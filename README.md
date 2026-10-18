@@ -1,6 +1,6 @@
 # Chert SDK
 
-Chert HTTP clients for JavaScript/TypeScript, Python, Rust and C++, plus explicit
+Chert HTTP clients for JavaScript/TypeScript, Python, Rust, C++, Go and C#/.NET, plus explicit
 iMessage compatibility adapters. This repository is under development: packages
 remain private/unpublished and provider coverage is incomplete.
 
@@ -41,9 +41,19 @@ checkout is required, and missing prerequisites fail rather than silently provin
 integration. Live device scripts are opt-in and require their reviewed plans.
 
 Other language clients have their own native checks and limitations:
-[Python](python/README.md), [Rust](rust/README.md), [C++](cpp/README.md).
-They currently provide typed text queue acceptance and raw JSON transport;
+[Python](python/README.md), [Rust](rust/README.md), [C++](cpp/README.md),
+[Go](go/README.md), [C#/.NET](dotnet/README.md).
+They provide typed text queue acceptance, reaction acknowledgement and raw JSON transport;
 they do not claim the JavaScript provider adapters' typed resource coverage.
+
+## TypeScript and JavaScript
+
+All SDK and adapter implementation source is TypeScript. Builds emit JavaScript
+and TypeScript declarations for Node, Bun and Deno. Plain `.mjs` files are
+executable integration fixtures and distribution probes, not a second SDK
+implementation. The distribution probe deliberately imports the built JavaScript
+to catch packaging errors a TypeScript-only test would miss. See
+[source conventions](docs/SOURCE_LAYOUT.md).
 
 ## Architecture and evidence
 

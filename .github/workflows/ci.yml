@@ -41,3 +41,26 @@ jobs:
       - run: cmake -S cpp -B cpp/build -DCHERT_SANITIZERS=ON -DCMAKE_BUILD_TYPE=Debug
       - run: cmake --build cpp/build --parallel 2
       - run: ctest --test-dir cpp/build --output-on-failure
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.23.x"
+          cache: false
+      - run: go test -race ./... && go vet ./...
+        working-directory: go
+  dotnet:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet --list-sdks
+      - run: dotnet run --project dotnet/Tests -c Release
+      - run: dotnet pack dotnet/Chert.Sdk -c Release -o dotnet/artifacts

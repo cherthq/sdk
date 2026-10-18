@@ -684,3 +684,21 @@ DNS/IP-pinning requirement is unavailable there. No per-Mac update is required.
 
 The official v4 OpenAPI was fetched again successfully on October 19: 198,551
 bytes, unchanged SHA-256 `069fa87a9702f802607bcf7341df4d6ae237ac52658eece5d4b4e6378ba40f73`.
+
+
+## Go and C#/.NET clients — 2026-10-19
+
+Both clients implement authenticated generic JSON transport, strict text queue
+acceptance and the six standard part-zero reaction acknowledgements. These are
+Chert API clients, not new vendor compatibility wrappers. They add no FaceTime,
+media-upload or full-resource parity claims. Go uses only its standard library;
+C# targets .NET 8 and uses built-in HttpClient/System.Text.Json without NuGet
+runtime dependencies. Both have explicit total deadlines, response bounds and
+caller cancellation, and refuse redirects and automatic retries.
+
+Go's actual loopback HTTP suite passes normal tests, the race detector and vet
+(94.5% statement coverage). The .NET dependency-free actual HTTP executable passes
+19 cases in Debug and Release, and the Release package includes its license and
+README. These tests cover exact requests, malformed acknowledgements, lost
+replies, pre-effect validation and cancellation; they do not establish device
+acceptance. Their READMEs document the public APIs and native check commands.

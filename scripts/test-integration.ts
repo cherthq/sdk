@@ -31,7 +31,7 @@ if (import.meta.main) {
   const root = validateIntegrationRoot(process.env.CHERT_MONOREPO_ROOT);
   if (process.argv.includes('--check')) { console.log('Reviewed integration source verified'); process.exit(0); }
   stage = mkdtempSync(resolve(tmpdir(), 'chert-sdk-integration-'));
-  cpSync(sdk, resolve(stage,'sdk'), {recursive:true, filter: path => !['.git','node_modules','target','build','__pycache__','.venv'].includes(path.split('/').at(-1)!) && !/^\.env(?:\.|$)/.test(path.split('/').at(-1)!)});
+  cpSync(sdk, resolve(stage,'sdk'), {recursive:true, filter: path => !['.git','node_modules','target','build','bin','obj','artifacts','__pycache__','.venv'].includes(path.split('/').at(-1)!) && !/^\.env(?:\.|$)/.test(path.split('/').at(-1)!)});
   symlinkSync(resolve(sdk,'node_modules'),resolve(stage,'sdk/node_modules'),'dir');
   for (const name of readdirSync(resolve(sdk,'packages'))) if (existsSync(resolve(sdk,'packages',name,'node_modules'))) symlinkSync(resolve(sdk,'packages',name,'node_modules'),resolve(stage,'sdk/packages',name,'node_modules'),'dir');
   for (const dir of ['imessage-server','control-plane','docs','Sources','Tests','native']) if (existsSync(resolve(root,dir))) symlinkSync(resolve(root,dir),resolve(stage,dir),'dir');
