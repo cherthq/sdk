@@ -39,7 +39,10 @@ paths in `CHERT_TEST_JOURNAL_PG_BIN` and `CHERT_TEST_JOURNAL_POSTGREST`.
 Storage additionally requires `CHERT_TEST_STORAGE_ENTRYPOINT` and
 `CHERT_TEST_STORAGE_NODE`. Compiled language helpers use the existing
 `CHERT_TEST_CPP_CLIENT`, `CHERT_TEST_RUST_CLIENT`, their `_TYPED_CLIENT` and
-`_REACTION_CLIENT` variants. `CHERT_TEST_PYTHON`,
+`_REACTION_CLIENT` variants. Offline guarded pipeline helpers use the exact
+`CHERT_PIPELINE_RUST_CLIENT` and `CHERT_PIPELINE_CPP_CLIENT` tool-path variables;
+`CHERT_PIPELINE_CONFIG`, `CHERT_PIPELINE_RECEIPT` and live flags are not forwarded.
+`CHERT_TEST_PYTHON`,
 `CHERT_TEST_NATIVE_WEBHOOK_CLIENT`, `CHERT_TEST_DEVICE_LIFECYCLE_BUNDLE` and
 `CHERT_TEST_URL_MEDIA_PIXEL_MANIFEST` retain their existing explicit fixture
 semantics. Missing optional tools produce explicit skips; source/auth/HTTP

@@ -19,6 +19,11 @@ export function validateIntegrationRoot(input: string | undefined): string {
  for (const dir of ['control-plane/node_modules','imessage-server/node_modules']) if (!existsSync(resolve(root,dir))) throw new Error('Install the reviewed monorepo dependencies before integration');
  return root;
 }
+export function integrationEnvironment(source: Record<string, string | undefined>): Record<string,string> {
+ const env: Record<string,string> = {PATH:source.PATH ?? '/usr/bin:/bin', NODE_ENV:'test'};
+ for (const [key,value] of Object.entries(source)) if (value && (key === 'CHERT_PIPELINE_RUST_CLIENT' || key === 'CHERT_PIPELINE_CPP_CLIENT' || /^CHERT_TEST_(?:JOURNAL_PG_BIN|JOURNAL_POSTGREST|CPP_CLIENT|CPP_REACTION_CLIENT|CPP_TYPED_CLIENT|RUST_CLIENT|RUST_REACTION_CLIENT|RUST_TYPED_CLIENT|PYTHON|STORAGE_ENTRYPOINT|STORAGE_NODE|NATIVE_WEBHOOK_CLIENT|DEVICE_LIFECYCLE_BUNDLE|URL_MEDIA_PIXEL_MANIFEST)$/.test(key))) env[key]=value;
+ return env;
+}
 if (import.meta.main) {
  let stage: string | undefined;
  try {
@@ -32,8 +37,7 @@ if (import.meta.main) {
   for (const dir of ['imessage-server','control-plane','docs','Sources','Tests','native']) if (existsSync(resolve(root,dir))) symlinkSync(resolve(root,dir),resolve(stage,dir),'dir');
   mkdirSync(resolve(stage,'scripts'));
   for (const runner of runners) cpSync(resolve(root,'scripts',runner),resolve(stage,'scripts',runner),{recursive:false});
-  const env: Record<string,string> = {PATH:process.env.PATH ?? '/usr/bin:/bin', NODE_ENV:'test'};
-  for (const [key,value] of Object.entries(process.env)) if (value && /^CHERT_TEST_(?:JOURNAL_PG_BIN|JOURNAL_POSTGREST|CPP_CLIENT|CPP_REACTION_CLIENT|CPP_TYPED_CLIENT|RUST_CLIENT|RUST_REACTION_CLIENT|RUST_TYPED_CLIENT|PYTHON|STORAGE_ENTRYPOINT|STORAGE_NODE|NATIVE_WEBHOOK_CLIENT|DEVICE_LIFECYCLE_BUNDLE|URL_MEDIA_PIXEL_MANIFEST)$/.test(key)) env[key]=value;
+  const env = integrationEnvironment(process.env);
   const child = Bun.spawn([process.execPath,'--no-env-file','test','tests','scripts','packages/blooio-v4-adapter/tests/webhook-management-postgrest.test.ts'],{cwd:resolve(stage,'sdk'),env,stdout:'inherit',stderr:'inherit'});
   process.exitCode = await child.exited;
  } catch { console.error('Integration refused or failed: verify CHERT_MONOREPO_ROOT, source lock, dependencies and explicit tool paths.'); process.exitCode=1; }
