@@ -720,7 +720,8 @@ UUID identity is required. It is not a full drop-in replacement. See its
 
 Thirteen tests (225 assertions) use the actual Chert client; send and typing
 include actual loopback HTTP with synthetic backend receipts. Built inventory
-and unsupported SMS checks pass under Node, Bun and Deno. Actual authenticated
-backend-route execution and device acceptance for this adapter remain pending.
+and unsupported SMS checks pass under Node, Bun and Deno. A separate 21-case fixture passes actual authenticated
+backend routes, reservation and HMAC signing with fake database/native peers.
+PostgreSQL-backed and device acceptance for this adapter remain pending.
 BlueBubbles, Photon/Spectrum and other candidates remain research unless an
 implemented method is explicitly identified; see [research](docs/PROVIDER_RESEARCH.md).

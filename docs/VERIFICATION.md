@@ -4,7 +4,9 @@ The expanded standalone SDK's portable suite passes 386 tests / 3,669 assertions
 across 27 files. Build/typecheck and built Node/Bun/Deno distribution checks pass,
 including MissBlue inventory and zero-effect unsupported SMS construction.
 MissBlue's 13 tests / 225 assertions include actual loopback HTTP with synthetic
-backend receipts, not authenticated platform routes or physical devices.
+backend receipts. A separate 21-case actual authenticated HTTP-route fixture
+passes with explicit fake database/native boundaries; PostgreSQL-backed MissBlue
+and physical-device acceptance remain pending.
 
 Go passes normal tests, the race detector, vet and formatting (94.5% statement
 coverage). .NET passes 19 actual HTTP cases in Debug and Release, and Release
@@ -25,7 +27,8 @@ PostgreSQL/PostgREST, Storage and source-bound native fixture gates; it does not
 run a fresh physical message or read transition. The MissBlue package's unit
 coverage and new Go/.NET HTTP tests are separate from this integration run.
 
-GitHub Actions run 39142526244 did not start any jobs. Its annotation reports
+GitHub Actions runs 39142526244 and 39144180024 did not start any jobs.
+The latter confirms zero steps across all six current jobs. Its annotation reports
 account payment/spending-limit configuration; no CI runner or repository test
 executed. Local passes do not imply GitHub CI passed. No billing changes were made.
 
