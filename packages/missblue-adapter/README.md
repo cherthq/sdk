@@ -80,4 +80,9 @@ validation/uncertainty behavior, not actual cloud PostgreSQL route execution,
 Miss Blue account operation, deployment or physical iMessage/typing. Workspace checks add packaging/build/distribution verification.
 `tests/missblue-http.test.ts` separately passes 21 cases through actual Chert auth,
 HTTP routes, reservation and HMAC signing, using explicitly fake query storage
-and native peers. PostgreSQL-backed and physical-device acceptance remain pending. No device actions are performed by these checks.
+and native peers. The separate six-provider strict text gate now passes real authentication and
+disposable PostgreSQL/PostgREST, including normal and exact Unicode/whitespace
+MissBlue sends and six refusal cases with no native dispatch or reserved row.
+Its native peer remains synthetic. The after-inventory inactive-line refusal does
+not close the documented same-phone UUID-reassignment limitation. Physical-device
+acceptance remains pending. No device actions are performed by these checks.

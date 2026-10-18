@@ -722,6 +722,8 @@ Thirteen tests (225 assertions) use the actual Chert client; send and typing
 include actual loopback HTTP with synthetic backend receipts. Built inventory
 and unsupported SMS checks pass under Node, Bun and Deno. A separate 21-case fixture passes actual authenticated
 backend routes, reservation and HMAC signing with fake database/native peers.
-PostgreSQL-backed and device acceptance for this adapter remain pending.
+The separate strict-text gate passes real PostgreSQL-backed normal and
+Unicode/whitespace sends plus six refusal cases with zero native dispatch.
+Its native peer is synthetic; device acceptance for this adapter remains pending.
 BlueBubbles, Photon/Spectrum and other candidates remain research unless an
 implemented method is explicitly identified; see [research](docs/PROVIDER_RESEARCH.md).

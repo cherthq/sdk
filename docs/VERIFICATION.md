@@ -5,8 +5,11 @@ across 27 files. Build/typecheck and built Node/Bun/Deno distribution checks pas
 including MissBlue inventory and zero-effect unsupported SMS construction.
 MissBlue's 13 tests / 225 assertions include actual loopback HTTP with synthetic
 backend receipts. A separate 21-case actual authenticated HTTP-route fixture
-passes with explicit fake database/native boundaries; PostgreSQL-backed MissBlue
-and physical-device acceptance remain pending.
+passes with explicit fake database/native boundaries. A separate real
+PostgreSQL/PostgREST strict-text gate now includes MissBlue normal and exact
+Unicode/whitespace sends, plus six refusal cases proving no native dispatch and
+no reserved message. The native peer remains synthetic; MissBlue physical-device
+acceptance remains pending.
 
 Go passes normal tests, the race detector, vet and formatting (94.5% statement
 coverage). .NET passes 19 actual HTTP cases in Debug and Release, and Release
@@ -20,12 +23,15 @@ unconfigured tool cases skipped. A fuller configured run then exposed omitted
 helper configurations, a stale native source lock, and three five-second fixture
 timeouts during concurrent compilation. After fixing the tool forwarding and
 refreshing the reviewed native harness, the unchanged-timeout combined rerun
-passes **404 tests / 3,824 assertions / 88 files**, zero failures. Three optional
+passes **405 tests / 3,826 assertions / 89 files**, zero failures, including the
+new MissBlue actual-route and PostgreSQL cases. The first expanded run caught a
+wrong expected route path in the new fixture; that assertion was corrected and
+both focused and complete configured reruns pass. Three optional
 ImageIO/caption cases remain skipped because their experimental pixel manifest
 is not configured. This combines actual authenticated platform HTTP,
 PostgreSQL/PostgREST, Storage and source-bound native fixture gates; it does not
-run a fresh physical message or read transition. The MissBlue package's unit
-coverage and new Go/.NET HTTP tests are separate from this integration run.
+run a fresh physical message or read transition. The MissBlue package's unit coverage and new Go/.NET HTTP tests remain separate
+from this integration run.
 
 GitHub Actions runs 39142526244 and 39144180024 did not start any jobs.
 The latter confirms zero steps across all six current jobs. Its annotation reports

@@ -81,3 +81,21 @@ Parsing a phone from that GUID would discard the missing ownership binding.
 No typing facade was added. The pinned [typing router](https://github.com/BlueBubblesApp/bluebubbles-server/blob/f2e2286241a7c3b6617a82b37d4afaab4df3a6b9/packages/server/src/server/api/http/api/v1/routers/chatRouter.ts#L293)
 and [HTTP route definitions](https://github.com/BlueBubblesApp/bluebubbles-server/blob/f2e2286241a7c3b6617a82b37d4afaab4df3a6b9/packages/server/src/server/api/http/api/v1/httpRoutes.ts#L362)
 were inspected without calling a provider or device.
+
+### Photon HTTP send-result boundary
+
+The inspected official `@photon-ai/advanced-imessage@2.3.0` declaration's
+`Message` requires an actual native `guid`, original `dateCreated: Date`,
+`chatGuids`, `content`, reaction/sticker arrays and numerous native flags
+(`isArchived`, `isAutoReply`, `isCorrupt`, `isDelayed`, `didNotifyRecipient`,
+`sendErrorCode`, among others). A Chert public queued ID and outbox creation
+clock cannot establish that record. Returning empty arrays, zero error or false
+flags would assert facts the present public response does not supply.
+
+This is an additional reason that replacing only Photon HTTP send action URLs
+would not be faithful SDK compatibility. A future native projection must supply
+and validate those facts for an owned message, or an explicitly different
+Chert API must expose queue receipts. This audit adds no Photon adapter or gRPC/
+event compatibility claim. Source: the published 2.3.0 `Message` declaration in
+`dist/groups-D5YRVJAL.d.ts`, read alongside the official
+[client repository](https://github.com/photon-hq/advanced-imessage-ts).
