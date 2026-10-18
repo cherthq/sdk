@@ -573,3 +573,29 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   assert.equal(response.status,422);assert.equal(calls.length,5);
   console.log('Built V4 qualified webhook GET/PATCH/DELETE and retired-filter zero-HTTP boundaries passed.');
 }
+
+// MissBlue's built ESM export runs directly in JavaScript under all three runtimes.
+{
+  const { createMissBlueFetch, MISSBLUE_CONTRACT } = await import('@chert/missblue-adapter');
+  assert.equal(MISSBLUE_CONTRACT.version, '1.0.0');
+  let reads = 0;
+  const id = 'd50e8400-e29b-41d4-a716-446655440000';
+  const transport = createMissBlueFetch({ chert: {
+    baseURL: 'https://chert.example', apiKey: 'distribution-only',
+    fetch: async (input, init) => {
+      const request = new Request(input, init);
+      assert.equal(request.url, 'https://chert.example/api/v1/phone-numbers');
+      assert.equal(request.method, 'GET');
+      assert.equal(request.headers.get('authorization'), 'Bearer distribution-only');
+      reads++;
+      return Response.json({phone_numbers: [{id, phone_number: '+15550000001', service: 'imessage', is_active: true, capabilities: ['imessage', 'send']}]});
+    },
+  }});
+  const inventory = await transport('https://api.missblue.dev/v1/numbers');
+  assert.equal(inventory.status, 200);
+  assert.deepEqual(await inventory.json(), {total: 1, data: [{id, handle: '+15550000001', service: 'imessage', disabled: false}]});
+  const rejected = await transport('https://api.missblue.dev/v1/messages', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({number_id: id, recipient: '+15550000002', text: 'fixture', service: 'sms'})});
+  assert.equal(rejected.status, 501);
+  assert.equal(reads, 1);
+  console.log('Built MissBlue inventory preserves owned facts; unsupported SMS requests refuse before HTTP.');
+}

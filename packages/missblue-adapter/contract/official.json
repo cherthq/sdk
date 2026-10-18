@@ -1,0 +1,612 @@
+{
+  "source": "https://missblue.dev/openapi.json",
+  "retrieved_at": "2026-10-18T16:08:25.767398+00:00",
+  "openapi_sha256": "63ba790ecdfb3e4155ed5af735a41e25f43a3f8d1852b9e53c8791a848df6105",
+  "info": {
+    "title": "Miss Blue API",
+    "version": "1.0.0",
+    "summary": "Send and receive iMessage from a dedicated business number.",
+    "description": "The HTTP API behind Miss Blue. Every request carries a bearer key; a key beginning `mb_test_` is currently only a label and can still act on live data.\n\nThe same reference in prose: https://missblue.dev/api-reference.md",
+    "contact": {
+      "name": "Miss Blue",
+      "url": "https://missblue.dev/contact"
+    },
+    "termsOfService": "https://missblue.dev/terms"
+  },
+  "paths": {
+    "/v1/messages": {
+      "post": {
+        "operationId": "postV1Messages",
+        "summary": "Send an iMessage.",
+        "description": "Send an iMessage.\n\nText, files, or a reply quoting an earlier message. Sending to an existing group is the same call with the group's chat_id as the recipient. A send the number cannot take right now is still accepted, not refused: 201 with status pending, queued: true, and a notice \u2014 { \"code\": \"number_unavailable\", \"message\": \"This number is temporarily unavailable. Your message is queued and will be sent automatically as soon as it's back.\" }. It goes out by itself when the number is back, so do not send it again; until then POST /v1/messages/{id}/cancel calls it off. A notice code of send_retrying means the send was turned down for now and will be tried again automatically. A notice code of daily_new_contact_limit means the number has messaged as many new people as it may today: the first message waits and goes out by itself at send_after, as room opens \u2014 do not send it again. Only a first message that could not go within five days is refused, with 429 and a Retry-After of when a try would be taken. GET /v1/projects/{id}/sending-stats shows each number's allowance: new_contacts_used, new_contacts_limit, new_contacts_waiting, and next_new_contact_at, when the next new person can be messaged if not now; messages_used and messages_limit, every message the number sent in the last 24 hours against its daily total (150 unless raised); and warmup, its week and limit while it climbs back after sending as texts. A paced send \u2014 or an automated one past the daily total \u2014 is queued with no notice: the message's send_after says when; one past the daily total that could not go within five days is refused with 429 daily_message_limit and a Retry-After. Pass manual: true for one message a person asked to send now: like a send typed in the inbox, it goes past the daily total and still counts toward it; opt-outs, blocks and the new-people limit still apply. Not for bulk. See /docs/rate-limits. notice.message is written to be shown to your own users as it is; switch on notice.code. link_code and url are the conversation's short link, the same one GET /v1/threads and its webhooks give it; they are absent while a first message to somebody new is still waiting for its number, and message.sent carries them once it has gone.\n\nSend an uploaded audio file as a native voice note.\n\nUpload one audio/* file first. An attachment-only audio send defaults to Apple's native voice-note bubble for every number-scoped customer call. Pass native_voice_note: false only when you deliberately want a normal file. If native delivery is unavailable before sending, Miss Blue automatically sends the original audio as a regular playable attachment. An uncertain delivery is kept pending to avoid duplicate messages.\n\nSend two through twenty images as one native carousel.\n\nUpload every image first and preserve the order in attachment_ids. All files must be images. A native carousel cannot carry a caption or quote another message; send text separately if you need it.",
+        "tags": [
+          "Messages"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "number_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Which of your numbers to send from. GET /v1/numbers lists them."
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "description": "A phone number, an Apple ID email, or a chat_id to send into an existing conversation."
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Optional only if you are sending attachments \u2014 a message must carry one or the other."
+                  },
+                  "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "description": "From POST /v1/attachments. This call accepts text or attachments, not both; send a caption separately."
+                  },
+                  "native_voice_note": {
+                    "type": "boolean",
+                    "description": "Audio-only sends default to a native voice note. Set false to send an ordinary file."
+                  },
+                  "reply_to_message_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Our id for the message being quoted, not Apple's."
+                  },
+                  "status_callback": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Where to POST this one message's outcome. See Delivery."
+                  },
+                  "allow_duplicate": {
+                    "type": "boolean",
+                    "description": "Send anyway, though the same text went to the same person moments ago."
+                  },
+                  "manual": {
+                    "type": "boolean",
+                    "description": "One message a person asked to send now: not held by the number's daily total, as a send from the inbox is not. It still counts toward it; opt-outs, blocks and the new-people limit still apply. Not for bulk."
+                  }
+                },
+                "required": [
+                  "number_id",
+                  "recipient"
+                ]
+              },
+              "example": {
+                "number_id": "8f14e45f-ceea-467a-9a1b-1b1e5f9e2c3d",
+                "recipient": "+15555550100",
+                "text": "Your table is confirmed for 7pm."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Send an iMessage.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "id": "0b5ed7e8-f7a1-4f6e-9c2a-2a1f0d9e8b77",
+                  "request_id": "d0cc8f6e-8d57-4bd2-bb27-a3c86ca810e8",
+                  "agent_id": "3e814ce3-d92b-4d93-9baf-33459eacb264",
+                  "status": "sent",
+                  "external_message_id": "p:0/4AEE9B2A-7E3C-4E7C-88EA-5F071974624B",
+                  "queued": false,
+                  "chat_id": "iMessage;-;+15555550100",
+                  "link_code": "k7Qm3xT9pa",
+                  "url": "https://missblue.dev/c/k7Qm3xT9pa"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Send an iMessage.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "id": "0b5ed7e8-f7a1-4f6e-9c2a-2a1f0d9e8b77",
+                  "request_id": "d0cc8f6e-8d57-4bd2-bb27-a3c86ca810e8",
+                  "agent_id": "3e814ce3-d92b-4d93-9baf-33459eacb264",
+                  "status": "sent",
+                  "external_message_id": "p:0/4AEE9B2A-7E3C-4E7C-88EA-5F071974624B",
+                  "queued": false,
+                  "chat_id": "iMessage;-;+15555550100",
+                  "link_code": "k7Qm3xT9pa",
+                  "url": "https://missblue.dev/c/k7Qm3xT9pa"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_recipient: a phone number nobody can have \u2014 a +1 number without ten digits, an area code or exchange starting with 0 or 1 or an N11 code, a fictional 555-0100\u20130199, or not 8 to 15 digits after the +. Nothing is written or sent. error.reason is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The key is missing, malformed, or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A number_id your key does not hold. Not 403 \u2014 whether it exists is not your business.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A native voice note while the number is temporarily unavailable (agent_offline). Voice notes are sent live and never queued; ordinary sends are queued instead \u2014 see queued and notice.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "recipient_undeliverable: the number cannot get texts \u2014 a landline, not in service, or not a valid number, as its carrier, Twilio or the check before a first text on a Twilio line said. error.reason is landline, not_in_service, invalid or other.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-miss-blue-variants": [
+          {
+            "id": "post-v1-messages-native-voice-note",
+            "summary": "Send an uploaded audio file as a native voice note.",
+            "description": "Upload one audio/* file first. An attachment-only audio send defaults to Apple's native voice-note bubble for every number-scoped customer call. Pass native_voice_note: false only when you deliberately want a normal file. If native delivery is unavailable before sending, Miss Blue automatically sends the original audio as a regular playable attachment. An uncertain delivery is kept pending to avoid duplicate messages.",
+            "request": {
+              "number_id": "8f14e45f-ceea-467a-9a1b-1b1e5f9e2c3d",
+              "recipient": "+15555550100",
+              "attachment_ids": [
+                "4c9103dd-ae62-4888-9a17-c762efe8ddcb"
+              ]
+            },
+            "response": {
+              "id": "f30fd81d-79a4-4795-9794-b58a49cbb825",
+              "request_id": "2ebf14c9-2952-4931-adc1-2e80852ce239",
+              "agent_id": "3e814ce3-d92b-4d93-9baf-33459eacb264",
+              "status": "sent",
+              "external_message_id": "p:0/2A3E52BC-6922-4608-94E9-F120285AE812",
+              "chat_id": "iMessage;-;+15555550100",
+              "queued": false
+            }
+          },
+          {
+            "id": "post-v1-messages-carousel",
+            "summary": "Send two through twenty images as one native carousel.",
+            "description": "Upload every image first and preserve the order in attachment_ids. All files must be images. A native carousel cannot carry a caption or quote another message; send text separately if you need it.",
+            "request": {
+              "number_id": "8f14e45f-ceea-467a-9a1b-1b1e5f9e2c3d",
+              "recipient": "+15555550100",
+              "attachment_ids": [
+                "88de9745-30e0-4b93-bfcb-dbb7f3325dde",
+                "45793a35-0a1c-431d-8806-38f71ce658ff",
+                "fe74c17c-f3cd-4547-a32b-cf271845d95f"
+              ]
+            },
+            "response": {
+              "id": "9396bdad-9e14-4caa-8f01-20188aedbb23",
+              "request_id": "3cd8cab6-1e17-4169-866d-eac13765ef58",
+              "agent_id": "3e814ce3-d92b-4d93-9baf-33459eacb264",
+              "status": "sent",
+              "external_message_id": "p:0/F4AF7E62-FC00-4805-A9A9-86557DB11137",
+              "chat_id": "iMessage;-;+15555550100",
+              "queued": false
+            }
+          }
+        ]
+      },
+      "get": {
+        "operationId": "getV1Messages",
+        "summary": "List messages across your project's numbers, newest first.",
+        "description": "List messages across your project's numbers, newest first.",
+        "tags": [
+          "Messages"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List messages across your project's numbers, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "total": 1,
+                  "data": [
+                    {
+                      "id": "0b5ed7e8-f7a1-4f6e-9c2a-2a1f0d9e8b77",
+                      "chat_id": "iMessage;-;+15555550100",
+                      "direction": "outbound",
+                      "recipient": "+15555550100",
+                      "text": "Your table is confirmed for 7pm.",
+                      "status": "delivered",
+                      "service": "imessage",
+                      "message_at": "2026-08-28T10:04:00Z",
+                      "created_at": "2026-08-28T10:04:00Z",
+                      "updated_at": "2026-08-28T10:04:02Z",
+                      "number_id": "8f14e45f-ceea-467a-9a1b-1b1e5f9e2c3d"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The key is missing, malformed, or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}": {
+      "get": {
+        "operationId": "getV1MessagesById",
+        "summary": "One message, including its current delivery state.",
+        "description": "One message, including its current delivery state.\n\nPolling this works, but a webhook or a status_callback tells you sooner and costs you nothing. `agent_version` and `macos_version` say which Mac build handled it, stamped when the message was written rather than looked up now \u2014 a Mac that is updated must not rewrite what it was running last week, which is exactly the week you are trying to explain. `read` means the person has seen it: an iMessage read receipt reads the conversation up to that message, so earlier delivered iMessages to the same person turn `read` with it, as they do on the sender's iPhone \u2014 Apple itself stamps only some of them. A failed message carries `reason` (landline, not_in_service, unreachable, invalid, opted_out, blocked, spam_filtered or other) and, when a carrier gave one, `error_code` (Twilio's 30006, say), as message.failed webhooks do.",
+        "tags": [
+          "Messages"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The id of the resource.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "0b5ed7e8-f7a1-4f6e-9c2a-2a1f0d9e8b77"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One message, including its current delivery state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "id": "0b5ed7e8-f7a1-4f6e-9c2a-2a1f0d9e8b77",
+                  "chat_id": "iMessage;-;+15555550100",
+                  "direction": "outbound",
+                  "recipient": "+15555550100",
+                  "text": "Your table is confirmed for 7pm.",
+                  "status": "delivered",
+                  "service": "imessage",
+                  "message_at": "2026-08-28T10:04:00Z",
+                  "created_at": "2026-08-28T10:04:00Z",
+                  "updated_at": "2026-08-28T10:04:02Z",
+                  "number_id": "8f14e45f-ceea-467a-9a1b-1b1e5f9e2c3d"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The key is missing, malformed, or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such message, or one on a number your key does not hold.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/numbers": {
+      "get": {
+        "operationId": "getV1Numbers",
+        "summary": "Your project's numbers, with the name each has been given.",
+        "description": "Your project's numbers, with the name each has been given.\n\nThe Mac behind a number is never named. Which machine holds a line is our problem, and telling you would make it yours. availability says whether a number can send right now: { \"status\": \"available\" }, or { \"status\": \"unavailable\", \"message\": \u2026 } with a sentence written to be shown to your own users as it is. It is unavailable exactly when a send made now would be queued rather than sent \u2014 sends are still accepted, and go out when it is back.",
+        "tags": [
+          "Numbers"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Your project's numbers, with the name each has been given.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "total": 1,
+                  "data": [
+                    {
+                      "id": "8f14e45f-ceea-467a-9a1b-1b1e5f9e2c3d",
+                      "handle": "+16465550142",
+                      "label": "Main support",
+                      "service": "imessage",
+                      "project_id": "e3b7c534-7e5d-4669-b90a-5b617bfe77f0",
+                      "disabled": false,
+                      "simulated": false,
+                      "availability": {
+                        "status": "available"
+                      },
+                      "shared": false,
+                      "created_at": "2026-08-23T09:12:04Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The key is missing, malformed, or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/typing": {
+      "post": {
+        "operationId": "postV1Typing",
+        "summary": "Show or hide the typing bubble in a conversation.",
+        "description": "Show or hide the typing bubble in a conversation.\n\nDo not block a reply on this. A bubble that arrives after the message it was meant to precede is worse than no bubble \u2014 send it, ignore the outcome, and reply. There is no guaranteed stop either: Messages.app clears it on its own after a few seconds of silence, which is the behaviour to rely on.",
+        "tags": [
+          "Conversations"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "chat_id": {
+                    "type": "string",
+                    "description": "The conversation. Not a bare handle \u2014 guessing which of several threads was meant would show a stranger that somebody is typing."
+                  },
+                  "active": {
+                    "type": "boolean",
+                    "description": "true to start, false to stop."
+                  }
+                },
+                "required": [
+                  "chat_id"
+                ]
+              },
+              "example": {
+                "chat_id": "iMessage;-;+15555550100",
+                "active": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Show or hide the typing bubble in a conversation."
+          },
+          "401": {
+            "description": "The key is missing, malformed, or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such conversation on a number your key holds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The number is temporarily unavailable (agent_offline). Retry shortly, or skip it \u2014 a late typing bubble is worse than none.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/typing-indicators": {
+      "post": {
+        "operationId": "postV1TypingIndicators",
+        "summary": "Show a bounded typing bubble to a contact.",
+        "description": "Show a bounded typing bubble to a contact.\n\nUse this form when your integration knows the contact rather than the chat_id. The one-to-one iMessage conversation must already exist. Start defaults to 60 seconds and is always cleared by five minutes; another start extends the active timer, while stop is a safe no-op when nothing is active.",
+        "tags": [
+          "Conversations"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "The contact who sees the bubble."
+                  },
+                  "number_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Which of your numbers sends it. Preferred over a mutable handle."
+                  },
+                  "from_number": {
+                    "type": "string",
+                    "description": "Handle alternative to number_id. Omit both only when your key holds one number."
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "Defaults to start."
+                  },
+                  "max_duration_ms": {
+                    "type": "integer",
+                    "description": "1\u2013300000. Defaults to 60000."
+                  }
+                },
+                "required": [
+                  "number"
+                ]
+              },
+              "example": {
+                "number": "+15555550100",
+                "from_number": "+16465550142",
+                "state": "start",
+                "max_duration_ms": 60000
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Show a bounded typing bubble to a contact.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "status": "ACTIVE",
+                  "number": "+15555550100",
+                  "from_number": "+16465550142",
+                  "chat_id": "iMessage;-;+15555550100",
+                  "max_duration_ms": 60000
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The number or duration is invalid, the source is ambiguous, or no prior iMessage conversation exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The key is missing, malformed, or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The source number is not held by this credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The source number is temporarily unavailable (agent_offline). Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "error_schema": {
+    "type": "object",
+    "description": "Every failure has this shape.",
+    "properties": {
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "A stable, machine-readable reason."
+          },
+          "message": {
+            "type": "string",
+            "description": "What went wrong, in prose."
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      }
+    },
+    "required": [
+      "error"
+    ]
+  }
+}

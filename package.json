@@ -20,7 +20,8 @@
     "@chert/loopmessage-adapter": "workspace:*",
     "@chert/sendblue-adapter": "workspace:*",
     "@chert/blooio-adapter": "workspace:*",
-    "@chert/blooio-v4-adapter": "workspace:*"
+    "@chert/blooio-v4-adapter": "workspace:*",
+    "@chert/missblue-adapter": "workspace:*"
   },
   "license": "MIT",
   "repository": {

@@ -42,3 +42,42 @@ Additional primary-source candidates:
 review did not establish a complete public API schema. Product marketing alone
 is insufficient for a drop-in adapter. No new provider above has passed Chert
 route/device acceptance or is represented as full compatibility.
+
+## BlueBubbles message-read contract audit — 2026-10-19
+
+No BlueBubbles adapter package was added. The audited server revision is
+`f2e2286241a7c3b6617a82b37d4afaab4df3a6b9`; this is a contract finding, not
+implemented compatibility or device acceptance.
+
+`GET /api/v1/message/:guid` returns the serialized native message, and
+`POST /api/v1/message/query` returns those same records plus offset/limit/total/count.
+The optional `with` expansions add nested data; they do not select a reduced
+field schema. See the pinned [message router](https://github.com/BlueBubblesApp/bluebubbles-server/blob/f2e2286241a7c3b6617a82b37d4afaab4df3a6b9/packages/server/src/server/api/http/api/v1/routers/messageRouter.ts#L73),
+[serializer](https://github.com/BlueBubblesApp/bluebubbles-server/blob/f2e2286241a7c3b6617a82b37d4afaab4df3a6b9/packages/server/src/server/api/serializers/MessageSerializer.ts#L117)
+and [required response type](https://github.com/BlueBubblesApp/bluebubbles-server/blob/f2e2286241a7c3b6617a82b37d4afaab4df3a6b9/packages/server/src/server/types.ts#L23).
+
+Chert's owned message GET has native GUID, text, direction and qualified lifecycle
+facts, but lacks required native `originalROWID`, `handleId`, `otherHandle`,
+`subject`, numeric `error`, `isArchived`, `itemType`, `groupActionType` and
+balloon/associated/expressive metadata. Its resource `created_at` is not always
+the Apple message creation timestamp required by `dateCreated`. Public resource
+IDs, nulls, zeros and queue clocks cannot replace those facts. Returning only
+GUID/text would omit required fields rather than satisfy the documented read
+contract. Query pagination additionally needs complete qualified native inventory
+and genuine count/filter semantics.
+
+A useful compatible read implementation first needs a tenant/account-bound,
+read-only native-message metadata projection exposing those exact typed facts,
+including actual Apple creation/delivery/read clocks and native row/handle IDs.
+Ownership must remain bound to the selected line and exact GUID; unavailable
+facts must refuse the projection. This is a backend prerequisite, not a proposed
+SDK placeholder. Sends also remain unsupported: Chert queue acceptance cannot
+stand in for BlueBubbles' completed send result.
+
+Typing has a small success envelope, but its route identifies a native chat GUID.
+Chert's typing route currently identifies an owned public lead/chat and a pinned
+line; no authenticated native-chat-GUID-to-owned-chat/account mapping is exposed.
+Parsing a phone from that GUID would discard the missing ownership binding.
+No typing facade was added. The pinned [typing router](https://github.com/BlueBubblesApp/bluebubbles-server/blob/f2e2286241a7c3b6617a82b37d4afaab4df3a6b9/packages/server/src/server/api/http/api/v1/routers/chatRouter.ts#L293)
+and [HTTP route definitions](https://github.com/BlueBubblesApp/bluebubbles-server/blob/f2e2286241a7c3b6617a82b37d4afaab4df3a6b9/packages/server/src/server/api/http/api/v1/httpRoutes.ts#L362)
+were inspected without calling a provider or device.

@@ -9,6 +9,7 @@
         "@chert/blooio-v4-adapter": "workspace:*",
         "@chert/linq-adapter": "workspace:*",
         "@chert/loopmessage-adapter": "workspace:*",
+        "@chert/missblue-adapter": "workspace:*",
         "@chert/sdk": "workspace:*",
         "@chert/sendblue-adapter": "workspace:*",
         "@types/bun": "1.3.14",
@@ -45,6 +46,13 @@
         "@chert/sdk": "workspace:*",
       },
     },
+    "packages/missblue-adapter": {
+      "name": "@chert/missblue-adapter",
+      "version": "0.1.0",
+      "dependencies": {
+        "@chert/sdk": "workspace:*",
+      },
+    },
     "packages/sdk": {
       "name": "@chert/sdk",
       "version": "0.1.0",
@@ -68,6 +76,8 @@
     "@chert/linq-adapter": ["@chert/linq-adapter@workspace:packages/linq-adapter"],
 
     "@chert/loopmessage-adapter": ["@chert/loopmessage-adapter@workspace:packages/loopmessage-adapter"],
+
+    "@chert/missblue-adapter": ["@chert/missblue-adapter@workspace:packages/missblue-adapter"],
 
     "@chert/sdk": ["@chert/sdk@workspace:packages/sdk"],
 

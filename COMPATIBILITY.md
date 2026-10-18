@@ -702,3 +702,25 @@ Go's actual loopback HTTP suite passes normal tests, the race detector and vet
 README. These tests cover exact requests, malformed acknowledgements, lost
 replies, pre-effect validation and cancellation; they do not establish device
 acceptance. Their READMEs document the public APIs and native check commands.
+
+
+## MissBlue HTTP subset — 2026-10-19
+
+`@chert/missblue-adapter` pins official OpenAPI 1.0.0. It maps plaintext sends,
+owned number inventory, recorded outbound message retrieval and owned-chat typing.
+Requests with unsupported fields, SMS/RCS options, media, scheduling or provider
+administration refuse before dispatch. Accepted text returns pending/queued, not
+sent or native service proof. Required provider-native facts are never invented.
+
+The source UUID is resolved to an owned iMessage phone, then passed as explicit
+`from` to Chert. This is not an atomic UUID-line binding under concurrent
+same-phone reassignment, so the adapter is unsuitable where frozen source-line
+UUID identity is required. It is not a full drop-in replacement. See its
+[method matrix and contract pin](packages/missblue-adapter/README.md).
+
+Thirteen tests (225 assertions) use the actual Chert client; send and typing
+include actual loopback HTTP with synthetic backend receipts. Built inventory
+and unsupported SMS checks pass under Node, Bun and Deno. Actual authenticated
+backend-route execution and device acceptance for this adapter remain pending.
+BlueBubbles, Photon/Spectrum and other candidates remain research unless an
+implemented method is explicitly identified; see [research](docs/PROVIDER_RESEARCH.md).
