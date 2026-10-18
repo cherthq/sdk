@@ -134,9 +134,9 @@ original boundaries. Other provider reaction contracts,
 current aggregate/UI state and full SDK parity remain unverified.
 See [dated evidence](../../docs/evidence/CHERT_SDK_M4D_2026_10_17.md).
 
-## Current installed service — FT-INSTALL-098
+## Historical installed service — FT-INSTALL-098
 
-M4D now serves Messages directly from the unified launchd executable, PID 30527,
+At the FT098 checkpoint, M4D served Messages directly from the unified launchd executable, PID 30527,
 SHA256 `7ac67fb5a6430bdc3910cdaf68e8db780028e0b08cb154c6c2e933bfc69884e2`.
 The existing Messages/helper process PID 23940 was preserved; helper SHA256 is
 `24c0b22b9a2da7ff81b0d36990a01a30a6d415a81fac4878ca0e420e5046c2e1`.
@@ -166,6 +166,23 @@ SHA256 `e614ad3dbc882a1edbbef3d3df19e3c8d5da87c109262b809476fa33f1a90ba5`.
 It passed with one effect and no retry. The migration itself still sent zero
 messages; this was a distinct, separately controlled one-message physical test.
 Previous receipts retain their original installed-pair and scope boundaries.
-The last combined SDK checkpoint remains 436 passing tests. This pass does not
+That checkpoint recorded 436 passing SDK tests. This pass does not
 establish all providers, media, caption fidelity, endurance or macOS 15 runtime
 acceptance.
+
+
+## Current read-only installation check — 2026-10-19
+
+A fresh read-only check matched FT099 R2: worker PID49389 SHA256
+`fa491416e3f07a2cd55f690e235b5eb327bad79f2631a71665677d5a5e1e3c75`,
+sender Messages PID49308 and recipient Messages PID50207, both loading helper
+SHA256 `542efd451a064eef5e9e61881b79ccab561a62aff818c5e04f0e4bb732f6362a`.
+These are dated observations, not future process assumptions. Receiving-context
+wire emission remains off. The FT100 mark-read candidate is not installed.
+The seven controlled unread rows remained unread during a separate audit;
+no read, send, service restart or account/security change ran in that audit.
+
+The source-bound offline webhook harness was rebuilt as R11 after its older
+R10 source lock correctly rejected a changed Makefile. Three actual local
+PostgreSQL relay/native-webhook tests passed, retaining the same historical
+device export. This is not new device contact or original live callback proof.
