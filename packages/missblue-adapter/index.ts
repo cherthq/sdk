@@ -101,7 +101,15 @@ function fromError(error: unknown): Response {
     if (error.status === 404) return failure(404, 'not_found', 'No such resource on a number this credential holds.');
     if (error.status === 429) return failure(429, 'rate_limited', 'The request was rate limited.');
   }
-  return failure(504, 'command_unconfirmed', 'The request outcome is unconfirmed. Reconcile before retrying.');
+  const response = failure(504, 'command_unconfirmed', 'The request outcome is unconfirmed. Reconcile before retrying.');
+  // Preserve only actual public reconciliation IDs, separately from provider fields.
+  // A lost Chert HTTP reply or malformed acknowledgement supplies no trusted IDs.
+  if (error instanceof ChertAPIError && error.status === 502 && error.code === '4103'
+    && record(error.data) && publicId(error.data.message_id) && uuid(error.data.chat_id)) {
+    response.headers.set('X-Chert-Message-Id', error.data.message_id);
+    response.headers.set('X-Chert-Chat-Id', error.data.chat_id);
+  }
+  return response;
 }
 /** Explicit HTTP fetch replacement. Never contacts Miss Blue or invents native identifiers. */
 export function createMissBlueFetch(options: {chert: ChertClientOptions}): ChertFetch {

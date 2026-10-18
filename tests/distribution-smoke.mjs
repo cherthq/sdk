@@ -599,3 +599,22 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   assert.equal(reads, 1);
   console.log('Built MissBlue inventory preserves owned facts; unsupported SMS requests refuse before HTTP.');
 }
+
+{
+  const { createMissBlueFetch } = await import('@chert/missblue-adapter');
+  const line = 'd50e8400-e29b-41d4-a716-446655440000', message = 'f'.repeat(32);
+  let posts = 0;
+  const transport = createMissBlueFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async (input, init) => {
+    const request = new Request(input, init);
+    if (request.method === 'GET') return Response.json({phone_numbers: [{id: line, phone_number: '+15558670001', service: 'imessage', is_active: true, capabilities: ['imessage', 'send']}]});
+    posts++;
+    return Response.json({error: {code: 4103, retryable: false, message: 'private detail'}, message_id: message, chat_id: line}, {status: 502});
+  }}});
+  const response = await transport('https://api.missblue.dev/v1/messages', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({number_id: line, recipient: '+15558670002', text: 'fixture'})});
+  assert.equal(response.status, 504);
+  assert.equal(response.headers.get('x-chert-message-id'), message);
+  assert.equal(response.headers.get('x-chert-chat-id'), line);
+  assert.equal(posts, 1);
+  assert.deepEqual(Object.keys(await response.json()), ['error']);
+  console.log('Built MissBlue unknown outcome retains validated Chert reconciliation IDs without retry.');
+}

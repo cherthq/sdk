@@ -1,9 +1,9 @@
 # Verification checkpoint — 2026-10-19
 
-The expanded standalone SDK's portable suite passes 386 tests / 3,669 assertions
+The expanded standalone SDK's portable suite passes 387 tests / 3,714 assertions
 across 27 files. Build/typecheck and built Node/Bun/Deno distribution checks pass,
 including MissBlue inventory and zero-effect unsupported SMS construction.
-MissBlue's 13 tests / 225 assertions include actual loopback HTTP with synthetic
+MissBlue's 14 tests / 270 assertions include actual loopback HTTP with synthetic
 backend receipts. A separate 21-case actual authenticated HTTP-route fixture
 passes with explicit fake database/native boundaries. A separate real
 PostgreSQL/PostgREST strict-text gate now includes MissBlue normal and exact
@@ -41,3 +41,14 @@ executed. Local passes do not imply GitHub CI passed. No billing changes were ma
 No new Mac installation is required for these client-only changes. Historical
 device proof and remaining boundaries are in DEVICE_ACCEPTANCE.md. No new package
 was published to a language registry and no fleet service was installed/restarted.
+
+
+After the complete405-test checkpoint, a bounded MissBlue error-handling repair
+preserved actual validated Chert reconciliation IDs in namespaced headers.
+Updated portable/type/distribution checks pass. The affected actual-route and
+PostgreSQL wrappers pass three tests /20 assertions, including two added native
+lost-reply/wrong-ACK cases with one dispatch, matching durable IDs and spent
+restart refusal. The six-provider PostgreSQL gate now checks31 pre-effect
+reservation reads and17 total synthetic effects, plus six zero-dispatch refusal
+cases. This focused result is separate from the preceding full combined run;
+no fresh physical message/read operation occurred.

@@ -102,3 +102,14 @@ test('genuine HTTP two-hop ChertClient send honors chosen from, exact text, oneP
  try{const fetch=createMissBlueFetch({chert:{baseURL:`http://127.0.0.1:${server.port}`,apiKey:'local-owned'}});const r=await post(fetch,'/v1/messages',f.body);expect(r.status).toBe(201);expect(seen).toHaveLength(2);expect(seen.filter(r=>r.method==='POST')).toHaveLength(1);expect(received).toEqual({from:'+15550000001',to:[f.body.recipient],message:{parts:[{type:'text',value:f.body.text}]}});}finally{await server.stop(true);}
  let posts=0;const lost=createMissBlueFetch({chert:{baseURL:'https://owned.chert.test',apiKey:'owned',fetch:async(input,init)=>{const r=new Request(input,init);if(r.method==='GET')return Response.json(inventory);posts++;throw new TypeError('private network detail');}}});const r=await post(lost,'/v1/messages',f.body);expect(r.status).toBe(504);expect(posts).toBe(1);expect(await r.text()).not.toContain('private network');
 });
+
+
+test('uncertain sends preserve only validated Chert reconciliation IDs in namespaced headers without retry',async()=>{
+ const valid={error:{code:4103,retryable:false,message:'private transport detail'},message_id:id,chat_id:chat,debug_secret:'never expose'};
+ for(const patch of [{},{message_id:'550e8400-e29b-41d4-a716-446655440000'},{message_id:id.toUpperCase()},{chat_id:'foreign'},{error:{code:4001,message:'private'}}]){
+  const f=sendFixture({...valid,...patch},502),response=await post(f.fetch,'/v1/messages',f.body);
+  const accepted=Object.keys(patch).length===0;
+  expect(response.status).toBe(504);expect(response.headers.get('x-chert-message-id')).toBe(accepted?id:null);expect(response.headers.get('x-chert-chat-id')).toBe(accepted?chat:null);
+  const body=await response.json();expect(Object.keys(body)).toEqual(['error']);expect(Object.keys(body.error).sort()).toEqual(['code','message']);expect(body.error.code).toBe('command_unconfirmed');expect(JSON.stringify(body)).not.toContain('private');expect(JSON.stringify([...response.headers])).not.toContain('never expose');expect(f.calls.filter(r=>r.method==='POST')).toHaveLength(1);
+ }
+});

@@ -718,7 +718,7 @@ same-phone reassignment, so the adapter is unsuitable where frozen source-line
 UUID identity is required. It is not a full drop-in replacement. See its
 [method matrix and contract pin](packages/missblue-adapter/README.md).
 
-Thirteen tests (225 assertions) use the actual Chert client; send and typing
+Fourteen tests (270 assertions) use the actual Chert client; send and typing
 include actual loopback HTTP with synthetic backend receipts. Built inventory
 and unsupported SMS checks pass under Node, Bun and Deno. A separate 21-case fixture passes actual authenticated
 backend routes, reservation and HMAC signing with fake database/native peers.
@@ -727,3 +727,11 @@ Unicode/whitespace sends plus six refusal cases with zero native dispatch.
 Its native peer is synthetic; device acceptance for this adapter remains pending.
 BlueBubbles, Photon/Spectrum and other candidates remain research unless an
 implemented method is explicitly identified; see [research](docs/PROVIDER_RESEARCH.md).
+
+
+MissBlue uncertainty handling also retains validated actual Chert public IDs in
+`X-Chert-Message-Id` / `X-Chert-Chat-Id` headers on an actual502/4103 response.
+Missing/invalid IDs or a lost Chert response never produce guessed headers.
+Two actual PostgreSQL-backed lost-native-reply/wrong-ACK cases verify one native
+request, matching header/ledger/claim IDs, retained unknown state and permanent
+restart refusal. These are synthetic native effects, not physical delivery.

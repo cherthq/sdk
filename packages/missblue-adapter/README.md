@@ -52,7 +52,13 @@ mark-read, callbacks/webhooks, schedules, sandbox emulation, number administrati
 duplicate-text suppression, quota pacing, cancellation or automatic resend is
 implemented. Merely omitting `allow_duplicate` does not create such a fence.
 
-Errors retain `{error:{code,message}}`, with sanitized messages. Unknown mutation
+Errors retain `{error:{code,message}}`, with sanitized messages. On actual Chert
+HTTP502/code4103 responses, a valid public message ID and chat UUID pair are
+preserved in `X-Chert-Message-Id` / `X-Chert-Chat-Id` response headers for Chert
+record/operator reconciliation. These are explicitly Chert extensions, not
+invented MissBlue request IDs or delivery proof. Invalid/missing IDs and lost
+Chert HTTP replies provide no such headers. The adapter never guesses IDs.
+ Unknown mutation
 outcomes use documented HTTP504 `command_unconfirmed`: they may have happened and
 must be reconciled, **never automatically retried**. Transport aborts propagate;
 after mutation dispatch an abort cannot prove no effect. Unsupported calls make
@@ -83,6 +89,9 @@ HTTP routes, reservation and HMAC signing, using explicitly fake query storage
 and native peers. The separate six-provider strict text gate now passes real authentication and
 disposable PostgreSQL/PostgREST, including normal and exact Unicode/whitespace
 MissBlue sends and six refusal cases with no native dispatch or reserved row.
+Two additional MissBlue native lost-reply/wrong-ACK cases each make one native
+request, retain the same actual public ID in headers/ledger/permanent claim,
+record an unconfirmed outcome, and refuse a restart of the spent attempt.
 Its native peer remains synthetic. The after-inventory inactive-line refusal does
 not close the documented same-phone UUID-reassignment limitation. Physical-device
 acceptance remains pending. No device actions are performed by these checks.
