@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=80.10.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chert-sdk"
+version = "0.1.0"
+description = "Explicit, synchronous Chert JSON API transport"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+
+[tool.setuptools]
+packages = ["chert"]
+
+[tool.setuptools.package-data]
+chert = ["py.typed"]
