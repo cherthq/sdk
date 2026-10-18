@@ -1,0 +1,1004 @@
+{
+  "source": "https://docs.blooio.com/openapi.json",
+  "sha256": "069fa87a9702f802607bcf7341df4d6ae237ac52658eece5d4b4e6378ba40f73",
+  "version": "4.0.0-beta",
+  "operations": {
+    "/messages": {
+      "operationId": "sendMessage",
+      "responseCodes": [
+        "200",
+        "201",
+        "207",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "429",
+        "501"
+      ]
+    },
+    "/chats/{chatId}/messages": {
+      "operationId": "sendMessageToChat",
+      "responseCodes": [
+        "200",
+        "201",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "429",
+        "501"
+      ],
+      "get": {
+        "operationId": "listChatMessages",
+        "responseCodes": [
+          "200",
+          "401",
+          "404"
+        ],
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Message"
+              }
+            },
+            "has_more": {
+              "type": "boolean"
+            },
+            "next_cursor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/chats/{chatId}/messages/{messageId}/status": {
+      "operationId": "getMessageStatus",
+      "responseCodes": [
+        "200",
+        "401",
+        "404"
+      ],
+      "responseSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MessageStatus"
+          }
+        }
+      }
+    },
+    "/chats/{chatId}/typing": {
+      "post": {
+        "operationId": "setTyping",
+        "responseCodes": [
+          "200",
+          "401",
+          "404",
+          "409",
+          "422"
+        ],
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "chat_id": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "started",
+                      "stopped"
+                    ],
+                    "default": "started"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "stopTyping",
+        "responseCodes": [
+          "200",
+          "401",
+          "404",
+          "409"
+        ],
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "chat_id": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "operationId": "getChatMessage",
+      "responseCodes": [
+        "200",
+        "401",
+        "404"
+      ],
+      "responseSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Message"
+          }
+        }
+      }
+    },
+    "/channels/{channel}": {
+      "operationId": "getChannel",
+      "responseCodes": [
+        "200",
+        "401",
+        "404"
+      ],
+      "responseSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Channel"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "channel",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/chats/{chatId}/read": {
+      "post": {
+        "operationId": "markChatRead",
+        "description": "Sends a read receipt. Blooio channels only.",
+        "responseCodes": [
+          "200",
+          "401",
+          "404",
+          "409"
+        ],
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "chat_id": {
+                  "type": "string"
+                },
+                "read": {
+                  "type": "boolean"
+                },
+                "at": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier of the chat, prefixed with `chat_`. Returned by the List chats endpoint."
+          }
+        ]
+      }
+    },
+    "/chats/{chatId}": {
+      "get": {
+        "tags": [
+          "Chats"
+        ],
+        "summary": "Get a chat",
+        "description": "The chat of a group that was merged into another group on its first send returns the surviving group's chat on the same number.",
+        "operationId": "getChat",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ChatIdParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A chat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Chat"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/channels": {
+      "operationId": "listChannels",
+      "responseCodes": [
+        "200",
+        "400",
+        "401"
+      ],
+      "responseSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Channel"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "type",
+          "in": "query",
+          "schema": {
+            "$ref": "#/components/schemas/ChannelType"
+          },
+          "description": "Filter by channel type."
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "schema": {
+            "$ref": "#/components/schemas/ChannelStatus"
+          },
+          "description": "Filter by channel status."
+        },
+        {
+          "$ref": "#/components/parameters/LimitParam"
+        },
+        {
+          "$ref": "#/components/parameters/CursorParam"
+        }
+      ]
+    },
+    "/contacts/{contactId}": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Get a contact",
+        "operationId": "getContact",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContactIdParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A contact",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Contact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "schemas": {
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ]
+        }
+      },
+      "required": [
+        "error"
+      ]
+    },
+    "MessageSendResult": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "chat_id": {
+          "type": "string"
+        },
+        "channel_id": {
+          "type": "string"
+        },
+        "channel_type": {
+          "$ref": "#/components/schemas/ChannelType"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "unknown",
+            "imessage",
+            "sms",
+            "rcs",
+            "whatsapp",
+            "whatsapp_business",
+            "amb"
+          ]
+        },
+        "from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "direction": {
+          "$ref": "#/components/schemas/Direction"
+        },
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "group_id": {
+          "type": "string"
+        },
+        "error": {
+          "$ref": "#/components/schemas/MessageError"
+        },
+        "fallback": {
+          "type": "object",
+          "properties": {
+            "recommended": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        "to": {
+          "type": "string"
+        },
+        "dry_run": {
+          "type": "boolean"
+        },
+        "would_send": {
+          "type": "boolean"
+        },
+        "preview": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "poll": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "routing": {
+          "$ref": "#/components/schemas/RoutingMetadata"
+        }
+      }
+    },
+    "ChannelType": {
+      "type": "string",
+      "enum": [
+        "blooio",
+        "twilio",
+        "whatsapp",
+        "whatsapp_business",
+        "rcs_business",
+        "amb"
+      ]
+    },
+    "Direction": {
+      "type": "string",
+      "enum": [
+        "inbound",
+        "outbound"
+      ]
+    },
+    "MessageStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "unknown",
+            "imessage",
+            "sms",
+            "rcs",
+            "whatsapp",
+            "whatsapp_business",
+            "amb"
+          ]
+        },
+        "error": {
+          "$ref": "#/components/schemas/MessageError"
+        },
+        "created_at": {
+          "type": "integer"
+        },
+        "updated_at": {
+          "type": "integer"
+        }
+      }
+    },
+    "MessageError": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "code": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/MessageErrorCode"
+            },
+            {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "Message": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "chat_id": {
+          "type": "string"
+        },
+        "channel_id": {
+          "type": "string"
+        },
+        "channel_type": {
+          "$ref": "#/components/schemas/ChannelType"
+        },
+        "channel_address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "unknown",
+            "imessage",
+            "sms",
+            "rcs",
+            "whatsapp",
+            "whatsapp_business",
+            "amb"
+          ]
+        },
+        "direction": {
+          "$ref": "#/components/schemas/Direction"
+        },
+        "sender": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recipient": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contact": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/ContactSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "group": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/GroupSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "type": "string"
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "formatted_text": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "reply_to_message_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error": {
+          "$ref": "#/components/schemas/MessageError"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "media_type": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "size": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "caption": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "interactive": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "imessage_app": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "routing": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "created_at": {
+          "type": "integer"
+        },
+        "updated_at": {
+          "type": "integer"
+        }
+      }
+    },
+    "GroupSummary": {
+      "type": "object",
+      "required": [
+        "group_id",
+        "name"
+      ],
+      "properties": {
+        "group_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "ContactSummary": {
+      "type": "object",
+      "description": "Who a chat or message is with.",
+      "required": [
+        "contact_id",
+        "identifier",
+        "name"
+      ],
+      "properties": {
+        "contact_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The contact (ct_...). `null` when no contact record matches the identifier."
+        },
+        "identifier": {
+          "type": "string",
+          "description": "The contact's identifier (phone number, email, or handle)."
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The contact's name. `null` when none is on file. On a webhook it is a snapshot from when the event happened; read the contact for current details."
+        }
+      }
+    },
+    "Channel": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/components/schemas/ChannelType"
+        },
+        "address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "business_id": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/components/schemas/ChannelStatus"
+        },
+        "capabilities": {
+          "$ref": "#/components/schemas/ChannelCapabilities"
+        },
+        "profile": {
+          "$ref": "#/components/schemas/ChannelProfile"
+        },
+        "settings": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "created_at": {
+          "type": "integer"
+        }
+      }
+    },
+    "Chat": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Chat id (chat_...)."
+        },
+        "channel_id": {
+          "type": "string"
+        },
+        "channel_type": {
+          "$ref": "#/components/schemas/ChannelType"
+        },
+        "contact_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "identity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "group_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contact": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/ContactSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The person on the other side of a 1:1 chat. `null` in a group chat; see `group`."
+        },
+        "group": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/GroupSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The group, when this is a group chat. `null` in a 1:1 chat."
+        },
+        "state": {
+          "$ref": "#/components/schemas/ChatState"
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "window_expires_at": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "last_message_at": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "created_at": {
+          "type": "integer"
+        }
+      }
+    },
+    "Contact": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Contact id (ct_...)."
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "type": "integer"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "last_message_time": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "last_direction": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "inbound",
+            "outbound",
+            null
+          ]
+        },
+        "last_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "identities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "channel_type": {
+                "$ref": "#/components/schemas/ChannelType"
+              },
+              "identifier": {
+                "type": "string"
+              },
+              "channel_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "created_at": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

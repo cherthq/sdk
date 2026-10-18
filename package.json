@@ -1,0 +1,30 @@
+{
+  "name": "chert-sdk-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "bun run build && bun scripts/test-unit.ts",
+    "typecheck": "bun run build && tsc --noEmit",
+    "build": "bun scripts/build.ts",
+    "test:distribution": "bun run build && node tests/distribution-smoke.mjs && bun tests/distribution-smoke.mjs && deno run --no-config --node-modules-dir=manual --allow-env --allow-read tests/distribution-smoke.mjs",
+    "test:integration": "bun run build && bun scripts/test-integration.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "5.9.2",
+    "@chert/sdk": "workspace:*",
+    "@chert/linq-adapter": "workspace:*",
+    "@chert/loopmessage-adapter": "workspace:*",
+    "@chert/sendblue-adapter": "workspace:*",
+    "@chert/blooio-adapter": "workspace:*",
+    "@chert/blooio-v4-adapter": "workspace:*"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cherthq/chert-sdk.git"
+  }
+}

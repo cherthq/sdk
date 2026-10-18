@@ -1,0 +1,6 @@
+import {test,expect} from 'bun:test';
+import {spawnSync} from 'node:child_process';
+import {resolve} from 'node:path';
+const pg=process.env.CHERT_TEST_JOURNAL_PG_BIN,rest=process.env.CHERT_TEST_JOURNAL_POSTGREST;
+test.skipIf(!pg&&!rest)('received-context actual migration and append-only grants preserve original tuple',()=>{expect(pg).toBeTruthy();expect(rest).toBeTruthy();const result=spawnSync('/bin/bash',[resolve(import.meta.dir,'../../scripts/test-webhook-postgrest.sh'),'--pg-bin',pg!,'--postgrest',rest!,'--received-contexts'],{env:{PATH:process.env.PATH??'/usr/bin:/bin'},encoding:'utf8',timeout:65000,maxBuffer:1024*1024});expect(result.error).toBeUndefined();expect(result.status,result.stderr).toBe(0);expect(JSON.parse(result.stdout.trim().split('\n').at(-1)!)).toMatchObject({passed:true,cases:25,realPostgres:true,realPostgrest:true,actualMigration:26,migrationApplications:2,realCommitFaults:1,dbMocks:0,nativeActions:0});},70000);
+test('received-context mode rejects incomplete arguments before startup',()=>{const result=spawnSync('/bin/bash',[resolve(import.meta.dir,'../../scripts/test-webhook-postgrest.sh'),'--received-contexts'],{env:{PATH:process.env.PATH??'/usr/bin:/bin'},encoding:'utf8'});expect(result.status).not.toBe(0);expect(result.stdout).toBe('');});

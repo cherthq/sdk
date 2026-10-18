@@ -1,0 +1,27 @@
+{
+  "name": "@chert/sendblue-adapter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@chert/sdk": "workspace:*",
+    "sendblue": "3.20.1"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "license": "MIT"
+}

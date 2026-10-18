@@ -1,0 +1,28 @@
+{
+  "name": "@chert/blooio-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution bundler --skipLibCheck index.ts"
+  },
+  "dependencies": {
+    "@blooio/sdk": "0.0.2",
+    "@chert/sdk": "workspace:*"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}
