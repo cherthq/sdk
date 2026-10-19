@@ -18,7 +18,7 @@ receipt, err := client.SendText(ctx, chert.TextRequest{
 })
 ```
 
-Import `github.com/cherthq/chert-sdk/go` as `chert`. Requires Go 1.23 or later;
+Import `github.com/cherthq/sdk/go` as `chert`. Requires Go 1.23 or later;
 no third-party modules. A root base URL defaults to `/api/v1`; explicit deployment
 prefixes are retained. HTTPS is required except literal `localhost`, `127.0.0.1`
 or `::1` HTTP test origins. Client configuration is private and safe to share

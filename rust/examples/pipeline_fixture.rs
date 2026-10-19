@@ -1,5 +1,5 @@
 //! Guarded test-only pipeline CLI. This does not authorize a physical send.
-use chert_sdk::{ChertClient, HttpMethod};
+use cherthq_imessage::{ChertClient, HttpMethod};
 use serde_json::{json, Value};
 use std::{
     io::{self, Read},

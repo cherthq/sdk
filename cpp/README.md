@@ -14,7 +14,7 @@ auto result = client.request("/messages/your-recorded-message-id");
 // Read actual returned lifecycle evidence; an accepted send is not delivery.
 ```
 
-Link the CMake target `chert::sdk`. `request(path, optional_json, method)` defaults
+Link the CMake target `cherthq::imessage`. `request(path, optional_json, method)` defaults
 to GET without a body or POST with one; an explicit JSON null is a POST body.
 HTTP 204 and successful HEAD return an empty optional, distinct from a JSON null result. Other JSON
 responses retain their route-specific wire shapes. This is a generic messaging

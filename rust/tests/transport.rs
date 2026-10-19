@@ -1,4 +1,4 @@
-use chert_sdk::{ChertClient, HttpMethod};
+use cherthq_imessage::{ChertClient, HttpMethod};
 use serde_json::{json, Value};
 use std::{
     io::{Read, Write},

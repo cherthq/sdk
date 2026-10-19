@@ -5,11 +5,11 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Version>0.1.0</Version>
-    <PackageId>Chert.Sdk</PackageId>
+    <PackageId>Cherthq.IMessage</PackageId>
     <Description>Explicit single-attempt Chert JSON transport and strict text/reaction receipts.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/cherthq/chert-sdk</RepositoryUrl>
+    <RepositoryUrl>https://github.com/cherthq/sdk</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <None Include="../LICENSE" Pack="true" PackagePath="" />

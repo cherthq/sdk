@@ -97,7 +97,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "chert-sdk"
+name = "cherthq-imessage"
 version = "0.1.0"
 dependencies = [
  "reqwest",

@@ -1,5 +1,5 @@
 //! Offline loopback fixture only. One actual typed SDK call per process.
-use chert_sdk::ChertClient;
+use cherthq_imessage::ChertClient;
 use reqwest::Url;
 use serde_json::{json, Value};
 use std::{io::Read, time::Duration};
