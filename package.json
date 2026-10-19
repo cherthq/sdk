@@ -22,7 +22,8 @@
     "@cherthq/blooio-adapter": "workspace:*",
     "@cherthq/blooio-v4-adapter": "workspace:*",
     "@cherthq/missblue-adapter": "workspace:*",
-    "@cherthq/texting-blue-adapter": "workspace:*"
+    "@cherthq/texting-blue-adapter": "workspace:*",
+    "@cherthq/contiguity-adapter": "workspace:*"
   },
   "license": "MIT",
   "repository": {

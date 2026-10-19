@@ -1,0 +1,24 @@
+{
+  "provider": "contiguity",
+  "source": "https://docs.contiguity.com/api-reference/product/imessage/send.md",
+  "typingSource": "https://docs.contiguity.com/api-reference/product/imessage/typing.md",
+  "retrieved": "2026-10-19",
+  "apiVersion": "v2026.9.27",
+  "baseURL": "https://api.contiguity.com/send",
+  "send": {
+    "explicit": {"to": "+14155551234", "from": "+14155559876", "message": "Hello, world!"},
+    "implicit": {"to": "+14155551234", "message": "Hello, world!"},
+    "chertChatQueued": {
+      "message": {"id": "0123456789abcdef0123456789abcdef", "chat_id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "parts": [{"type": "text", "value": "Hello, world!"}],
+        "status": "queued", "direction": "outbound", "created_at": "2026-10-19T12:00:00Z", "delivered_at": null, "read_at": null, "service": "unknown"},
+      "chat": {"id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "is_group": false, "handles": [{"address": "+14155551234"}]}
+    },
+    "chertTextQueued": {"success": true, "message_id": "0123456789abcdef0123456789abcdef", "chat_id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "status": "queued"},
+    "responseData": {"message_id": "0123456789abcdef0123456789abcdef"}
+  },
+  "typing": {
+    "request": {"to": "+14155551234", "from": "+14155559876", "action": "start"},
+    "chertApplied": {"from": "+14155559876", "to": "+14155551234", "state": "typing", "applied": true, "chat_id": "a1b2c3d4-e5f6-4789-8abc-def012345678"},
+    "responseData": {"status": "started"}
+  }
+}

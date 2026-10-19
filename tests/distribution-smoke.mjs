@@ -630,3 +630,21 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   assert.equal(posts, 1);
   console.log('Built Texting Blue adapter refuses media before HTTP and never accepts a malformed receipt.');
 }
+
+{
+  const { createContiguityFetch, CONTIGUITY_CONTRACT } = await import('@cherthq/contiguity-adapter');
+  assert.equal(CONTIGUITY_CONTRACT.apiVersion, 'v2026.9.27');
+  let posts = 0;
+  const transport = createContiguityFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async (input, init) => {
+    posts++; const request = new Request(input, init);
+    assert.equal(request.url, 'https://chert.example/api/v1/text-operations/v1');
+    return Response.json({success: true, message_id: 'a'.repeat(32), chat_id: 'chat-a', status: 'queued'}, {status: 202});
+  }}});
+  const rejected = await transport('https://api.contiguity.com/send/imessage', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', message: 'x', fallback: {when: ['imessage_fails']}})});
+  assert.equal(rejected.status, 501);
+  const accepted = await transport('https://api.contiguity.com/send/imessage', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', message: 'x'})});
+  assert.equal(accepted.status, 200);
+  assert.deepEqual((await accepted.json()).data, {message_id: 'a'.repeat(32)});
+  assert.equal(posts, 1);
+  console.log('Built Contiguity adapter refuses SMS fallback before HTTP and maps strict queue acceptance.');
+}
