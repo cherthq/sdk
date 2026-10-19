@@ -5,19 +5,19 @@
     "": {
       "name": "chert-sdk-workspace",
       "devDependencies": {
-        "@chert/blooio-adapter": "workspace:*",
-        "@chert/blooio-v4-adapter": "workspace:*",
-        "@chert/linq-adapter": "workspace:*",
-        "@chert/loopmessage-adapter": "workspace:*",
-        "@chert/missblue-adapter": "workspace:*",
         "@chert/sdk": "workspace:*",
-        "@chert/sendblue-adapter": "workspace:*",
+        "@cherthq/blooio-adapter": "workspace:*",
+        "@cherthq/blooio-v4-adapter": "workspace:*",
+        "@cherthq/linq-adapter": "workspace:*",
+        "@cherthq/loopmessage-adapter": "workspace:*",
+        "@cherthq/missblue-adapter": "workspace:*",
+        "@cherthq/sendblue-adapter": "workspace:*",
         "@types/bun": "1.3.14",
         "typescript": "5.9.2",
       },
     },
     "packages/blooio-adapter": {
-      "name": "@chert/blooio-adapter",
+      "name": "@cherthq/blooio-adapter",
       "version": "0.1.0",
       "dependencies": {
         "@blooio/sdk": "0.0.2",
@@ -25,14 +25,14 @@
       },
     },
     "packages/blooio-v4-adapter": {
-      "name": "@chert/blooio-v4-adapter",
+      "name": "@cherthq/blooio-v4-adapter",
       "version": "0.1.0",
       "dependencies": {
         "@chert/sdk": "workspace:*",
       },
     },
     "packages/linq-adapter": {
-      "name": "@chert/linq-adapter",
+      "name": "@cherthq/linq-adapter",
       "version": "0.1.0",
       "dependencies": {
         "@chert/sdk": "workspace:*",
@@ -40,14 +40,14 @@
       },
     },
     "packages/loopmessage-adapter": {
-      "name": "@chert/loopmessage-adapter",
+      "name": "@cherthq/loopmessage-adapter",
       "version": "0.1.0",
       "dependencies": {
         "@chert/sdk": "workspace:*",
       },
     },
     "packages/missblue-adapter": {
-      "name": "@chert/missblue-adapter",
+      "name": "@cherthq/missblue-adapter",
       "version": "0.1.0",
       "dependencies": {
         "@chert/sdk": "workspace:*",
@@ -58,7 +58,7 @@
       "version": "0.1.0",
     },
     "packages/sendblue-adapter": {
-      "name": "@chert/sendblue-adapter",
+      "name": "@cherthq/sendblue-adapter",
       "version": "0.0.0",
       "dependencies": {
         "@chert/sdk": "workspace:*",
@@ -69,19 +69,19 @@
   "packages": {
     "@blooio/sdk": ["@blooio/sdk@0.0.2", "", {}, "sha512-+bhPlyfUb+W5H9Lp+2Ydamv5O7HbesYLppKc5hUsDL2WqI48Pg0Ork4CDWu87BkaQ0VzoZy5R8E3F7ZBf2lKng=="],
 
-    "@chert/blooio-adapter": ["@chert/blooio-adapter@workspace:packages/blooio-adapter"],
-
-    "@chert/blooio-v4-adapter": ["@chert/blooio-v4-adapter@workspace:packages/blooio-v4-adapter"],
-
-    "@chert/linq-adapter": ["@chert/linq-adapter@workspace:packages/linq-adapter"],
-
-    "@chert/loopmessage-adapter": ["@chert/loopmessage-adapter@workspace:packages/loopmessage-adapter"],
-
-    "@chert/missblue-adapter": ["@chert/missblue-adapter@workspace:packages/missblue-adapter"],
-
     "@chert/sdk": ["@chert/sdk@workspace:packages/sdk"],
 
-    "@chert/sendblue-adapter": ["@chert/sendblue-adapter@workspace:packages/sendblue-adapter"],
+    "@cherthq/blooio-adapter": ["@cherthq/blooio-adapter@workspace:packages/blooio-adapter"],
+
+    "@cherthq/blooio-v4-adapter": ["@cherthq/blooio-v4-adapter@workspace:packages/blooio-v4-adapter"],
+
+    "@cherthq/linq-adapter": ["@cherthq/linq-adapter@workspace:packages/linq-adapter"],
+
+    "@cherthq/loopmessage-adapter": ["@cherthq/loopmessage-adapter@workspace:packages/loopmessage-adapter"],
+
+    "@cherthq/missblue-adapter": ["@cherthq/missblue-adapter@workspace:packages/missblue-adapter"],
+
+    "@cherthq/sendblue-adapter": ["@cherthq/sendblue-adapter@workspace:packages/sendblue-adapter"],
 
     "@linqapp/sdk": ["@linqapp/sdk@0.78.0", "", { "dependencies": { "standardwebhooks": "^1.0.0" } }, "sha512-5G8UmnJrrmHc4vxjOQLOqdd9KAqqCMwY2ITdSap0BfMjlHAb613wRnKT498oxaIb6T2j3Fdy8sWJdQtuFt4veA=="],
 

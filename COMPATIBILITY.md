@@ -471,7 +471,7 @@ separately under FT-INSTALL-095/097; other fleet/deployment gates remain open.
 
 ## LoopMessage Conversation HTTP subset
 
-The private `@chert/loopmessage-adapter` supports a send and recorded-status
+The private `@cherthq/loopmessage-adapter` supports a send and recorded-status
 subset. `POST https://a.loopmessage.com/api/v1/message/send/` requires exact
 `{contact,text,channel:"imessage"}`. It uses Chert's recipient-only strict route,
 owned line selection and an existing Apple DM. Provider sender IDs, emails,
@@ -706,7 +706,7 @@ acceptance. Their READMEs document the public APIs and native check commands.
 
 ## MissBlue HTTP subset — 2026-10-19
 
-`@chert/missblue-adapter` pins official OpenAPI 1.0.0. It maps plaintext sends,
+`@cherthq/missblue-adapter` pins official OpenAPI 1.0.0. It maps plaintext sends,
 owned number inventory, recorded outbound message retrieval and owned-chat typing.
 Requests with unsupported fields, SMS/RCS options, media, scheduling or provider
 administration refuse before dispatch. Accepted text returns pending/queued, not

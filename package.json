@@ -16,12 +16,12 @@
     "@types/bun": "1.3.14",
     "typescript": "5.9.2",
     "@chert/sdk": "workspace:*",
-    "@chert/linq-adapter": "workspace:*",
-    "@chert/loopmessage-adapter": "workspace:*",
-    "@chert/sendblue-adapter": "workspace:*",
-    "@chert/blooio-adapter": "workspace:*",
-    "@chert/blooio-v4-adapter": "workspace:*",
-    "@chert/missblue-adapter": "workspace:*"
+    "@cherthq/linq-adapter": "workspace:*",
+    "@cherthq/loopmessage-adapter": "workspace:*",
+    "@cherthq/sendblue-adapter": "workspace:*",
+    "@cherthq/blooio-adapter": "workspace:*",
+    "@cherthq/blooio-v4-adapter": "workspace:*",
+    "@cherthq/missblue-adapter": "workspace:*"
   },
   "license": "MIT",
   "repository": {

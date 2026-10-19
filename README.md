@@ -7,12 +7,12 @@ remain private/unpublished and provider coverage is incomplete.
 | Package | Boundary |
 | --- | --- |
 | `@chert/sdk` | Authenticated Chert JSON transport and typed queue acceptance |
-| `@chert/linq-adapter` | Selected `@linqapp/sdk@0.78.0` methods |
-| `@chert/sendblue-adapter` | Selected `sendblue@3.20.1` methods |
-| `@chert/blooio-adapter` | Legacy `@blooio/sdk@0.0.2` subset |
-| `@chert/blooio-v4-adapter` | Pinned current v4 HTTP subset |
-| `@chert/loopmessage-adapter` | Selected LoopMessage HTTP requests |
-| `@chert/missblue-adapter` | Pinned MissBlue HTTP text, inventory, recorded retrieval and typing subset |
+| `@cherthq/linq-adapter` | Selected `@linqapp/sdk@0.78.0` methods |
+| `@cherthq/sendblue-adapter` | Selected `sendblue@3.20.1` methods |
+| `@cherthq/blooio-adapter` | Legacy `@blooio/sdk@0.0.2` subset |
+| `@cherthq/blooio-v4-adapter` | Pinned current v4 HTTP subset |
+| `@cherthq/loopmessage-adapter` | Selected LoopMessage HTTP requests |
+| `@cherthq/missblue-adapter` | Pinned MissBlue HTTP text, inventory, recorded retrieval and typing subset |
 
 These are explicit adapters, not aliases for complete provider parity. Existing
 provider credentials and IDs do not transfer to Chert. Accepted/queued requests

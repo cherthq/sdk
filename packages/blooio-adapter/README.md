@@ -6,7 +6,7 @@ runtime dependencies or outbound telemetry integration. Its resource classes,
 APIPromise and APIError behavior remain the original SDK's.
 
 ```ts
-import Blooio from '@chert/blooio-adapter';
+import Blooio from '@cherthq/blooio-adapter';
 
 const client = new Blooio({
   chert: { baseURL: 'https://your-chert-host', apiKey: process.env.CHERT_API_KEY! },

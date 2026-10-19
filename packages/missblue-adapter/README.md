@@ -1,4 +1,4 @@
-# @chert/missblue-adapter
+# @cherthq/missblue-adapter
 
 Explicit, limited Miss Blue HTTP fetch replacement backed by Chert. This is not
 an official Miss Blue JavaScript SDK, full drop-in replacement or live-device
@@ -13,7 +13,7 @@ use this adapter when strict frozen UUID-line identity is required. No retry,
 lookup fallback or sender substitution is performed.
 
 ```ts
-import {createMissBlueFetch} from '@chert/missblue-adapter';
+import {createMissBlueFetch} from '@cherthq/missblue-adapter';
 const missBlueFetch = createMissBlueFetch({chert: {
   baseURL: 'https://messaging.example.com', apiKey: process.env.CHERT_API_KEY!,
 }});

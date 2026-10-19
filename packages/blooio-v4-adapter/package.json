@@ -1,5 +1,5 @@
 {
-  "name": "@chert/blooio-v4-adapter",
+  "name": "@cherthq/blooio-v4-adapter",
   "version": "0.1.0",
   "private": true,
   "type": "module",

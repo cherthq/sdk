@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { ChertClient, ChertAPIError } from '@chert/sdk';
-import Linq from '@chert/linq-adapter';
-import Sendblue, { unwrapChert, createSendblueReactionFetch } from '@chert/sendblue-adapter';
-import Blooio from '@chert/blooio-adapter';
+import Linq from '@cherthq/linq-adapter';
+import Sendblue, { unwrapChert, createSendblueReactionFetch } from '@cherthq/sendblue-adapter';
+import Blooio from '@cherthq/blooio-adapter';
 
 // Exercise the built reaction API under each supported runtime, including
 // identity preservation and a response that must never become acceptance.
@@ -110,7 +110,7 @@ assert.deepEqual(calls.map(call => call.url), ['https://chert.example/api/v1/cha
 assert.ok(calls.every(call => call.key === 'Bearer chert-only'));
 console.log('Built ESM packages: core and three real upstream SDK adapters passed synthetic transport checks.');
 
-const { createBlooioV4Fetch } = await import('@chert/blooio-v4-adapter');
+const { createBlooioV4Fetch } = await import('@cherthq/blooio-v4-adapter');
 const v4 = createBlooioV4Fetch({ chert });
 const v4Response = await v4('https://api.blooio.com/v4/messages', {method:'POST',body:JSON.stringify({from:'+15551234567',to:'+15557654321',text:'hello'})});
 assert.equal(v4Response.status, 201);
@@ -402,7 +402,7 @@ assert.equal((await mediaSendSDK.messages.send({from_number:'+15551234567',numbe
 assert.equal(mediaSendRequests.length,4);
 console.log('Built Sendblue media and caption sends each import on the server then make one strict send, preserving exact caption bytes.');
 
-const {createLoopMessageFetch}=await import('@chert/loopmessage-adapter');
+const {createLoopMessageFetch}=await import('@cherthq/loopmessage-adapter');
 const loop=createLoopMessageFetch({chert});
 const loopBefore=calls.length;
 const loopResponse=await loop('https://a.loopmessage.com/api/v1/message/send/',{method:'POST',headers:{authorization:'vendor-only','content-type':'application/json'},body:JSON.stringify({contact:'+15557654321',text:'hello',channel:'imessage'})});
@@ -576,7 +576,7 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
 
 // MissBlue's built ESM export runs directly in JavaScript under all three runtimes.
 {
-  const { createMissBlueFetch, MISSBLUE_CONTRACT } = await import('@chert/missblue-adapter');
+  const { createMissBlueFetch, MISSBLUE_CONTRACT } = await import('@cherthq/missblue-adapter');
   assert.equal(MISSBLUE_CONTRACT.version, '1.0.0');
   let reads = 0;
   const id = 'd50e8400-e29b-41d4-a716-446655440000';
@@ -601,7 +601,7 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
 }
 
 {
-  const { createMissBlueFetch } = await import('@chert/missblue-adapter');
+  const { createMissBlueFetch } = await import('@cherthq/missblue-adapter');
   const line = 'd50e8400-e29b-41d4-a716-446655440000', message = 'f'.repeat(32);
   let posts = 0;
   const transport = createMissBlueFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async (input, init) => {

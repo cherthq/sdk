@@ -1,4 +1,4 @@
-# @chert/loopmessage-adapter
+# @cherthq/loopmessage-adapter
 
 Private ESM Fetch-compatible adapter for a narrow LoopMessage Conversation HTTP
 contract, verified against official documentation on 2026-10-18. This is not an
@@ -6,7 +6,7 @@ upstream JavaScript SDK or full provider replacement. No provider dependency,
 credential forwarding, automatic retries or telemetry is added.
 
 ```ts
-import { createLoopMessageFetch } from '@chert/loopmessage-adapter';
+import { createLoopMessageFetch } from '@cherthq/loopmessage-adapter';
 const transport = createLoopMessageFetch({chert:{baseURL:'https://your-chert.example',apiKey:'your-chert-key'}});
 const response = await transport('https://a.loopmessage.com/api/v1/message/send/', {
   method:'POST', headers:{'content-type':'application/json'},
