@@ -20,6 +20,16 @@
         "typescript": "5.9.2",
       },
     },
+    "packages/adopt": {
+      "name": "@cherthq/adopt",
+      "version": "0.1.0",
+      "bin": {
+        "chert-adopt": "./dist/cli.js",
+      },
+      "dependencies": {
+        "typescript": "5.9.2",
+      },
+    },
     "packages/blooio-adapter": {
       "name": "@cherthq/blooio-adapter",
       "version": "0.1.0",
@@ -100,6 +110,8 @@
   },
   "packages": {
     "@blooio/sdk": ["@blooio/sdk@0.0.2", "", {}, "sha512-+bhPlyfUb+W5H9Lp+2Ydamv5O7HbesYLppKc5hUsDL2WqI48Pg0Ork4CDWu87BkaQ0VzoZy5R8E3F7ZBf2lKng=="],
+
+    "@cherthq/adopt": ["@cherthq/adopt@workspace:packages/adopt"],
 
     "@cherthq/blooio-adapter": ["@cherthq/blooio-adapter@workspace:packages/blooio-adapter"],
 

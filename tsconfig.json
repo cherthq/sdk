@@ -21,5 +21,8 @@
     "tests/client.test.ts",
     "tests/strict-core.test.ts",
     "tests/standalone*.ts"
+  ],
+  "exclude": [
+    "packages/adopt/fixtures"
   ]
 }
