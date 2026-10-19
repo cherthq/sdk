@@ -1,0 +1,16 @@
+{
+  "provider": "texting-blue",
+  "source": "https://docs.texting.blue/api/messages",
+  "retrieved": "2026-10-19",
+  "baseURL": "https://api.texting.blue/v1",
+  "send": {
+    "request": {"to": "+14155551234", "from": "+14155559876", "content": "Hello from Texting Blue!"},
+    "chertQueued": {
+      "message": {"id": "0123456789abcdef0123456789abcdef", "chat_id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "parts": [{"type": "text", "value": "Hello from Texting Blue!"}],
+        "status": "queued", "direction": "outbound", "created_at": "2026-10-19T12:00:00Z", "delivered_at": null, "read_at": null, "service": "unknown"},
+      "chat": {"id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "is_group": false, "handles": [{"address": "+14155551234"}]}
+    },
+    "response": {"id": "0123456789abcdef0123456789abcdef", "status": "queued", "to": "+14155551234", "from": "+14155559876",
+      "content": "Hello from Texting Blue!", "media_url": null, "created_at": "2026-10-19T12:00:00Z"}
+  }
+}

@@ -13,6 +13,7 @@ remain private/unpublished and provider coverage is incomplete.
 | `@cherthq/blooio-v4-adapter` | Pinned current v4 HTTP subset |
 | `@cherthq/loopmessage-adapter` | Selected LoopMessage HTTP requests |
 | `@cherthq/missblue-adapter` | Pinned MissBlue HTTP text, inventory, recorded retrieval and typing subset |
+| `@cherthq/texting-blue-adapter` | Texting Blue explicit-sender text send subset |
 
 Every package is iMessage messaging; there is no FaceTime client here yet, so
 there is no `@cherthq/facetime` package (see [FaceTime integration](docs/FACETIME.md)).
