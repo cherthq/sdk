@@ -1,0 +1,19 @@
+{
+  "provider": "bluereacher",
+  "source": "https://bluereacher.com/docs/api-reference/send-message",
+  "retrieved": "2026-10-19",
+  "baseURL": "https://api.bluereacher.com/v1",
+  "line": "8c9a4f2e-1d3b-4a6c-9e8f-2b7c5d1a9e3f",
+  "inventory": {"phone_numbers": [
+    {"id": "8c9a4f2e-1d3b-4a6c-9e8f-2b7c5d1a9e3f", "phone_number": "+14155559876", "service": "imessage", "is_active": true, "capabilities": ["imessage", "send"]}
+  ]},
+  "send": {
+    "request": {"to": "+16465550119", "message": "Worth a quick chat?", "send_mode": "instant", "device_id": "8c9a4f2e-1d3b-4a6c-9e8f-2b7c5d1a9e3f"},
+    "chertQueued": {
+      "message": {"id": "0123456789abcdef0123456789abcdef", "chat_id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "parts": [{"type": "text", "value": "Worth a quick chat?"}],
+        "status": "queued", "direction": "outbound", "created_at": "2026-10-19T12:00:00Z", "delivered_at": null, "read_at": null, "service": "unknown"},
+      "chat": {"id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "is_group": false, "handles": [{"address": "+16465550119"}]}
+    },
+    "response": {"success": true, "message_id": "0123456789abcdef0123456789abcdef", "mode": "instant", "status": "dispatched", "device_id": "8c9a4f2e-1d3b-4a6c-9e8f-2b7c5d1a9e3f"}
+  }
+}

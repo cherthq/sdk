@@ -648,3 +648,14 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   assert.equal(posts, 1);
   console.log('Built Contiguity adapter refuses SMS fallback before HTTP and maps strict queue acceptance.');
 }
+
+{
+  const { createBlueReacherFetch } = await import('@cherthq/bluereacher-adapter');
+  let requests = 0;
+  const transport = createBlueReacherFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async () => { requests++; return Response.json({}); }}});
+  const drip = await transport('https://api.bluereacher.com/v1/messages', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+16465550119', message: 'x'})});
+  assert.equal(drip.status, 501);
+  assert.equal((await drip.json()).error, 'unsupported_feature');
+  assert.equal(requests, 0);
+  console.log('Built Blue Reacher adapter refuses default drip sends before HTTP.');
+}

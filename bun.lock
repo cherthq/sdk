@@ -7,6 +7,7 @@
       "devDependencies": {
         "@cherthq/blooio-adapter": "workspace:*",
         "@cherthq/blooio-v4-adapter": "workspace:*",
+        "@cherthq/bluereacher-adapter": "workspace:*",
         "@cherthq/contiguity-adapter": "workspace:*",
         "@cherthq/imessage": "workspace:*",
         "@cherthq/linq-adapter": "workspace:*",
@@ -28,6 +29,13 @@
     },
     "packages/blooio-v4-adapter": {
       "name": "@cherthq/blooio-v4-adapter",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cherthq/imessage": "workspace:*",
+      },
+    },
+    "packages/bluereacher-adapter": {
+      "name": "@cherthq/bluereacher-adapter",
       "version": "0.1.0",
       "dependencies": {
         "@cherthq/imessage": "workspace:*",
@@ -88,6 +96,8 @@
     "@cherthq/blooio-adapter": ["@cherthq/blooio-adapter@workspace:packages/blooio-adapter"],
 
     "@cherthq/blooio-v4-adapter": ["@cherthq/blooio-v4-adapter@workspace:packages/blooio-v4-adapter"],
+
+    "@cherthq/bluereacher-adapter": ["@cherthq/bluereacher-adapter@workspace:packages/bluereacher-adapter"],
 
     "@cherthq/contiguity-adapter": ["@cherthq/contiguity-adapter@workspace:packages/contiguity-adapter"],
 
