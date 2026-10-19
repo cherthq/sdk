@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'bun:test';
-import {ChertClient} from '@chert/sdk';
+import {ChertClient} from '@cherthq/imessage';
 import {resolveMediaSource,MediaSourceError} from './media-source';
 const origin='https://chert.test',id='a'.repeat(48),tenant='11111111-1111-4111-8111-111111111111';
 const url=`${origin}/api/v1/attachments/${id}/download?tenant=${tenant}&signature=${'b'.repeat(64)}`;

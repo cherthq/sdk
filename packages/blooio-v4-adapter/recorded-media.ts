@@ -1,4 +1,4 @@
-import {validateMediaCapability} from '@chert/sdk';
+import {validateMediaCapability} from '@cherthq/imessage';
 const object=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 /** Project one owned canonical media record; never fetch its URL or infer lifecycle. */
 export function recordedMedia(parts:unknown,attachments:unknown,baseURL:string){

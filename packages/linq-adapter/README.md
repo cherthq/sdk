@@ -1,9 +1,9 @@
-# @chert/linq-adapter
+# @cherthq/linq-adapter
 
 Experimental, unpublished **restricted** compatibility adapter for `@linqapp/sdk@0.78.0`. Reuses the official SDK's types, method objects and APIError classes. Supported operations: `chats.messages.send(chatId, {message:{parts:[{type:'text',value}]}})` with exactly one nonempty, unmodified text part, direct-chat `chats.typing.start(chatId)` / `chats.typing.stop(chatId)`, conditional recorded-metadata history reads, and attachment registration/metadata retrieval described below.
 
 ```ts
-import Linq from '@chert/linq-adapter';
+import Linq from '@cherthq/linq-adapter';
 const client = new Linq({
   chert: { baseURL: 'https://your-chert.example', apiKey: process.env.CHERT_API_KEY! },
   maxRetries: 0,

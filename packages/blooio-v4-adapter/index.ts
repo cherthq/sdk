@@ -2,7 +2,7 @@ import {resolveMediaSource, validateMediaSourceURL, MediaSourceError} from './me
 import {recordedMedia} from './recorded-media';
 import {manageWebhook} from './webhook-management';
 import {createV4IdempotencyRequest} from './idempotency';
-import { ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch } from '@chert/sdk';
+import { ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch } from '@cherthq/imessage';
 
 export const BLOOIO_V4_CONTRACT = {
   url: 'https://docs.blooio.com/openapi.json', version: '4.0.0-beta',

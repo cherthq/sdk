@@ -1,5 +1,5 @@
 {
-  "name": "@chert/linq-adapter",
+  "name": "@cherthq/linq-adapter",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@linqapp/sdk": "0.78.0",
-    "@chert/sdk": "workspace:*"
+    "@cherthq/imessage": "workspace:*"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

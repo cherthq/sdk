@@ -1,11 +1,11 @@
-# @chert/sendblue-adapter
+# @cherthq/sendblue-adapter
 
 A limited Chert transport for the real `sendblue@3.20.1` SDK. This package
 subclasses the official SDK and retains its resources, APIPromise helpers,
 types and API error classes. It is not a complete Sendblue replacement.
 
 ```ts
-import SendblueAPI from '@chert/sendblue-adapter';
+import SendblueAPI from '@cherthq/sendblue-adapter';
 const client = new SendblueAPI({
   chert: { baseURL: 'https://your-chert-host', apiKey: 'your-chert-key' },
   maxRetries: 0,
@@ -106,7 +106,7 @@ Cancellation, no retries and Chert-only credential routing apply to both reads.
 ## Explicit Chert webhook conversion
 
 ```ts
-import { unwrapChert } from '@chert/sendblue-adapter';
+import { unwrapChert } from '@cherthq/sendblue-adapter';
 const { eventId, message } = await unwrapChert(await request.text(), request.headers, {
   secret: configuredChertSubscriptionSecret,
 });
@@ -221,7 +221,7 @@ The pinned Sendblue 3.20 SDK has no reaction method. The named export
 `createSendblueReactionFetch` separately translates the documented HTTP endpoint:
 
 ```ts
-import { createSendblueReactionFetch } from '@chert/sendblue-adapter';
+import { createSendblueReactionFetch } from '@cherthq/sendblue-adapter';
 
 const reactionFetch = createSendblueReactionFetch({
   baseURL: 'https://your-chert-server.example',

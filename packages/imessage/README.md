@@ -1,4 +1,4 @@
-# Chert core SDK
+# @cherthq/imessage
 
 Private, unpublished generic JSON transport. Requests use explicit Chert
 credentials and an explicit HTTPS or loopback HTTP destination, with no
@@ -8,7 +8,7 @@ remain documented in the workspace README.
 ## Standard reaction dispatch
 
 ```ts
-import {ChertClient} from '@chert/sdk';
+import {ChertClient} from '@cherthq/imessage';
 const client=new ChertClient({baseURL:'https://your-chert.example',apiKey:'your-key'});
 // Explicit effect: only use an owned chat/message and an authorized target.
 const receipt=await client.sendReaction(

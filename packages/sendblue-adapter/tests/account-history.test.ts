@@ -1,5 +1,5 @@
 import {expect,test} from 'bun:test';
-import {ChertClient} from '@chert/sdk';
+import {ChertClient} from '@cherthq/imessage';
 import {accountHistoryQuery,mapAccountHistory,listAccountHistory} from '../account-history';
 const row=()=>({id:'public_1',chat_id:'chat-a',status:'queued',direction:'outbound',parts:[{type:'text',value:'actual text'}],from:'+15550000001',to:'+15550000002',line_number:'+15550000001',phone_line_id:'11000000-0000-4000-8000-000000000001',is_group:false,endpoint_source:'strict_text_intent',created_at:'2026-10-18T00:00:00Z',updated_at:null,sent_at:null,service:'unknown'});
 const page=(messages:unknown[]=[row()])=>({messages,pagination:{has_more:false,limit:50,offset:0,total:messages.length}});

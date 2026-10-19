@@ -6,9 +6,9 @@ the actual JSON response into a caller-selected serde type without unwrapping ro
 specific envelopes. Use `serde_json::Value` when preserving all wire fields.
 
 ```rust,no_run
-use chert_sdk::ChertClient;
+use cherthq_imessage::ChertClient;
 use std::time::Duration;
-# async fn example() -> Result<(), chert_sdk::ChertError> {
+# async fn example() -> Result<(), cherthq_imessage::ChertError> {
 let client = ChertClient::new("https://messaging.example.test", "explicit-key",
     Some("tenant"), Duration::from_secs(20), 1024 * 1024)?;
 let receipt = client.send_text("+15550000001", "hello",

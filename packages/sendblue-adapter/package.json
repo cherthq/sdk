@@ -1,5 +1,5 @@
 {
-  "name": "@chert/sendblue-adapter",
+  "name": "@cherthq/sendblue-adapter",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@chert/sdk": "workspace:*",
+    "@cherthq/imessage": "workspace:*",
     "sendblue": "3.20.1"
   },
   "scripts": {

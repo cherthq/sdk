@@ -56,7 +56,7 @@ await plugin({name:'typed-real-reaction-routes',setup(build){
 }});
 const {NextRequest}=await import('./next-route-platform.mjs');
 const reactionRoute=await import('../../imessage-server/app/api/v1/chats/[id]/messages/[messageId]/reactions/route.ts');
-const {ChertClient,ChertAPIError}=await import('../packages/sdk/src/index.ts');
+const {ChertClient,ChertAPIError}=await import('../packages/imessage/src/index.ts');
 const cloud=Bun.serve({hostname:'127.0.0.1',port:0,async fetch(request){
  const parts=new URL(request.url).pathname.split('/');
  if(request.method==='POST'&&parts.length===8&&parts[3]==='chats'&&parts[5]==='messages'&&parts[7]==='reactions'){

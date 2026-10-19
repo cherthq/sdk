@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import type { ChertFetch } from '@chert/sdk';
+import type { ChertFetch } from '@cherthq/imessage';
 import SendblueAPI, { APIError, APIUserAbortError, NotFoundError } from './index';
 const input = { from_number: '+15550000001', number: '+15550000002', content: 'hello' };
 function client(fetch: ChertFetch, extra = {}) {

@@ -1,5 +1,5 @@
 import {textOperationFingerprint} from '../../imessage-server/lib/sending/text-operation-fingerprint.ts';
-import {ChertClient} from '@chert/sdk';
+import {ChertClient} from '@cherthq/imessage';
 import {isDeepStrictEqual} from 'node:util';
 // Real strict reservation/transport and legacy sendFollowUp/mini-server/convo append.
 // Only external auth, DB and device HTTP are substituted.

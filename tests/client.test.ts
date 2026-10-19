@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { ChertClient, ChertAPIError } from '../packages/sdk/src/index';
+import { ChertClient, ChertAPIError } from '../packages/imessage/src/index';
 const options = { baseURL: 'https://chert.example.test', apiKey: 'synthetic-chert-key', tenant: 'tenant' };
 test('pins auth and destination, forwards abort and never follows redirects', async () => {
   const controller = new AbortController();

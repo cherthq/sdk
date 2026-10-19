@@ -1,5 +1,5 @@
 //! Offline integration helper: one typed request to a literal loopback fixture only.
-use chert_sdk::ChertClient;
+use cherthq_imessage::ChertClient;
 use reqwest::Url;
 use serde_json::{json, Value};
 use std::{io::Read, time::Duration};

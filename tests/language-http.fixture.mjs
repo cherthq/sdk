@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { plugin } from 'bun';
 import { mock } from 'bun:test';
-import { ChertClient } from '../packages/sdk/src/index.ts';
+import { ChertClient } from '../packages/imessage/src/index.ts';
 const app=resolve(import.meta.dir,'../../imessage-server');
 await plugin({name:'assigned-number-route',setup(build){build.onResolve({filter:/^@\//},({path})=>({path:resolve(app,path.slice(2)+'.ts')}));build.onResolve({filter:/^next\/server$/},()=>({path:resolve(import.meta.dir,'next-route-platform.mjs')}));}});
 const tenant={id:'tenant-a',tenant_slug:'fixture-tenant',signing_secret:'fixture-chert-key',crm_project_id:'project-a',is_active:true,requires_tenant_header:false,email:null};

@@ -1,5 +1,5 @@
 //! Test-only joined HTTP fixture CLI. Arguments must contain synthetic credentials only.
-use chert_sdk::{ChertClient, HttpMethod};
+use cherthq_imessage::{ChertClient, HttpMethod};
 use serde_json::{json, Value};
 use std::{process::ExitCode, time::Duration};
 
