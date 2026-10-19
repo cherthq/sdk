@@ -17,6 +17,7 @@ export type Provider = {
   methods: Method[];
   methodFallback?: Outcome;
   env: string[];
+  keyPrefixes?: string[];
   webhook: Outcome & { keywords: string[]; fields?: Record<string, Classification> };
   blocked?: string;
 };
@@ -155,6 +156,53 @@ export const PROVIDERS: Provider[] = [
     webhook: { keywords: ['missblue', 'miss-blue'], class: 'unsupported', note: 'MissBlue callbacks/webhooks are unsupported; consume Chert events and deduplicate by event ID.' },
   },
   {
+    id: 'texting-blue', name: 'Texting Blue',
+    adapter: { package: '@cherthq/texting-blue-adapter', version: '0.1.0', kind: 'fetch', factory: 'createTextingBlueFetch' },
+    packages: [], hosts: ['api.texting.blue'],
+    routes: [
+      { methods: 'POST', path: '/v1/messages/send', class: 'drop_in', note: 'Exactly `{to, from, content}` with distinct E.164 numbers; `media_url` (even null) rejects.' },
+      { methods: 'GET', path: '/v1/messages', class: 'unsupported', note: 'Rejected: Chert records lack the sender phone and `delivered_at` clock the response requires.' },
+      { methods: 'GET', path: '/v1/messages/{}', class: 'unsupported', note: 'Rejected: Chert records lack the sender phone and `delivered_at` clock the response requires.' },
+    ],
+    rawFallback: notMapped('@cherthq/texting-blue-adapter'),
+    methods: [], env: [], keyPrefixes: ['tb_live_'],
+    webhook: { keywords: ['texting-blue', 'textingblue'], class: 'unsupported', note: 'Texting Blue webhooks and signature verification are unsupported; consume Chert events and deduplicate by event ID.' },
+  },
+  {
+    id: 'contiguity', name: 'Contiguity iMessage',
+    adapter: { package: '@cherthq/contiguity-adapter', version: '0.1.0', kind: 'fetch', factory: 'createContiguityFetch' },
+    packages: [], hosts: ['api.contiguity.com'],
+    routes: [
+      { methods: 'POST', path: '/send/imessage', class: 'drop_in', note: 'Keys `{to, from?, message}` only; fallback/attachments/effect/fast_track and markdown-style text reject. Chert never falls back to SMS/RCS.' },
+      { methods: 'POST', path: '/send/imessage/typing', class: 'drop_in', note: 'Exactly `{to, from, action}` with explicit E.164 `from`.' },
+      { methods: 'POST', path: '/send/imessage/reactions', class: 'unsupported', note: 'Rejected: targets the latest message matching content, which Chert cannot resolve to an owned message ID.' },
+    ],
+    rawFallback: notMapped('@cherthq/contiguity-adapter'),
+    methods: [], env: [],
+    webhook: { keywords: ['contiguity'], class: 'unsupported', note: 'Contiguity webhooks are unsupported; consume Chert events and deduplicate by event ID.' },
+  },
+  {
+    id: 'bluereacher', name: 'Blue Reacher',
+    adapter: { package: '@cherthq/bluereacher-adapter', version: '0.1.0', kind: 'fetch', factory: 'createBlueReacherFetch' },
+    packages: [], hosts: ['api.bluereacher.com'],
+    routes: [
+      { methods: 'POST', path: '/v1/messages', class: 'drop_in', note: 'Exactly `{to, message, send_mode:"instant", device_id}` with an owned Chert line UUID; drip (the provider default), auto-balanced lines and media reject.' },
+      { methods: '*', path: '/v1/typing', class: 'unsupported', note: 'Rejected: auto-expiring typing windows cannot be represented by Chert start/stop typing.' },
+    ],
+    rawFallback: notMapped('@cherthq/bluereacher-adapter'),
+    methods: [], env: [], keyPrefixes: ['brk_live_', 'brk_test_'],
+    webhook: { keywords: ['bluereacher', 'blue-reacher'], class: 'unsupported', note: 'Blue Reacher webhooks are unsupported; consume Chert events and deduplicate by event ID.' },
+  },
+  {
+    id: 'jared', name: 'Jared (self-hosted)',
+    adapter: { package: '@cherthq/jared-adapter', version: '0.1.0', kind: 'fetch', factory: 'createJaredFetch' },
+    packages: [], hosts: ['localhost:3005', '127.0.0.1:3005'],
+    routes: [{ methods: 'POST', path: '/message', class: 'drop_in', via: "createJaredFetch({origin: 'http://localhost:3005', chert})", note: 'Exactly `{body:{message}, recipient:{handle}}` to an E.164 phone; email/group handles and attachments reject.' }],
+    rawFallback: notMapped('@cherthq/jared-adapter'),
+    methods: [], env: [],
+    webhook: { keywords: ['jared'], class: 'unsupported', note: 'Jared outbound webhooks, routes and plugins are not part of the adapter.' },
+  },
+  {
     id: 'photon', name: 'Photon / Spectrum',
     packages: ['spectrum-ts', '@spectrum-ts/*', '@photon-ai/*'], hosts: [], routes: [], methods: [],
     rawFallback: { class: 'unsupported', note: 'No drop-in adapter.' },
@@ -164,13 +212,27 @@ export const PROVIDERS: Provider[] = [
   },
   {
     id: 'bluebubbles', name: 'BlueBubbles',
-    packages: ['bluebubbles*', '@bluebubbles/*'], otherPackages: ['bluebubbles'], hosts: [],
+    packages: ['bluebubbles*', '@bluebubbles/*'], otherPackages: ['bluebubbles', 'imessage-rs'], hosts: [],
     paths: ['/api/v1/message/text', '/api/v1/message/query', '/api/v1/server/info'], routes: [], methods: [],
     rawFallback: { class: 'unsupported', note: 'No drop-in adapter.' },
     env: ['BLUEBUBBLES_', 'BB_SERVER_'],
     webhook: { keywords: ['bluebubbles'], class: 'unsupported', note: 'No drop-in adapter.' },
     blocked: 'Unsupported for drop-in: BlueBubbles reads need native message metadata Chert does not expose, and sends need a completed send result (Chert SDK docs/PROVIDER_RESEARCH.md).',
   },
+  ...([
+    ['messageblue', 'MessageBlue', ['api.messageblue.ai'], 'success means native completion with Apple GUIDs; typing auto-expires'],
+    ['inkbox', 'Inkbox', ['inkbox.ai'], 'identity/router/assignment facts Chert does not have'],
+    ['claw-messenger', 'Claw Messenger', ['claw-messenger.onrender.com'], 'sends are WebSocket-only with fallback by default'],
+    ['sendimessage', 'SendiMessage', ['api.sendimessage.com'], 'SMS fallback cannot be disabled'],
+    ['tuco', 'Tuco AI', ['app.tuco.ai'], 'lead/workspace multi-channel model'],
+    ['textlink', 'TextLink / Blububl', ['textlinksms.com'], 'send contract is an SMS API with implicit routing'],
+    ['beeper', 'Beeper Desktop API', ['localhost:23373'], 'opaque multi-network chat IDs with no owned-chat mapping'],
+  ] as const).map(([id, name, hosts, reason]): Provider => ({
+    id, name, packages: [], hosts: [...hosts], routes: [], methods: [], env: [],
+    rawFallback: { class: 'unsupported', note: 'No drop-in adapter.' },
+    webhook: { keywords: [], class: 'unsupported', note: 'No drop-in adapter.' },
+    blocked: `Unsupported for drop-in: ${reason} (Chert SDK docs/PROVIDER_RESEARCH.md).`,
+  })),
 ];
 
 export const PROVIDER_IDS = PROVIDERS.filter(p => p.adapter).map(p => p.id);

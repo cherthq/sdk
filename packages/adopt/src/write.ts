@@ -6,7 +6,7 @@ import { ownerManifest, type Finding, type Scan } from './scan';
 export const REPORT = 'ADOPTION_REPORT.md';
 const provider = (id: string) => PROVIDERS.find(p => p.id === id)!;
 const at = (f: Finding) => `${f.file}:${f.line}`;
-const subject = (f: Finding) => f.op ?? (f.url ? `${f.method ?? '?'} ${f.url}` : f.name ?? '');
+const subject = (f: Finding) => f.op ?? (f.url ? (f.kind === 'http' ? `${f.method ?? '?'} ${f.url}` : f.url) : f.name ?? '');
 const usage = (f: Finding) => f.class !== undefined;
 
 function updateManifest(root: string, file: string, add: Map<string, string>, remove: Set<string>): boolean {
@@ -132,6 +132,8 @@ export function report(scan: Scan): string {
     '## Webhook payload mapping', '',
     ...(webhooks.length ? webhooks.map(id => `- ${provider(id).name}: ${provider(id).webhook.note}`) : ['No provider webhook handlers detected.']), '',
     ...(webhooks.length ? ['Chert webhooks are signed with your Chert subscription secret (`CHERT_WEBHOOK_SECRET`), not the vendor secret. Treat every event as at-least-once and deduplicate by event ID.', ''] : []),
+    '## Providers without drop-in support', '',
+    `Reported as unsupported for drop-in when detected: ${PROVIDERS.filter(p => p.blocked).map(p => p.name).join(', ')}.`, '',
     '## Manual steps', '',
     ...manualSteps(findings).map((s, i) => `${i + 1}. ${s}`), '',
   ];

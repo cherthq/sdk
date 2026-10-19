@@ -7,7 +7,7 @@ import { PROVIDERS } from '../src/providers';
 import { scan, type Finding } from '../src/scan';
 
 const fixtures = resolve(import.meta.dir, '../fixtures');
-const SECRETS = ['sb_live_SECRET_VALUE_XYZ', 'sb_example_value_DO_NOT_PRINT', 'sb_hardcoded_SECRET_123'];
+const SECRETS = ['sb_live_SECRET_VALUE_XYZ', 'sb_example_value_DO_NOT_PRINT', 'sb_hardcoded_SECRET_123', 'tb_live_abc123SECRET', 'brk_test_SECRETxyz'];
 
 function git(dir: string, ...args: string[]) {
   const child = Bun.spawnSync(['git', '-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid', '-c', 'commit.gpgsign=false', ...args], { cwd: dir });
@@ -100,6 +100,27 @@ describe('detection and classification', () => {
     ]);
   });
 
+  test('fetch-style providers added after the scope rename', () => {
+    expect(brief(scan(join(fixtures, 'texting-blue-ts')).findings)).toEqual([
+      'index.ts:4 http POST https://api.texting.blue/v1/messages/send drop_in',
+      'index.ts:5 http GET https://api.texting.blue/v1/messages unsupported',
+    ]);
+    expect(brief(scan(join(fixtures, 'contiguity-js')).findings)).toEqual([
+      'client.mjs:4 http POST https://api.contiguity.com/send/imessage drop_in',
+      'client.mjs:5 http POST https://api.contiguity.com/send/imessage/typing drop_in',
+      'client.mjs:6 http POST https://api.contiguity.com/send/imessage/reactions unsupported',
+    ]);
+    const bluereacher = scan(join(fixtures, 'bluereacher-ts')).findings;
+    expect(brief(bluereacher)).toEqual([
+      'index.ts:4 http POST https://api.bluereacher.com/v1/messages drop_in',
+      'index.ts:5 http POST https://api.bluereacher.com/v1/typing unsupported',
+    ]);
+    expect(bluereacher.find(f => f.kind === 'credential')).toMatchObject({ file: 'config.yaml', line: 2, name: 'brk_test_…' });
+    const jared = scan(join(fixtures, 'jared-js')).findings;
+    expect(brief(jared)).toEqual(['bot.js:1 http POST http://localhost:3005/message drop_in']);
+    expect(jared[0]!.note).toContain("createJaredFetch({origin: 'http://localhost:3005', chert})");
+  });
+
   test('Python is detection-only', () => {
     const result = scan(join(fixtures, 'python-sendblue'));
     expect(result.findings.every(f => !f.class)).toBe(true);
@@ -117,7 +138,9 @@ describe('detection and classification', () => {
     expect(brief(result.findings)).toEqual([
       'index.ts:1 import spectrum-ts unsupported',
       'index.ts:4 http POST /api/v1/message/text unsupported',
+      'index.ts:5 http POST https://api.messageblue.ai/sendIndividualMessage unsupported',
     ]);
+    expect(result.findings.find(f => f.provider === 'messageblue')!.note).toStartWith('Unsupported for drop-in:');
     expect(result.findings.filter(f => f.kind === 'dependency').map(f => f.provider)).toEqual(['photon', 'photon']);
     expect(result.findings.find(f => f.kind === 'env')).toMatchObject({ provider: 'bluebubbles', name: 'BLUEBUBBLES_PASSWORD' });
     expect(JSON.stringify(result.findings)).not.toContain('password=');
@@ -164,6 +187,7 @@ describe('dry run, write and safety', () => {
     for (const heading of ['## Summary', '## Unsupported blockers (1)', '## Findings', '## Webhook payload mapping', '## Manual steps']) expect(report).toContain(heading);
     expect(report).toContain('`src/send.ts:3`: Add `chert:');
     expect(report).toContain('not full parity');
+    expect(report).toContain('Reported as unsupported for drop-in when detected: Photon / Spectrum, BlueBubbles, MessageBlue,');
 
     git(dir, 'add', '-A');
     git(dir, 'commit', '-qm', 'adopt');

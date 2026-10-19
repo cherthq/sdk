@@ -7,10 +7,12 @@ analysis aid, not a parity claim: dynamic calls are invisible to it, and every
 adapter still rejects unsupported operations before sending.
 
 ```sh
-chert-adopt [path] [--from auto|blooio|blooio-v4|linq|sendblue|loopmessage|missblue] [--write] [--install] [--json] [--allow-dirty]
+chert-adopt [path] [--from auto|<provider-id>] [--write] [--install] [--json] [--allow-dirty]
 ```
 
-Dry run is the default and changes nothing. Example (`fixtures/missblue-ts`):
+Provider IDs: `blooio`, `blooio-v4`, `linq`, `sendblue`, `loopmessage`,
+`missblue`, `texting-blue`, `contiguity`, `bluereacher`, `jared`. Dry run is
+the default and changes nothing. Example (`fixtures/missblue-ts`):
 
 ```
 Provider       drop_in  native  unsupported  detected
@@ -30,13 +32,18 @@ provider SDK imports and `require()`s, clients constructed from them (including
 class properties), method calls on those clients, raw HTTP calls to provider API
 hosts (string, template and same-file `const` URLs; `fetch`, `Request` and
 `x.get/post/...` methods), provider env var names, and webhook routes and
-payload field access. `package.json` dependencies are read too.
+payload field access. `package.json` dependencies are read too. Providers that
+document no env var names (Texting Blue, Contiguity, Blue Reacher, Jared) are
+found by API base URL, and hardcoded `tb_live_`/`brk_live_`/`brk_test_` keys
+are flagged by prefix only.
 
 Python and other languages are detection-only: dependency names, provider API
 URLs and env var names. Nothing outside JS/TS is rewritten.
 
-Photon/Spectrum (`spectrum-ts`, `@spectrum-ts/*`, `@photon-ai/*`) and
-BlueBubbles are reported as unsupported for drop-in.
+Providers researched without an adapter (Photon/Spectrum, BlueBubbles and
+imessage-rs, MessageBlue, Inkbox, Claw Messenger, SendiMessage, Tuco AI,
+TextLink, Beeper Desktop API) are reported as unsupported for drop-in, with the
+reason from `docs/PROVIDER_RESEARCH.md`.
 
 ## Classes
 
@@ -71,7 +78,8 @@ BlueBubbles are reported as unsupported for drop-in.
 No network calls, credentials or telemetry. Files that may contain secret values
 (`.env`, `.env.local`, `.env.production`, ...) are never opened; from
 `.env.example`-style files only variable names are read. Reported URLs drop
-query strings, and call arguments are never printed.
+query strings, call arguments are never printed, and key literals are shown
+as their prefix only.
 
 ## Adding a provider
 

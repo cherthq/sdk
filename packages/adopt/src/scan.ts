@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { PROVIDERS, type Classification, type Outcome, type Provider } from './providers';
 
-export type Kind = 'dependency' | 'import' | 'constructor' | 'call' | 'http' | 'base_url' | 'env' | 'webhook';
+export type Kind = 'dependency' | 'import' | 'constructor' | 'call' | 'http' | 'base_url' | 'env' | 'credential' | 'webhook';
 export type Finding = {
   provider: string; kind: Kind; file: string; line: number; class?: Classification;
   op?: string; method?: string; url?: string; name?: string; note: string; adopted?: boolean;
@@ -58,10 +58,10 @@ function lineAt(text: string, index: number) { let line = 1; for (let i = 0; i <
 function hostMatch(value: string): { provider: Provider; host: string; path: string } | null {
   for (const provider of PROVIDERS) {
     for (const host of provider.hosts) {
-      const match = new RegExp(`(?:^|//)${host.replace(/\./g, '\\.')}(?::\\d+)?(?=[/?#]|$)`).exec(value);
+      const match = new RegExp(`(?:^|(https?:)?//)${host.replace(/\./g, '\\.')}(?::\\d+)?(?=[/?#]|$)`).exec(value);
       if (match) {
         const rest = value.slice(match.index + match[0].length);
-        return { provider, host, path: rest.split(/[?#]/)[0] ?? '' };
+        return { provider, host: `${match[1] ?? 'https:'}//${host}`, path: rest.split(/[?#]/)[0] ?? '' };
       }
     }
     const path = provider.paths?.find(p => value.includes(p));
@@ -69,11 +69,11 @@ function hostMatch(value: string): { provider: Provider; host: string; path: str
   }
   return null;
 }
-const displayURL = (host: string, path: string) => host ? `https://${host}${path}` : path;
+const displayURL = (host: string, path: string) => host + path;
 
 function classifyRoute(provider: Provider, host: string, path: string, method: string | undefined): Outcome & { via?: string } {
   if (provider.blocked) return { class: 'unsupported', note: provider.blocked };
-  const route = provider.routes.find(r => (!r.host || r.host === host)
+  const route = provider.routes.find(r => (!r.host || host.endsWith(`//${r.host}`))
     && new RegExp(`^${r.path.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\{\}/g, '[^/]+')}$`).test(path)
     && (r.methods === '*' || !method || r.methods.split('|').includes(method)));
   if (!route) return provider.rawFallback;
@@ -343,6 +343,16 @@ function scanEnv(file: string, text: string, out: Finding[], example: boolean) {
   }
 }
 
+function scanKeys(file: string, text: string, out: Finding[]) {
+  for (const provider of PROVIDERS) {
+    for (const prefix of provider.keyPrefixes ?? []) {
+      const at = text.search(new RegExp(`(?<![A-Za-z0-9_])${prefix}[A-Za-z0-9]`));
+      if (at >= 0) out.push({ provider: provider.id, kind: 'credential', file, line: lineAt(text, at), name: `${prefix}…`,
+        note: 'Hardcoded vendor key literal (value not shown). Remove it from source; Chert does not use vendor keys.' });
+    }
+  }
+}
+
 export function scan(root: string, from = 'auto'): Scan {
   const files = listFiles(root);
   const findings: Finding[] = [], edits: ImportEdit[] = [], manifests: Manifest[] = [], envExamples: string[] = [];
@@ -378,6 +388,7 @@ export function scan(root: string, from = 'auto'): Scan {
     else if (OTHER.test(file)) scanText(file, text, findings);
     if (DEPFILE.test(name)) scanDeps(file, text, findings);
     scanEnv(file, text, findings, false);
+    scanKeys(file, text, findings);
   }
   const evidence = new Set(findings.filter(f => f.kind !== 'env').map(f => f.provider));
   let result = findings.filter(f => {
