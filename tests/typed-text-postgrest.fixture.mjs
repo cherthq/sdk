@@ -5,7 +5,7 @@ import {resolve,isAbsolute} from 'node:path';
 import {statSync} from 'node:fs';
 import {plugin} from 'bun';import {mock} from 'bun:test';
 import {createClient} from '@supabase/supabase-js';
-import {ChertClient,ChertAPIError} from '@chert/sdk';
+import {ChertClient,ChertAPIError} from '@cherthq/imessage';
 import {textOperationFingerprint} from '../../imessage-server/lib/sending/text-operation-fingerprint.ts';
 const root=resolve(import.meta.dir,'../..'),app=resolve(root,'imessage-server');
 const target=new URL(process.env.CHERT_TEST_POSTGREST_URL??'');assert.equal(target.protocol,'http:');assert.equal(target.hostname,'127.0.0.1');assert.ok(target.port&&target.pathname==='/'&&!target.search&&!target.hash&&!target.username&&!target.password);

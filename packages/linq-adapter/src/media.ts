@@ -1,4 +1,4 @@
-import {validateMediaCapability,validateFrozenMediaCapability} from '@chert/sdk';
+import {validateMediaCapability,validateFrozenMediaCapability} from '@cherthq/imessage';
 import type {MediaPartResponse} from '@linqapp/sdk/resources/shared';
 import type {MessageSendResponse} from '@linqapp/sdk/resources/chats/messages';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);

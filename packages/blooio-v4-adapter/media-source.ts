@@ -1,4 +1,4 @@
-import {ChertClient} from '@chert/sdk';
+import {ChertClient} from '@cherthq/imessage';
 
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const idPattern=/^[a-f0-9]{48}(?![\s\S])/;

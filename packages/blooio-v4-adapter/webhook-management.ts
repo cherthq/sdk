@@ -1,4 +1,4 @@
-import {ChertClient,ChertAPIError} from '@chert/sdk';
+import {ChertClient,ChertAPIError} from '@cherthq/imessage';
 const profile='blooio-v4/2026-10-01';
 const events:Record<string,string>={message_received:'message.received',message_queued:'message.queued',message_sent:'message.sent',message_delivered:'message.delivered',read_receipt:'message.read',message_failed:'message.failed'};
 const object=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);

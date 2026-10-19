@@ -1,4 +1,4 @@
-import { ChertAPIError, ChertClient, validateMediaCapability } from '@chert/sdk';
+import { ChertAPIError, ChertClient, validateMediaCapability } from '@cherthq/imessage';
 import type { MessageListResponse } from 'sendblue/resources/messages/messages';
 
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);

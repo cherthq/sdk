@@ -6,7 +6,7 @@ remain private/unpublished and provider coverage is incomplete.
 
 | Package | Boundary |
 | --- | --- |
-| `@chert/sdk` | Authenticated Chert JSON transport and typed queue acceptance |
+| `@cherthq/imessage` | Authenticated Chert JSON transport and typed queue acceptance |
 | `@cherthq/linq-adapter` | Selected `@linqapp/sdk@0.78.0` methods |
 | `@cherthq/sendblue-adapter` | Selected `sendblue@3.20.1` methods |
 | `@cherthq/blooio-adapter` | Legacy `@blooio/sdk@0.0.2` subset |

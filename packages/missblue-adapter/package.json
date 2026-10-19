@@ -6,7 +6,7 @@
   "license": "MIT",
   "exports": {".": {"types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js"}},
   "scripts": {"test": "bun test"},
-  "dependencies": {"@chert/sdk": "workspace:*"},
+  "dependencies": {"@cherthq/imessage": "workspace:*"},
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": ["dist", "README.md", "contract"]

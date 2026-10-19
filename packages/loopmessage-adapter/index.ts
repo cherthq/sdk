@@ -1,4 +1,4 @@
-import { ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch } from '@chert/sdk';
+import { ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch } from '@cherthq/imessage';
 const record=(value:unknown):value is Record<string,unknown>=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const failure=(status:number,message:string)=>Response.json({success:false,code:100,message},{status});
 const publicID=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{32}(?![\s\S])/.test(value);

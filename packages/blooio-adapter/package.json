@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@blooio/sdk": "0.0.2",
-    "@chert/sdk": "workspace:*"
+    "@cherthq/imessage": "workspace:*"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

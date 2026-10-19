@@ -1,5 +1,5 @@
 import {test,expect} from 'bun:test';
-import {ChertClient,ChertAPIError} from '../packages/sdk/src/index';
+import {ChertClient,ChertAPIError} from '../packages/imessage/src/index';
 const body={phone:'+15550000002',body:' exact / text ',idempotency_key:'key'};
 const receipt={success:true,message_id:'a'.repeat(32),chat_id:'chat-a',status:'queued'} as const;
 test('typed strict send uses exact request once and preserves queued receipt',async()=>{

@@ -2,7 +2,7 @@ import { listAccountHistory } from './account-history.js';
 import OfficialSendblue, { APIError, type ClientOptions } from 'sendblue';
 import type { TypingIndicatorSendParams } from 'sendblue/resources/typing-indicators';
 import type { MessageResponse, MessageRetrieveResponse } from 'sendblue/resources/messages/messages';
-import { ChertClient, ChertAPIError, validateMediaCapability, type ChertClientOptions } from '@chert/sdk';
+import { ChertClient, ChertAPIError, validateMediaCapability, type ChertClientOptions } from '@cherthq/imessage';
 
 export * from 'sendblue';
 export { unwrapChert } from './webhooks.js';

@@ -5,9 +5,9 @@
     "": {
       "name": "chert-sdk-workspace",
       "devDependencies": {
-        "@chert/sdk": "workspace:*",
         "@cherthq/blooio-adapter": "workspace:*",
         "@cherthq/blooio-v4-adapter": "workspace:*",
+        "@cherthq/imessage": "workspace:*",
         "@cherthq/linq-adapter": "workspace:*",
         "@cherthq/loopmessage-adapter": "workspace:*",
         "@cherthq/missblue-adapter": "workspace:*",
@@ -21,21 +21,25 @@
       "version": "0.1.0",
       "dependencies": {
         "@blooio/sdk": "0.0.2",
-        "@chert/sdk": "workspace:*",
+        "@cherthq/imessage": "workspace:*",
       },
     },
     "packages/blooio-v4-adapter": {
       "name": "@cherthq/blooio-v4-adapter",
       "version": "0.1.0",
       "dependencies": {
-        "@chert/sdk": "workspace:*",
+        "@cherthq/imessage": "workspace:*",
       },
+    },
+    "packages/imessage": {
+      "name": "@cherthq/imessage",
+      "version": "0.1.0",
     },
     "packages/linq-adapter": {
       "name": "@cherthq/linq-adapter",
       "version": "0.1.0",
       "dependencies": {
-        "@chert/sdk": "workspace:*",
+        "@cherthq/imessage": "workspace:*",
         "@linqapp/sdk": "0.78.0",
       },
     },
@@ -43,25 +47,21 @@
       "name": "@cherthq/loopmessage-adapter",
       "version": "0.1.0",
       "dependencies": {
-        "@chert/sdk": "workspace:*",
+        "@cherthq/imessage": "workspace:*",
       },
     },
     "packages/missblue-adapter": {
       "name": "@cherthq/missblue-adapter",
       "version": "0.1.0",
       "dependencies": {
-        "@chert/sdk": "workspace:*",
+        "@cherthq/imessage": "workspace:*",
       },
-    },
-    "packages/sdk": {
-      "name": "@chert/sdk",
-      "version": "0.1.0",
     },
     "packages/sendblue-adapter": {
       "name": "@cherthq/sendblue-adapter",
       "version": "0.0.0",
       "dependencies": {
-        "@chert/sdk": "workspace:*",
+        "@cherthq/imessage": "workspace:*",
         "sendblue": "3.20.1",
       },
     },
@@ -69,11 +69,11 @@
   "packages": {
     "@blooio/sdk": ["@blooio/sdk@0.0.2", "", {}, "sha512-+bhPlyfUb+W5H9Lp+2Ydamv5O7HbesYLppKc5hUsDL2WqI48Pg0Ork4CDWu87BkaQ0VzoZy5R8E3F7ZBf2lKng=="],
 
-    "@chert/sdk": ["@chert/sdk@workspace:packages/sdk"],
-
     "@cherthq/blooio-adapter": ["@cherthq/blooio-adapter@workspace:packages/blooio-adapter"],
 
     "@cherthq/blooio-v4-adapter": ["@cherthq/blooio-v4-adapter@workspace:packages/blooio-v4-adapter"],
+
+    "@cherthq/imessage": ["@cherthq/imessage@workspace:packages/imessage"],
 
     "@cherthq/linq-adapter": ["@cherthq/linq-adapter@workspace:packages/linq-adapter"],
 

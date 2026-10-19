@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { ChertClient, ChertAPIError } from '@chert/sdk';
+import { ChertClient, ChertAPIError } from '@cherthq/imessage';
 import Linq from '@cherthq/linq-adapter';
 import Sendblue, { unwrapChert, createSendblueReactionFetch } from '@cherthq/sendblue-adapter';
 import Blooio from '@cherthq/blooio-adapter';

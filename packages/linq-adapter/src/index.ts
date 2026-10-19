@@ -3,7 +3,7 @@ import {queuedMediaMessage} from './media.js';
 import { attachmentMetadata, validAttachmentCreate, createdAttachment } from './attachments.js';
 import { historyCursor, recordedMessage, recordedPage } from './history.js';
 import OfficialLinq, { type ClientOptions } from '@linqapp/sdk';
-import { ChertClient, ChertAPIError, type ChertClientOptions } from '@chert/sdk';
+import { ChertClient, ChertAPIError, type ChertClientOptions } from '@cherthq/imessage';
 
 export * from '@linqapp/sdk';
 

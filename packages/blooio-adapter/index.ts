@@ -1,7 +1,7 @@
 import OfficialBlooio, { APIError, type ClientOptions } from '@blooio/sdk';
 import type { MeRetrieveResponse } from '@blooio/sdk/resources/me';
 import type { MessageSendResponse, MessageRetrieveResponse, MessageGetStatusResponse } from '@blooio/sdk/resources/messages';
-import { ChertClient, ChertAPIError, type ChertClientOptions } from '@chert/sdk';
+import { ChertClient, ChertAPIError, type ChertClientOptions } from '@cherthq/imessage';
 
 export * from '@blooio/sdk';
 export type BlooioAdapterOptions = ClientOptions & { chert: ChertClientOptions };

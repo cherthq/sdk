@@ -151,5 +151,5 @@ cd sdk/python
 python3 -c 'import setuptools.build_meta as b; b.build_wheel("dist")'
 ```
 
-MIT metadata follows the existing `@chert/sdk` manifest. This work adds no
+MIT metadata follows the existing `@cherthq/imessage` manifest. This work adds no
 invented copyright attribution and does not publish or install the package.

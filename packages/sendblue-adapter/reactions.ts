@@ -1,4 +1,4 @@
-import {ChertClient,ChertAPIError,type ChertClientOptions,type ChertFetch} from '@chert/sdk';
+import {ChertClient,ChertAPIError,type ChertClientOptions,type ChertFetch} from '@cherthq/imessage';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const uuid=(v:unknown):v is string=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}(?![\s\S])/i.test(v);
 const phone=(v:unknown):v is string=>typeof v==='string'&&/^\+[1-9][0-9]{1,14}(?![\s\S])/.test(v);

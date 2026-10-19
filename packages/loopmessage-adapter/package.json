@@ -15,7 +15,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@chert/sdk": "workspace:*"
+    "@cherthq/imessage": "workspace:*"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

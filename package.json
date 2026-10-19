@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/bun": "1.3.14",
     "typescript": "5.9.2",
-    "@chert/sdk": "workspace:*",
+    "@cherthq/imessage": "workspace:*",
     "@cherthq/linq-adapter": "workspace:*",
     "@cherthq/loopmessage-adapter": "workspace:*",
     "@cherthq/sendblue-adapter": "workspace:*",

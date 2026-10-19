@@ -1,4 +1,4 @@
-import {ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch} from '@chert/sdk';
+import {ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch} from '@cherthq/imessage';
 
 export const MISSBLUE_CONTRACT = Object.freeze({
   source: 'https://missblue.dev/openapi.json', version: '1.0.0',
