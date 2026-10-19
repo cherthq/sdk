@@ -735,3 +735,51 @@ Missing/invalid IDs or a lost Chert response never produce guessed headers.
 Two actual PostgreSQL-backed lost-native-reply/wrong-ACK cases verify one native
 request, matching header/ledger/claim IDs, retained unknown state and permanent
 restart refusal. These are synthetic native effects, not physical delivery.
+
+## Additional HTTP provider subsets — 2026-10-19
+
+Four private Fetch-replacement adapters were added from the
+[2026-10-19 provider inventory](docs/PROVIDER_RESEARCH.md#imessage-provider-inventory--2026-10-19).
+Each pins official docs (or source, for Jared) retrieved that day. None forwards
+the vendor credential, retries, or falls back to SMS/RCS; every operation not
+listed as supported or partial rejects before any Chert request. Accepted sends
+mean Chert queue acceptance only. Response IDs are actual 32-hex Chert public
+IDs, never the vendor's ID format. For an actual Chert 4103 nonretryable 502
+with validated IDs, `X-Chert-Message-Id` / `X-Chert-Chat-Id` carry
+reconciliation identity.
+
+| Operation | Texting Blue (`texting-blue`) | Contiguity (`contiguity`) | Blue Reacher (`bluereacher`) | Jared (`jared`) |
+| --- | --- | --- | --- | --- |
+| Base URL | `https://api.texting.blue/v1` | `https://api.contiguity.com/send` | `https://api.bluereacher.com/v1` | Caller-configured loopback (`http://localhost:3005` documented) |
+| Explicit-sender text | Supported subset: `POST /messages/send` `{to,from,content}` → 202 queued shape | Partial: `POST /imessage` `{to,from,message}`; `id`/`timestamp` are adapter-local | Partial: `POST /messages` `{to,message,send_mode:'instant',device_id}`; `status:'dispatched'` = queue acceptance | Not mapped |
+| Recipient-only text (Chert line policy) | Not mapped (`from` required upstream) | Partial: `from` omitted/`null` | Unsupported (`auto_*` line selection) | Supported subset: `POST /message` phone handle → empty 200 |
+| Text limits | ≤5,000 UTF-16 units and ≤16 KiB | ≤16 KiB; markdown-style formatting rejected | ≤16 KiB | ≤16 KiB |
+| Media / attachments | Unsupported (`media_url`) | Unsupported (`attachments`) | Unsupported (`media_urls`, voice memos) | Unsupported (local file paths) |
+| Effects / formatting | — | Unsupported (`effect`, formatting markup) | Unsupported (`message_effect`) | — |
+| SMS/RCS fallback | Not offered upstream | Unsupported (`fallback`, even `null`) | Unsupported: upstream falls back automatically; Chert never does | — |
+| Scheduling / pacing | — | Unsupported (`fast_track`) | Unsupported (`drip`, the upstream default) | — |
+| Idempotency | Rejected (`Idempotency-Key`) | Rejected | Rejected (`Idempotency-Key`) | Rejected |
+| Typing start/stop | Not offered upstream | Supported subset: `POST /imessage/typing` with explicit `from`; `stopped` status inferred | Unsupported (auto-expiring window, `expires_at`) | — |
+| Reactions | — | Unsupported (content-matched target) | Unsupported | — |
+| Read receipts | — | Unsupported | Unsupported | — |
+| Status / history | Unsupported (sender phone, `delivered_at` not Chert facts) | Unsupported | Unsupported (`device_name`, `delivery_channel`) | — |
+| Lines / numbers | Unsupported (`label`, `verified`, `device_name`, …) | Unsupported (leases) | Used internally to resolve `device_id`; endpoint unsupported | — |
+| Groups | Not offered upstream | Unsupported | Unsupported | Unsupported (group GUID handles) |
+| Email / iCloud recipients | — | Unsupported | — | Unsupported |
+| Webhooks / signatures | Unsupported | Unsupported | Unsupported | Unsupported |
+| Error envelope | Documented `{error:{code,message}}` | Documented `{id,timestamp,api_version,object:'error',data:{error,status}}` | Undocumented upstream; adapter emits `{success:false,error,message}` | Upstream plain text |
+
+Blue Reacher's `device_id` resolution reads owned Chert inventory, then sends
+with explicit `from`; like MissBlue this is not an atomic line-identity guard.
+
+Verification: 34 new fixture-based unit tests (Texting Blue 8, Contiguity 11,
+Blue Reacher 8, Jared 7) plus Node/Bun/Deno built-package smoke checks. No
+provider or device was contacted; there is no route, PostgreSQL or device
+acceptance for these adapters. They require no Mac installation change.
+
+Researched without an adapter (reasons in the inventory): MessageBlue
+(completed-by-agent send with native GUIDs), Inkbox (identity/router model),
+Claw Messenger (WebSocket send), SendiMessage (non-optional SMS fallback, SDK-only
+schema), Tuco AI, Zernio, Courio, TextLink/Blububl, Mobile Text Alerts, Beeper
+Desktop API, mautrix/beeper bridges, AirMessage, imessage-rs (BlueBubbles
+contract), plus BlueBubbles and Photon above.
