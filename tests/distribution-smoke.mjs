@@ -659,3 +659,19 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   assert.equal(requests, 0);
   console.log('Built Blue Reacher adapter refuses default drip sends before HTTP.');
 }
+
+{
+  const { createJaredFetch } = await import('@cherthq/jared-adapter');
+  assert.throws(() => createJaredFetch({origin: 'http://example.com:3005', chert: {baseURL: 'https://chert.example', apiKey: 'k'}}), TypeError);
+  let posts = 0;
+  const transport = createJaredFetch({origin: 'http://localhost:3005', chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async () => {
+    posts++; return Response.json({success: true, message_id: 'a'.repeat(32), chat_id: 'chat-a', status: 'queued'}, {status: 202});
+  }}});
+  const ok = await transport('http://localhost:3005/message', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({body: {message: 'x'}, recipient: {handle: '+14155551234'}})});
+  assert.equal(ok.status, 200);
+  assert.equal(await ok.text(), '');
+  const group = await transport('http://localhost:3005/message', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({body: {message: 'x'}, recipient: {handle: 'iMessage;+;chat1'}})});
+  assert.equal(group.status, 501);
+  assert.equal(posts, 1);
+  console.log('Built Jared adapter maps strict queue acceptance to empty 200 and refuses group handles before HTTP.');
+}

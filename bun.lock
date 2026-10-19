@@ -10,6 +10,7 @@
         "@cherthq/bluereacher-adapter": "workspace:*",
         "@cherthq/contiguity-adapter": "workspace:*",
         "@cherthq/imessage": "workspace:*",
+        "@cherthq/jared-adapter": "workspace:*",
         "@cherthq/linq-adapter": "workspace:*",
         "@cherthq/loopmessage-adapter": "workspace:*",
         "@cherthq/missblue-adapter": "workspace:*",
@@ -51,6 +52,13 @@
     "packages/imessage": {
       "name": "@cherthq/imessage",
       "version": "0.1.0",
+    },
+    "packages/jared-adapter": {
+      "name": "@cherthq/jared-adapter",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cherthq/imessage": "workspace:*",
+      },
     },
     "packages/linq-adapter": {
       "name": "@cherthq/linq-adapter",
@@ -102,6 +110,8 @@
     "@cherthq/contiguity-adapter": ["@cherthq/contiguity-adapter@workspace:packages/contiguity-adapter"],
 
     "@cherthq/imessage": ["@cherthq/imessage@workspace:packages/imessage"],
+
+    "@cherthq/jared-adapter": ["@cherthq/jared-adapter@workspace:packages/jared-adapter"],
 
     "@cherthq/linq-adapter": ["@cherthq/linq-adapter@workspace:packages/linq-adapter"],
 

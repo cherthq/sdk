@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '..');
-for (const [name, entry] of [['imessage', 'src/index.ts'], ['linq-adapter', 'src/index.ts'], ['sendblue-adapter', 'index.ts'], ['blooio-adapter', 'index.ts'], ['blooio-v4-adapter', 'index.ts'], ['loopmessage-adapter', 'index.ts'], ['missblue-adapter', 'index.ts'], ['texting-blue-adapter', 'index.ts'], ['contiguity-adapter', 'index.ts'], ['bluereacher-adapter', 'index.ts']]) {
+for (const [name, entry] of [['imessage', 'src/index.ts'], ['linq-adapter', 'src/index.ts'], ['sendblue-adapter', 'index.ts'], ['blooio-adapter', 'index.ts'], ['blooio-v4-adapter', 'index.ts'], ['loopmessage-adapter', 'index.ts'], ['missblue-adapter', 'index.ts'], ['texting-blue-adapter', 'index.ts'], ['contiguity-adapter', 'index.ts'], ['bluereacher-adapter', 'index.ts'], ['jared-adapter', 'index.ts']]) {
   const directory = resolve(root, 'packages', name);
   const result = await Bun.build({ entrypoints: [resolve(directory, entry)], outdir: resolve(directory, 'dist'),
     target: 'node', format: 'esm', packages: 'external', sourcemap: 'external' });

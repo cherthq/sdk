@@ -16,6 +16,7 @@ remain private/unpublished and provider coverage is incomplete.
 | `@cherthq/texting-blue-adapter` | Texting Blue explicit-sender text send subset |
 | `@cherthq/contiguity-adapter` | Contiguity iMessage text send and typing subset |
 | `@cherthq/bluereacher-adapter` | Blue Reacher instant 1:1 text send subset |
+| `@cherthq/jared-adapter` | Open-source Jared local `POST /message` text subset |
 
 Every package is iMessage messaging; there is no FaceTime client here yet, so
 there is no `@cherthq/facetime` package (see [FaceTime integration](docs/FACETIME.md)).

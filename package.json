@@ -24,7 +24,8 @@
     "@cherthq/missblue-adapter": "workspace:*",
     "@cherthq/texting-blue-adapter": "workspace:*",
     "@cherthq/contiguity-adapter": "workspace:*",
-    "@cherthq/bluereacher-adapter": "workspace:*"
+    "@cherthq/bluereacher-adapter": "workspace:*",
+    "@cherthq/jared-adapter": "workspace:*"
   },
   "license": "MIT",
   "repository": {
