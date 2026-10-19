@@ -1,0 +1,12 @@
+{
+  "provider": "jared",
+  "source": "https://github.com/ZekeSnider/Jared/blob/969f145321deacfc41401fb7728053f240dad465/Jared/JaredWebServer.swift",
+  "docs": "https://github.com/ZekeSnider/Jared/blob/969f145321deacfc41401fb7728053f240dad465/Documentation/restapi.md",
+  "commit": "969f145321deacfc41401fb7728053f240dad465",
+  "retrieved": "2026-10-19",
+  "defaultPort": {"documented": 3005, "source": 3000},
+  "send": {
+    "request": {"body": {"message": "Jared is an amazing app"}, "recipient": {"handle": "+14155551234"}},
+    "chertQueued": {"success": true, "message_id": "0123456789abcdef0123456789abcdef", "chat_id": "chat-a", "status": "queued"}
+  }
+}

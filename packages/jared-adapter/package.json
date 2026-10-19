@@ -1,0 +1,13 @@
+{
+  "name": "@cherthq/jared-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {".": {"types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js"}},
+  "scripts": {"test": "bun test"},
+  "dependencies": {"@cherthq/imessage": "workspace:*"},
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"]
+}

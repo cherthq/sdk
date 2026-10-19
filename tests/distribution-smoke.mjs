@@ -618,3 +618,60 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   assert.deepEqual(Object.keys(await response.json()), ['error']);
   console.log('Built MissBlue unknown outcome retains validated Chert reconciliation IDs without retry.');
 }
+
+{
+  const { createTextingBlueFetch } = await import('@cherthq/texting-blue-adapter');
+  let posts = 0;
+  const transport = createTextingBlueFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async () => { posts++; return Response.json({}, {status: 202}); }}});
+  const rejected = await transport('https://api.texting.blue/v1/messages/send', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', from: '+14155559876', content: 'x', media_url: 'https://example.com/a.png'})});
+  assert.equal(rejected.status, 501);
+  const malformed = await transport('https://api.texting.blue/v1/messages/send', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', from: '+14155559876', content: 'x'})});
+  assert.equal(malformed.status, 502);
+  assert.equal(posts, 1);
+  console.log('Built Texting Blue adapter refuses media before HTTP and never accepts a malformed receipt.');
+}
+
+{
+  const { createContiguityFetch, CONTIGUITY_CONTRACT } = await import('@cherthq/contiguity-adapter');
+  assert.equal(CONTIGUITY_CONTRACT.apiVersion, 'v2026.9.27');
+  let posts = 0;
+  const transport = createContiguityFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async (input, init) => {
+    posts++; const request = new Request(input, init);
+    assert.equal(request.url, 'https://chert.example/api/v1/text-operations/v1');
+    return Response.json({success: true, message_id: 'a'.repeat(32), chat_id: 'chat-a', status: 'queued'}, {status: 202});
+  }}});
+  const rejected = await transport('https://api.contiguity.com/send/imessage', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', message: 'x', fallback: {when: ['imessage_fails']}})});
+  assert.equal(rejected.status, 501);
+  const accepted = await transport('https://api.contiguity.com/send/imessage', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', message: 'x'})});
+  assert.equal(accepted.status, 200);
+  assert.deepEqual((await accepted.json()).data, {message_id: 'a'.repeat(32)});
+  assert.equal(posts, 1);
+  console.log('Built Contiguity adapter refuses SMS fallback before HTTP and maps strict queue acceptance.');
+}
+
+{
+  const { createBlueReacherFetch } = await import('@cherthq/bluereacher-adapter');
+  let requests = 0;
+  const transport = createBlueReacherFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async () => { requests++; return Response.json({}); }}});
+  const drip = await transport('https://api.bluereacher.com/v1/messages', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+16465550119', message: 'x'})});
+  assert.equal(drip.status, 501);
+  assert.equal((await drip.json()).error, 'unsupported_feature');
+  assert.equal(requests, 0);
+  console.log('Built Blue Reacher adapter refuses default drip sends before HTTP.');
+}
+
+{
+  const { createJaredFetch } = await import('@cherthq/jared-adapter');
+  assert.throws(() => createJaredFetch({origin: 'http://example.com:3005', chert: {baseURL: 'https://chert.example', apiKey: 'k'}}), TypeError);
+  let posts = 0;
+  const transport = createJaredFetch({origin: 'http://localhost:3005', chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async () => {
+    posts++; return Response.json({success: true, message_id: 'a'.repeat(32), chat_id: 'chat-a', status: 'queued'}, {status: 202});
+  }}});
+  const ok = await transport('http://localhost:3005/message', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({body: {message: 'x'}, recipient: {handle: '+14155551234'}})});
+  assert.equal(ok.status, 200);
+  assert.equal(await ok.text(), '');
+  const group = await transport('http://localhost:3005/message', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({body: {message: 'x'}, recipient: {handle: 'iMessage;+;chat1'}})});
+  assert.equal(group.status, 501);
+  assert.equal(posts, 1);
+  console.log('Built Jared adapter maps strict queue acceptance to empty 200 and refuses group handles before HTTP.');
+}
