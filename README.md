@@ -14,6 +14,26 @@ remain private/unpublished and provider coverage is incomplete.
 | `@cherthq/loopmessage-adapter` | Selected LoopMessage HTTP requests |
 | `@cherthq/missblue-adapter` | Pinned MissBlue HTTP text, inventory, recorded retrieval and typing subset |
 
+Every package is iMessage messaging; there is no FaceTime client here yet, so
+there is no `@cherthq/facetime` package (see [FaceTime integration](docs/FACETIME.md)).
+
+### Package names by language
+
+All remain private/unpublished (`private: true`, `publish = false`).
+
+| Language | Package / distribution | Import as | Previous name |
+| --- | --- | --- | --- |
+| JS/TS core | `@cherthq/imessage` (`packages/imessage`) | `@cherthq/imessage` | `@chert/sdk` (`packages/sdk`) |
+| JS/TS adapters | `@cherthq/<provider>-adapter` | same | `@chert/<provider>-adapter` |
+| Python | `cherthq-imessage` | `chert` | `chert-sdk` |
+| Rust | `cherthq-imessage` | `cherthq_imessage` | `chert-sdk` / `chert_sdk` |
+| Go | `github.com/cherthq/sdk/go` | package `chert` | `github.com/cherthq/chert-sdk/go` |
+| C#/.NET | NuGet ID `Cherthq.IMessage` | namespace `Chert.Sdk` | `Chert.Sdk` |
+| C++ | CMake target `cherthq-imessage` / `cherthq::imessage` | `<chert/client.hpp>`, namespace `chert` | `chert-sdk` / `chert::sdk` |
+
+Source-level import names (Python `chert`, C# `Chert.Sdk`, C++ `chert`) and
+the C++/Rust fixture executable names are deliberately unchanged.
+
 These are explicit adapters, not aliases for complete provider parity. Existing
 provider credentials and IDs do not transfer to Chert. Accepted/queued requests
 are separate from sent, delivered and read evidence. Unsupported operations

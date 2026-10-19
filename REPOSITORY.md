@@ -1,6 +1,6 @@
 # Chert SDK
 
-This repository contains the Chert language clients and iMessage compatibility
+This repository (`cherthq/sdk`, formerly `cherthq/chert-sdk`) contains the Chert language clients and iMessage compatibility
 adapters extracted from the branch-local platform work. Packages remain private
 and unpublished while compatibility and device acceptance continue.
 
