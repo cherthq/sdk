@@ -1,0 +1,7 @@
+{
+  "name": "blooio-fixture",
+  "private": true,
+  "dependencies": {
+    "@blooio/sdk": "0.0.2"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "unsupported-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@photon-ai/advanced-imessage": "2.3.0",
+    "spectrum-ts": "12.11.0"
+  }
+}

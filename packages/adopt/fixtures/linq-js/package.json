@@ -1,0 +1,8 @@
+{
+  "name": "linq-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@linqapp/sdk": "0.78.0"
+  }
+}
