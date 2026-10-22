@@ -12,7 +12,7 @@ export const HELP = `Chert — connect your existing agent or project
   chert setup --backend https://HOST [--target project|personal] [--plan shared|dedicated]
   chert login --backend https://HOST
   chert status | doctor [--backend https://HOST] [--env-file PATH]
-  chert onboard --base-url https://HOST --phone +COUNTRYNUMBER --consent-contact [--agent codex] [--target auto] [--detach]
+  chert onboard --base-url https://HOST --phone +COUNTRYNUMBER --consent-contact [--agent codex] [--target auto] [--detach] [--prefer-facetime]
   chert onboard-status | onboard-watch | onboard-cancel | onboard-cleanup --state /tmp/.../state.json
   --json produces structured output. --help shows this page.
 Shared: US$25/month. Dedicated: US$250/month/line. No free plan.
@@ -33,7 +33,7 @@ function parse(argv: string[]): { command: string; flags: Flags } {
   const valued = new Set(['backend', 'target', 'plan', 'env-file', 'base-url', 'phone', 'agent', 'state']);
   for (let index = 0; index < words.length; index++) {
     const name = words[index].replace(/^--/, '');
-    if (!words[index].startsWith('--') || !['json', 'help', 'consent-contact', 'detach', ...valued].includes(name) || name in flags) throw new SetupError('Unknown or repeated option. Run chert --help.');
+    if (!words[index].startsWith('--') || !['json', 'help', 'consent-contact', 'detach', 'prefer-facetime', ...valued].includes(name) || name in flags) throw new SetupError('Unknown or repeated option. Run chert --help.');
     if (valued.has(name)) {
       if (!words[index + 1] || words[index + 1].startsWith('--')) throw new SetupError(`--${name} needs a value.`);
       flags[name] = words[++index];
@@ -94,7 +94,7 @@ export async function run(argv: string[], dependencies: Dependencies = {}): Prom
     const target = flags.target === undefined || flags.target === 'auto' ? await detectTarget(cwd) : flags.target;
     if (target !== 'project' && target !== 'personal') throw new SetupError('--target must be auto, project or personal.');
     const agent = typeof flags.agent === 'string' ? flags.agent : env.CHERT_ORIGIN_AGENT ?? (env.CODEX_THREAD_ID ? 'codex' : env.CLAUDECODE ? 'claude-code' : 'coding-agent');
-    const result = await startOnboarding({ baseUrl: flags['base-url'], phone: flags.phone, consent: flags['consent-contact'] === true, agent, target, ...(target === 'project' ? { projectLabel: basename(cwd) } : {}), detached: flags.detach === true }, common);
+    const result = await startOnboarding({ baseUrl: flags['base-url'], phone: flags.phone, consent: flags['consent-contact'] === true, agent, target, ...(target === 'project' ? { projectLabel: basename(cwd) } : {}), detached: flags.detach === true, preferFaceTime: flags['prefer-facetime'] === true }, common);
     return flags.detach === true ? result : watchOnboarding(String(result.helperFile), common);
   }
   if (!['setup', 'login', 'status', 'doctor'].includes(command)) throw new SetupError('Unknown command. Run chert --help.');

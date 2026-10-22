@@ -65,3 +65,12 @@ test('failed remote cancellation still stops local polling without claiming remo
   const result=await cancelOnboarding(file,{fetch:unavailable});expect(result).toMatchObject({status:'cancelled',remoteCancellation:false});expect(String(result.message)).toContain('contact may continue');
   expect(await readFile(file,'utf8')).not.toContain(capability);expect((await pollOnboarding(file,{fetch:unavailable})).status).toBe('cancelled');
 }));
+
+test('hosted FaceTime preference is forwarded only when explicitly selected',async()=>fixture(async root=>{
+ const seen:{url:string;init?:RequestInit}[]=[];
+ await startOnboarding({...input,preferFaceTime:true},{temporaryRoot:root,fetch:api([session()],seen)});
+ expect(JSON.parse(String(seen[0]!.init?.body)).preferFaceTime).toBe(true);
+ const plain:{url:string;init?:RequestInit}[]=[];
+ await startOnboarding(input,{temporaryRoot:root,fetch:api([session()],plain)});
+ expect(JSON.parse(String(plain[0]!.init?.body)).preferFaceTime).toBeUndefined();
+}));

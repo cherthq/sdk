@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 
-export interface OnboardInput { baseUrl: string; phone: string; consent: boolean; agent: string; target: 'project'|'personal'; projectLabel?: string; detached?: boolean }
+export interface OnboardInput { baseUrl: string; phone: string; consent: boolean; agent: string; target: 'project'|'personal'; projectLabel?: string; detached?: boolean; preferFaceTime?: boolean }
 interface HelperState { schema: 1; baseUrl: string; sessionId: string; capability: string; expiresAt: number; createdAt: number; state: string; agent: string; target: 'project'|'personal'; remoteCancellation?: boolean }
 export interface OnboardDeps { fetch?: typeof fetch; now?: () => number; pause?: (ms:number)=>Promise<void>; temporaryRoot?: string; emit?: (event:Record<string,unknown>)=>void; detach?: (file:string)=>void }
 const TTL = 2 * 60 * 60 * 1000;
@@ -45,7 +45,7 @@ export async function startOnboarding(input:OnboardInput,deps:OnboardDeps={}):Pr
   if(!input.consent)throw new OnboardError('Explain that Chert will contact this phone for onboarding, then obtain --consent-contact from the user.');
   if(!/^[a-zA-Z0-9][a-zA-Z0-9 ._-]{0,79}$/.test(input.agent))throw new OnboardError('Supply a short --agent name for the originating agent.');
   const label=input.projectLabel?.replace(/[^a-zA-Z0-9 ._-]/g,'').slice(0,100);
-  const data=await request(baseUrl,'/sessions',{method:'POST',body:JSON.stringify({phone:input.phone,contactConsent:true,originAgent:input.agent,target:{kind:input.target,...(label?{projectLabel:label}:{})},resumeStrategy:input.detached?'poll':'manual',ttlSeconds:TTL/1000})},deps);
+  const data=await request(baseUrl,'/sessions',{method:'POST',body:JSON.stringify({phone:input.phone,contactConsent:true,originAgent:input.agent,target:{kind:input.target,...(label?{projectLabel:label}:{})},resumeStrategy:input.detached?'poll':'manual',ttlSeconds:TTL/1000,...(input.preferFaceTime?{preferFaceTime:true}:{})})},deps);
   const createdAt=(deps.now??Date.now)(),end=Math.min(expiration(data.expiresAt),createdAt+TTL);
   if(typeof data.sessionId!=='string'||!/^[A-Za-z0-9_-]{8,160}$/.test(data.sessionId)||typeof data.pollCapability!=='string'||data.pollCapability.length<32||data.pollCapability.length>1024||!Number.isFinite(end)||end<=createdAt)throw new OnboardError('Server did not return a valid session capability. Do not start a second session without checking with Chert.');
   const directory=await mkdtemp(join(deps.temporaryRoot??tmpdir(),'chert-onboarding-'));await chmod(directory,0o700);
