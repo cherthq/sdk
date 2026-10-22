@@ -69,6 +69,15 @@ test('incomplete or wrong-chat results are outcome-unknown with exactly one send
     expect(fetch).toHaveBeenCalledTimes(1);
   }
 });
+test('unkeyed chat replies reject noncanonical IDs before contacting Chert', async () => {
+  const { fetch, transport } = setup();
+  for (const id of ['chat%2Fx', 'chat%252Fx']) {
+    const response = await post(transport, `/chats/${id}/messages`, { text: 'hello' });
+    expect(response.status).toBe(501);
+    expect(await response.json()).toMatchObject({ error: { code: 'unsupported_feature' } });
+  }
+  expect(fetch).not.toHaveBeenCalled();
+});
 test('network timeout is outcome-unknown and never retried', async () => {
   const fetch = mock(async () => { throw new DOMException('Timed out', 'TimeoutError'); });
   const transport = createBlooioV4Fetch({ chert: { baseURL: 'https://chert.test', apiKey: 'key', fetch } });
@@ -350,6 +359,16 @@ test('history first page uses official defaults and returns actual plaintext plu
   expect(await response.json()).toEqual({ data: [{ id: 'msg_1', chat_id: 'chat_existing', text: 'one\n\ntwo', status: 'received', direction: 'inbound' }], has_more: true, next_cursor: 'opaque_next' });
   expect(fetch).toHaveBeenCalledTimes(1);
   expect(new Request(...fetch.mock.calls[0]).url).toBe('https://chert.test/api/v1/chats/chat_existing/messages?order=desc&limit=50');
+});
+test('history accepts nullable flattened text when plaintext parts are present', async () => {
+  const { fetch, transport } = setup({
+    messages: [{ id: 'msg_1', chat_id: 'chat_existing', parts: [{ type: 'text', value: 'hello' }], text: null }],
+    has_more: false, next_cursor: null,
+  });
+  const response = await transport('https://api.blooio.com/v4/chats/chat_existing/messages');
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ data: [{ id: 'msg_1', chat_id: 'chat_existing', text: 'hello' }], has_more: false, next_cursor: null });
+  expect(fetch).toHaveBeenCalledTimes(1);
 });
 
 test('pins listChatMessages query limits and optional page schema without changing source hash', () => {
