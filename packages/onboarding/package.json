@@ -16,7 +16,9 @@
   ],
   "scripts": {
     "test": "bun test",
-    "preview": "bun src/http/preview.ts"
+    "preview": "bun src/http/preview.ts",
+    "start:staging": "bun dist/staging.js",
+    "check:staging": "bun src/http/staging.ts --check-config"
   },
   "engines": {
     "bun": ">=1.3.0"

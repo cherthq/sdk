@@ -29,6 +29,8 @@ export interface ServiceOptions {
   mode: 'local-fixture' | 'staging';
   contactConfigured: boolean;
   faceTimeConfigured: boolean;
+  /** Staging hosts must explicitly restrict contact to authorized test recipients. */
+  allowContact?: (phone:string)=>boolean;
 }
 class HttpError extends Error {
   constructor(readonly status: number, readonly code: string) { super(code); }
@@ -112,6 +114,7 @@ export function createOnboardingHandler(options: ServiceOptions): (request: Requ
   const origin = originURL(options.origin);
   if (options.secretKey.length !== 32 || options.rpId !== origin.hostname || !/^\+[1-9]\d{7,14}$/.test(options.mainLine)) throw new Error('Invalid onboarding security configuration');
   if (options.mode === 'local-fixture' && !['localhost', '127.0.0.1', '[::1]'].includes(origin.hostname)) throw new Error('Fixture mode must stay on loopback');
+  if(options.mode==='staging'&&!options.allowContact)throw new Error('Staging requires an explicit recipient allowlist');
   const now = options.now ?? Date.now;
   const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()' };
   const json = (data: unknown, status = 200) => Response.json({ data }, { status, headers });
@@ -145,12 +148,14 @@ export function createOnboardingHandler(options: ServiceOptions): (request: Requ
       if (request.method === 'GET' && url.pathname === '/capabilities') return json({ mode: options.mode, messaging: options.contactConfigured, faceTime: options.faceTimeConfigured, passkeys: true, billing: options.billing ? 'stripe-test' : 'unconfigured', productionReady: false });
       if (request.method === 'POST' && url.pathname === '/sessions') {
         if (!options.contactConfigured || !options.verifyInbound) throw new HttpError(503, 'contact_unconfigured');
-        const source = options.sourceKey(request);
-        if (!source || !options.browserStore.allow(digest(options.secretKey, 'source', source), now(), 3_600_000, 10)) throw new HttpError(429, 'rate_limited');
         const body = await bodyJSON(request);
         object(body, ['phone', 'contactConsent', 'originAgent', 'target', 'resumeStrategy', 'ttlSeconds', 'preferFaceTime']);
         object(body.target, ['kind', 'projectLabel']);
         if (typeof body.phone !== 'string' || body.contactConsent !== true || typeof body.originAgent !== 'string' || !['personal', 'project'].includes(String(body.target.kind)) || (body.target.projectLabel !== undefined && typeof body.target.projectLabel !== 'string') || !['poll', 'manual'].includes(String(body.resumeStrategy)) || (body.ttlSeconds !== undefined && typeof body.ttlSeconds !== 'number') || (body.preferFaceTime !== undefined && typeof body.preferFaceTime !== 'boolean')) throw new HttpError(422, 'invalid_request');
+        if(options.allowContact&&!options.allowContact(body.phone as string))throw new HttpError(403,'recipient_not_allowed');
+        if(body.preferFaceTime===true&&!options.faceTimeConfigured)throw new HttpError(503,'facetime_unconfigured');
+        const source = options.sourceKey(request);
+        if (!source || !options.browserStore.allow(digest(options.secretKey, 'source', source), now(), 3_600_000, 10)) throw new HttpError(429, 'rate_limited');
         const created = options.core.createSession(body as unknown as Parameters<OnboardingCore['createSession']>[0]);
         try {
           options.browserStore.create({ sessionId: created.sessionId, openingHash: digest(options.secretKey, 'opening-hash', openingToken(options.secretKey, created.sessionId)), cookieHash: null, expiresAt: created.expiresAt });
