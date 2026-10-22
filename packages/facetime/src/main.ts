@@ -85,7 +85,7 @@ export async function run(argv: string[], dependencies: Dependencies = {}): Prom
       if (typeof flags.state !== 'string') throw new SetupError('Supply --state with the helper state.json path.');
       if (command === 'onboard-status') return pollOnboarding(flags.state, common);
       if (command === 'onboard-watch') return watchOnboarding(flags.state, common);
-      if (command === 'onboard-cancel') return cancelOnboarding(flags.state);
+      if (command === 'onboard-cancel') return cancelOnboarding(flags.state, common);
       if (command === 'onboard-cleanup') return cleanupOnboarding(flags.state);
       throw new SetupError('Unknown onboarding command.');
     }

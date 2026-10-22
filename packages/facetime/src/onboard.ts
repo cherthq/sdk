@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 
 export interface OnboardInput { baseUrl: string; phone: string; consent: boolean; agent: string; target: 'project'|'personal'; projectLabel?: string; detached?: boolean }
-interface HelperState { schema: 1; baseUrl: string; sessionId: string; capability: string; expiresAt: number; createdAt: number; state: string; agent: string; target: 'project'|'personal' }
+interface HelperState { schema: 1; baseUrl: string; sessionId: string; capability: string; expiresAt: number; createdAt: number; state: string; agent: string; target: 'project'|'personal'; remoteCancellation?: boolean }
 export interface OnboardDeps { fetch?: typeof fetch; now?: () => number; pause?: (ms:number)=>Promise<void>; temporaryRoot?: string; emit?: (event:Record<string,unknown>)=>void; detach?: (file:string)=>void }
 const TTL = 2 * 60 * 60 * 1000;
 export class OnboardError extends Error {}
@@ -85,9 +85,21 @@ export async function watchOnboarding(file:string,deps:OnboardDeps={}):Promise<R
   }
   throw new OnboardError('Helper reached its polling bound; inspect its status.');
 }
-async function cancelUnlocked(file:string):Promise<Record<string,unknown>>{
-  const state=await stateFile(file);await atomic(file,JSON.stringify({...state,state:'cancelled',capability:''})+'\n');
-  return {status:'cancelled',message:'Local polling stopped and its capability was erased. Remote contact cancellation is not supported by this API; the remote session expires at its TTL.'};
+async function cancelUnlocked(file:string,deps:OnboardDeps):Promise<Record<string,unknown>>{
+  const state=await stateFile(file);
+  if((deps.now??Date.now)()>=state.expiresAt){await eraseHelper(file);return {status:'expired',remoteCancellation:false,message:'Expired local helper and handoff removed. Remote cancellation was not confirmed; the service must enforce its session expiry.'};}
+  if(state.state==='complete')return {status:'complete',remoteCancellation:false,message:'The completion receipt is already available; cancelling setup does not revoke an allocated line or subscription.'};
+  if(state.state==='cancelled')return {status:'cancelled',remoteCancellation:state.remoteCancellation===true,message:state.remoteCancellation===true?'Local polling stopped and the service confirmed cancellation.':'Local polling stopped. Remote cancellation was not confirmed; contact may continue until the service expires or stops the session.'};
+  // Erase the persisted capability before HTTP; the lock fences concurrent polling/claiming.
+  const cancelled={...state,state:'cancelled',capability:'',remoteCancellation:false};
+  await atomic(file,JSON.stringify(cancelled)+'\n');
+  let remoteCancellation=false;
+  try{
+    const response=await request(state.baseUrl,`/sessions/${encodeURIComponent(state.sessionId)}/cancel`,{method:'POST',headers:{Authorization:`Bearer ${state.capability}`},body:'{}'},deps);
+    remoteCancellation=response.sessionId===state.sessionId&&response.state==='cancelled';
+  }catch{/* Local cancellation remains effective even when the remote request is unavailable or uncertain. */}
+  await atomic(file,JSON.stringify({...cancelled,remoteCancellation})+'\n');
+  return {status:'cancelled',remoteCancellation,message:remoteCancellation?'Local polling stopped, its capability was erased, and the service confirmed cancellation.':'Local polling stopped and its capability was erased. Remote cancellation was not confirmed; contact may continue until the service expires or stops the session.'};
 }
 
 async function eraseHelper(file:string):Promise<void>{for(const name of ['completion.json','continuation.md','state.json'])await rm(join(resolve(file,'..'),name),{force:true});}
@@ -100,5 +112,5 @@ async function withLock(file:string,operation:()=>Promise<Record<string,unknown>
 }
 
 export async function pollOnboarding(file:string,deps:OnboardDeps={}):Promise<Record<string,unknown>>{return withLock(file,()=>pollUnlocked(file,deps));}
-export async function cancelOnboarding(file:string):Promise<Record<string,unknown>>{return withLock(file,()=>cancelUnlocked(file));}
+export async function cancelOnboarding(file:string,deps:OnboardDeps={}):Promise<Record<string,unknown>>{return withLock(file,()=>cancelUnlocked(file,deps));}
 export async function cleanupOnboarding(file:string):Promise<Record<string,unknown>>{return withLock(file,()=>cleanupUnlocked(file));}

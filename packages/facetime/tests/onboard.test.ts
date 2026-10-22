@@ -41,11 +41,27 @@ test('expiry erases capability and cancel stops local polling',async()=>fixture(
   expect((await pollOnboarding(String(start.helperFile),{now:()=>clock})).status).toBe('expired');
   await expect(readFile(String(start.helperFile))).rejects.toThrow();
   const next=await startOnboarding(input,{temporaryRoot:root,fetch:api([session()],[])}),file=String(next.helperFile);
-  expect((await cancelOnboarding(file)).status).toBe('cancelled');expect((await pollOnboarding(file)).status).toBe('cancelled');expect(await readFile(file,'utf8')).not.toContain(capability);
+  expect((await cancelOnboarding(file,{fetch:api([{sessionId,state:'cancelled'}],[])})).status).toBe('cancelled');expect((await pollOnboarding(file)).status).toBe('cancelled');expect(await readFile(file,'utf8')).not.toContain(capability);
 }));
 test('detached helper uses explicit adapter and watcher finishes pending sequence',async()=>fixture(async root=>{
   let detached='';const fetch=api([session(),{sessionId,state:'waiting'},{sessionId,state:'failed'}],[]);
   const start=await startOnboarding({...input,detached:true},{temporaryRoot:root,fetch,detach:file=>{detached=file;}});
   expect(start.detached).toBe(true);expect(detached).toBe(String(start.helperFile));
   expect((await watchOnboarding(detached,{fetch,pause:async()=>{}})).status).toBe('failed');
+}));
+
+test('remote cancellation authenticates and confirms the session before reporting success',async()=>fixture(async root=>{
+  const seen:{url:string;init?:RequestInit}[]=[];
+  const fetch=api([session(),{sessionId,state:'cancelled'}],seen);
+  const start=await startOnboarding(input,{temporaryRoot:root,fetch}),file=String(start.helperFile);
+  const result=await cancelOnboarding(file,{fetch});expect(result).toMatchObject({status:'cancelled',remoteCancellation:true});
+  expect(seen[1].url).toBe(origin+'/sessions/'+sessionId+'/cancel');expect(seen[1].init?.method).toBe('POST');expect(seen[1].init?.body).toBe('{}');
+  expect((seen[1].init?.headers as Record<string,string>).Authorization).toBe('Bearer '+capability);
+  expect(await readFile(file,'utf8')).not.toContain(capability);expect(JSON.stringify(result)).not.toContain(capability);
+}));
+test('failed remote cancellation still stops local polling without claiming remote contact ceased',async()=>fixture(async root=>{
+  const start=await startOnboarding(input,{temporaryRoot:root,fetch:api([session()],[])}),file=String(start.helperFile);
+  const unavailable=(async()=>Response.json({error:'unavailable'},{status:503}))as unknown as typeof fetch;
+  const result=await cancelOnboarding(file,{fetch:unavailable});expect(result).toMatchObject({status:'cancelled',remoteCancellation:false});expect(String(result.message)).toContain('contact may continue');
+  expect(await readFile(file,'utf8')).not.toContain(capability);expect((await pollOnboarding(file,{fetch:unavailable})).status).toBe('cancelled');
 }));
