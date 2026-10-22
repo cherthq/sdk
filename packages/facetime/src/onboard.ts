@@ -7,7 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 export interface OnboardInput { baseUrl: string; phone: string; consent: boolean; agent: string; target: 'project'|'personal'; projectLabel?: string; detached?: boolean; preferFaceTime?: boolean }
 interface HelperState { schema: 1; baseUrl: string; sessionId: string; capability: string; expiresAt: number; createdAt: number; state: string; agent: string; target: 'project'|'personal'; remoteCancellation?: boolean }
-export interface OnboardDeps { fetch?: typeof fetch; now?: () => number; pause?: (ms:number)=>Promise<void>; temporaryRoot?: string; emit?: (event:Record<string,unknown>)=>void; detach?: (file:string)=>void }
+export interface OnboardDeps { fetch?: typeof fetch; now?: () => number; pause?: (ms:number)=>Promise<void>; temporaryRoot?: string; emit?: (event:Record<string,unknown>)=>void; detach?: (file:string)=>void; scheduleExpiry?: (file:string)=>Promise<void>|void }
 const TTL = 2 * 60 * 60 * 1000;
 export class OnboardError extends Error {}
 export function trustedOrigin(input:string):string {
@@ -54,7 +54,8 @@ export async function startOnboarding(input:OnboardInput,deps:OnboardDeps={}):Pr
   const file=join(directory,'state.json');
   const state:HelperState={schema:1,baseUrl,sessionId:data.sessionId,capability:data.pollCapability,expiresAt:end,createdAt,state:safeState(data.state),agent:input.agent,target:input.target};
   await atomic(file,JSON.stringify(state)+'\n');
-  const summary={status:'pending',sessionId:state.sessionId,state:state.state,helperFile:file,expiresAt:new Date(end).toISOString(),message:'Chert will guide the user on the consented phone. Keep the helper running, or use onboard-status with this file. Completion writes a protected handoff; it does not inject instructions into another agent.'};
+  if(deps.scheduleExpiry){try{await deps.scheduleExpiry(file);}catch{throw new OnboardError(`Could not start automatic expiry cleanup. Keep the saved helper at ${file}; run onboard-cleanup after use.`);}}
+  const summary={automaticCleanup:!!deps.scheduleExpiry,status:'pending',sessionId:state.sessionId,state:state.state,helperFile:file,expiresAt:new Date(end).toISOString(),message:'Chert will guide the user on the consented phone. Keep the helper running, or use onboard-status with this file. Completion writes a protected handoff; it does not inject instructions into another agent.'};
   deps.emit?.(summary);
   if(input.detached){
     if(deps.detach)deps.detach(file);else{await new Promise<void>((done,fail)=>{const child=spawn(process.execPath,[process.argv[1],'onboard-watch','--state',file],{detached:true,stdio:'ignore'});child.once('error',()=>fail(new OnboardError('Could not detach the helper. Run onboard-watch with the saved helper path.')));child.once('spawn',()=>{child.unref();done();});});}
@@ -138,3 +139,21 @@ async function withLock(file:string,operation:()=>Promise<Record<string,unknown>
 export async function pollOnboarding(file:string,deps:OnboardDeps={}):Promise<Record<string,unknown>>{return withLock(file,()=>pollUnlocked(file,deps));}
 export async function cancelOnboarding(file:string,deps:OnboardDeps={}):Promise<Record<string,unknown>>{return withLock(file,()=>cancelUnlocked(file,deps));}
 export async function cleanupOnboarding(file:string):Promise<Record<string,unknown>>{return withLock(file,()=>cleanupUnlocked(file));}
+
+/** Local-only expiry watcher. It never polls a service or cancels paid resources. */
+export async function reapExpiredOnboarding(file:string,deps:OnboardDeps={}):Promise<Record<string,unknown>>{
+  let deadline:number|undefined,announced=false,busyAttempts=0;
+  for(;;){
+    let state:HelperState;
+    try{state=await stateFile(file);}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return {status:'cleaned'};throw error;}
+    if(!announced){deps.emit?.({type:'expiry-ready'});announced=true;}
+    deadline=Math.min(deadline??state.expiresAt,state.expiresAt);
+    const remaining=deadline-(deps.now??Date.now)();
+    if(remaining>0){await(deps.pause??(ms=>delay(ms)))(Math.min(60000,remaining));continue;}
+    const result=await withLock(file,async()=>{await eraseHelper(file);return {status:'expired'};});
+    if(result.state!=='helper_busy')return result;
+    if(++busyAttempts>=60)return {status:'cleanup_blocked',message:'Another helper holds the local lock. Inspect that process before retrying cleanup.'};
+    // Let an already-running bounded poll finish; do not race its credential writes.
+    await(deps.pause??(ms=>delay(ms)))(1000);
+  }
+}

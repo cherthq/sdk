@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { ChertApiError } from '@cherthq/control-plane';
 import { OnboardError } from './onboard.js';
+import { scheduleHelperExpiry } from './expiry.js';
 import { run, SetupError } from './main.js';
 
 const json = process.argv.includes('--json');
@@ -10,7 +11,7 @@ function output(value: Record<string, unknown>): void {
   else console.log(JSON.stringify(value, null, 2));
 }
 try {
-  const result = await run(process.argv.slice(2), { emit: output });
+  const result = await run(process.argv.slice(2), { emit: output, scheduleExpiry: scheduleHelperExpiry });
   output(result);
   if (result.status === 'blocked') process.exitCode = 2;
 } catch (error) {

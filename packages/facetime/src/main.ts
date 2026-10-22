@@ -26,6 +26,7 @@ export interface Dependencies {
   now?: () => number;
   pause?: (milliseconds: number) => Promise<void>;
   emit?: (value: Record<string, unknown>) => void;
+  scheduleExpiry?: (file:string)=>Promise<void>|void;
 }
 function parse(argv: string[]): { command: string; flags: Flags } {
   const words = [...argv], command = words[0]?.startsWith('--') ? 'help' : words.shift() ?? 'help';
@@ -80,7 +81,7 @@ export async function run(argv: string[], dependencies: Dependencies = {}): Prom
   const { command, flags } = parse(argv);
   if (command === 'help' || flags.help) return { status: 'help', text: HELP };
   if (command.startsWith('onboard')) {
-    const common = { ...(dependencies.fetch ? { fetch: dependencies.fetch } : {}), ...(dependencies.now ? { now: dependencies.now } : {}), ...(dependencies.pause ? { pause: dependencies.pause } : {}), ...(dependencies.emit ? { emit: dependencies.emit } : {}) };
+    const common = { ...(dependencies.fetch ? { fetch: dependencies.fetch } : {}), ...(dependencies.now ? { now: dependencies.now } : {}), ...(dependencies.pause ? { pause: dependencies.pause } : {}), ...(dependencies.emit ? { emit: dependencies.emit } : {}), ...(dependencies.scheduleExpiry ? { scheduleExpiry: dependencies.scheduleExpiry } : {}) };
     if (command !== 'onboard') {
       if (typeof flags.state !== 'string') throw new SetupError('Supply --state with the helper state.json path.');
       if (command === 'onboard-status') return pollOnboarding(flags.state, common);
