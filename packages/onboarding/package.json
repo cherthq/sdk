@@ -1,0 +1,23 @@
+{
+  "name": "@cherthq/onboarding",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "bun test"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
+  }
+}

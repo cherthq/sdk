@@ -1,0 +1,13 @@
+export type State='contact_pending'|'phone_pending'|'passkey_pending'|'plan_pending'|'payment_pending'|'provisioning'|'ready'|'claimed'|'cancelled'|'expired'|'failed';
+export type Plan='shared'|'dedicated';
+export type Target={kind:'personal'|'project';projectLabel?:string};
+export type ResumeStrategy='poll'|'manual';
+export interface Session {id:string;version:number;state:State;createdAt:number;expiresAt:number;capabilityHash:string;phoneHash:string;phoneSealed:string;userId:string;originAgent:string;target:Target;resumeStrategy:ResumeStrategy;challengeHash:string;challengeExpiresAt:number;challengeAttempts:number;phoneVerified:boolean;passkeyRegistered:boolean;plan?:Plan;checkoutId?:string;checkoutUrl?:string;paymentEvent?:string;readySealed?:string;failure?:string}
+export interface UserIdentity {id:string;phoneHash:string;phoneSealed:string;verifiedAt:number|null}
+export interface PasskeyIdentity {credentialId:string;userId:string;publicKey:string;counter:number;createdAt:number}
+export interface PublicSession {sessionId:string;version:number;state:State;expiresAt:number;originAgent:string;target:Target;resumeStrategy:ResumeStrategy;phoneVerified:boolean;passkeyRegistered:boolean;plan?:Plan;failure?:string}
+export interface ClaimPayload {sessionId:string;userId:string;projectId:string;allocationId:string;entitlementId:string;connector:{kind:'existing-connector'|'hosted-webhook';configuration:Record<string,string>};target:Target;originAgent:string;resumeStrategy:ResumeStrategy}
+export interface Outbox {id:string;sessionId:string;kind:'message'|'facetime'|'allocate';sealedPayload:string;status:'pending'|'processing'|'done'|'cancelled';attempts:number;availableAt:number;leaseUntil:number}
+/** All methods are synchronous. transaction must commit atomically or roll back on throw. */
+export interface OnboardingStore {transaction<T>(fn:()=>T):T;getSession(id:string):Session|undefined;insertSession(session:Session):void;saveSession(session:Session,expectedVersion:number):boolean;getUser(phoneHash:string):UserIdentity|undefined;putUser(user:UserIdentity):void;getPasskey(credentialId:string):PasskeyIdentity|undefined;getPasskeys(userId:string):PasskeyIdentity[];putPasskey(passkey:PasskeyIdentity):void;putEvent(id:string):boolean;consumeRate(key:string,now:number,windowMs:number,limit:number):boolean;addOutbox(item:Outbox):void;dueOutbox(now:number,limit:number):Outbox[];claimOutbox(id:string,now:number,leaseUntil:number):string|undefined;ownsOutboxLease(id:string,token:string):boolean;saveOutbox(item:Outbox,leaseToken?:string):boolean;cancelOutbox(sessionId:string):void}
+export class OnboardingError extends Error {constructor(public readonly code:string,public readonly status=409){super(code);this.name='OnboardingError';}}
