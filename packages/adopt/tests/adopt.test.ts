@@ -220,6 +220,57 @@ describe('dry run, write and safety', () => {
     expect(readFileSync(join(v4, 'src/api.ts'), 'utf8')).toBe(readFileSync(join(fixtures, 'blooio-v4-ts/src/api.ts'), 'utf8'));
   });
 
+  test('destructured CommonJS SDK imports stay on the vendor package', () => {
+    const dir = project('sendblue-ts', d => {
+      for (const file of ['send.ts', 'reaction.ts', 'webhook.ts']) writeFileSync(join(d, 'src', file), '');
+      writeFileSync(join(d, 'src/legacy.cjs'), [
+        "const { SendblueAPI } = require('sendblue');",
+        'const client = new SendblueAPI({ apiServiceKey: process.env.SENDBLUE_API_KEY });',
+        "client.messages.send({ from_number: '+15550000001', body: 'hello' });",
+      ].join('\n') + '\n');
+      writeFileSync(join(d, 'src/unused.cjs'), "const sdk = require('sendblue');\nvoid sdk;\n");
+    });
+    const result = scan(dir);
+    expect(result.edits.map(edit => [edit.file, edit.ok])).toEqual([['src/legacy.cjs', false], ['src/unused.cjs', false]]);
+    expect(result.findings.find(finding => finding.file === 'src/legacy.cjs' && finding.kind === 'constructor')).toMatchObject({ class: 'unsupported' });
+    const original = readFileSync(join(dir, 'src/legacy.cjs'), 'utf8');
+    const unused = readFileSync(join(dir, 'src/unused.cjs'), 'utf8');
+
+    expect(run(dir, '--write').code).toBe(0);
+    expect(readFileSync(join(dir, 'src/legacy.cjs'), 'utf8')).toBe(original);
+    expect(readFileSync(join(dir, 'src/unused.cjs'), 'utf8')).toBe(unused);
+    const dependencies = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies;
+    expect(dependencies.sendblue).toBe('3.20.1');
+    expect(dependencies).not.toHaveProperty('@cherthq/sendblue-adapter');
+  });
+
+  test('unresolved namespace constructors block an SDK import rewrite', () => {
+    const dir = project('linq-js', d => {
+      writeFileSync(join(d, 'src/index.mjs'), '');
+      writeFileSync(join(d, 'src/named.js'), '');
+      writeFileSync(join(d, 'src/unresolved.mjs'), [
+        "import * as Sdk from '@linqapp/sdk';",
+        'const client = new Sdk.Linq({ key: process.env.LINQ_API_KEY });',
+        'client.chats.messages.send({});',
+      ].join('\n') + '\n');
+      writeFileSync(join(d, 'src/nested.mjs'), [
+        "import * as Sdk from '@linqapp/sdk';",
+        'const client = new Sdk.Linq.Client({ key: process.env.LINQ_API_KEY });',
+        'client.chats.messages.send({});',
+      ].join('\n') + '\n');
+    });
+    const result = scan(dir);
+    expect(result.edits.map(edit => [edit.file, edit.ok])).toEqual([['src/nested.mjs', false], ['src/unresolved.mjs', false]]);
+    expect(result.findings.find(finding => finding.file === 'src/unresolved.mjs' && finding.kind === 'import')).toMatchObject({ class: 'unsupported' });
+    const original = readFileSync(join(dir, 'src/unresolved.mjs'), 'utf8');
+    const nested = readFileSync(join(dir, 'src/nested.mjs'), 'utf8');
+
+    expect(run(dir, '--write').code).toBe(0);
+    expect(readFileSync(join(dir, 'src/unresolved.mjs'), 'utf8')).toBe(original);
+    expect(readFileSync(join(dir, 'src/nested.mjs'), 'utf8')).toBe(nested);
+    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@linqapp/sdk': '0.78.0' });
+  });
+
   test('refuses to write into a dirty tree unless --allow-dirty', () => {
     const dir = project('sendblue-ts');
     writeFileSync(join(dir, 'src/send.ts'), readFileSync(join(dir, 'src/send.ts'), 'utf8') + '\n// local edit\n');
