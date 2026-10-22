@@ -74,8 +74,8 @@ export class OnboardingCore {
   try{const s=this.active(item.sessionId),phone=this.open<string>(s.phoneSealed),payload=this.open<{text?:string;welcome?:boolean}>(item.sealedPayload);
    let faceTime:'requested'|'busy'|'unavailable'|undefined;
    let allocation:Omit<ClaimPayload,'sessionId'|'target'|'originAgent'|'resumeStrategy'|'userId'>|undefined;
-   if(item.kind==='message')await this.options.messaging.sendMessage({to:phone,from:this.options.mainLine,text:payload.text!,idempotencyKey:item.id});
-   else if(item.kind==='facetime')faceTime=await this.options.messaging.requestFaceTime?.({to:phone,from:this.options.mainLine,sessionId:s.id,idempotencyKey:item.id})??'unavailable';
+   if(item.kind==='message')await this.options.messaging.sendMessage({to:phone,from:this.options.mainLine,text:payload.text!,idempotencyKey:item.id,context:{sessionId:s.id,originAgent:s.originAgent,target:s.target}});
+   else if(item.kind==='facetime')faceTime=await this.options.messaging.requestFaceTime?.({to:phone,from:this.options.mainLine,sessionId:s.id,idempotencyKey:item.id,context:{sessionId:s.id,originAgent:s.originAgent,target:s.target}})??'unavailable';
    else if(s.state!=='ready'){if(!this.options.allocator)throw new Error('allocator_unavailable');allocation=await this.options.allocator.allocate({sessionId:s.id,userId:s.userId,phone,plan:s.plan!,checkoutId:s.checkoutId!,target:s.target,idempotencyKey:item.id});}
    const completed=this.store.transaction(()=>{
     const current=this.session(item.sessionId);
