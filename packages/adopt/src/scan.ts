@@ -82,9 +82,10 @@ function classifyRoute(provider: Provider, host: string, path: string, method: s
 }
 
 const constructorNote = (provider: Provider) => `Add \`chert: {baseURL: process.env.CHERT_BASE_URL, apiKey: process.env.CHERT_API_KEY}\` to the constructor (required by ${provider.adapter!.package}); keep maxRetries 0 or omitted. Vendor credentials are unused.`;
+const commonJSNote = (adapter: string) => `${adapter} is ESM-only; rewriting this CommonJS require may break on supported Node runtimes. Keep the vendor import or convert the file to ESM.`;
 
 type ImportRec = { provider: Provider; finding: Finding; edit?: ImportEdit; usages: Finding[]; blocked?: string };
-type Binding = { rec: ImportRec; kind: 'default' | 'ns' | 'cjs' | string };
+type Binding = { rec: ImportRec; kind: 'default' | 'ns' | 'cjs' | string; viaCjs?: boolean };
 
 function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[]) {
   const kind = file.endsWith('x') ? (file.endsWith('tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.JSX) : /\.[cm]?ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS;
@@ -119,8 +120,8 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
     recs.push(rec); local.push(finding);
     return rec;
   };
-  const bindNamed = (rec: ImportRec, imported: string, name: string) => {
-    bindings.set(name, { rec, kind: imported });
+  const bindNamed = (rec: ImportRec, imported: string, name: string, viaCjs = false) => {
+    bindings.set(name, { rec, kind: imported, ...(viaCjs ? { viaCjs: true } : {}) });
     const adapter = rec.provider.adapter;
     if (adapter?.kind === 'sdk' && rec.provider.upstreamClients?.includes(imported) && !adapter.namedClients?.includes(imported)) {
       rec.blocked = `Named export \`${imported}\` resolves to the original vendor client through ${adapter.package}'s re-exports; use the default import.`;
@@ -166,22 +167,29 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
       if (rec && ts.isVariableDeclaration(declaration)) {
         if (ts.isIdentifier(declaration.name)) {
           if (kind === 'cjs' || kind === 'ns' || kind === 'default') bindings.set(declaration.name.text, { rec, kind });
-          else bindNamed(rec, kind, declaration.name.text);
+          else bindNamed(rec, kind, declaration.name.text, required);
         } else if (ts.isObjectBindingPattern(declaration.name)) {
           for (const element of declaration.name.elements) {
             const imported = element.propertyName && ts.isIdentifier(element.propertyName) ? element.propertyName.text : ts.isIdentifier(element.name) ? element.name.text : null;
-            if (imported && ts.isIdentifier(element.name)) imported === 'default' ? bindings.set(element.name.text, { rec, kind: 'default' }) : bindNamed(rec, imported, element.name.text);
+            if (imported && ts.isIdentifier(element.name)) imported === 'default' ? bindings.set(element.name.text, { rec, kind: 'default', ...(required ? { viaCjs: true } : {}) }) : bindNamed(rec, imported, element.name.text, required);
           }
         }
       }
+      if (required && rec?.edit) rec.blocked = commonJSNote(rec.provider.adapter!.package);
     } else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.getCombinedNodeFlags(node) & ts.NodeFlags.Const) {
       const value = resolve(node.initializer);
       if (value !== null) consts.set(node.name.text, value);
     } else if (ts.isNewExpression(node)) {
       let binding: Binding | undefined, member: string | undefined;
       if (ts.isIdentifier(node.expression)) binding = bindings.get(node.expression.text);
-      else if (ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression)) {
-        binding = bindings.get(node.expression.expression.text); member = node.expression.name.text;
+      else if (ts.isPropertyAccessExpression(node.expression)) {
+        const names = chain(node.expression);
+        const candidate = names?.length ? bindings.get(names[0]!) : undefined;
+        if (names && candidate && names.length > 1 && (candidate.kind === 'ns' || candidate.kind === 'cjs')) {
+          binding = candidate; member = names.slice(1).join('.');
+        } else if (names?.length === 2) {
+          binding = candidate; member = names[1];
+        }
       }
       const provider = binding?.rec.provider;
       if (binding && provider?.adapter?.kind === 'sdk') {
@@ -192,12 +200,16 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
           : member === undefined && (name === 'default' || name === 'cjs' || provider.upstreamClients?.includes(name));
         if (isClient) {
           let outcome: Outcome = { class: 'drop_in', note: constructorNote(provider) };
-          if (!member && binding.kind === 'cjs') outcome = { class: 'unsupported', note: `${adapter.package} is ESM-only: require() returns its module namespace, so \`new X()\` breaks. Use an ESM import or require(...).default.` };
+          if (!member && (binding.kind === 'cjs' || binding.viaCjs)) outcome = { class: 'unsupported', note: commonJSNote(adapter.package) };
           else if (name !== 'default' && name !== 'cjs' && !adapter.namedClients?.includes(name)) outcome = { class: 'unsupported', note: `\`${name}\` resolves to the original vendor client through ${adapter.package}'s re-exports; use the default export.` };
           const finding: Finding = { provider: provider.id, kind: 'constructor', file, line: line(node), op: `new ${node.expression.getText(sf)}`, ...outcome };
           binding.rec.usages.push(finding); local.push(finding);
           const key = clientKey(node.parent && ts.isAwaitExpression(node.parent) ? node.parent : node);
           if (key) clients.set(key, binding.rec);
+        } else if (viaNamespace) {
+          const finding: Finding = { provider: provider.id, kind: 'constructor', file, line: line(node), op: `new ${node.expression.getText(sf)}`,
+            class: 'unsupported', note: `Cannot verify that namespace export \`${name}\` resolves to a Chert adapter client; keep the vendor import.` };
+          binding.rec.usages.push(finding); local.push(finding);
         }
       }
     }

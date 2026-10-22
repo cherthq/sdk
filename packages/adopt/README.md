@@ -60,7 +60,7 @@ reason from `docs/PROVIDER_RESEARCH.md`.
   overrides; a non-git directory also requires it).
 - Rewrites an import/require specifier only when every usage through it is
   `drop_in`. Imports with native or unsupported usages, subpath imports and
-  CommonJS `new require(...)()` clients are left alone and reported.
+  CommonJS `require()` imports of ESM-only adapters are left alone and reported.
 - Updates `package.json`: adds the adapter, and removes the vendor package only
   when no direct imports of it remain. Fetch-style adapters are added when a
   drop-in raw HTTP call exists.

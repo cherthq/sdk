@@ -146,7 +146,7 @@ export function createBlooioV4Fetch(options: { chert: ChertClientOptions }): Che
           if(hasMedia&&!media)return invalidPage();
           if(!hasMedia&&row.parts.some(part=>!record(part)||part.type!=='text'||typeof part.value!=='string'||(part.text!==undefined&&part.text!==part.value)))return invalidPage();
           const joined=media?media.text??'':row.parts.map(part=>(part as {value:string}).value).join('\n\n');
-          if(row.text!==undefined&&row.text!==joined)return invalidPage();
+          if(row.text!==undefined&&row.text!==null&&row.text!==joined)return invalidPage();
           const text=media?media.text:row.parts.length||typeof row.text==='string'?joined:undefined;
           data.push({ id: row.id, chat_id: chatID,
             ...(media?{attachments:media.attachments}:{}),
@@ -273,7 +273,7 @@ export function createBlooioV4Fetch(options: { chert: ChertClientOptions }): Che
       return error('unsupported_feature', 'Unsupported routing or content options. No message was sent.');
     }
     const expectedChat = direct ? null : identifier(url.pathname.split('/')[3]!);
-    if (idempotencyKey !== null && !direct && !expectedChat)
+    if (!direct && !expectedChat)
       return error('unsupported_feature','A canonical owned chat ID is required. No request was sent.');
     let importedSource=false;
     let dispatched=false, phase:'lookup'|'metadata'|'dispatch'='lookup';
