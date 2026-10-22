@@ -33,7 +33,7 @@ Plans are USD25/month shared or USD250/month dedicated. `choosePlan` reports min
 
 ## Verification
 
-`bun test packages/onboarding/tests/core.test.ts` exercises isolated SQLite persistence/reopen, CAS, stale outbox lease fencing, contact consent, expiry, provider retries, deduplication, attempts, cross-session/cross-identity rejection, encrypted data at rest and one-time claim. It does not contact a provider, charge, mutate a production database, or prove a physical FaceTime call. See [WORKER_API_HANDOFF.md](./WORKER_API_HANDOFF.md) for the implementation boundary and missing staging gates.
+`bun test packages/onboarding/tests/core.test.ts` exercises isolated SQLite persistence/reopen, CAS, stale outbox lease fencing, contact consent, expiry, provider retries, deduplication, attempts, cross-session/cross-identity rejection, encrypted data at rest and delivery-bound receipt acknowledgement. It does not contact a provider, charge, mutate a production database, or prove a physical FaceTime call. See [WORKER_API_HANDOFF.md](./WORKER_API_HANDOFF.md) for the implementation boundary and missing staging gates.
 
 
 ## HTTP service and browser preview
@@ -47,3 +47,5 @@ Browser grants are distinct from CLI capabilities. Link-preview GETs do not cons
 ## Persistent staging entry
 
 The secret-free `.env.example` lists required settings. Validate with `bun packages/onboarding/src/http/staging.ts --check-config`; after the root build, `bun packages/onboarding/dist/staging.js` runs the persistent staging host behind a separately configured HTTPS proxy. It permits only explicitly allowlisted test recipients and test Stripe keys, authenticates its TLS proxy and uses independent worker signing keys, runs the durable dispatcher and preserves owner-only databases on shutdown. The worker must implement the [v1 bridge contract](../../docs/ONBOARDING_WORKER_API.md). No provider endpoint, public staging origin or real test-recipient authorization was supplied in this change, so no live staging traffic was sent.
+
+Receipt retrieval remains in `ready` until a capability- and delivery-bound `POST /sessions/:id/claim/ack`. The CLI saves its protected handoff before acknowledgement; retrying lost claim/ack responses cannot repeat allocation. Unacknowledged delivery expires into the existing paid recovery inbox.
