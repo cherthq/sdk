@@ -92,7 +92,7 @@ test('a busy helper lock has a bounded cleanup wait and is never forcibly remove
 
 test('helper reports automatic cleanup only after its scheduler confirms startup',async()=>fixture(async root=>{
  let scheduled='';const result=await startOnboarding(input,{temporaryRoot:root,fetch:(async()=>Response.json({sessionId:'session_scheduled_123',pollCapability:'capability-'.repeat(5),expiresAt:Date.now()+60000,state:'waiting'}))as unknown as typeof fetch,scheduleExpiry:async file=>{scheduled=file;expect(await readFile(file,'utf8')).toContain('capability-');}});
- expect(result.automaticCleanup).toBe(true);expect(scheduled).toBe(result.helperFile);
+ expect(result.automaticCleanup).toBe(true);expect(scheduled).toBe(String(result.helperFile));
 }));
 test('scheduler failure retains a recoverable helper and reports its path without credentials',async()=>fixture(async root=>{
  let scheduled='';let message='';try{await startOnboarding(input,{temporaryRoot:root,fetch:(async()=>Response.json({sessionId:'session_schedule_fail',pollCapability:'hidden-secret-capability-'.repeat(3),expiresAt:Date.now()+60000,state:'waiting'}))as unknown as typeof fetch,scheduleExpiry:async file=>{scheduled=file;throw Error('unsafe provider detail');}});}catch(error){message=(error as Error).message;}
