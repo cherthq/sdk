@@ -30,7 +30,8 @@ test('concierge CLI claims a real persisted onboarding-core receipt over the ser
         const headers = new Headers(init?.headers), bearer = headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
         if (parts[0] !== 'sessions' || parts[1] !== sessionId) return Response.json({ error: 'not_found' }, { status: 404 });
         if (method === 'GET' && parts.length === 2) data = core.getSession(parts[1], bearer);
-        else if (method === 'POST' && parts[2] === 'claim') data = core.claim(parts[1], bearer);
+        else if (method === 'POST' && parts[2] === 'claim' && parts[3] === 'ack') data = core.acknowledgeClaim(parts[1], bearer, JSON.parse(String(init?.body)).deliveryId);
+        else if (method === 'POST' && parts[2] === 'claim' && parts.length === 3) data = core.claim(parts[1], bearer);
         else return Response.json({ error: 'not_found' }, { status: 404 });
       }
       // Response.json forces the same Date/string/undefined serialization boundary as an HTTP worker.
@@ -72,5 +73,6 @@ test('concierge CLI claims a real persisted onboarding-core receipt over the ser
     expect(() => core.claim(sessionId, capability)).toThrow('session_closed');
     expect((await pollOnboarding(helper, { fetch, now: () => clock })).status).toBe('complete');
     expect(routes.filter(route => route.path.endsWith('/claim'))).toHaveLength(1);
+    expect(routes.filter(route => route.path.endsWith('/claim/ack'))).toHaveLength(1);
   } finally { store.close(); await rm(directory, { recursive: true, force: true }); }
 });

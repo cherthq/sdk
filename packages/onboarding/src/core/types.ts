@@ -2,7 +2,7 @@ export type State='contact_pending'|'phone_pending'|'passkey_pending'|'plan_pend
 export type Plan='shared'|'dedicated';
 export type Target={kind:'personal'|'project';projectLabel?:string};
 export type ResumeStrategy='poll'|'manual';
-export interface Session {id:string;version:number;state:State;createdAt:number;expiresAt:number;capabilityHash:string;phoneHash:string;phoneSealed:string;userId:string;originAgent:string;target:Target;resumeStrategy:ResumeStrategy;challengeHash:string;challengeExpiresAt:number;challengeAttempts:number;phoneVerified:boolean;passkeyRegistered:boolean;plan?:Plan;checkoutStarted?:boolean;checkoutId?:string;checkoutUrl?:string;paymentEvent?:string;readySealed?:string;failure?:string}
+export interface Session {id:string;version:number;state:State;createdAt:number;expiresAt:number;capabilityHash:string;phoneHash:string;phoneSealed:string;userId:string;originAgent:string;target:Target;resumeStrategy:ResumeStrategy;challengeHash:string;challengeExpiresAt:number;challengeAttempts:number;phoneVerified:boolean;passkeyRegistered:boolean;plan?:Plan;checkoutStarted?:boolean;checkoutId?:string;checkoutUrl?:string;paymentEvent?:string;readySealed?:string;claimId?:string;failure?:string}
 export interface UserIdentity {id:string;phoneHash:string;phoneSealed:string;verifiedAt:number|null}
 export interface PasskeyIdentity {credentialId:string;userId:string;publicKey:string;counter:number;createdAt:number}
 export interface PublicSession {sessionId:string;version:number;state:State;expiresAt:number;originAgent:string;target:Target;resumeStrategy:ResumeStrategy;phoneVerified:boolean;passkeyRegistered:boolean;plan?:Plan;failure?:string}

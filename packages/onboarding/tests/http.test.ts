@@ -58,7 +58,7 @@ async function setup() {
   return { directory, server, core, store, browserStore, messages, origin, request, start,advance:(ms:number)=>{clock+=ms;}, setPayment: (value: typeof verifiedPayment) => { verifiedPayment = value; }, checkoutCalls: () => checkoutCalls };
 }
 
-test('real HTTP: signed inbound proof, WebAuthn registration, payment gate, allocation and one-time CLI claim', () => fixture(async f => {
+test('real HTTP: signed inbound proof, WebAuthn registration, payment gate, allocation and acknowledged CLI handoff', () => fixture(async f => {
   const session = await f.start();
   expect(session.page.headers.get('Content-Security-Policy')).toContain("script-src 'nonce-");
   expect(session.html).toContain('test-app'); expect(session.html).not.toContain(session.pollCapability);
@@ -85,7 +85,11 @@ test('real HTTP: signed inbound proof, WebAuthn registration, payment gate, allo
   expect(f.store.getSession(session.sessionId)!.state).toBe('provisioning');
   await f.core.flushOutbox(); expect(f.store.getSession(session.sessionId)!.state).toBe('ready');
   const claimed = await f.request(`/sessions/${session.sessionId}/claim`, {}, cliHeaders);
-  expect(claimed.status).toBe(200); expect((await claimed.json()).data.connector.configuration.scopedToken).toBe('test-receipt-private');
+  expect(claimed.status).toBe(200); const receipt=(await claimed.json()).data;expect(receipt.connector.configuration.scopedToken).toBe('test-receipt-private');
+  expect((await(await f.request(`/sessions/${session.sessionId}/claim`, {}, cliHeaders)).json()).data).toEqual(receipt);
+  expect((await f.request(`/sessions/${session.sessionId}/claim/ack`, {deliveryId:'wrong'}, cliHeaders)).status).toBe(403);
+  expect((await f.request(`/sessions/${session.sessionId}/claim/ack`, {deliveryId:receipt.deliveryId}, cliHeaders)).status).toBe(200);
+  expect((await f.request(`/sessions/${session.sessionId}/claim/ack`, {deliveryId:receipt.deliveryId}, cliHeaders)).status).toBe(200);
   expect((await f.request(`/sessions/${session.sessionId}/claim`, {}, cliHeaders)).status).toBe(409);
   expect((await f.request('/webhooks/stripe',{})).status).toBe(200);
   f.advance(3*60*60*1000);
@@ -143,7 +147,18 @@ test('CLI runs against the actual HTTP server and consumes the paid allocated re
   await f.request(base+'/checkout',{},session.browserHeaders);
   f.setPayment({sessionId:session.sessionId,userId:f.store.getSession(session.sessionId)!.userId,eventId:'evt_cli',checkoutId:'cs_test_one',plan:'shared'});
   await f.request('/webhooks/stripe',{}); await f.core.flushOutbox();
-  const completed=await pollOnboarding(helper);
+  // Drop successful responses at the transport boundary: server state must remain recoverable.
+  let dropClaim=true,dropAck=true;
+  const flaky=(async(input:RequestInfo|URL,init?:RequestInit)=>{const response=await fetch(input,init);const path=new URL(String(input)).pathname;if(path.endsWith('/claim')&&dropClaim){dropClaim=false;await response.arrayBuffer();throw Error('lost claim response');}if(path.endsWith('/claim/ack')&&dropAck){dropAck=false;await response.arrayBuffer();throw Error('lost acknowledgement response');}return response;})as typeof fetch;
+  await expect(pollOnboarding(helper,{fetch:flaky})).rejects.toThrow('unavailable');
+  expect(f.store.getSession(session.sessionId)!.state).toBe('ready');
+  const storedDelivery=f.store.getSession(session.sessionId)!.claimId;
+  const reopened=new SqliteOnboardingStore({path:join(f.directory,'core.sqlite')});
+  expect(reopened.getSession(session.sessionId)!.claimId).toBe(storedDelivery);expect(reopened.getSession(session.sessionId)!.readySealed).toBeTruthy();reopened.close();
+  await expect(pollOnboarding(helper,{fetch:flaky})).rejects.toThrow('unavailable');
+  expect(f.store.getSession(session.sessionId)!.state).toBe('claimed');
+  expect(JSON.parse(await readFile(helper,'utf8')).state).toBe('handoff_saved');
+  const completed=await pollOnboarding(helper,{fetch:flaky});
   expect(completed.status).toBe('complete');
   const receipt=JSON.parse(await readFile(String(completed.completionFile),'utf8'));
   expect(receipt.projectId).toBe('project-one'); expect(receipt.target.kind).toBe('project');

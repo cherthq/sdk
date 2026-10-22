@@ -17,8 +17,10 @@ export function trustedOrigin(input:string):string {
 }
 async function atomic(file:string,value:string):Promise<void>{
   const temp=`${file}.${randomUUID()}.tmp`;const handle=await open(temp,'wx',0o600);
-  try{await handle.writeFile(value);await handle.sync();}finally{await handle.close();}
-  try{await rename(temp,file);}finally{await rm(temp,{force:true});}
+  try{
+    try{await handle.writeFile(value);await handle.sync();}finally{await handle.close();}
+    await rename(temp,file);
+  }finally{await rm(temp,{force:true});}
 }
 async function stateFile(file:string):Promise<HelperState>{
   const info=await lstat(file);if(!info.isFile()||info.isSymbolicLink()||info.size>16384||(process.platform!=='win32'&&(info.mode&0o077)))throw new OnboardError('Helper state must be an owner-only regular file.');
@@ -65,17 +67,39 @@ async function pollUnlocked(file:string,deps:OnboardDeps={}):Promise<Record<stri
   if(now>=state.expiresAt){await eraseHelper(file);return {status:'expired',message:'The local helper expired and its capability and handoff were removed. The remote session must also enforce its TTL.'};}
   if(state.state==='complete')return {status:'complete',handoffFile:join(resolve(file,'..'),'continuation.md'),completionFile:join(resolve(file,'..'),'completion.json')};
   if(state.state==='cancelled')return {status:'cancelled'};
+  if(state.state==='handoff_saved')return acknowledgeSavedHandoff(file,state,deps);
   const data=await request(state.baseUrl,`/sessions/${encodeURIComponent(state.sessionId)}`,{method:'GET',headers:{Authorization:`Bearer ${state.capability}`}},deps);
   const phase=safeState(data.state);
   if(data.sessionId!==state.sessionId)throw new OnboardError('Onboarding session identity mismatch.');
   if(['failed','expired','cancelled','denied'].includes(phase)){await rm(file,{force:true});return {status:phase,message:'Onboarding stopped. No connected worker is claimed.'};}
   if(phase!=='ready')return {status:'pending',state:phase,phoneVerified:data.phoneVerified===true,passkeyRegistered:data.passkeyRegistered===true,next:'The user should follow the instructions sent by Chert. Run onboard-status again or keep onboard-watch running.'};
   const completion=await request(state.baseUrl,`/sessions/${encodeURIComponent(state.sessionId)}/claim`,{method:'POST',headers:{Authorization:`Bearer ${state.capability}`},body:'{}'},deps);
-  if(completion.sessionId!==state.sessionId||typeof completion.projectId!=='string'||!completion.connector||typeof completion.connector!=='object'||!['existing-connector','hosted-webhook'].includes(String((completion.connector as Record<string,unknown>).kind)))throw new OnboardError('Invalid completion receipt. It may already have been claimed; ask Chert to reconcile rather than retrying setup.');
+  validateCompletion(completion,state);
   const directory=resolve(file,'..'),completionFile=join(directory,'completion.json'),handoffFile=join(directory,'continuation.md');
   await atomic(completionFile,JSON.stringify(completion,null,2)+'\n');
   const prompt=`# Continue Chert setup\n\nThe user completed Chert concierge onboarding for this ${state.target}. Read the protected completion.json beside this file. Do not print its credentials. Reuse the confirmed project and line; do not repeat signup, payment or allocation. Inspect the returned connector kind and follow its supported runtime instructions. Configure only the intended project or persistent agent, keep secrets outside source control, and run read-only readiness checks first. Ask the user before any real call or message. Report the exact remaining runtime or provider requirements; a receipt is not proof of working media.\n`;
-  await atomic(handoffFile,prompt);await atomic(file,JSON.stringify({...state,state:'complete',capability:''})+'\n');
+  await atomic(handoffFile,prompt);
+  const saved={...state,state:'handoff_saved'};
+  await atomic(file,JSON.stringify(saved)+'\n');
+  return acknowledgeSavedHandoff(file,saved,deps);
+}
+function validateCompletion(completion:Record<string,unknown>,state:HelperState):void {
+  if(!completion||typeof completion!=='object'||Array.isArray(completion)||completion.sessionId!==state.sessionId||typeof completion.deliveryId!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(completion.deliveryId)||typeof completion.projectId!=='string'||!completion.projectId||!completion.connector||typeof completion.connector!=='object'||Array.isArray(completion.connector)||!['existing-connector','hosted-webhook'].includes(String((completion.connector as Record<string,unknown>).kind)))throw new OnboardError('Invalid completion receipt. Retry the existing helper; do not start another paid setup.');
+}
+async function protectedHandoff(file:string):Promise<string>{
+  const info=await lstat(file);
+  if(!info.isFile()||info.isSymbolicLink()||info.size>65536||(process.platform!=='win32'&&(info.mode&0o077)))throw new OnboardError('Saved handoff must be an owner-only regular file.');
+  return readFile(file,'utf8');
+}
+async function acknowledgeSavedHandoff(file:string,state:HelperState,deps:OnboardDeps):Promise<Record<string,unknown>>{
+  const directory=resolve(file,'..'),completionFile=join(directory,'completion.json'),handoffFile=join(directory,'continuation.md');
+  let completion:Record<string,unknown>;
+  try{completion=JSON.parse(await protectedHandoff(completionFile));}catch{throw new OnboardError('Saved completion receipt is unavailable. Keep this helper and request reconciliation.');}
+  validateCompletion(completion,state);
+  await protectedHandoff(handoffFile);
+  const acknowledged=await request(state.baseUrl,`/sessions/${encodeURIComponent(state.sessionId)}/claim/ack`,{method:'POST',headers:{Authorization:`Bearer ${state.capability}`},body:JSON.stringify({deliveryId:completion.deliveryId})},deps);
+  if(acknowledged.sessionId!==state.sessionId||acknowledged.state!=='claimed'||acknowledged.deliveryId!==completion.deliveryId)throw new OnboardError('Completion acknowledgement did not match. Retry this helper; its saved handoff is protected.');
+  await atomic(file,JSON.stringify({...state,state:'complete',capability:''})+'\n');
   return {status:'complete',completionFile,handoffFile,message:'Read continuation.md in the originating agent. No arbitrary shell command or automatic agent injection was executed.'};
 }
 export async function watchOnboarding(file:string,deps:OnboardDeps={}):Promise<Record<string,unknown>>{

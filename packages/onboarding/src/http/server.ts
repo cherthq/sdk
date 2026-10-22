@@ -162,12 +162,14 @@ export function createOnboardingHandler(options: ServiceOptions): (request: Requ
         } catch { options.core.cancel(created.sessionId, created.pollCapability); throw new HttpError(503, 'session_unavailable'); }
         return json(created, 201);
       }
-      const cli = /^\/sessions\/([A-Za-z0-9_-]{8,160})(\/claim|\/cancel)?$/.exec(url.pathname);
+      const cli = /^\/sessions\/([A-Za-z0-9_-]{8,160})(\/claim(?:\/ack)?|\/cancel)?$/.exec(url.pathname);
       if (cli) {
         const id = cli[1]!, cap = capability(request);
         if (request.method === 'GET' && !cli[2]) return json(options.core.getSession(id, cap));
-        if (request.method === 'POST' && ['/claim', '/cancel'].includes(cli[2] ?? '')) {
-          object(await bodyJSON(request), []);
+        if (request.method === 'POST' && ['/claim', '/claim/ack', '/cancel'].includes(cli[2] ?? '')) {
+          const body=await bodyJSON(request);
+          object(body, cli[2]==='/claim/ack'?['deliveryId']:[]);
+          if(cli[2]==='/claim/ack'){if(typeof body.deliveryId!=='string')throw new HttpError(422,'invalid_request');return json(options.core.acknowledgeClaim(id,cap,body.deliveryId));}
           if (cli[2] === '/claim') return json(options.core.claim(id, cap));
           options.core.cancel(id, cap); options.browserStore.revoke(id); return json({ sessionId: id, state: 'cancelled' });
         }
