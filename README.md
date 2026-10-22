@@ -19,8 +19,10 @@ remain private/unpublished and provider coverage is incomplete.
 | `@cherthq/jared-adapter` | Open-source Jared local `POST /message` text subset |
 | `@cherthq/adopt` | `chert-adopt` migration report and drop-in import rewrites; see [its README](packages/adopt/README.md) |
 
-Every package is iMessage messaging; there is no FaceTime client here yet, so
-there is no `@cherthq/facetime` package (see [FaceTime integration](docs/FACETIME.md)).
+`@cherthq/control-plane` adds typed control-plane operations. `@cherthq/facetime`
+adds an original development CLI and concierge helper, not a bundled media worker.
+See [setup.md](setup.md) and the [worker/API handoff](docs/ONBOARDING_WORKER_HANDOFF.md).
+These packages remain private/unpublished; hosted onboarding and media adapters require staging verification.
 
 ### Package names by language
 

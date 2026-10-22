@@ -1,0 +1,13 @@
+{
+  "name": "@cherthq/facetime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "bin": { "chert": "./dist/cli.js" },
+  "exports": { ".": { "types": "./dist/main.d.ts", "import": "./dist/main.js" } },
+  "files": ["dist", "README.md"],
+  "scripts": { "test": "bun test" },
+  "engines": { "node": ">=22.12" },
+  "dependencies": { "@cherthq/control-plane": "workspace:*" }
+}
