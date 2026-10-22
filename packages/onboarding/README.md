@@ -34,3 +34,12 @@ Plans are USD25/month shared or USD250/month dedicated. `choosePlan` reports min
 ## Verification
 
 `bun test packages/onboarding/tests/core.test.ts` exercises isolated SQLite persistence/reopen, CAS, stale outbox lease fencing, contact consent, expiry, provider retries, deduplication, attempts, cross-session/cross-identity rejection, encrypted data at rest and one-time claim. It does not contact a provider, charge, mutate a production database, or prove a physical FaceTime call. See [WORKER_API_HANDOFF.md](./WORKER_API_HANDOFF.md) for the implementation boundary and missing staging gates.
+
+
+## HTTP service and browser preview
+
+`createOnboardingHandler` implements the CLI session routes, separately authenticated first-party browser pages, signed inbound webhook bridge, actual SimpleWebAuthn registration/authentication and Stripe test-only checkout/webhook coordination. Build with `bun run build`; the package root exports the core, HTTP handler, browser store and Stripe adapter. The service does not enable production payments or supply a live communications worker.
+
+Run `bun packages/onboarding/src/http/preview.ts` from repository root for a disposable loopback-only demonstration. It does not contact phones, charge money or create an installed account. See the [canonical worker/API handoff](../../docs/ONBOARDING_WORKER_HANDOFF.md) for complete routes, signature protocol, host configuration, dispatcher, recovery queue and outstanding staging gates.
+
+Browser grants are distinct from CLI capabilities. Link-preview GETs do not consume them; a same-origin POST creates an HttpOnly SameSite=Lax cookie. Mutations require Origin and CSRF. Passkeys require user verification and anonymous attestation, one-time challenges and exact RP/origin. Existing verified identities use their bound passkey; phone possession cannot add a replacement key. Checkout reservation prevents plan/cancel races. Expired-session payments enter a durable reconciliation inbox; no paid receipt is silently discarded or treated as an allocated line.

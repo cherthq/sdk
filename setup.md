@@ -6,7 +6,7 @@ This file is the canonical agent onboarding runbook. The website should copy onl
 
 ## Release status
 
-This branch is a development preview. Packages are private/unpublished. The concierge HTTP service and production worker adapters must be implemented and staging-verified before this becomes unattended onboarding. Do not claim signup, payment, a provisioned line, or working FaceTime from a local fixture or CLI receipt.
+This branch is a development preview. Packages are private/unpublished. The concierge HTTP service is implemented and locally fixture-tested; communications/account adapters and real staging must be verified before this becomes unattended onboarding. Do not claim signup, payment, a provisioned line, or working FaceTime from a local fixture or CLI receipt.
 
 ## Agent workflow
 
@@ -18,7 +18,7 @@ This branch is a development preview. Packages are private/unpublished. The conc
 6. Use `chert onboard-status --state <helper-path>` or `onboard-watch` to resume. When complete, read `continuation.md` and `completion.json` privately. Reuse the confirmed project and line, configure the intended runtime, and run read-only readiness checks. Keep credentials outside source control and avoid overwriting existing configuration. Do not claim that a receipt proves successful calls, video or delivery.
 7. Report the exact remaining prerequisites. Connecting an existing agent still requires its provider/LiveKit configuration and a running connector. Ask before placing a real test call or sending a real message. Deploy for availability only within the user's authorization.
 
-The helper writes owner-only files in a temporary directory. It does not execute a callback or inject instructions into the originating agent. The host agent must watch/read the handoff and continue; automatic resumption requires a supported host integration. Use `onboard-cleanup` after consuming credentials. `onboard-cancel` currently stops local polling; the remote service must independently expire or cancel contact.
+The helper writes owner-only files in a temporary directory. It does not execute a callback or inject instructions into the originating agent. The host agent must watch/read the handoff and continue; automatic resumption requires a supported host integration. Use `onboard-cleanup` after consuming credentials. `onboard-cancel` attempts authenticated remote cancellation and always reports whether it was confirmed. It stops local polling on failure; contact can continue until the remote service expires or stops it. Once checkout starts, payment must be reconciled rather than blindly cancelled.
 
 ## Implementers
 

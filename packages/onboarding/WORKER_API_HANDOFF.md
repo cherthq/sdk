@@ -4,12 +4,12 @@ The SDK repository owns the contracts and state machine. A separate worker devel
 
 ## Public agent flow
 
-- `POST /sessions`: JSON `{phone,contactConsent:true,originAgent,target:{kind:'personal'|'project',projectLabel?},resumeStrategy:'poll'|'manual',ttlSeconds?,preferFaceTime?}`. The human must approve being contacted before this request. Return `{sessionId,pollCapability,expiresAt,state}` and the server-owned secure browser continuation URL.
+- `POST /sessions`: JSON `{phone,contactConsent:true,originAgent,target:{kind:'personal'|'project',projectLabel?},resumeStrategy:'poll'|'manual',ttlSeconds?,preferFaceTime?}`. The human must approve being contacted before this request. Return `{sessionId,pollCapability,expiresAt,state}`. The server-owned secure browser link is appended only to the consented welcome message, not CLI stdout.
 - `GET /sessions/:id`: `Authorization: Bearer <pollCapability>`. Return `PublicSession` from the core. No secret, raw phone or checkout URL; the authenticated browser obtains its own checkout link. No side effects from arbitrary polling state names.
 - `POST /sessions/:id/claim`: same capability. Only `ready` can return the single-use `ClaimPayload`. Write it to an owner-only local handoff file and tell the originating agent where it is. Never execute returned configuration or shell text.
 - Cancellation should map to `core.cancel`; it cancels pending setup operations, not an existing Stripe subscription. State expiry does not reverse an already completed payment. Payment reconciliation, refunds and resumed allocations require a durable operator/backend recovery process.
 
-The actual HTTP server owns route prefixes, strict schema/body limits, safe error mapping, caller throttling, capability parsing, TLS origin/RP configuration, security headers and browser CSRF/session protections. Core trusted methods are not public routes. Reject unknown fields and executable resume strategies. Only allow `poll` or `manual`; preserve origin-agent name and project label as data.
+The SDK HTTP handler now implements these routes locally; the staging host still owns strict schema/body limits, safe error mapping, caller throttling, capability parsing, TLS origin/RP configuration, security headers and browser CSRF/session protections. Core trusted methods are not public routes. Reject unknown fields and executable resume strategies. Only allow `poll` or `manual`; preserve origin-agent name and project label as data.
 
 ## Trusted transitions
 
@@ -33,3 +33,5 @@ The actual HTTP server owns route prefixes, strict schema/body limits, safe erro
 SQLite transactions/CAS protect state and durable outbox uniqueness. A unique lease token fences completion/retry callbacks so a slow old dispatcher cannot overwrite a newer claim. Provider sends/allocation remain at least once; adapter idempotency MUST cover crash-after-provider-success. A 60-second lease requires bounded provider timeouts and one stable key per operation. Interrupted `ready` allocation is not reallocated. Rate-limit initial contact at edge and per phone. Encrypt backups, protect SQLite files, schedule retention cleanup, document key rotation and recover expired paid sessions without charging again.
 
 Before production: run real-provider staging contact/verification, wrong sender/code, replay, two concurrent sessions, new/existing passkeys, wrong RP/origin, duplicate checkout/payment events, payment success/allocation failure, missing inventory, restart/retry, expiry/cancel, one-time claim, credential leakage, and actual worker configuration acceptance. Physical call audio/video and message delivery require separately authorized real-device tests. Current deterministic tests establish core behavior only. No production provider calls, purchases or database mutations were performed here.
+
+The canonical expanded implementation/recovery handoff is [docs/ONBOARDING_WORKER_HANDOFF.md](../../docs/ONBOARDING_WORKER_HANDOFF.md). It distinguishes the implemented HTTP service from missing live providers and staging acceptance.
