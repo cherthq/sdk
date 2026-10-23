@@ -4,9 +4,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Version>0.1.0</Version>
-    <PackageId>Cherthq.IMessage</PackageId>
-    <Description>Explicit single-attempt Chert JSON transport and strict text/reaction receipts.</Description>
+    <Version>0.2.0-preview.1</Version>
+    <PackageId>chert-sdk</PackageId>
+    <AssemblyName>TryChert</AssemblyName>
+    <RootNamespace>TryChert</RootNamespace>
+    <Description>Chert iMessage and FaceTime clients with explicit independent credentials and single-attempt HTTP transports.</Description>
+    <Authors>Chert</Authors>
+    <PackageProjectUrl>https://trychert.com</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/cherthq/sdk</RepositoryUrl>
