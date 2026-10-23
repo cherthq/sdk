@@ -88,7 +88,7 @@ test('CLI defaults and explicit overrides use only selected channel credentials'
       env.CHERT_PROJECT_ID = 'project';
       env[channel === 'imessage' ? 'CHERT_API_KEY' : 'CHERT_FACETIME_TOKEN'] = 'selected-secret';
       if (override !== undefined) env[channel === 'imessage' ? 'CHERT_BASE_URL' : 'CHERT_FACETIME_URL'] = override;
-      const args = channel === 'imessage' ? ['send', '--phone', body.phone, '--body', body.body] : ['status'];
+      const args = channel === 'imessage' ? ['send', '--phone', body.phone, '--body', body.body, '--idempotency-key', 'stable-key', '--confirm'] : ['status'];
       const child = Bun.spawn(['node', '--import', `data:text/javascript,${encodeURIComponent(preload)}`, resolve(import.meta.dir, '../../dist/unified/cli.js'), channel, ...args], { env, stdout: 'pipe', stderr: 'pipe' });
       const output = await new Response(child.stdout).text();
       expect(await child.exited).toBe(override === '' ? 1 : 0);
