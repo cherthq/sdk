@@ -2,6 +2,25 @@ import {describe,it,expect} from 'bun:test';
 import {ChertControlPlane,ChertApiError} from './index';
 function fixture(data:unknown,status=200){const requests:{url:string;init:RequestInit}[]=[];const client=new ChertControlPlane({baseUrl:'https://control.example',token:'ftu_private',projectId:'project',fetch:(async(url: Parameters<typeof fetch>[0],init?: RequestInit)=>{requests.push({url:String(url),init:init!});return Response.json({data}, {status});}) as unknown as typeof fetch});return {client,requests};}
 describe('control-plane wire contracts',()=>{
+ it('defaults to the canonical origin with one API prefix and preserves auth boundaries',async()=>{
+  expect(()=>new ChertControlPlane()).not.toThrow();
+  const requests:{url:string;headers:Headers}[]=[];
+  const fetcher=(async(url:Parameters<typeof fetch>[0],init?:RequestInit)=>{requests.push({url:String(url),headers:new Headers(init?.headers)});return Response.json({data:{}});}) as typeof fetch;
+  const client=new ChertControlPlane({token:'private',projectId:'project',fetch:fetcher});
+  await client.beginLogin({device_name:'Test'});await client.pollLogin({device_code:'code'});await client.billingCatalog();await client.whoami();
+  expect(requests.map(r=>r.url)).toEqual(['cli/logins','cli/logins/token','billing/catalog','cli/whoami'].map(path=>`https://facetime.trychert.com/api/v1/${path}`));
+  for(const request of requests.slice(0,3)){expect(request.headers.has('Authorization')).toBe(false);expect(request.headers.has('x-chert-project-id')).toBe(false);}
+  expect(requests[3]!.headers.get('Authorization')).toBe('Bearer private');expect(requests[3]!.headers.get('x-chert-project-id')).toBe('project');
+  await expect(new ChertControlPlane({fetch:fetcher}).whoami()).rejects.toMatchObject({status:401});
+  expect(requests).toHaveLength(4);
+ });
+ it('validates explicit overrides rather than falling back to production',async()=>{
+  for(const baseUrl of ['', 'https://facetime.trychert.com/api/v1', 'https://control.example/#fragment', 'http://control.example'])expect(()=>new ChertControlPlane({baseUrl})).toThrow();
+  for(const baseUrl of ['https://override.example/', 'http://localhost:3000/']){
+   let requested='';const client=new ChertControlPlane({baseUrl,fetch:(async(url:Parameters<typeof fetch>[0])=>{requested=String(url);return Response.json({data:{}});}) as typeof fetch});
+   await client.billingCatalog();expect(requested).toBe(`${new URL(baseUrl).origin}/api/v1/billing/catalog`);
+  }
+ });
  it('starts and polls device auth without sending existing credentials',async()=>{const {client,requests}=fixture({status:'pending'},202);expect(await client.pollLogin({device_code:'fdc_private'})).toEqual({status:'pending'});await client.beginLogin({device_name:'Local laptop'});expect(requests[0]!.url).toBe('https://control.example/api/v1/cli/logins/token');expect(requests[0]!.init.headers).toEqual({Accept:'application/json','Content-Type':'application/json'});expect(requests[0]!.init.body).toBe('{"device_code":"fdc_private"}');expect(requests[1]!.init.redirect).toBe('error');});
  it('sends scoped credentials in headers and paginates',async()=>{const {client,requests}=fixture({items:[],total:0,limit:10,offset:20});await client.listLines({limit:10,offset:20});expect(requests[0]!.url).toBe('https://control.example/api/v1/lines?limit=10&offset=20');expect(requests[0]!.init.headers).toEqual({Accept:'application/json',Authorization:'Bearer ftu_private','x-chert-project-id':'project'});});
  it('uses exact connector management and checkout bodies once',async()=>{const {client,requests}=fixture({});await client.enrollConnector({line_id:'line',name:'Agent',environment:'development',session_mode:'byor'});await client.createCheckout({plan_id:'shared',catalog_version:'2026-10-22'},'stable-checkout-key');expect(JSON.parse(requests[0]!.init.body as string)).toEqual({action:'enroll',line_id:'line',name:'Agent',environment:'development',session_mode:'byor'});expect(requests[1]!.init.headers).toHaveProperty('Idempotency-Key','stable-checkout-key');expect(requests).toHaveLength(2);});
