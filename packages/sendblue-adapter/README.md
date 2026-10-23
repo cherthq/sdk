@@ -1,19 +1,23 @@
-# @cherthq/sendblue-adapter
+# chert-sdk/sendblue-adapter
 
 A limited Chert transport for the real `sendblue@3.20.1` SDK. This package
 subclasses the official SDK and retains its resources, APIPromise helpers,
 types and API error classes. It is not a complete Sendblue replacement.
 
 ```ts
-import SendblueAPI from '@cherthq/sendblue-adapter';
+import SendblueAPI from 'chert-sdk/sendblue-adapter';
 const client = new SendblueAPI({
-  chert: { baseURL: 'https://your-chert-host', apiKey: 'your-chert-key' },
+  chert: { apiKey: 'your-chert-key' },
   maxRetries: 0,
 });
 await client.messages.send({
   from_number: '+15550000001', number: '+15550000002', content: 'hello',
 });
 ```
+
+The endpoint defaults to `https://console.trychert.com`; optional `chert.baseURL`
+overrides remain available for tests/self-hosting. This successor package is not
+published yet; the root README records backend route release blockers.
 
 | Surface | Support |
 | --- | --- |

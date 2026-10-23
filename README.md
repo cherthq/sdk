@@ -9,7 +9,7 @@ the other clients are source previews, with unified channel support under review
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
-| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | npm [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk); binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | Published: [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk). Planned successor: `chert-sdk` (not yet published); same binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage transport (`chert`) | Unpublished; `trychert-sdk` / `trychert` unified client in [draft #11](https://github.com/cherthq/sdk/pull/11) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
@@ -22,8 +22,9 @@ build/test source; do not substitute a similarly named registry package.
 
 ## Channels and credentials
 
-- **iMessage** clients use an explicit service URL, Chert API key and optional
-  messaging tenant. A queued receipt does not mean sent, delivered or read.
+- **iMessage** clients use a Chert API key and optional messaging tenant.
+  JavaScript defaults to `https://console.trychert.com` with an optional service
+  URL override. A queued receipt does not mean sent, delivered or read.
 - **FaceTime control-plane** coverage differs by language. The published JavaScript
   client inspects identity, assigned lines, workers, credentials and connectors;
   it is not an outbound-call API. The C++ and Rust source previews also expose typed call
@@ -39,32 +40,33 @@ build/test source; do not substitute a similarly named registry package.
 
 ## JavaScript / TypeScript
 
-```sh
-npm install @trychert/sdk
-# Alternatives:
-pnpm add @trychert/sdk
-bun add @trychert/sdk
+The examples below target the **planned `chert-sdk` successor**, not an already
+available registry release. Until it is published and verified, existing users
+should keep `@trychert/sdk@0.1.0`; local validation installs the packed tarball.
 
-npx @trychert/sdk --help
-bunx @trychert/sdk --help
+```sh
+npm install chert-sdk
+# Alternatives:
+pnpm add chert-sdk
+bun add chert-sdk
+
+npx chert-sdk --help
+bunx chert-sdk --help
 ```
 
 ESM and declarations are shipped for Node 22.12+, current Bun and Deno 2 with
-npm compatibility. Deno imports use `npm:@trychert/sdk`. CommonJS `require()` is
-not a supported migration target. `chert-sdk` is the binary, not a second npm
-package.
+npm compatibility. Deno imports use `npm:chert-sdk`. CommonJS `require()` is
+not a supported migration target. The npm package and binary are both `chert-sdk`.
 
 ```ts
-import { ChertSDK } from '@trychert/sdk';
+import { ChertSDK } from 'chert-sdk';
 
 const sdk = new ChertSDK({
   projectId: process.env.CHERT_PROJECT_ID!,
   imessage: {
-    baseURL: process.env.CHERT_BASE_URL!,
     apiKey: process.env.CHERT_API_KEY!,
   },
   facetime: {
-    baseUrl: process.env.CHERT_FACETIME_URL!,
     token: process.env.CHERT_FACETIME_TOKEN!,
   },
 });
@@ -79,31 +81,60 @@ The default export remains the iMessage `ChertClient`. Explicit subpaths include
 `texting-blue`, `contiguity`, `bluereacher`, `jared` (append `-adapter`).
 
 ```ts
-import ChertClient from '@trychert/sdk';
-import { ChertControlPlane } from '@trychert/sdk/facetime';
-import Sendblue from '@trychert/sdk/sendblue-adapter';
+import ChertClient from 'chert-sdk';
+import { ChertControlPlane } from 'chert-sdk/facetime';
+import Sendblue from 'chert-sdk/sendblue-adapter';
 ```
 
 Channel commands require `CHERT_PROJECT_ID` as application context and only their
 own channel credentials. `context` needs only the project ID; help and `adopt`
-need neither project context nor channel credentials. iMessage uses `CHERT_BASE_URL`, `CHERT_API_KEY` and
-optional `CHERT_TENANT`; FaceTime uses `CHERT_FACETIME_URL` and
-`CHERT_FACETIME_TOKEN`.
+need neither project context nor channel credentials. iMessage uses `CHERT_API_KEY`
+and optional `CHERT_TENANT`, defaulting to `https://console.trychert.com`.
+`CHERT_BASE_URL` optionally overrides it: root origins get `/api/v1`, while
+explicit deployment prefixes (including `/api/v1`) are preserved without duplication.
+FaceTime uses `CHERT_FACETIME_TOKEN` and defaults to
+`https://facetime.trychert.com`. `CHERT_FACETIME_URL` is an optional origin-only
+override; `/api/v1` is composed once by the client.
+
+Defaults apply only when a URL option is omitted/undefined. Explicit empty or
+null values are invalid, not a request to fall back to production. No host
+fallback or retries are added.
+
+**Release hold — do not merge or release:** method-correct unauthenticated
+`POST https://console.trychert.com/api/v1/text-operations/v1` and
+`GET https://facetime.trychert.com/api/v1/billing/catalog` currently return 404.
+Backend fixes and verification are required. Canonical hosts and passing local
+tests do not establish full production compatibility.
 
 ```sh
-bunx @trychert/sdk context
-bunx @trychert/sdk facetime status
-bunx @trychert/sdk facetime lines
-bunx @trychert/sdk facetime workers
-bunx @trychert/sdk adopt ./my-app          # Dry-run migration report
-bunx @trychert/sdk adopt ./my-app --write  # Applies supported rewrites
+bunx chert-sdk context
+bunx chert-sdk facetime status
+bunx chert-sdk facetime lines
+bunx chert-sdk facetime workers
+bunx chert-sdk adopt ./my-app          # Dry-run migration report
+bunx chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
 `adopt --install` additionally uses the target project's package manager.
-Replace legacy `@cherthq/sdk` imports with `@trychert/sdk` and
-`@cherthq/<adapter>` with `@trychert/sdk/<adapter>`. Bare legacy package names do
+Replace legacy `@cherthq/sdk` imports with `chert-sdk` and
+`@cherthq/<adapter>` with `chert-sdk/<adapter>`. Bare legacy package names do
 not resolve from this archive. Provider call shapes and refusal boundaries are
 preserved. `chert-adopt` becomes `chert-sdk adopt`.
+
+### Migrating from `@trychert/sdk@0.1.0`
+
+The published scoped package remains available and is not unpublished or
+deprecated by this change. Existing installs and imports keep working without
+migration. Registry deprecation is deferred until the successor is published and
+verified; publication is a separate release step.
+
+Once the successor is available, replace the dependency with `chert-sdk`, update
+root imports from `@trychert/sdk` to `chert-sdk`, and preserve subpath suffixes
+(for example `@trychert/sdk/facetime` becomes `chert-sdk/facetime`). Regenerate
+your consumer lockfile and rerun tests. The default export, named exports,
+provider contracts and `chert-sdk` CLI are unchanged by this rename. The new
+archive does not provide an alias for old imports. `adopt` migrates supported
+provider usage; it does not automatically rename existing scoped SDK imports.
 
 Published 0.1.0 does not include `login`, `onboard`, `new`, `doctor` or `dev`.
 The preview CLI/onboarding work remains in [draft #5](https://github.com/cherthq/sdk/pull/5)

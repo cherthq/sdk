@@ -1,11 +1,11 @@
-# @cherthq/linq-adapter
+# chert-sdk/linq-adapter
 
 Experimental, unpublished **restricted** compatibility adapter for `@linqapp/sdk@0.78.0`. Reuses the official SDK's types, method objects and APIError classes. Supported operations: `chats.messages.send(chatId, {message:{parts:[{type:'text',value}]}})` with exactly one nonempty, unmodified text part, direct-chat `chats.typing.start(chatId)` / `chats.typing.stop(chatId)`, conditional recorded-metadata history reads, and attachment registration/metadata retrieval described below.
 
 ```ts
-import Linq from '@cherthq/linq-adapter';
+import Linq from 'chert-sdk/linq-adapter';
 const client = new Linq({
-  chert: { baseURL: 'https://your-chert.example', apiKey: process.env.CHERT_API_KEY! },
+  chert: { apiKey: process.env.CHERT_API_KEY! },
   maxRetries: 0,
 });
 await client.chats.messages.send('existing-chert-chat-id', {
@@ -16,7 +16,7 @@ await client.chats.typing.stop('existing-chert-chat-id');
 await client.chats.markAsRead('existing-chert-chat-id');
 ```
 
-Use an existing Chert chat ID; vendor chat IDs are not migrated. Explicit Chert configuration is required. Vendor credentials are not forwarded. Network requests go exclusively through the configured Chert client. SDK retries are disabled and nonzero constructor/per-request retry overrides are rejected. Custom headers, streaming, default headers and default query parameters are unsupported rather than silently ignored. Idempotency is supported only for the existing-chat send subset described below.
+Use an existing Chert chat ID; vendor chat IDs are not migrated. Explicit Chert credentials are required. The endpoint defaults to `https://console.trychert.com`; an optional `chert.baseURL` overrides it for tests/self-hosting. Vendor credentials are not forwarded. Network requests go exclusively through the configured Chert client. SDK retries are disabled and nonzero constructor/per-request retry overrides are rejected. Custom headers, streaming, default headers and default query parameters are unsupported rather than silently ignored. Idempotency is supported only for the existing-chat send subset described below.
 
 Send and control methods share decoded chat-ID validation before dispatch.
 IDs over 128 characters, malformed escapes, separators, percent signs,

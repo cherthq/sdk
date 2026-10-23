@@ -1,11 +1,11 @@
-# @cherthq/blooio-v4-adapter
+# chert-sdk/blooio-v4-adapter
 
-Private, unpublished **Blooio v4 HTTP method subset** for Chert messaging. This exports a fetch replacement, not an invented official JavaScript SDK interface. Published `@blooio/sdk@0.0.2` uses v1 routes and remains a separate adapter.
+**Blooio v4 HTTP method subset** in the unpublished `chert-sdk` successor. This exports a fetch replacement, not an invented official JavaScript SDK interface. Published `@blooio/sdk@0.0.2` uses v1 routes and remains a separate adapter.
 
 ```ts
-import { createBlooioV4Fetch } from '@cherthq/blooio-v4-adapter';
+import { createBlooioV4Fetch } from 'chert-sdk/blooio-v4-adapter';
 const fetch = createBlooioV4Fetch({ chert: {
-  baseURL: 'https://your-chert.example', apiKey: process.env.CHERT_API_KEY!,
+  apiKey: process.env.CHERT_API_KEY!,
 } });
 const response = await fetch('https://api.blooio.com/v4/messages', {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -13,6 +13,10 @@ const response = await fetch('https://api.blooio.com/v4/messages', {
 });
 const result = await response.json(); // Actual Chert id, chat_id, lifecycle status.
 ```
+
+The endpoint defaults to `https://console.trychert.com`; optional `chert.baseURL`
+overrides remain available for tests/self-hosting. See the root README for the
+backend route compatibility hold before release.
 
 Supported HTTP contracts:
 

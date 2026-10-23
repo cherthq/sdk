@@ -1,8 +1,15 @@
 # @cherthq/imessage
 
 Private, unpublished generic JSON transport. Requests use explicit Chert
-credentials and an explicit HTTPS or loopback HTTP destination, with no
-provider fallback or automatic retries. The transport and `sendText` contracts
+credentials and default to `https://console.trychert.com`, with no provider
+fallback or automatic retries. An optional `baseURL` accepts HTTPS or loopback
+HTTP: root origins get `/api/v1`; explicit deployment path prefixes and trailing
+slashes retain their existing semantics. `/api/v1` is not duplicated. Only
+omitted/undefined values select the default; empty/null values are rejected.
+The planned public import is `chert-sdk/imessage` (use a local tarball until
+publication). Release is held because the canonical strict-text endpoint
+currently returns 404; backend fixes and verification are required.
+The transport and `sendText` contracts
 remain documented in the workspace README.
 
 ## Standard reaction dispatch
