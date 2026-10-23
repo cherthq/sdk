@@ -1,27 +1,56 @@
-# @trychert/sdk
+# Chert SDKs
 
-One ESM package for Chert iMessage, FaceTime control-plane access, CRM/provider
-adapters and migration tooling. The executable is `chert-sdk`; this release does
-not create a second npm package named `chert-sdk`.
+Open-source clients for Chert messaging and FaceTime control-plane services.
+This repository contains JavaScript/TypeScript, Python, Rust, C#/.NET, C++ and Go
+clients. **Language coverage and release status differ:** JavaScript is published;
+the other clients are source previews, with unified channel support under review.
 
-## Install and run
+## Languages and release status
+
+| Language | Available on `main` | Release / unified-channel work | Documentation |
+| --- | --- | --- | --- |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | npm [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk); binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| Python 3.10+ | iMessage transport (`chert`) | Unpublished; `trychert-sdk` / `trychert` unified client in [draft #11](https://github.com/cherthq/sdk/pull/11) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
+| Rust | Async iMessage transport (`cherthq_imessage`) | Unpublished; unified `trychert-sdk` in [draft #8](https://github.com/cherthq/sdk/pull/8) | [Rust guide](https://github.com/cherthq/sdk/blob/main/rust/README.md) |
+| C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
+| C++20 | iMessage transport (`chert`, CMake `cherthq::imessage`) | Unpublished; unified `trychert` preview in [draft #7](https://github.com/cherthq/sdk/pull/7) | [C++ guide](https://github.com/cherthq/sdk/blob/main/cpp/README.md) |
+| Go 1.23+ | Standard-library iMessage transport (`chert`) | Source module; no unified FaceTime release claimed | [Go guide](https://github.com/cherthq/sdk/blob/main/go/README.md) |
+
+Draft package names describe proposed distributions, not packages available from
+PyPI, crates.io, NuGet or a C++ package registry. Follow the language guide to
+build/test source; do not substitute a similarly named registry package.
+
+## Channels and credentials
+
+- **iMessage** clients use an explicit service URL, Chert API key and optional
+  messaging tenant. A queued receipt does not mean sent, delivered or read.
+- **FaceTime control-plane** clients inspect identity, assigned lines, workers,
+  credentials and connectors. These HTTP APIs are not a media runtime or an
+  outbound-call API. Route availability and permissions depend on the backend.
+- Channel credentials are **separate**. The SDK does not prove that an iMessage
+  key belongs to a FaceTime project, map tenants to projects, or convert provider
+  credentials. In the JavaScript wrapper, `projectId` is sent to FaceTime only;
+  it is application context, not an authorization check, for iMessage.
+- Keep secrets outside source control. Explicit login/enrollment responses may
+  contain credentials; do not log them. Constructors do not contact services.
+  Use only authorized recipients and reconcile uncertain outcomes before retrying.
+
+## JavaScript / TypeScript
 
 ```sh
 npm install @trychert/sdk
+# Alternatives:
 pnpm add @trychert/sdk
 bun add @trychert/sdk
 
 npx @trychert/sdk --help
 bunx @trychert/sdk --help
-npx @trychert/sdk imessage --help
-bunx @trychert/sdk facetime --help
 ```
 
-Use Node 22.12+, current Bun, or Deno 2 with npm compatibility. JavaScript and
-TypeScript declarations are shipped. This is ESM only; CommonJS `require()` is
-not a supported migration target. Deno imports use `npm:@trychert/sdk`.
-
-## Minimal quickstart
+ESM and declarations are shipped for Node 22.12+, current Bun and Deno 2 with
+npm compatibility. Deno imports use `npm:@trychert/sdk`. CommonJS `require()` is
+not a supported migration target. `chert-sdk` is the binary, not a second npm
+package.
 
 ```ts
 import { ChertSDK } from '@trychert/sdk';
@@ -37,98 +66,145 @@ const sdk = new ChertSDK({
     token: process.env.CHERT_FACETIME_TOKEN!,
   },
 });
-
-// Inspect existing FaceTime lines; this does not provision a line or place a call.
-const lines = await sdk.facetime.listLines();
-// Only send to a consenting recipient. Queued is not delivered.
-const receipt = await sdk.imessage.sendText({
-  phone: '+15555550123', body: 'Hello from Chert',
-});
+const lines = await sdk.facetime.listLines(); // Existing assignments; no provisioning.
+// Only send with recipient consent:
+// await sdk.imessage.sendText({ phone: '+15555550123', body: 'Hello' });
 ```
 
-The SDK groups two existing transports. **It does not unify server authentication
-or verify that an iMessage API key belongs to the FaceTime project.** `projectId`
-is sent to the FaceTime control plane; it is application context only for
-iMessage. Supply credentials assigned by your administrator to the intended
-project. Never treat the wrapper's project label as an authorization check.
-Provider credentials cannot be substituted for Chert credentials. No credential
-is embedded, logged, or automatically converted; keep secrets in your environment.
-
-Direct imports retain existing call shapes:
+The default export remains the iMessage `ChertClient`. Explicit subpaths include
+`imessage`, `facetime`, `control-plane`, `adopt`, and each provider adapter:
+`linq`, `sendblue`, `blooio`, `blooio-v4`, `loopmessage`, `missblue`,
+`texting-blue`, `contiguity`, `bluereacher`, `jared` (append `-adapter`).
 
 ```ts
-import ChertClient from '@trychert/sdk'; // existing iMessage default
+import ChertClient from '@trychert/sdk';
 import { ChertControlPlane } from '@trychert/sdk/facetime';
 import Sendblue from '@trychert/sdk/sendblue-adapter';
 ```
 
-## CLI channels
-
-Set `CHERT_PROJECT_ID` as application context. iMessage additionally requires
-`CHERT_BASE_URL`, `CHERT_API_KEY`, and optionally `CHERT_TENANT`. FaceTime requires
-`CHERT_FACETIME_URL` and `CHERT_FACETIME_TOKEN`. Each command requires only its
-own channel's credentials. Explicit URLs must point to your existing services;
-there is no implicit production endpoint or fallback provider.
+Channel commands require `CHERT_PROJECT_ID` as application context and only their
+own channel credentials. `context` needs only the project ID; help and `adopt`
+need neither project context nor channel credentials. iMessage uses `CHERT_BASE_URL`, `CHERT_API_KEY` and
+optional `CHERT_TENANT`; FaceTime uses `CHERT_FACETIME_URL` and
+`CHERT_FACETIME_TOKEN`.
 
 ```sh
 bunx @trychert/sdk context
 bunx @trychert/sdk facetime status
 bunx @trychert/sdk facetime lines
 bunx @trychert/sdk facetime workers
-bunx @trychert/sdk imessage send --phone +15555550123 --body 'Hello'
-bunx @trychert/sdk adopt ./my-app
-bunx @trychert/sdk adopt ./my-app --write
+bunx @trychert/sdk adopt ./my-app          # Dry-run migration report
+bunx @trychert/sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
-`adopt` is a dry run unless `--write` is supplied. `--install` additionally uses
-the target project's package manager. Migration preserves unsupported usages
-and reports them instead of pretending full provider parity. The former
-`chert-adopt` invocation becomes `chert-sdk adopt`.
+`adopt --install` additionally uses the target project's package manager.
+Replace legacy `@cherthq/sdk` imports with `@trychert/sdk` and
+`@cherthq/<adapter>` with `@trychert/sdk/<adapter>`. Bare legacy package names do
+not resolve from this archive. Provider call shapes and refusal boundaries are
+preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
-## Supported surfaces and limitations
+Published 0.1.0 does not include `login`, `onboard`, `new`, `doctor` or `dev`.
+The preview CLI/onboarding work remains in [draft #5](https://github.com/cherthq/sdk/pull/5)
+and its integration branch in [draft #6](https://github.com/cherthq/sdk/pull/6).
+Those drafts are not installed by the current npm release.
 
-- iMessage queue acceptance, typed resources and provider-specific CRM subsets
-  are unchanged. See [COMPATIBILITY.md](COMPATIBILITY.md) for precise coverage.
-- FaceTime exposes existing control-plane identity, lines, workers, connector
-  and credential methods. Backend permissions and availability still apply.
-  `status` checks identity only; it does not prove media readiness.
-- Existing assigned lines can be inspected. Shared-line availability and
-  assignment are backend/admin managed. This package does not automatically
-  allocate shared or dedicated lines and does not promise a free or paid plan.
-- No concierge onboarding, browser/passkey enrollment, checkout automation,
-  media connector, FaceTime call/media API, or delivery guarantee is included.
-  Raw control-plane billing methods require a separately enabled backend.
-- Unsupported adapter methods fail before dispatch. Sends are not automatically
-  retried; reconcile uncertain outcomes before retrying.
-- Local tests use controlled fixtures, not proof of live calls, devices,
-  provider delivery, billing, or cross-service project authorization.
+## Source-preview quickstarts
 
-Exports: root, `imessage`, `facetime`, `control-plane`, `adopt`, and
-`linq-adapter`, `sendblue-adapter`, `blooio-adapter`, `blooio-v4-adapter`,
-`loopmessage-adapter`, `missblue-adapter`, `texting-blue-adapter`,
-`contiguity-adapter`, `bluereacher-adapter`, `jared-adapter`.
+These examples describe the **current `main` APIs**, after following the linked
+language guide's local build setup. They are not registry installation commands
+and do not describe the different unified APIs proposed in the draft PRs.
 
-## Migration and local verification
+**Python** — with `python/` on the module path:
 
-Replace `@cherthq/sdk` with `@trychert/sdk`, and legacy `@cherthq/<adapter>`
-imports with `@trychert/sdk/<adapter>`. Bare legacy package names do not resolve
-from this archive. The default iMessage client, named error classes and provider
-call shapes are retained. The private preview's onboarding exports are omitted;
-`facetime` now exposes the real control-plane client rather than the preview
-setup/concierge runner. Old setup commands are not a supported public API.
-Other language packages remain separate and are not published by this release.
+```python
+import os
+from chert import ChertClient
 
-From the source repository:
+client = ChertClient(os.environ['CHERT_BASE_URL'], os.environ['CHERT_API_KEY'])
+# identity = client.request('/whoami')  # Explicit read-only request.
+```
+
+**Rust** — in a consumer configured for the local `rust/` crate:
+
+```rust
+use cherthq_imessage::ChertClient;
+use std::time::Duration;
+
+let client = ChertClient::new(
+    "https://messaging.example.test", "replace-with-your-key", None,
+    Duration::from_secs(20), 1024 * 1024,
+)?;
+```
+
+**C# / .NET** — reference `dotnet/Chert.Sdk/Chert.Sdk.csproj` locally:
+
+```csharp
+using Chert.Sdk;
+
+using var client = new ChertClient(
+    "https://messaging.example.test", "replace-with-your-key");
+```
+
+**C++** — link the local CMake target `cherthq::imessage`:
+
+```cpp
+#include <chert/client.hpp>
+
+chert::Client client("https://messaging.example.test", "replace-with-your-key");
+```
+
+**Go** — import the source module `github.com/cherthq/sdk/go`:
+
+```go
+client, err := chert.NewClient(chert.Config{
+    BaseURL: "https://messaging.example.test",
+    APIKey: "replace-with-your-key",
+})
+// Check err before using client; construction makes no request.
+```
+
+## Repository layout and contributing
+
+`packages/` contains TypeScript clients, adapters, migration tooling and the
+unified CLI. `python/`, `rust/`, `dotnet/`, `cpp/` and `go/` contain language
+clients and their tests. `tests/` and `scripts/` contain distribution and
+opt-in integration fixtures; `docs/` records API and acceptance boundaries.
 
 ```sh
+# JavaScript release gates (Node, Bun and Deno must be installed):
 bun install --frozen-lockfile
-bun run build
-bun scripts/test-unit.ts
-bun x --no-install tsc --noEmit
-bun scripts/test-package.ts
+bun run typecheck
+bun run test
+bun run test:distribution
+bun run test:package
 ```
 
-The package check installs a tarball outside the workspace, checks all exports,
-Node/Bun/Deno behavior, CLI help and strict TypeScript declarations.
-Source and integration documentation: https://github.com/cherthq/sdk
-MIT licensed; upstream SDK dependencies retain their own licenses.
+Run each native language's checks from its guide. Python packaging requires the
+declared setuptools build backend in an isolated environment, not an arbitrary
+system setuptools. CI runs all language suites; packed-artifact checks cover
+clean consumers rather than relying only on workspace imports.
+
+Contributions should preserve channel contracts, credential isolation, failure
+semantics and legacy compatibility. Keep implementation, tests, packaging and
+documentation changes reviewable. Include reproduction steps and tests for
+observable behavior; never commit secrets. See the
+[integration guide](https://github.com/cherthq/sdk/blob/main/INTEGRATION.md) before
+running backend or device tests: they require explicit prerequisites and consent
+for any real messages, calls or other external effects.
+
+## Compatibility and limits
+
+[COMPATIBILITY.md](COMPATIBILITY.md) defines the supported provider subsets.
+Adapters are not full vendor replacements; unsupported operations reject before
+dispatch. Provider IDs and credentials do not transfer to Chert. Sends are not
+automatically retried. Local tests do not establish live-device delivery or
+cross-service project authorization.
+
+Assigned lines can be inspected; shared/dedicated availability and allocation
+remain backend/admin managed. No automatic line allocation, plan entitlement,
+concierge service, checkout automation, native media connector or delivery
+guarantee is included in the published SDK. Billing client methods require a
+separately enabled backend. Repository source, package publication and backend
+deployment are independent release steps.
+
+MIT licensed. Third-party dependencies retain their own licenses.
