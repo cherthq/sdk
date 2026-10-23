@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname -- "${BASH_SOURCE[0]}")/.."
+
+required_packages=(
+	build-essential
+	ca-certificates
+	cmake
+	curl
+	libcurl4-openssl-dev
+	nlohmann-json3-dev
+	pkg-config
+	python3
+)
+missing_packages=()
+for package in "${required_packages[@]}"; do
+	if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed'; then
+		missing_packages+=("$package")
+	fi
+done
+if ((${#missing_packages[@]})); then
+	step_start=$SECONDS
+	printf '[setup] Installing system packages: %s\n' "${missing_packages[*]}"
+	apt-get update
+	DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_packages[@]}"
+	printf '[setup] System package installation finished in %ss\n' "$((SECONDS - step_start))"
+fi
+
+profile="$HOME/.bash_profile"
+profile_marker="# Amp setup: chert-sdk mise activation"
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+if ! command -v mise >/dev/null 2>&1; then
+	step_start=$SECONDS
+	printf '[setup] Installing mise\n'
+	curl -fsSL https://mise.run | sh
+	printf '[setup] Mise installation finished in %ss\n' "$((SECONDS - step_start))"
+fi
+
+if ! grep -Fqx "$profile_marker" "$profile" 2>/dev/null; then
+	{
+		printf '\n%s\n' "$profile_marker"
+		printf '%s\n' 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"'
+	} >> "$profile"
+fi
+
+step_start=$SECONDS
+printf '[setup] Installing CI toolchains with mise\n'
+mise use --global \
+	node@22.23.1 \
+	bun@1.4.0 \
+	deno@2.9.4 \
+	go@1.23 \
+	rust@1.88.0 \
+	dotnet@8.0
+printf '[setup] Toolchain setup finished in %ss\n' "$((SECONDS - step_start))"
+
+step_start=$SECONDS
+printf '[setup] Installing locked Bun workspace dependencies\n'
+bun install --frozen-lockfile
+printf '[setup] Bun dependencies finished in %ss\n' "$((SECONDS - step_start))"
+
+node --version
+bun --version
+deno --version | head -1
+go version
+rustc --version
+dotnet --version
+cmake --version | head -1
+python3 --version
