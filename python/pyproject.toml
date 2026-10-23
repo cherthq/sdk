@@ -3,7 +3,7 @@ requires = ["setuptools>=80.10.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "trychert-sdk"
+name = "chert-sdk"
 version = "0.1.0"
 description = "Explicit synchronous iMessage and FaceTime control-plane clients"
 readme = "README.md"

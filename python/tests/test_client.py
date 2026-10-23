@@ -263,7 +263,8 @@ class PackagingTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             wheel, = Path(temp).glob("*.whl")
             with zipfile.ZipFile(wheel) as archive:
-                metadata = archive.read("trychert_sdk-0.1.0.dist-info/METADATA").decode()
+                metadata = archive.read("chert_sdk-0.1.0.dist-info/METADATA").decode()
+                self.assertIn("Name: chert-sdk\n", metadata)
                 self.assertNotIn("Requires-Dist:", metadata)
                 self.assertIn("Requires-Python: >=3.10", metadata)
                 self.assertIn("License-Expression: MIT", metadata)

@@ -10,7 +10,7 @@ the other clients are source previews, with unified channel support under review
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
 | JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | Published: [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk). Planned successor: `chert-sdk` (not yet published); same binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
-| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | Unpublished `trychert-sdk`; build from source ([implementation #11](https://github.com/cherthq/sdk/pull/11)) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
+| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | Unpublished `chert-sdk` distribution; build from source ([implementation #11](https://github.com/cherthq/sdk/pull/11)) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |

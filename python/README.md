@@ -1,8 +1,18 @@
-# Chert Python SDK (`trychert-sdk`)
+# Chert Python SDK (`chert-sdk`)
 
 Unpublished Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
-Install the built `trychert-sdk` wheel and import `trychert`. The legacy `chert`
+The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
+Install the built wheel and import `trychert`. The legacy `chert`
 import remains compatible; its iMessage implementation is unchanged.
+
+```sh
+# Install a locally built artifact; no PyPI release is claimed yet.
+python -m pip install ./chert_sdk-0.1.0-py3-none-any.whl
+```
+
+```python
+from trychert import Chert, IMessageConfig, FaceTimeConfig
+```
 
 ## Explicit independent channels
 
