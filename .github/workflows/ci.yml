@@ -22,6 +22,7 @@ jobs:
       - run: bun run typecheck
       - run: bun run test
       - run: bun run test:distribution
+      - run: bun run test:package
   python:
     runs-on: ubuntu-latest
     steps:
