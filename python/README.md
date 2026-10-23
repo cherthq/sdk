@@ -1,13 +1,75 @@
-# Chert Python transport
+# Chert Python SDK (`trychert-sdk`)
 
-Private, unpublished Python 3.10+ JSON client with no runtime dependencies.
-Its generic `request` operation matches the JavaScript core's raw Chert API
-transport. `send_text` adds the strict plaintext reservation contract; provider
-SDK wrappers and FaceTime methods are not implemented. `send_reaction` adds an
-explicit standard-reaction dispatch contract.
+Unpublished Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
+Install the built `trychert-sdk` wheel and import `trychert`. The legacy `chert`
+import remains compatible; its iMessage implementation is unchanged.
+
+## Explicit independent channels
 
 ```python
-from chert import ChertClient, ChertAPIError
+from trychert import Chert, IMessageConfig, FaceTimeConfig
+
+sdk = Chert(
+    imessage=IMessageConfig(
+        base_url="https://your-messaging-origin.example",
+        api_key="your-imessage-key",
+        tenant="your-messaging-tenant",  # optional
+    ),
+    facetime=FaceTimeConfig(
+        base_url="https://your-control-plane-origin.example",
+        token="your-facetime-token",
+        project_id="your-facetime-project",
+    ),
+)
+# Either channel may be omitted; its attribute will be None.
+identity = sdk.facetime.whoami()
+```
+
+This wrapper does not bind servers, provision devices, discover origins, share
+credentials, or map messaging tenants to FaceTime projects. Project selection is
+FaceTime-only. Each channel uses its own explicitly supplied origin and credential.
+Credentials are excluded from configuration reprs. Explicit successful login and
+connector responses contain secrets: do not log those responses.
+
+## FaceTime control plane
+
+`ChertControlPlane(base_url, token=None, project_id=None, timeout=15.0)` exposes
+the inspected TypeScript control-plane surface with Python snake_case methods:
+
+| Scope | Methods |
+| --- | --- |
+| Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)`, `billing_catalog()` |
+| User (bearer only) | `inspect_login(user_code)`, `approve_login(user_code, project_id)`, `logout()` |
+| Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)`, `current_checkout()`, `create_checkout(plan_id=..., catalog_version=..., idempotency_key=...)` |
+
+Pagination parameters and checkout arguments are keyword-only. Enrollment uses
+a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
+annotations describe server responses, not full runtime schema validation.
+Checkout currently types `plan_id='shared'`, `catalog_version='2026-10-22'`.
+Mutating methods can have effects; reconcile uncertain results before retrying.
+
+FaceTime requires an HTTPS origin (or loopback HTTP), without a path, credentials,
+query, or fragment. Requests target `/api/v1/`; successful `{data: ...}` envelopes
+are unwrapped, including explicit null. Missing data, invalid JSON, and responses
+over 1 MiB fail. Redirects, ambient proxy/netrc credentials, and automatic retries
+are disabled. Missing credentials/project fail before HTTP. Headers must be
+nonempty printable ASCII. Pagination rejects booleans and non-integers.
+
+`ChertControlPlaneError` exposes sanitized `status` and an allowlisted `code`,
+never raw server bodies, URLs, or underlying exception context. Unknown server
+codes become `request_failed`; malformed responses use `invalid_response`;
+transport failures and redirects use status 0 / `network_error`.
+These are control-plane operations, not FaceTime media/calling APIs or evidence
+that a connector is provisioned or a call succeeded.
+
+## Existing iMessage transport
+
+The generic `request` operation matches the JavaScript core's raw Chert API
+transport. `send_text` adds the strict plaintext reservation contract, and
+`send_reaction` adds the explicit standard-reaction dispatch contract.
+
+```python
+from trychert import ChertClient, ChertAPIError
 
 client = ChertClient(
     base_url="https://your-messaging-origin.example",
@@ -130,7 +192,11 @@ reaction or deployment claim; compatible cloud/native installation remains requi
 ## Local checks and packaging
 
 ```sh
-PYTHONPATH=sdk/python python3 -m unittest discover -s sdk/python/tests -v
+uv venv .amp/in/python-tooling
+uv pip install --python .amp/in/python-tooling/bin/python build twine 'setuptools>=80.10.2'
+.amp/in/python-tooling/bin/python -m unittest discover -s python/tests -v
+.amp/in/python-tooling/bin/python -m build --installer uv --outdir .amp/in/artifacts/python-unified python
+.amp/in/python-tooling/bin/python -m twine check --strict .amp/in/artifacts/python-unified/*.whl .amp/in/artifacts/python-unified/*.tar.gz
 ```
 
 Tests use a real loopback `ThreadingHTTPServer`, never cloud/device/provider
@@ -142,14 +208,11 @@ importing a built wheel in an isolated process.
 Python 3.14 was exercised locally; the source targets 3.10+, but this does not
 claim a tested interpreter matrix or production/deployment acceptance.
 
-The package uses setuptools, already present in the development environment,
-as its build-only backend; runtime dependencies are empty. A wheel can be built
-without downloading dependencies with the installed backend:
-
-```sh
-cd sdk/python
-python3 -c 'import setuptools.build_meta as b; b.build_wheel("dist")'
-```
+Run these commands from the repository root. Tooling lives in an isolated venv;
+do not modify system Python. Setuptools is a build-only dependency.
+The unified loopback tests cover all 18 FaceTime operations, explicit auth scopes,
+cross-channel credential isolation, redaction, response bounds, and one-attempt
+transport behavior. Existing messaging tests retain their original contracts.
 
 MIT metadata follows the existing `@cherthq/imessage` manifest. This work adds no
-invented copyright attribution and does not publish or install the package.
+invented copyright attribution. Building and checking do not publish the package.
