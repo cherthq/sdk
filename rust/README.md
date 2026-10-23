@@ -1,9 +1,10 @@
-# Chert Rust SDK — `trychert-sdk`
+# Chert Rust SDK — `chert-sdk`
 
-One async Rust crate for iMessage and FaceTime, aligned with `@trychert/sdk`.
-Import as `trychert_sdk`. This release candidate is **unpublished** and retains
+One async Rust crate for iMessage and FaceTime, using the public `chert-sdk` identity.
+The library import remains `trychert_sdk` for preview source compatibility.
+This release candidate is **unpublished** and retains
 `publish = false` until exact archive review and separate publication authorization.
-Use a path dependency (`trychert-sdk = { path = "../sdk/rust" }`) while reviewing.
+Use a path dependency (`chert-sdk = { path = "../sdk/rust" }`) while reviewing.
 Requires Rust 1.88+ and a Tokio runtime. No device installation is required for this client.
 
 ## Two channels, separate credentials

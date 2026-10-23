@@ -6,7 +6,7 @@ manifest="$root/rust/Cargo.toml"
 out="${1:?usage: bash scripts/verify-rust-package.sh ABSOLUTE_ARTIFACT_DIRECTORY}"
 case "$out" in /*) ;; *) echo 'artifact directory must be absolute' >&2; exit 2;; esac
 mkdir -p "$out"
-scratch="$(mktemp -d "${TMPDIR:-/tmp}/trychert-rust-review.XXXXXX")"
+scratch="$(mktemp -d "${TMPDIR:-/tmp}/chert-rust-review.XXXXXX")"
 trap 'rm -rf "$scratch"' EXIT
 cargo fmt --manifest-path "$manifest" --check
 cargo test --offline --locked --manifest-path "$manifest" --all-targets
@@ -14,7 +14,7 @@ cargo test --offline --locked --manifest-path "$manifest" --doc
 cargo clippy --offline --locked --manifest-path "$manifest" --all-targets --all-features -- -D warnings
 RUSTDOCFLAGS='-D warnings' cargo doc --offline --locked --no-deps --manifest-path "$manifest"
 CARGO_TARGET_DIR="$scratch/build" cargo package --offline --locked --allow-dirty --manifest-path "$manifest"
-archive="$scratch/build/package/trychert-sdk-0.1.0.crate"
+archive="$scratch/build/package/chert-sdk-0.1.0.crate"
 tar -tzf "$archive" | sort > "$out/package-files.txt"
 # Inspect the exact tarball: reject unexpected members and path dependencies; compare source bytes.
 python3 - "$archive" "$root/rust" <<'PY'
@@ -29,7 +29,7 @@ with tarfile.open(archive) as tar:
     actual = set()
     for m in members:
         path = pathlib.PurePosixPath(m.name)
-        assert m.isfile() and path.parts[0] == 'trychert-sdk-0.1.0' and '..' not in path.parts
+        assert m.isfile() and path.parts[0] == 'chert-sdk-0.1.0' and '..' not in path.parts
         relative = '/'.join(path.parts[1:])
         actual.add(relative)
         assert relative in expected, f'unexpected package member: {relative}'
@@ -37,8 +37,9 @@ with tarfile.open(archive) as tar:
             original = source / ('Cargo.toml' if relative == 'Cargo.toml.orig' else relative)
             assert tar.extractfile(m).read() == original.read_bytes(), f'archive differs: {relative}'
     assert actual == expected, f'missing files: {expected-actual}'
-    manifest = tomllib.loads(tar.extractfile('trychert-sdk-0.1.0/Cargo.toml').read().decode())
-    assert manifest['package']['name'] == 'trychert-sdk'
+    manifest = tomllib.loads(tar.extractfile('chert-sdk-0.1.0/Cargo.toml').read().decode())
+    assert manifest['package']['name'] == 'chert-sdk'
+    assert manifest['lib']['name'] == 'trychert_sdk', 'preview import compatibility'
     assert manifest['package']['publish'] == [] or manifest['package']['publish'] is False
     assert manifest['package']['license'] == 'MIT'
     for section in ['dependencies','dev-dependencies']:
@@ -48,7 +49,7 @@ print('Exact archive content and unpublished manifest verified')
 print('sha256', hashlib.sha256(archive.read_bytes()).hexdigest())
 PY
 tar -xzf "$archive" -C "$scratch"
-unpacked="$scratch/trychert-sdk-0.1.0"
+unpacked="$scratch/chert-sdk-0.1.0"
 CARGO_TARGET_DIR="$scratch/build" cargo test --offline --locked --manifest-path "$unpacked/Cargo.toml" --all-targets
 CARGO_TARGET_DIR="$scratch/build" cargo test --offline --locked --manifest-path "$unpacked/Cargo.toml" --doc
 mkdir -p "$scratch/consumer/tests"
@@ -58,7 +59,7 @@ name = "clean-chert-consumer"
 version = "0.0.0"
 edition = "2021"
 [dependencies]
-trychert-sdk = { path = "../trychert-sdk-0.1.0" }
+chert-sdk = { path = "../chert-sdk-0.1.0" }
 serde_json = "=1.0.145"
 tokio = { version = "=1.48.0", features = ["macros", "rt", "time"] }
 TOML
@@ -66,6 +67,6 @@ TOML
 cp "$unpacked"/tests/*.rs "$scratch/consumer/tests/"
 cp "$unpacked/Cargo.lock" "$scratch/consumer/Cargo.lock"
 CARGO_TARGET_DIR="$scratch/build" cargo test --offline --manifest-path "$scratch/consumer/Cargo.toml"
-cp "$archive" "$out/trychert-sdk-0.1.0.crate"
-shasum -a 256 "$out/trychert-sdk-0.1.0.crate" > "$out/SHA256SUMS"
+cp "$archive" "$out/chert-sdk-0.1.0.crate"
+shasum -a 256 "$out/chert-sdk-0.1.0.crate" > "$out/SHA256SUMS"
 echo 'PASS: source, exact packaged crate, and clean consumer; nothing published'

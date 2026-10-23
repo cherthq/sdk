@@ -11,7 +11,7 @@ the other clients are source previews, with unified channel support under review
 | --- | --- | --- | --- |
 | JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | npm [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk); binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage transport (`chert`) | Unpublished; `trychert-sdk` / `trychert` unified client in [draft #11](https://github.com/cherthq/sdk/pull/11) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
-| Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `trychert-sdk`; source preview only | [Rust guide](rust/README.md) |
+| Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
 | Go 1.23+ | Standard-library iMessage transport (`chert`) | Unified iMessage/FaceTime source preview on `unified-go-sdk`; no tagged release | [Go guide](go/README.md) |
@@ -130,7 +130,7 @@ client = ChertClient(os.environ['CHERT_BASE_URL'], os.environ['CHERT_API_KEY'])
 
 ```toml
 [dependencies]
-trychert-sdk = { path = "../sdk/rust" }
+chert-sdk = { path = "../sdk/rust" }
 ```
 
 ```rust
@@ -143,7 +143,8 @@ let client = ChertClient::new(
 )?;
 ```
 
-`ChertClient` remains messaging-only; `ChertSdk` accepts independent
+The distribution is `chert-sdk`; the library import stays `trychert_sdk` for
+preview source compatibility. `ChertClient` remains messaging-only; `ChertSdk` accepts independent
 `IMessageConfig` and `FaceTimeConfig` values for either or both channels.
 FaceTime includes typed calls, events, transcripts, lines, assistants and settings.
 Messaging tenant and FaceTime project credentials remain separate; no shared

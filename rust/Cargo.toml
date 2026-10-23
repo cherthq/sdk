@@ -1,5 +1,5 @@
 [package]
-name = "trychert-sdk"
+name = "chert-sdk"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -9,6 +9,9 @@ description = "Explicit async Chert iMessage and FaceTime clients, with isolated
 repository = "https://github.com/cherthq/sdk"
 readme = "README.md"
 include = ["src/**", "examples/**", "tests/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
+
+[lib]
+name = "trychert_sdk"
 
 [dependencies]
 reqwest = { version = "=0.13.4", default-features = false, features = ["rustls", "json"] }
