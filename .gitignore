@@ -10,3 +10,4 @@ node_modules/
 !.env.example
 .DS_Store
 **/artifacts/
+.amp/portals/*
