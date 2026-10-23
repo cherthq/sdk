@@ -2,10 +2,18 @@
 
 One async Rust crate for iMessage and FaceTime, using the public `chert-sdk` identity.
 The library import remains `trychert_sdk` for preview source compatibility.
-This release candidate is **unpublished** and retains
+This untagged source preview is **unpublished** and retains
 `publish = false` until exact archive review and separate publication authorization.
 Use a path dependency (`chert-sdk = { path = "../sdk/rust" }`) while reviewing.
 Requires Rust 1.88+ and a Tokio runtime. No device installation is required for this client.
+
+**Publication hold:** the confirmed production defaults are `https://console.trychert.com`
+for iMessage and `https://facetime.trychert.com` for FaceTime, with `/api/v1` once.
+Canonical deployment still requires production smoke verification before publication.
+No production default reaction-routing claim is made: the backend text-route repair
+does not establish reaction routing. Defaults do not prove route compatibility.
+This source preview has no typed billing wrappers; generic billing transport is not
+a release promise. Source integration is separate from publication and backend acceptance.
 
 ## Two channels, separate credentials
 
@@ -15,19 +23,12 @@ The iMessage tenant and FaceTime project ID are **not interchangeable**.
 The server must establish any future shared credential/project binding first.
 
 ```rust,no_run
-use trychert_sdk::{ChertSdk, IMessageConfig, FaceTimeConfig, TransportLimits};
+use trychert_sdk::{ChertSdk, IMessageConfig, FaceTimeConfig};
 use trychert_sdk::facetime::{CallExecution, CallTarget, CreateCall, DestinationType, Media};
 # async fn example() -> Result<(), trychert_sdk::ChertError> {
 let sdk = ChertSdk::new(
-    Some(IMessageConfig {
-        base_url: "https://messaging.example.test", api_key: "messaging-key",
-        tenant: Some("messaging-tenant"), limits: TransportLimits::default(),
-    }),
-    Some(FaceTimeConfig {
-        base_url: "https://facetime.example.test", api_key: "ftk_explicit-key",
-        project_id: "00000000-0000-4000-8000-000000000001",
-        limits: TransportLimits::default(),
-    }),
+    Some(IMessageConfig::new("messaging-key")),
+    Some(FaceTimeConfig::new("ftk_explicit-key", "00000000-0000-4000-8000-000000000001")),
 )?;
 let messaging = sdk.imessage.as_ref().expect("configured above");
 let queued = messaging.send_text("+15550000001", "hello", Some("stable-text-key")).await?;
@@ -49,6 +50,14 @@ let call = facetime.create_call(&request, "caller-stable-call-key").await?;
 # let _ = (queued, calls, call);
 # Ok(()) }
 ```
+
+Configuration constructors select official defaults without requiring URLs.
+Set `base_url` explicitly for tests or self-hosting, for example
+`FaceTimeConfig { base_url: "http://127.0.0.1:8080/custom/v2", ..FaceTimeConfig::new("key", "project") }`.
+Only omission selects the default: empty or invalid overrides fail client construction,
+never fall back. Root origins and trailing slashes yield `/api/v1` once; explicit
+prefixes such as `/api/v1` or `/custom/v2` are retained. `tenant` and `limits` remain
+explicit configurable fields. The legacy explicit-URL `ChertClient::new` is unchanged.
 
 ## Supported surface and boundaries
 
@@ -91,8 +100,9 @@ candidate; use the explicit generic transport for JSON routes, with the required
 server permissions. No browser authentication or elevated scope is invented.
 
 `cargo run --example unified` is a read-only example using explicitly supplied
-`CHERT_IMESSAGE_URL`, `CHERT_IMESSAGE_KEY`, optional `CHERT_IMESSAGE_TENANT`,
-`CHERT_FACETIME_URL`, `CHERT_FACETIME_KEY`, and `CHERT_FACETIME_PROJECT_ID`.
+`CHERT_IMESSAGE_KEY`, optional `CHERT_IMESSAGE_TENANT`, `CHERT_FACETIME_KEY`,
+and `CHERT_FACETIME_PROJECT_ID`. `CHERT_IMESSAGE_URL` and `CHERT_FACETIME_URL`
+are optional overrides; present empty/invalid values reject rather than select defaults.
 It prints counts/status only, not credentials or customer content.
 
 ## iMessage acceptance contract
@@ -101,11 +111,9 @@ Messaging `request<T>` decodes the actual response without unwrapping envelopes.
 Use `serde_json::Value` to preserve every wire field.
 
 ```rust,no_run
-use trychert_sdk::ChertClient;
-use std::time::Duration;
+use trychert_sdk::{ChertClient, IMessageConfig};
 # async fn example() -> Result<(), trychert_sdk::ChertError> {
-let client = ChertClient::new("https://messaging.example.test", "explicit-key",
-    Some("tenant"), Duration::from_secs(20), 1024 * 1024)?;
+let client = ChertClient::from_config(IMessageConfig::new("explicit-key"))?;
 let receipt = client.send_text("+15550000001", "hello",
     Some("caller-stable-key")).await?;
 assert_eq!(receipt.status, "queued");

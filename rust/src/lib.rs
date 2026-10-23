@@ -160,6 +160,18 @@ fn safe_request(path: &str) -> bool {
     true
 }
 impl ChertClient {
+    /// Builds a messaging client from configuration, including its official default origin.
+    /// Explicit invalid overrides fail rather than falling back to production.
+    pub fn from_config(config: IMessageConfig<'_>) -> Result<Self, ChertError> {
+        Self::new(
+            config.base_url,
+            config.api_key,
+            config.tenant,
+            config.limits.timeout,
+            config.limits.max_response_bytes,
+        )
+    }
+
     /// Explicit HTTPS base (HTTP only for parsed loopback/localhost), credentials and limits.
     /// Root bases default to `/api/v1`; other deployment prefixes are retained.
     pub fn new(

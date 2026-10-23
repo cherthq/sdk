@@ -1,28 +1,32 @@
 //! Read-only example. Credentials are read explicitly by this binary, never by the SDK.
-use trychert_sdk::{ChertSdk, FaceTimeConfig, HttpMethod, IMessageConfig, TransportLimits};
+use trychert_sdk::{ChertSdk, FaceTimeConfig, HttpMethod, IMessageConfig};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let messaging_url = std::env::var("CHERT_IMESSAGE_URL")?;
+    let messaging_url = match std::env::var("CHERT_IMESSAGE_URL") {
+        Ok(value) => Some(value),
+        Err(std::env::VarError::NotPresent) => None,
+        Err(error) => return Err(error.into()),
+    };
     let messaging_key = std::env::var("CHERT_IMESSAGE_KEY")?;
     let tenant = std::env::var("CHERT_IMESSAGE_TENANT").ok();
-    let facetime_url = std::env::var("CHERT_FACETIME_URL")?;
+    let facetime_url = match std::env::var("CHERT_FACETIME_URL") {
+        Ok(value) => Some(value),
+        Err(std::env::VarError::NotPresent) => None,
+        Err(error) => return Err(error.into()),
+    };
     let facetime_key = std::env::var("CHERT_FACETIME_KEY")?;
     let project = std::env::var("CHERT_FACETIME_PROJECT_ID")?;
-    let sdk = ChertSdk::new(
-        Some(IMessageConfig {
-            base_url: &messaging_url,
-            api_key: &messaging_key,
-            tenant: tenant.as_deref(),
-            limits: TransportLimits::default(),
-        }),
-        Some(FaceTimeConfig {
-            base_url: &facetime_url,
-            api_key: &facetime_key,
-            project_id: &project,
-            limits: TransportLimits::default(),
-        }),
-    )?;
+    let mut imessage = IMessageConfig::new(&messaging_key);
+    imessage.tenant = tenant.as_deref();
+    if let Some(url) = messaging_url.as_deref() {
+        imessage.base_url = url;
+    }
+    let mut facetime = FaceTimeConfig::new(&facetime_key, &project);
+    if let Some(url) = facetime_url.as_deref() {
+        facetime.base_url = url;
+    }
+    let sdk = ChertSdk::new(Some(imessage), Some(facetime))?;
     if let Some(imessage) = sdk.imessage {
         let _: serde_json::Value = imessage
             .request("/phone-numbers", HttpMethod::GET, None)

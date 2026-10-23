@@ -130,6 +130,85 @@ fn create() -> CreateCall {
     }
 }
 
+#[test]
+fn official_defaults_require_no_url_and_invalid_overrides_never_fall_back() {
+    let im = IMessageConfig::new("im-secret");
+    let ft = FaceTimeConfig::new("ft-secret", "project-ft");
+    assert_eq!(im.base_url, "https://console.trychert.com");
+    assert_eq!(ft.base_url, "https://facetime.trychert.com");
+    assert!(ChertSdk::new(Some(im), Some(ft)).is_ok());
+    for base_url in [
+        "",
+        " ",
+        "not-a-url",
+        "http://remote.test",
+        "https://user@host.test",
+        "https://host.test?query=1",
+    ] {
+        let im = IMessageConfig {
+            base_url,
+            ..IMessageConfig::new("im-secret")
+        };
+        let ft = FaceTimeConfig {
+            base_url,
+            ..FaceTimeConfig::new("ft-secret", "project-ft")
+        };
+        assert_eq!(
+            ChertSdk::new(Some(im), None).unwrap_err().code,
+            "invalid_configuration"
+        );
+        assert_eq!(
+            ChertSdk::new(None, Some(ft)).unwrap_err().code,
+            "invalid_configuration"
+        );
+    }
+}
+
+#[tokio::test]
+async fn explicit_overrides_preserve_prefixes_and_channel_credentials() {
+    for (suffix, prefix) in [
+        ("", "/api/v1"),
+        ("/", "/api/v1"),
+        ("/api/v1", "/api/v1"),
+        ("/api/v1/", "/api/v1"),
+        ("/custom/v2/", "/custom/v2"),
+    ] {
+        let (im, im_wire) = server(200, "{}".into(), "", Duration::ZERO);
+        let (ft, ft_wire) = ok(200, call());
+        let im_base = format!("{im}{suffix}");
+        let ft_base = format!("{ft}{suffix}");
+        let sdk = ChertSdk::new(
+            Some(IMessageConfig {
+                base_url: &im_base,
+                tenant: Some("tenant-im"),
+                ..IMessageConfig::new("im-secret")
+            }),
+            Some(FaceTimeConfig {
+                base_url: &ft_base,
+                ..FaceTimeConfig::new("ft-secret", "project-ft")
+            }),
+        )
+        .unwrap();
+        let _: Value = sdk
+            .imessage
+            .unwrap()
+            .request("/whoami", HttpMethod::GET, None)
+            .await
+            .unwrap();
+        sdk.facetime.unwrap().get_call("call-1").await.unwrap();
+        let im_wire = im_wire.join().unwrap().to_ascii_lowercase();
+        let ft_wire = ft_wire.join().unwrap().to_ascii_lowercase();
+        assert!(im_wire.starts_with(&format!("get {prefix}/whoami http/1.1\r\n")));
+        assert!(ft_wire.starts_with(&format!("get {prefix}/calls/call-1 http/1.1\r\n")));
+        assert!(im_wire.contains("authorization: bearer im-secret\r\n"));
+        assert!(im_wire.contains("x-chert-tenant: tenant-im\r\n"));
+        assert!(!im_wire.contains("ft-secret") && !im_wire.contains("x-chert-project-id"));
+        assert!(ft_wire.contains("authorization: bearer ft-secret\r\n"));
+        assert!(ft_wire.contains("x-chert-project-id: project-ft\r\n"));
+        assert!(!ft_wire.contains("im-secret") && !ft_wire.contains("x-chert-tenant"));
+    }
+}
+
 #[tokio::test]
 async fn independent_channels_send_only_their_own_credentials_and_scope() {
     let (im, im_wire) = server(202, json!({"success":true,"message_id":"0123456789abcdef0123456789abcdef","chat_id":"chat-1","status":"queued"}).to_string(), "", Duration::ZERO);

@@ -134,12 +134,11 @@ chert-sdk = { path = "../sdk/rust" }
 ```
 
 ```rust
-use trychert_sdk::ChertClient;
-use std::time::Duration;
+use trychert_sdk::{ChertSdk, IMessageConfig, FaceTimeConfig};
 
-let client = ChertClient::new(
-    "https://messaging.example.test", "replace-with-your-key", None,
-    Duration::from_secs(20), 1024 * 1024,
+let sdk = ChertSdk::new(
+    Some(IMessageConfig::new("messaging-key")),
+    Some(FaceTimeConfig::new("facetime-key", "project-id")),
 )?;
 ```
 
@@ -151,6 +150,14 @@ Messaging tenant and FaceTime project credentials remain separate; no shared
 server binding is inferred. See the [Rust guide](rust/README.md) for the unified
 example and API limits. `publish = false` remains enforced: this is not a
 crates.io installation command, and call snapshots do not prove connection.
+
+URLs default to `https://console.trychert.com` and `https://facetime.trychert.com`,
+with `/api/v1` once. Explicit `base_url` overrides support tests/self-hosting;
+empty or invalid values reject. **Rust publication hold:** canonical deployment
+still needs production smoke verification. No production default reaction-routing
+claim is made; the backend text-route repair does not establish reaction routing.
+This is an untagged source preview, not a published package. There are no typed
+billing wrappers; generic billing transport is not a release promise.
 
 **C# / .NET** — reference `dotnet/Chert.Sdk/Chert.Sdk.csproj` locally:
 
