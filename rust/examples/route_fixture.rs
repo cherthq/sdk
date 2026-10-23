@@ -1,7 +1,7 @@
 //! Test-only joined HTTP fixture CLI. Arguments must contain synthetic credentials only.
-use cherthq_imessage::{ChertClient, HttpMethod};
 use serde_json::{json, Value};
 use std::{process::ExitCode, time::Duration};
+use trychert_sdk::{ChertClient, HttpMethod};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> ExitCode {

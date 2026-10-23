@@ -1,8 +1,8 @@
 //! Offline integration helper: one typed request to a literal loopback fixture only.
-use cherthq_imessage::ChertClient;
 use reqwest::Url;
 use serde_json::{json, Value};
 use std::{io::Read, time::Duration};
+use trychert_sdk::ChertClient;
 
 async fn run() -> Result<Value, ()> {
     let args: Vec<String> = std::env::args().collect();
