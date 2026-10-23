@@ -1,5 +1,10 @@
 # FaceTime integration
 
+The development `@cherthq/facetime` CLI now lives in this repository. It is an original
+control-plane/onboarding client, not a port of the media connector. See [setup](../setup.md)
+and the [worker handoff](ONBOARDING_WORKER_HANDOFF.md) for remaining hosted integration.
+
+
 ## FaceTime CLI comparison — 2026-10-19
 
 Reviewed `cherthq/chert-facetime-cli` main at
