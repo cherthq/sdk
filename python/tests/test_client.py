@@ -263,11 +263,12 @@ class PackagingTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             wheel, = Path(temp).glob("*.whl")
             with zipfile.ZipFile(wheel) as archive:
-                metadata = archive.read("cherthq_imessage-0.1.0.dist-info/METADATA").decode()
+                metadata = archive.read("trychert_sdk-0.1.0.dist-info/METADATA").decode()
                 self.assertNotIn("Requires-Dist:", metadata)
                 self.assertIn("Requires-Python: >=3.10", metadata)
                 self.assertIn("License-Expression: MIT", metadata)
                 self.assertIn("chert/py.typed", archive.namelist())
+                self.assertIn("trychert/py.typed", archive.namelist())
             imported = subprocess.run([sys.executable, "-I", "-c", "import sys; sys.path.insert(0, %r); from chert import ChertClient, QueuedTextReceipt, ReactionReceipt; assert callable(ChertClient.send_text); assert callable(ChertClient.send_reaction); assert ReactionReceipt.__dataclass_params__.frozen; assert QueuedTextReceipt.__required_keys__ == frozenset(['success', 'message_id', 'chat_id', 'status']); print(ChertClient.__name__)" % str(wheel)], capture_output=True, text=True, timeout=10)
             self.assertEqual(imported.returncode, 0, imported.stderr)
             self.assertEqual(imported.stdout.strip(), "ChertClient")
