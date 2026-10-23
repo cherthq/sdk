@@ -2,7 +2,7 @@ import {resolveMediaSource, validateMediaSourceURL, MediaSourceError} from './me
 import {recordedMedia} from './recorded-media';
 import {manageWebhook} from './webhook-management';
 import {createV4IdempotencyRequest} from './idempotency';
-import { ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch } from '@cherthq/imessage';
+import { ChertAPIError, ChertClient, DEFAULT_IMESSAGE_BASE_URL, type ChertClientOptions, type ChertFetch } from '@cherthq/imessage';
 
 export const BLOOIO_V4_CONTRACT = {
   url: 'https://docs.blooio.com/openapi.json', version: '4.0.0-beta',
@@ -27,6 +27,7 @@ const readAllowed = (request: Request) => request.body === null && [...request.h
 /** Explicit v4 HTTP fetch replacement; no unverified upstream JavaScript SDK signature. */
 export function createBlooioV4Fetch(options: { chert: ChertClientOptions }): ChertFetch {
   const client = new ChertClient(options.chert);
+  const baseURL = options.chert.baseURL === undefined ? DEFAULT_IMESSAGE_BASE_URL : options.chert.baseURL;
   return async (input, init) => {
     const request = new Request(input, init);
     request.signal.throwIfAborted();
@@ -142,7 +143,7 @@ export function createBlooioV4Fetch(options: { chert: ChertClientOptions }): Che
           if (!record(row) || typeof row.id !== 'string' || identifier(row.id) !== row.id || ids.has(row.id) || row.chat_id !== chatID || !Array.isArray(row.parts)) return invalidPage();
           ids.add(row.id);
           const hasMedia=row.parts.some(part=>record(part)&&part.type==='media')||row.attachments!==undefined;
-          const media=hasMedia?recordedMedia(row.parts,row.attachments,options.chert.baseURL):null;
+          const media=hasMedia?recordedMedia(row.parts,row.attachments,baseURL):null;
           if(hasMedia&&!media)return invalidPage();
           if(!hasMedia&&row.parts.some(part=>!record(part)||part.type!=='text'||typeof part.value!=='string'||(part.text!==undefined&&part.text!==part.value)))return invalidPage();
           const joined=media?media.text??'':row.parts.map(part=>(part as {value:string}).value).join('\n\n');
@@ -219,7 +220,7 @@ export function createBlooioV4Fetch(options: { chert: ChertClientOptions }): Che
         const stored=record(result.response)?result.response:null;
         const intent=record(result.request)&&record(result.request.message)?result.request.message:null;
         const hasMedia=retrieve&&(stored?.attachments!==undefined||(Array.isArray(intent?.parts)&&intent.parts.some(part=>record(part)&&part.type==='media')));
-        const media=hasMedia?recordedMedia(intent?.parts,stored?.attachments,options.chert.baseURL):null;
+        const media=hasMedia?recordedMedia(intent?.parts,stored?.attachments,baseURL):null;
         if(hasMedia&&(!media||(media.text!==undefined?result.text!==media.text:result.text!==undefined&&result.text!=='')))return error('invalid_response','Chert returned incompatible recorded media.',502);
         return Response.json({ data: { id: result.id,
           ...(retrieve ? { chat_id: chatID,
@@ -263,7 +264,7 @@ export function createBlooioV4Fetch(options: { chert: ChertClientOptions }): Che
         return error('unsupported_feature','Only one owned canonical image URL in an existing chat is supported.');
       // Source validation/import happens after historical replay lookup. Keep
       // the original provider URL untouched in the frozen request identity.
-      try {validateMediaSourceURL(options.chert.baseURL,body.attachments[0]);}
+      try {validateMediaSourceURL(baseURL,body.attachments[0]);}
       catch(failure){if(failure instanceof MediaSourceError)return error(failure.code,failure.message,failure.status);throw failure;}
       attachment={id:'',url:body.attachments[0]};
     }
@@ -309,7 +310,7 @@ export function createBlooioV4Fetch(options: { chert: ChertClientOptions }): Che
       }
       if(attachment){
         phase='metadata';
-        try {const originalURL=attachment.url;attachment=await resolveMediaSource(client,options.chert.baseURL,originalURL,request.signal);importedSource=attachment.url!==originalURL;}
+        try {const originalURL=attachment.url;attachment=await resolveMediaSource(client,baseURL,originalURL,request.signal);importedSource=attachment.url!==originalURL;}
         catch(failure){
           request.signal.throwIfAborted();
           if(idempotencyKey!==null){const raced=await lookup();if(raced)return raced;}

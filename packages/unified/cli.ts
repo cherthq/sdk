@@ -9,8 +9,10 @@ const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk context
 
 Both channels use CHERT_PROJECT_ID as application context.
-Set CHERT_BASE_URL and CHERT_API_KEY for iMessage; CHERT_FACETIME_URL and
-CHERT_FACETIME_TOKEN for FaceTime. Credentials are service-specific, not interchangeable.
+Set CHERT_API_KEY for iMessage; CHERT_FACETIME_TOKEN for FaceTime.
+iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.
+FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionally
+overrides the origin. Credentials are service-specific, not interchangeable.
 FaceTime commands inspect existing access/lines; no calls, media relay, billing,
 concierge onboarding or automatic shared-line allocation is implemented.
 Use --help on any channel without credentials. Output is JSON.`;
@@ -34,11 +36,11 @@ async function main() {
   if (channel === 'imessage') {
     if (command !== 'send') throw new Error('Use imessage send.');
     const { values } = parseArgs({ args, options: { phone: { type: 'string' }, body: { type: 'string' }, 'idempotency-key': { type: 'string' } } });
-    const client = new ChertClient({ baseURL: required('CHERT_BASE_URL'), apiKey: required('CHERT_API_KEY'), ...(env.CHERT_TENANT ? { tenant: env.CHERT_TENANT } : {}) });
+    const client = new ChertClient({ baseURL: env.CHERT_BASE_URL, apiKey: required('CHERT_API_KEY'), ...(env.CHERT_TENANT ? { tenant: env.CHERT_TENANT } : {}) });
     result = await client.sendText({ phone: values.phone!, body: values.body!, ...(values['idempotency-key'] !== undefined ? { idempotency_key: values['idempotency-key'] } : {}) });
   } else {
     if (args.length || !['status', 'lines', 'workers'].includes(command!)) throw new Error('Use facetime status, lines or workers.');
-    const client = new ChertControlPlane({ baseUrl: required('CHERT_FACETIME_URL'), token: required('CHERT_FACETIME_TOKEN'), projectId });
+    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId });
     result = command === 'lines' ? await client.listLines() : command === 'workers' ? await client.listWorkers() : await client.whoami();
   }
   console.log(JSON.stringify({ projectId, channel, data: result }));

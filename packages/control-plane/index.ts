@@ -1,6 +1,6 @@
 /** Thin client for the inspected Chert FaceTime control-plane routes. No retries or provisioning fiction. */
 export type Json = null | boolean | number | string | Json[] | {[key:string]:Json};
-export interface ClientOptions { baseUrl:string; token?:string; projectId?:string; fetch?:typeof globalThis.fetch }
+export interface ClientOptions { baseUrl?:string; token?:string; projectId?:string; fetch?:typeof globalThis.fetch }
 export interface PageOptions { limit?:number; offset?:number }
 export interface Page<T> {items:T[];total:number;limit:number;offset:number}
 export interface DeviceLoginStart {device_code:string;user_code:string;verification_url:string;verification_url_complete:string;expires_in:number;interval:number}
@@ -18,8 +18,12 @@ export class ChertApiError extends Error {constructor(public readonly status:num
 const safeCodes = new Set(['unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
-  constructor(options:ClientOptions){
-    let url:URL;try{url=new URL(options.baseUrl);}catch{throw new TypeError('A valid control-plane base URL is required.');}
+  constructor(options:ClientOptions={}){
+    const rawURL=options.baseUrl === undefined ? 'https://facetime.trychert.com' : options.baseUrl;
+    let url:URL;try{
+      if(typeof rawURL!=='string'||/[\x00-\x20\x7f\\?#]/.test(rawURL)||!/^https?:\/\//i.test(rawURL)||rawURL.split('/').slice(3).join('/')!=='')throw new TypeError();
+      url=new URL(rawURL);
+    }catch{throw new TypeError('A valid control-plane base URL is required.');}
     if(url.username||url.password||url.search||url.hash||url.pathname!=='/'||!(url.protocol==='https:'||(url.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(url.hostname))))throw new TypeError('Use an HTTPS origin or local HTTP origin without credentials, query, fragment or path.');
     if(options.token&&/[\r\n]/.test(options.token))throw new TypeError('Invalid credential.');
     this.origin=url.origin;this.token=options.token;this.projectId=options.projectId;this.fetcher=options.fetch??globalThis.fetch;
