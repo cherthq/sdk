@@ -1,19 +1,57 @@
-# Chert C# / .NET client
+# chert-sdk C# / .NET SDK
 
-A source candidate for .NET 8 with no NuGet or runtime package dependencies.
-It uses `HttpClient` and `System.Text.Json`. No package has been published.
-The local checks use SDK 8.0.129 and runtime 8.0.29; they do not establish device
-acceptance or compatibility with every deployment.
+NuGet package **`chert-sdk`**, assembly and namespace **`TryChert`**, targeting .NET 8 with no
+third-party dependencies. Uses `HttpClient` and `System.Text.Json`.
+`0.2.0-preview.1` is an unpublished review candidate, not a live NuGet release.
+Local checks do not establish device acceptance or compatibility with every deployment.
 
-Reference `Chert.Sdk/Chert.Sdk.csproj` from a .NET 8 application:
+Reference `Chert.Sdk/Chert.Sdk.csproj`, or install the reviewed artifact from a local feed:
+
+```sh
+dotnet add package chert-sdk --version 0.2.0-preview.1 --source /absolute/review/feed
+```
+
+The distribution name aligns with the other Chert SDKs. The `TryChert` assembly
+and namespace remain unchanged for source and binary compatibility with the preview;
+a hyphenated package ID is not a C# namespace. Replace any preview package reference
+to `TryChert` with `chert-sdk`; do not install both.
+
+The source directory retains its historical name; public symbols do not.
+Migration from the old source candidate: replace `using Chert.Sdk` with
+`using TryChert`, and use `IMessageClient` in place of the old messaging-only
+`ChertClient`. `Cherthq.IMessage` is not an alias or a second package.
+
+Configure either channel independently, or both:
 
 ```csharp
-using Chert.Sdk;
+using TryChert;
 using var chert = new ChertClient(
-    "https://your-messaging-origin.example", "your-chert-key",
-    tenant: "your-tenant");
-var identity = await chert.RequestAsync("/whoami", cancellationToken: cancellation);
+    iMessage: new IMessageOptions {
+        ApiKey = messagingKey, Tenant = messagingTenant
+    },
+    faceTime: new FaceTimeOptions {
+        Token = faceTimeToken, ProjectId = faceTimeProjectId
+    });
+var lines = await chert.FaceTime!.ListLinesAsync(limit: 10, cancellationToken: cancellation);
 ```
+
+iMessage defaults to `https://console.trychert.com/api/v1` and FaceTime to
+`https://facetime.trychert.com/api/v1`. Ordinary callers provide credentials/project,
+not URLs. Explicit `BaseUrl` overrides remain available for tests and self-hosting;
+only omission selects a default, while null, empty and invalid overrides reject.
+**Merge/publication remain held for backend smoke verification:** the endpoint
+audit found strict iMessage `POST /api/v1/text-operations/v1` and FaceTime
+`/api/v1/billing/catalog` returning 404. Canonical defaults do not establish route
+compatibility or production readiness. Credentials above come from caller configuration.
+The SDK never reads environment variables, logs in, allocates a project or sends
+a communication during construction. Omitted channels are null. The unified
+client owns and disposes both configured channels; standalone `IMessageClient`
+and `FaceTimeClient` are also available. Reuse clients for application lifetime.
+
+**Authentication is not unified on the server.** iMessage uses its own bearer key
+and optional `x-chert-tenant`; FaceTime uses its own bearer token and
+`x-chert-project-id`. Neither key, project nor tenant is inferred from the other
+channel. Even equal URLs do not merge their credentials. There is no global key.
 
 Construction performs no requests. The base URL must use HTTPS, except explicit
 `http://localhost`, `http://127.0.0.1` or `http://[::1]` for local testing. An
@@ -23,7 +61,7 @@ There are no custom authentication headers, environment credentials, cookies,
 ambient proxies, redirect following, automatic retries or provider fallback.
 Dispose the client when its application lifetime ends.
 
-`RequestAsync(path, body, method, cancellationToken)` returns the actual JSON as
+`IMessage.RequestAsync(path, body, method, cancellationToken)` returns the actual JSON as
 an owned `JsonElement?`. An omitted body sends no bytes and defaults to GET;
 a supplied `JsonElement` defaults to POST. To send JSON `null`, supply
 `JsonSerializer.SerializeToElement<object?>(null)`. HTTP 204 and successful HEAD
@@ -34,7 +72,7 @@ are retained after validation. GET/HEAD bodies are rejected before HTTP.
 
 ```csharp
 // Explicit effect: use only an authorized recipient.
-var queued = await chert.SendTextAsync(
+var queued = await chert.IMessage!.SendTextAsync(
     "+15550000002", "Exact plaintext", idempotencyKey: "one-operation",
     cancellationToken: cancellation);
 ```
@@ -54,7 +92,7 @@ sent/delivered/read state or occurrence time.
 
 ```csharp
 // Explicit effect against an owned public message, not a native GUID receipt.
-var ack = await chert.SendReactionAsync(
+var ack = await chert.IMessage!.SendReactionAsync(
     chatId, messageId, "like", remove: false, idempotencyKey: "reaction-operation",
     cancellationToken: cancellation);
 ```
@@ -72,10 +110,65 @@ Only HTTP 202 with exactly `operation_id` (lowercase 32 hex), matching canonical
 `ReactionReceipt`. It is dispatch acknowledgement, not applied/current reaction
 state or recipient proof. Custom emoji, groups and nonzero parts are unsupported.
 
+## FaceTime calls and control-plane operations
+
+```csharp
+// Explicit effect: obtain consent for this destination first. Persist the operation key.
+var call = await chert.FaceTime!.CreateCallAsync(new CreateCallRequest {
+    Mode = "customer_managed",
+    LineId = assignedLineId,
+    Destination = authorizedDestination,
+    Media = new MediaOptions { Audio = true, Video = false },
+    LivekitUrl = roomUrl,
+    ParticipantToken = callScopedRoomToken,
+    RemoteParticipantIdentity = agentIdentity
+}, idempotencyKey: persistedOperationKey, cancellationToken: cancellation);
+var observed = await chert.FaceTime.GetCallAsync(call.Id, cancellation);
+// Separate explicit effect, with a separately persisted operation key:
+var ending = await chert.FaceTime.EndCallAsync(call.Id, endOperationKey,
+    cancellationToken: cancellation);
+```
+
+Managed calls use `Mode = "managed"` and `AssistantId` instead of room credentials.
+FaceTime links use `DestinationType = "facetime_link"`; groups use typed
+`CallRecipient[]` instead of `Destination`. Links and groups require an assigned
+line. Server permissions, worker capabilities and deployment feature flags still
+decide whether each destination/media combination can run.
+
+Typed operations cover calls (create/list/get/answer/reject/end/events/transcript),
+lines and workers (paged lists), device login (start/poll/inspect/approve), identity,
+logout, credential list/revocation, connector enrollment, and billing catalog/checkout.
+Connector list/activate/drain/revoke preserve their versioned results as JSON.
+`FaceTime.RequestAsync` is a project-authenticated JSON escape hatch. It unwraps
+`data` from the FaceTime envelope, unlike iMessage's unwrapped response format.
+A FaceTime response must have an envelope, including for generic requests;
+204/HEAD-with-no-envelope are not valid FaceTime typed results.
+
+Every call and action needs a stable 8–200 printable-ASCII-character idempotency
+key without outer whitespace. Nothing retries or generates a replacement key.
+Create requires HTTP 201; answer/reject/end require HTTP 202. A returned call
+is server state, not proof of ringing, answering, delivery, two-way audio or video.
+Query events/state to reconcile an uncertain outcome before deciding to resend.
+Pagination is explicit (`limit` 1–100, `offset` ≥ 0); there is no hidden page fetch.
+Unknown state strings and additional model fields are retained for forward compatibility.
+
+Public login start/poll and billing catalog send **no authorization or project
+headers**, even on an authenticated client. Inspect/approve/logout send the token
+but not a project header. Other methods require both token and project locally.
+The server decides credential permissions: an `ftu_` CLI credential does not gain
+call-write, transcript, credential-management or billing privileges merely because
+a method exists. Login approval requires human consent. Polling is one request per
+invocation; respect `Interval` and `ExpiresIn`, verify approval URLs before opening
+them, and securely store approved credentials yourself. No browser is launched.
+Connector enrollment returns secrets and does not activate routing. Activation
+requires the expected binding (including explicit null) and assignment generation.
+Checkout creation is an explicit financial action; the supported source contract
+is shared plan/catalog `2026-10-22`, not proof of live entitlement or allocation.
+
 ## Failure and cancellation
 
 The default total request deadline is 15 seconds, including reading the response.
-The default response bound is 8 MiB; both are constructor options. Advertised and
+The default response bound is 8 MiB for iMessage and 1 MiB for FaceTime; both are options. Advertised and
 streamed body sizes are checked. Caller cancellation throws a sanitized
 `OperationCanceledException`; deadline expiry raises `ChertApiException` with
 `Code == "timeout"`. A cancellation or lost reply can occur after an effect and
@@ -86,12 +179,20 @@ machine-readable data. Error/client/receipt formatting does not print credential
 URL query tokens or response bodies. No raw transport exception is attached.
 Malformed successful typed receipts produce `unconfirmed_text_outcome` or
 `unconfirmed_reaction_outcome`, with HTTP status 502 and explicit raw response
-data where available. Follow the actual server's reconciliation policy; the SDK
-never retries on its own.
+data where available. Invalid FaceTime envelopes, required fields, duplicate JSON
+properties or typed statuses produce `invalid_response`. FaceTime's envelope
+`request_id` is preserved when no HTTP request-ID header exists. Server-provided
+codes, explicit response data, model properties and JSON serialization can contain
+sensitive information: do not log them indiscriminately. `ToString()` is redacted;
+it is not a replacement for careful logging. Follow the actual server's
+reconciliation policy; the SDK never retries on its own.
 
-This is a generic messaging transport plus two strict typed methods. It does not
-provide vendor SDK wrappers, FaceTime methods, media upload, callbacks or full
-resource parity. Matching cloud/native deployment remains necessary.
+This package does not include vendor compatibility adapters, iMessage media
+upload/download helpers, a LiveKit/media relay, connector runtime, webhook server,
+account signup/passkeys, or typed wrappers for every administration resource.
+Use the raw channel request APIs for supported deployment-specific JSON routes.
+Do not use these APIs to bypass permissions. See `COVERAGE.md` in the source tree
+for the inspected source contracts and explicit coverage boundaries.
 
 ## Offline checks and packaging
 
@@ -99,13 +200,17 @@ Use the installed .NET 8 SDK; `NuGet.Config` clears remote package sources, and
 these projects need no packages. Disable CLI telemetry explicitly:
 
 ```sh
-DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 dotnet run --project dotnet/Tests
-DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 dotnet build dotnet/Chert.Sdk -c Release
-DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 dotnet pack dotnet/Chert.Sdk -c Release -o /your/task/output
+bash dotnet/verify-package.sh .amp/in/artifacts/nuget
+DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 dotnet run --project dotnet/Examples
 ```
 
 The dependency-free test executable uses task-owned `TcpListener` HTTP peers and
 synthetic credentials only. It exercises headers, methods, exact receipts,
 pre-effect validation, Unicode, redirects, error privacy, lost replies, limits,
 cancellation and total stream deadlines. It sends no device messages. MIT license
-text is included in the local package; packing does not publish it.
+text is included in the local package; packing does not publish it. The artifact
+gate inspects the package allowlist, identity, license and absence of dependencies,
+then restores a clean consumer from only that exact local package with an empty
+NuGet cache. It reruns the entire contract suite against the installed DLL and
+builds/runs the safe example. It records package SHA-256 and logs. Do not publish
+until exact-artifact review and separate release authorization are complete.
