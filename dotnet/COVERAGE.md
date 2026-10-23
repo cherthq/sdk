@@ -37,10 +37,14 @@ passed before changes. No unrelated worktree changes were imported.
 - FaceTime executable backend inspected at
   [`b5e0de5`](https://github.com/cherthq/facetime/commit/b5e0de5ddec188cbe872f48e58fba331092a5ecb):
   `control-plane/app/api/v1/calls/**`, `lines`, `workers`, `cli/**`, `connectors`,
-  `billing/**`; `src/lib/facetime/{schemas,destination-schema,http,call-action,
+  and `src/lib/facetime/{schemas,destination-schema,http,call-action,
   normalization,store,cli-login,connectors}.ts`. These sources, rather than a
   historical coverage document, define call payloads and the two different event
   representations. Source inspection is not a deployment assertion.
+- FaceTime `control-plane/app/api/v1/billing/**`, including checkout, was
+  inspected in the current backend worktree. Its exact inspected revision is
+  **unverified**; checkout is absent at `b5e0de5` and must not be attributed to
+  that revision. Billing source coverage does not establish deployed availability.
 
 ## Completeness matrix
 
