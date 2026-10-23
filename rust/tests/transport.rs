@@ -1,4 +1,3 @@
-use cherthq_imessage::{ChertClient, HttpMethod};
 use serde_json::{json, Value};
 use std::{
     io::{Read, Write},
@@ -7,6 +6,7 @@ use std::{
     thread,
     time::Duration,
 };
+use trychert_sdk::{ChertClient, HttpMethod};
 fn serve(
     status: &str,
     body: &str,
@@ -438,16 +438,21 @@ async fn strict_text_invalid_input_never_connects_and_cancellation_never_resends
     assert!(listener.accept().is_err());
     let (url, rx, h) = serve("202 Accepted", "{}", "", Duration::from_millis(100));
     let c = client(&url);
-    assert!(tokio::time::timeout(
-        Duration::from_millis(10),
-        c.send_text("+15550000002", "hello", None)
-    )
+    let task = tokio::spawn(async move { c.send_text("+15550000002", "hello", None).await });
+    // Cancel after receipt, rather than assuming dispatch completes within 10ms.
+    let wire = tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            if let Ok(wire) = rx.try_recv() {
+                break wire;
+            }
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+    })
     .await
-    .is_err());
-    assert!(rx
-        .recv()
-        .unwrap()
-        .starts_with("POST /api/v1/text-operations/v1 "));
+    .unwrap();
+    task.abort();
+    assert!(task.await.unwrap_err().is_cancelled());
+    assert!(wire.starts_with("POST /api/v1/text-operations/v1 "));
     h.join().unwrap();
 }
 

@@ -1,4 +1,3 @@
-use cherthq_imessage::ChertClient;
 use serde_json::{json, Value};
 use std::{
     io::{Read, Write},
@@ -7,6 +6,7 @@ use std::{
     thread,
     time::Duration,
 };
+use trychert_sdk::ChertClient;
 const CHAT: &str = "11000000-0000-4000-8000-000000000001";
 const MESSAGE: &str = "record:explicit_1";
 fn server(
