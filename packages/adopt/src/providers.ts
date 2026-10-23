@@ -30,7 +30,7 @@ export const CHERT_WEBHOOK_ENV = 'CHERT_WEBHOOK_SECRET';
 
 // Legacy package names remain in the coverage table for workspace compatibility.
 // New integrations install one SDK and import the equivalent adapter subpath.
-export const sdkImport = (legacy: string) => legacy.replace('@cherthq/', '@cherthq/sdk/');
+export const sdkImport = (legacy: string) => legacy.replace('@cherthq/', '@trychert/sdk/');
 export const SDK_VERSION = '0.1.0';
 
 export const PROVIDERS: Provider[] = [

@@ -1,24 +1,21 @@
 {
-  "name": "@cherthq/sdk",
+  "name": "@trychert/sdk",
   "version": "0.1.0",
-  "private": true,
+  "description": "Unified Chert iMessage, FaceTime control-plane, provider adapters and migration CLI",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "engines": { "node": ">=22.12" },
-  "publishConfig": { "access": "restricted" },
-  "files": ["dist", "README.md", "LICENSE", "COMPATIBILITY.md", "setup.md", "docs"],
+  "publishConfig": { "access": "public" },
+  "files": ["dist", "README.md", "LICENSE", "COMPATIBILITY.md"],
   "bin": {
-    "chert": "./dist/facetime/cli.js",
-    "chert-adopt": "./dist/adopt/cli.js"
+    "chert-sdk": "./dist/unified/cli.js"
   },
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
     "./imessage": { "types": "./dist/imessage/index.d.ts", "import": "./dist/imessage/index.js" },
     "./control-plane": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
-    "./facetime": { "types": "./dist/facetime/main.d.ts", "import": "./dist/facetime/main.js" },
-    "./onboarding": { "types": "./dist/onboarding/index.d.ts", "import": "./dist/onboarding/index.js" },
-    "./onboarding/client": { "types": "./dist/facetime/onboard.d.ts", "import": "./dist/facetime/onboard.js" },
+    "./facetime": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
     "./adopt": { "types": "./dist/adopt/main.d.ts", "import": "./dist/adopt/main.js" },
     "./linq-adapter": { "types": "./dist/linq-adapter/index.d.ts", "import": "./dist/linq-adapter/index.js" },
     "./sendblue-adapter": { "types": "./dist/sendblue-adapter/index.d.ts", "import": "./dist/sendblue-adapter/index.js" },
@@ -64,7 +61,6 @@
   "dependencies": {
     "@blooio/sdk": "0.0.2",
     "@linqapp/sdk": "0.78.0",
-    "@simplewebauthn/server": "14.0.3",
     "sendblue": "3.20.1",
     "typescript": "5.9.2"
   },

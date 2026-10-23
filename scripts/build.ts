@@ -42,9 +42,18 @@ function copyDistribution(source: string, destination: string): void {
     writeFileSync(to, text);
   }
 }
-for (const [name] of entriesByPackage) copyDistribution(resolve(root, 'packages', name, 'dist'), resolve(distribution, name));
+for (const [name] of entriesByPackage) {
+  if (name !== 'onboarding' && name !== 'facetime') copyDistribution(resolve(root, 'packages', name, 'dist'), resolve(distribution, name));
+}
+rmSync(resolve(root, 'packages/unified/dist'), { recursive: true, force: true });
+const unified = await Bun.build({ entrypoints: [resolve(root, 'packages/unified/index.ts'), resolve(root, 'packages/unified/cli.ts')], outdir: resolve(root, 'packages/unified/dist'), target: 'node', format: 'esm', packages: 'external' });
+if (!unified.success) throw new AggregateError(unified.logs, 'Unified build failed');
+const declarations = Bun.spawn(['bun', 'x', '--no-install', 'tsc', '--declaration', '--emitDeclarationOnly', '--strict', '--target', 'ES2022', '--module', 'ESNext', '--moduleResolution', 'bundler', '--skipLibCheck', '--types', 'bun', '--outDir', 'dist', 'index.ts'], { cwd: resolve(root, 'packages/unified'), stdout: 'inherit', stderr: 'inherit' });
+if (await declarations.exited !== 0) throw new Error('Unified declarations failed');
+copyDistribution(resolve(root, 'packages/unified/dist'), resolve(distribution, 'unified'));
 const index = `export * from './imessage/index.js';
 export { default } from './imessage/index.js';
 export * from './control-plane/index.js';
+export * from './unified/index.js';
 `;
 for (const extension of ['js', 'd.ts']) writeFileSync(resolve(distribution, `index.${extension}`), index);

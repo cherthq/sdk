@@ -38,7 +38,7 @@ HTTP adapters. Actual authentication, disposable PostgreSQL reservation, frozen
 fingerprints, queued receipts and one native effect per fresh plan were checked;
 exact GUID/iMessage observations matched both accounts. V4's final result is a
 separate read-only reconciliation preserving its original spent receipt.
-[Receipt identities and acceptance limits](docs/DEVICE_ACCEPTANCE.md#five-provider-strict-plaintext-checkpoint--2026-10-18)
+[Receipt identities and acceptance limits](https://github.com/cherthq/sdk/blob/main/docs/DEVICE_ACCEPTANCE.md#five-provider-strict-plaintext-checkpoint--2026-10-18)
 remain authoritative. This does not promote media, read transitions, webhooks,
 OS-level SMS-downgrade prevention or unsupported methods to accepted parity.
 Earlier platform verification before the October19 media extension: 594 tests / 0 failures / 5,531 assertions / 94 files (including keyed V4 direct plaintext replay, strict text/media history, Sendblue3.20.1 mapping, and the source-bound R10 local relay); typecheck passes. Local verification does not establish physical acceptance. FT099 R2 is separately installed on M4D with receiving-context wire emission off; one received-message LIKE ADD is separately observed in both M4D account databases through verified native snapshot/export reingestion. Original live webhook transport and UI application remain unverified.
@@ -81,7 +81,7 @@ SDK acceptance, exact recipient iMessage GUID matches and later read-only sender
 delivery confirmation; all remained unread. Cloud authentication/storage and the
 SSH transport boundary were substituted. This does not prove installed native
 HTTP status support, typing, read transitions or full provider parity. The
-[device evidence](docs/DEVICE_ACCEPTANCE.md) preserves each receipt.
+[device evidence](https://github.com/cherthq/sdk/blob/main/docs/DEVICE_ACCEPTANCE.md) preserves each receipt.
 
 The new assigned-number `id` field is a cloud public-contract change;
 production deployment remains a separate gate. It does not provision a number or prove native
@@ -152,7 +152,7 @@ through tenant callbacks. A real HMAC-ingest/dispatch/notifier/loopback-receiver
 fixture verifies project/line isolation, immutable persisted events and retry
 recovery with a substituted database. It preserves native event IDs and requires
 consumer deduplication; this is Chert webhook support, not a provider-specific
-webhook replacement. Live callback acceptance remains pending. See [route evidence](tests/ROUTE_HTTP.md).
+webhook replacement. Live callback acceptance remains pending. See [route evidence](https://github.com/cherthq/sdk/blob/main/tests/ROUTE_HTTP.md).
 
 Typing tests retain the real Chert HTTP handler and HMAC forwarder, substituting
 only external authentication/database/device boundaries. Compatible FT-INSTALL-087 native server/helper installation is required before
@@ -280,7 +280,7 @@ service and downgrade evidence; absence is unknown, not iMessage or SMS. An
 outbound observed SMS value can report downgrade evidence, which is not proof of
 delivery. The reviewed M4D pair includes this fix; other Macs require the reviewed
 signed server and scoped restart under
-[FT-INSTALL-088](INTEGRATION.md). Existing runtime behavior must not be inferred from
+[FT-INSTALL-088](https://github.com/cherthq/sdk/blob/main/INTEGRATION.md). Existing runtime behavior must not be inferred from
 source tests. The completed old-version CRM comparison is not a paired
 deployment, fleet installation or full provider compatibility claim.
 
@@ -481,7 +481,7 @@ UTF16 code units; no vendor truncation is emulated. Actual strict202 queued
 acceptance maps to the endpoint-specific HTTP200 `{message_id,contact,text}`.
 The generic example's conflicting `recipient` alias is not emitted. Generic
 error100 is supported; billing/lifecycle/retry-advice parity is not claimed.
-See the [package contract](packages/loopmessage-adapter/README.md).
+See the [package contract](https://github.com/cherthq/sdk/blob/main/packages/loopmessage-adapter/README.md).
 
 Twelve focused checks and Node/Bun/Deno built-package smoke checks pass. The
 actual-auth/disposable-PostgreSQL fixture now covers three genuine SDKs plus
@@ -543,7 +543,7 @@ eight rows acknowledge and four remain unknown. There are zero implicit message
 GETs. Case-preserved encoded aliases, add/remove, authentication failures,
 invalid-input zero HTTP, and replay/unknown replay with zero extra native effects
 are checked. No native/device response or applied reaction is inferred. See the
-[explicit helper variables and offline runner](tests/ROUTE_HTTP.md#four-typed-reaction-clients-over-real-postgresql--2026-10-18).
+[explicit helper variables and offline runner](https://github.com/cherthq/sdk/blob/main/tests/ROUTE_HTTP.md#four-typed-reaction-clients-over-real-postgresql--2026-10-18).
 
 The genuine Linq0.78 adapter separately passed a fresh LIKE add and separately
 bound fresh removal through actual authenticated GET/nested POST, disposable
@@ -554,7 +554,7 @@ on both accounts. Runs `9195c2cb-eb8d-4ca3-8857-ff0911a396d9` and
 `3a0e0d2c1e578b68b835ab614cc68a7b826a35308d83b42751d02071f0cca5ee` and
 `caac6e05d376a4b9163297d6767e5f1c8f3bd54508d540b5717202f874f3d13c`.
 The original failed/spent remove-love receipt and separate no-send reconciliation
-are preserved; no spent operation was resent. See [device evidence](docs/DEVICE_ACCEPTANCE.md).
+are preserved; no spent operation was resent. See [device evidence](https://github.com/cherthq/sdk/blob/main/docs/DEVICE_ACCEPTANCE.md).
 These bounded R8 event checks do not establish current UI state, arbitrary
 multipart/custom reactions, all providers, endurance or an OS no-SMS guarantee.
 
@@ -656,7 +656,7 @@ harness connected to the existing helper. Both account databases contained the
 exact text GUID; media decoded pixels matched after Messages re-encoding (file
 bytes differed). These are same-Mac controlled-account checks, not independent
 phone, upstream vendor, deployed-cloud or endurance acceptance. See the latest
-[route evidence](tests/ROUTE_HTTP.md). No native protocol, database migration, Mac installation,
+[route evidence](https://github.com/cherthq/sdk/blob/main/tests/ROUTE_HTTP.md). No native protocol, database migration, Mac installation,
 upstream expiry semantics or universal provider parity is added. Chert keeps
 reservations permanently; official v4 docs do not specify expiry/reuse behavior,
 while older v2 guides guarantee replay within 24 hours. Use the matching cloud
@@ -716,7 +716,7 @@ The source UUID is resolved to an owned iMessage phone, then passed as explicit
 `from` to Chert. This is not an atomic UUID-line binding under concurrent
 same-phone reassignment, so the adapter is unsuitable where frozen source-line
 UUID identity is required. It is not a full drop-in replacement. See its
-[method matrix and contract pin](packages/missblue-adapter/README.md).
+[method matrix and contract pin](https://github.com/cherthq/sdk/blob/main/packages/missblue-adapter/README.md).
 
 Fourteen tests (270 assertions) use the actual Chert client; send and typing
 include actual loopback HTTP with synthetic backend receipts. Built inventory
@@ -726,7 +726,7 @@ The separate strict-text gate passes real PostgreSQL-backed normal and
 Unicode/whitespace sends plus six refusal cases with zero native dispatch.
 Its native peer is synthetic; device acceptance for this adapter remains pending.
 BlueBubbles, Photon/Spectrum and other candidates remain research unless an
-implemented method is explicitly identified; see [research](docs/PROVIDER_RESEARCH.md).
+implemented method is explicitly identified; see [research](https://github.com/cherthq/sdk/blob/main/docs/PROVIDER_RESEARCH.md).
 
 
 MissBlue uncertainty handling also retains validated actual Chert public IDs in
@@ -739,7 +739,7 @@ restart refusal. These are synthetic native effects, not physical delivery.
 ## Additional HTTP provider subsets — 2026-10-19
 
 Four private Fetch-replacement adapters were added from the
-[2026-10-19 provider inventory](docs/PROVIDER_RESEARCH.md#imessage-provider-inventory--2026-10-19).
+[2026-10-19 provider inventory](https://github.com/cherthq/sdk/blob/main/docs/PROVIDER_RESEARCH.md#imessage-provider-inventory--2026-10-19).
 Each pins official docs (or source, for Jared) retrieved that day. None forwards
 the vendor credential, retries, or falls back to SMS/RCS; every operation not
 listed as supported or partial rejects before any Chert request. Accepted sends
