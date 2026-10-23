@@ -13,6 +13,13 @@ import (
 	"time"
 )
 
+func writeFixture(t *testing.T, w io.Writer, body string) {
+	t.Helper()
+	if _, err := io.WriteString(w, body); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestProductionDefaultAndExplicitOverride(t *testing.T) {
 	t.Setenv("CHERT_BASE_URL", "http://untrusted.invalid")
 	t.Setenv("CHERT_API_KEY", "ambient-secret")
@@ -71,7 +78,7 @@ func TestRawIdempotency(t *testing.T) {
 		if r.Header.Get("Idempotency-Key") != "stable-key" {
 			t.Error("missing key")
 		}
-		fmt.Fprint(w, `{}`)
+		writeFixture(t, w, `{}`)
 	}))
 	defer s.Close()
 	c := client(t, s, 0, 0)
