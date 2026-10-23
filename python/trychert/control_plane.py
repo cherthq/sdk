@@ -11,6 +11,7 @@ from .models import (BillingCatalog, Checkout, ConnectorEnrollment, ConnectorRec
                      Credentials, DeviceLoginStart, Identity, Json, LinePage, LoginApproval,
                      LoginInspection, LoginResult, Revoked, WorkerPage)
 
+DEFAULT_FACETIME_URL = 'https://facetime.trychert.com'
 _UNSET = object()
 _SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict".split())
 
@@ -40,7 +41,7 @@ def _nonfinite(value: str):
 
 
 class ChertControlPlane:
-    def __init__(self, base_url: str, *, token: str | None = None,
+    def __init__(self, base_url: str = DEFAULT_FACETIME_URL, *, token: str | None = None,
                  project_id: str | None = None, timeout: float = 15.0):
         valid = False
         try:

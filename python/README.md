@@ -3,7 +3,7 @@
 Unpublished Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
 The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
 Install the built wheel and import `trychert`. The legacy `chert`
-import remains compatible; its iMessage implementation is unchanged.
+import and explicit-URL constructor calls remain compatible.
 
 ```sh
 # Install a locally built artifact; no PyPI release is claimed yet.
@@ -21,12 +21,10 @@ from trychert import Chert, IMessageConfig, FaceTimeConfig
 
 sdk = Chert(
     imessage=IMessageConfig(
-        base_url="https://your-messaging-origin.example",
         api_key="your-imessage-key",
         tenant="your-messaging-tenant",  # optional
     ),
     facetime=FaceTimeConfig(
-        base_url="https://your-control-plane-origin.example",
         token="your-facetime-token",
         project_id="your-facetime-project",
     ),
@@ -37,13 +35,25 @@ identity = sdk.facetime.whoami()
 
 This wrapper does not bind servers, provision devices, discover origins, share
 credentials, or map messaging tenants to FaceTime projects. Project selection is
-FaceTime-only. Each channel uses its own explicitly supplied origin and credential.
+FaceTime-only. iMessage defaults to `https://console.trychert.com`; FaceTime
+defaults to `https://facetime.trychert.com`. `base_url` is an optional validated
+override for self-hosting or tests. Omission alone selects the default; explicit
+empty/invalid URLs fail instead of falling back. Existing positional
+`ChertClient(base_url, api_key, tenant)` calls are preserved; ordinary users can
+call `ChertClient(api_key=...)`. Credentials are still required for protected APIs.
+Each channel keeps its own credential.
 Credentials are excluded from configuration reprs. Explicit successful login and
 connector responses contain secrets: do not log those responses.
 
+**Release hold:** canonical origins are confirmed, but live strict iMessage
+`POST /api/v1/text-operations/v1` and FaceTime `GET /api/v1/billing/catalog`
+currently return 404. Defaults and local contract tests do not establish backend
+compatibility. Do not publish this candidate until routing is reconciled and
+method-correct live route smoke tests pass. No alternate-host retry is performed.
+
 ## FaceTime control plane
 
-`ChertControlPlane(base_url, token=None, project_id=None, timeout=15.0)` exposes
+`ChertControlPlane(base_url='https://facetime.trychert.com', *, token=None, project_id=None, timeout=15.0)` exposes
 the inspected TypeScript control-plane surface with Python snake_case methods:
 
 | Scope | Methods |
@@ -59,7 +69,9 @@ Checkout currently types `plan_id='shared'`, `catalog_version='2026-10-22'`.
 Mutating methods can have effects; reconcile uncertain results before retrying.
 
 FaceTime requires an HTTPS origin (or loopback HTTP), without a path, credentials,
-query, or fragment. Requests target `/api/v1/`; successful `{data: ...}` envelopes
+query, or fragment. Omit `base_url` to use the production default; explicit empty
+or invalid overrides are rejected, never silently replaced. Requests append
+`/api/v1/` exactly once; successful `{data: ...}` envelopes
 are unwrapped, including explicit null. Missing data, invalid JSON, and responses
 over 1 MiB fail. Redirects, ambient proxy/netrc credentials, and automatic retries
 are disabled. Missing credentials/project fail before HTTP. Headers must be

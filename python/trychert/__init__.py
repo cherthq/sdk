@@ -1,20 +1,20 @@
 """Explicit, independent iMessage and FaceTime clients; no implicit provisioning."""
 from dataclasses import dataclass, field
 
-from chert import ChertClient, ChertAPIError, QueuedTextReceipt, ReactionReceipt
-from .control_plane import ChertControlPlane, ChertControlPlaneError
+from chert import ChertClient, ChertAPIError, QueuedTextReceipt, ReactionReceipt, DEFAULT_IMESSAGE_URL
+from .control_plane import ChertControlPlane, ChertControlPlaneError, DEFAULT_FACETIME_URL
 
 
 @dataclass(frozen=True)
 class IMessageConfig:
-    base_url: str
-    api_key: str = field(repr=False)
+    base_url: str = DEFAULT_IMESSAGE_URL
+    api_key: str = field(default="", repr=False)
     tenant: str | None = None
 
 
 @dataclass(frozen=True)
 class FaceTimeConfig:
-    base_url: str
+    base_url: str = DEFAULT_FACETIME_URL
     token: str | None = field(default=None, repr=False)
     project_id: str | None = None
 

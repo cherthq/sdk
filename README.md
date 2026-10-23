@@ -158,14 +158,20 @@ import os
 from trychert import Chert, IMessageConfig, FaceTimeConfig
 
 sdk = Chert(
-    imessage=IMessageConfig(os.environ['CHERT_BASE_URL'], os.environ['CHERT_API_KEY']),
-    facetime=FaceTimeConfig(os.environ['CHERT_FACETIME_URL'],
-                           os.environ['CHERT_FACETIME_TOKEN'],
-                           os.environ['CHERT_PROJECT_ID']),
+    imessage=IMessageConfig(api_key=os.environ['CHERT_API_KEY']),
+    facetime=FaceTimeConfig(token=os.environ['CHERT_FACETIME_TOKEN'],
+                           project_id=os.environ['CHERT_PROJECT_ID']),
 )
 # identity = sdk.facetime.whoami()  # Explicit read-only request.
 # Either channel can be omitted. Legacy `from chert import ChertClient` still works.
 ```
+
+Python defaults to `https://console.trychert.com` for iMessage and
+`https://facetime.trychert.com` for FaceTime; explicit `base_url` overrides remain
+available for tests/self-hosting. **Unpublished source preview:** default origins
+and offline tests do not establish live service compatibility. Strict text,
+default-origin reactions, and billing availability require separate verification.
+No host fallback or automatic retries are performed; publication remains separate.
 
 **Rust** — use Rust 1.88+ and a Tokio runtime with the local `rust/` crate:
 

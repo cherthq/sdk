@@ -6,7 +6,9 @@ import threading
 import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from io import BytesIO
 from unittest.mock import patch
+from urllib.response import addinfourl
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from trychert import (Chert, ChertClient, ChertControlPlane, ChertControlPlaneError,
@@ -67,6 +69,68 @@ class UnifiedTests(unittest.TestCase):
             server.status, server.raw, server.delay = 200, None, 0
             server.redirect = self.message_base + '/sink'
         self.client = ChertControlPlane(self.base, token=SECRET, project_id='project-only')
+
+    def test_facetime_default_and_explicit_https_override(self):
+        requests = []
+
+        def respond(request):
+            requests.append(request)
+            response = addinfourl(BytesIO(b'{"data":{"ok":true}}'), {}, request.full_url, 200)
+            response.msg = 'OK'
+            return response
+
+        # Capture at the HTTP boundary: never send fixture credentials to production.
+        with patch('urllib.request.HTTPSHandler.https_open', side_effect=respond):
+            self.assertEqual(ChertControlPlane().billing_catalog(), {'ok': True})
+            sdk = Chert(facetime=FaceTimeConfig(token=SECRET, project_id='project-only'))
+            self.assertEqual(sdk.facetime.whoami(), {'ok': True})
+            self.assertEqual(ChertControlPlane('https://selfhost.example/').billing_catalog(), {'ok': True})
+        self.assertEqual([request.full_url for request in requests], [
+            'https://facetime.trychert.com/api/v1/billing/catalog',
+            'https://facetime.trychert.com/api/v1/cli/whoami',
+            'https://selfhost.example/api/v1/billing/catalog',
+        ])
+        self.assertIsNone(requests[0].get_header('Authorization'))
+        self.assertEqual(requests[1].get_header('Authorization'), 'Bearer ' + SECRET)
+        self.assertEqual(requests[1].get_header('X-chert-project-id'), 'project-only')
+        self.assertIsNone(requests[2].get_header('Authorization'))
+
+    def test_imessage_default_override_prefix_and_auth_isolation(self):
+        requests = []
+
+        def respond(request):
+            requests.append(request)
+            response = addinfourl(BytesIO(b'{"ok":true}'), {}, request.full_url, 200)
+            response.msg = 'OK'
+            return response
+
+        with patch('urllib.request.HTTPSHandler.https_open', side_effect=respond):
+            sdk = Chert(imessage=IMessageConfig(api_key=MESSAGE_SECRET, tenant='tenant-only'),
+                        facetime=FaceTimeConfig(token=SECRET, project_id='project-only'))
+            self.assertEqual(sdk.imessage.request('/whoami'), {'ok': True})
+            for base in ('https://selfhost.example', 'https://selfhost.example/',
+                         'https://selfhost.example/api/v1', 'https://selfhost.example/custom/'):
+                self.assertEqual(ChertClient(base, MESSAGE_SECRET).request('/whoami'), {'ok': True})
+            self.assertEqual(ChertClient(api_key=MESSAGE_SECRET).request('/whoami'), {'ok': True})
+        self.assertEqual([request.full_url for request in requests], [
+            'https://console.trychert.com/api/v1/whoami',
+            'https://selfhost.example/api/v1/whoami',
+            'https://selfhost.example/api/v1/whoami',
+            'https://selfhost.example/api/v1/whoami',
+            'https://selfhost.example/custom/whoami',
+            'https://console.trychert.com/api/v1/whoami',
+        ])
+        for request in requests:
+            self.assertEqual(request.get_header('Authorization'), 'Bearer ' + MESSAGE_SECRET)
+            self.assertIsNone(request.get_header('X-chert-project-id'))
+        self.assertEqual(requests[0].get_header('X-chert-tenant'), 'tenant-only')
+        for invalid in ('', None, 'http://example.test', 'https://user:pass@example.test',
+                        'https://example.test?query', 'https://example.test#fragment',
+                        'https://example.test/a/../b'):
+            with self.subTest(base=invalid), self.assertRaises(ValueError):
+                Chert(imessage=IMessageConfig(base_url=invalid, api_key=MESSAGE_SECRET))
+        with self.assertRaises(ValueError):
+            Chert(imessage=IMessageConfig())
 
     def test_every_control_plane_route_body_and_auth_scope(self):
         cases = [
@@ -185,7 +249,7 @@ class UnifiedTests(unittest.TestCase):
             self.assertEqual(self.client.whoami(), {'ok': True})
 
     def test_invalid_input_rejected_before_network(self):
-        for base in ('https://user:secret@example.test', 'https://example.test/path', 'https://example.test?', 'https://example.test#', 'https://example.test:99999', 'http://example.test', 'https://example.test\n', None):
+        for base in ('', 'https://user:secret@example.test', 'https://example.test/path', 'https://example.test?', 'https://example.test#', 'https://example.test:99999', 'http://example.test', 'https://example.test\n', None):
             with self.subTest(base=base), self.assertRaises(ValueError):
                 ChertControlPlane(base)
         for value in ('bad\nheader', 'bad\rheader', '\0', 'é'):
