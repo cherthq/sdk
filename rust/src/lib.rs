@@ -1,4 +1,10 @@
-//! Generic messaging transport. No provider parity or automatic retries.
+#![doc = include_str!("../README.md")]
+pub mod facetime;
+mod unified;
+pub use unified::{ChertSdk, FaceTimeConfig, IMessageConfig, TransportLimits};
+/// Explicit name for the messaging client; `ChertClient` remains its compatibility name.
+pub type IMessageClient = ChertClient;
+
 use reqwest::{
     header::{HeaderMap, HeaderValue, ACCEPT, AUTHORIZATION},
     Method, Url,
@@ -163,6 +169,22 @@ impl ChertClient {
         timeout: Duration,
         max_response_bytes: usize,
     ) -> Result<Self, ChertError> {
+        Self::with_scope(
+            base,
+            api_key,
+            tenant.map(|v| ("x-chert-tenant", v)),
+            timeout,
+            max_response_bytes,
+        )
+    }
+
+    fn with_scope(
+        base: &str,
+        api_key: &str,
+        scope: Option<(&'static str, &str)>,
+        timeout: Duration,
+        max_response_bytes: usize,
+    ) -> Result<Self, ChertError> {
         let invalid = || ChertError::new(None, "invalid_configuration");
         if !clean(base)
             || base.contains('\\')
@@ -171,7 +193,7 @@ impl ChertClient {
             || max_response_bytes == 0
             || api_key.trim().is_empty()
             || api_key.chars().any(char::is_control)
-            || tenant.is_some_and(|s| s.trim().is_empty() || s.chars().any(char::is_control))
+            || scope.is_some_and(|(_, s)| s.trim().is_empty() || s.chars().any(char::is_control))
         {
             return Err(invalid());
         }
@@ -205,11 +227,8 @@ impl ChertClient {
         auth.set_sensitive(true);
         headers.insert(AUTHORIZATION, auth);
         headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
-        if let Some(tenant) = tenant {
-            headers.insert(
-                "x-chert-tenant",
-                HeaderValue::from_str(tenant).map_err(|_| invalid())?,
-            );
+        if let Some((name, value)) = scope {
+            headers.insert(name, HeaderValue::from_str(value).map_err(|_| invalid())?);
         }
         let http = reqwest::Client::builder()
             .default_headers(headers)
