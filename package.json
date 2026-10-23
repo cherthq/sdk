@@ -1,7 +1,34 @@
 {
-  "name": "chert-sdk-workspace",
-  "private": true,
+  "name": "@trychert/sdk",
+  "version": "0.1.0",
+  "description": "Unified Chert iMessage, FaceTime control-plane, provider adapters and migration CLI",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": { "node": ">=22.12" },
+  "publishConfig": { "access": "public" },
+  "files": ["dist", "README.md", "LICENSE", "COMPATIBILITY.md"],
+  "bin": {
+    "chert-sdk": "./dist/unified/cli.js"
+  },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./imessage": { "types": "./dist/imessage/index.d.ts", "import": "./dist/imessage/index.js" },
+    "./control-plane": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
+    "./facetime": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
+    "./adopt": { "types": "./dist/adopt/main.d.ts", "import": "./dist/adopt/main.js" },
+    "./linq-adapter": { "types": "./dist/linq-adapter/index.d.ts", "import": "./dist/linq-adapter/index.js" },
+    "./sendblue-adapter": { "types": "./dist/sendblue-adapter/index.d.ts", "import": "./dist/sendblue-adapter/index.js" },
+    "./blooio-adapter": { "types": "./dist/blooio-adapter/index.d.ts", "import": "./dist/blooio-adapter/index.js" },
+    "./blooio-v4-adapter": { "types": "./dist/blooio-v4-adapter/index.d.ts", "import": "./dist/blooio-v4-adapter/index.js" },
+    "./loopmessage-adapter": { "types": "./dist/loopmessage-adapter/index.d.ts", "import": "./dist/loopmessage-adapter/index.js" },
+    "./missblue-adapter": { "types": "./dist/missblue-adapter/index.d.ts", "import": "./dist/missblue-adapter/index.js" },
+    "./texting-blue-adapter": { "types": "./dist/texting-blue-adapter/index.d.ts", "import": "./dist/texting-blue-adapter/index.js" },
+    "./contiguity-adapter": { "types": "./dist/contiguity-adapter/index.d.ts", "import": "./dist/contiguity-adapter/index.js" },
+    "./bluereacher-adapter": { "types": "./dist/bluereacher-adapter/index.d.ts", "import": "./dist/bluereacher-adapter/index.js" },
+    "./jared-adapter": { "types": "./dist/jared-adapter/index.d.ts", "import": "./dist/jared-adapter/index.js" },
+    "./package.json": "./package.json"
+  },
   "workspaces": [
     "packages/*"
   ],
@@ -9,12 +36,13 @@
     "test": "bun run build && bun scripts/test-unit.ts",
     "typecheck": "bun run build && tsc --noEmit",
     "build": "bun scripts/build.ts",
+    "prepack": "bun run build",
+    "test:package": "bun run build && bun scripts/test-package.ts",
     "test:distribution": "bun run build && node tests/distribution-smoke.mjs && bun tests/distribution-smoke.mjs && deno run --no-config --node-modules-dir=manual --allow-env --allow-read tests/distribution-smoke.mjs",
     "test:integration": "bun run build && bun scripts/test-integration.ts"
   },
   "devDependencies": {
     "@types/bun": "1.3.14",
-    "typescript": "5.9.2",
     "@cherthq/imessage": "workspace:*",
     "@cherthq/linq-adapter": "workspace:*",
     "@cherthq/loopmessage-adapter": "workspace:*",
@@ -25,7 +53,14 @@
     "@cherthq/texting-blue-adapter": "workspace:*",
     "@cherthq/contiguity-adapter": "workspace:*",
     "@cherthq/bluereacher-adapter": "workspace:*",
-    "@cherthq/jared-adapter": "workspace:*"
+    "@cherthq/jared-adapter": "workspace:*",
+    "@cherthq/control-plane": "workspace:*"
+  },
+  "dependencies": {
+    "@blooio/sdk": "0.0.2",
+    "@linqapp/sdk": "0.78.0",
+    "sendblue": "3.20.1",
+    "typescript": "5.9.2"
   },
   "license": "MIT",
   "repository": {
