@@ -1,0 +1,5 @@
+{
+  "base_archive_sha256": "27e6f3b7614eee8cd73fff157a79d3bd26c192e614a667cd308880009b8342ea",
+  "only_change": "Append FROM qualification AS railway_qualification to select reviewed stage",
+  "dockerfile_sha256": "d836a6bf5bead95845b21ac6b25fb69c167032b45211aaf584573771fbd63a14"
+}

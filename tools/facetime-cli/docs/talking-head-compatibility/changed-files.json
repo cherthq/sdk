@@ -1,0 +1,532 @@
+[
+  {
+    "path": "/Users/garygao/chert-facetime-cli/CLI_GUIDE.md",
+    "status": "modified",
+    "sha256": "7ddf97f22bb5218a978114d9c2becf408fcb260402a57e658bb198d3b734a799"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/README.md",
+    "status": "modified",
+    "sha256": "f033898f494a4acd0481430094ec7d35f7358f357201b33f4fd1b77bc5687250"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/talking-head-compatibility/artifacts/chert-local-transport-proof-0.0.0.tgz",
+    "status": "new",
+    "sha256": "ea5da6543cd9b766b076901270fb2535d5681c45a030df8456a4e198b9ed11bc"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/transport/byor.test.ts",
+    "status": "modified",
+    "sha256": "3e4b2f3c372a9e457a112cca350ed08b4fbb0dab6287e204b98eb00572e789d2"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/cli/talking-head-package.test.ts",
+    "status": "modified",
+    "sha256": "2a3514ee4919697512a6b46894acdbd6a1d48824cbb3df6628c1cbf3558356f1"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/fixtures/control-plane.ts",
+    "status": "modified",
+    "sha256": "c027c1ca3763929b0eb0875f90d1b29c564c6a5180f5e0f99c975745df541b81"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/DEPLOYMENT_READINESS.md",
+    "status": "modified",
+    "sha256": "83e65563d7f064c2fe0f7ef365a4a6aa2852ac05e0877be7628324ad3ce46eda"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/BYOR_OWNERSHIP.md",
+    "status": "modified",
+    "sha256": "7d0c69bf01c7170a902428032a046db86f1f80f0b89fb942e26c65dbeff4aef6"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/BACKEND_PILOT_RUNBOOK.md",
+    "status": "modified",
+    "sha256": "987ad4f5086c875349648eae000ce280cff5dc095da693ea45dcc2ac2d35ac38"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-full-node24.txt",
+    "status": "new",
+    "sha256": "b1e9622ba81ae0a001954d281c4043fa44ff750922535566cb141ef5f36fef39"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/remaining-matrix.json",
+    "status": "new",
+    "sha256": "c21004f6192fd9d7b613d7edabac522222fe78903ac0b561febf94dba51e52ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-lint-node22.txt",
+    "status": "new",
+    "sha256": "546dbf624c898b50a0ab6cb5506a84098d5706b75e3a6a59369eb58cd24e2a7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-build.txt",
+    "status": "new",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-red.txt",
+    "status": "new",
+    "sha256": "25d58c5c3163443dd5ad550172e46822ddea5daee058d989d5884f109849271f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-tests-node24.txt",
+    "status": "new",
+    "sha256": "f2b1fae00ef28913eb9acf1b877bfaca2671600e7997f2f6928d54495ac5fefa"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-green.txt",
+    "status": "new",
+    "sha256": "a56fda35100cdc6da6a6e831f583c2134c693a9a074e5535add26387877bc8b5"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-typecheck-node24.txt",
+    "status": "new",
+    "sha256": "fd028c32b6407f6da7f8d3e883239dc5f39e11ef901a1d0b6a6771eb1a1305ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-full-node22.txt",
+    "status": "new",
+    "sha256": "7c48d861acf400aab4fd1178a5cb766f83c7ca94d0c106e53aafc106a9cf16d1"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/owner-host-final.txt",
+    "status": "new",
+    "sha256": "1cdc5530fabc48e1b13299442334542c49a5c4c8b27afa7b706804d2ae399496"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/rehearse.py",
+    "status": "new",
+    "sha256": "9e81bcd388180342ada149cd897291e8cecd68b330131ed2c6cce52fbc30f83a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-lint-node24.txt",
+    "status": "new",
+    "sha256": "546dbf624c898b50a0ab6cb5506a84098d5706b75e3a6a59369eb58cd24e2a7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/media-green.txt",
+    "status": "new",
+    "sha256": "aaa648bd70c47a54ead1f82fa2e76e3e441a59391b2b772a1dd549cc3abf6330"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-tests-node22.txt",
+    "status": "new",
+    "sha256": "a99061fb27a17fdda0686abdf98e213fb94ace181232efacc9c46ed252598b89"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-typecheck-node22.txt",
+    "status": "new",
+    "sha256": "fd028c32b6407f6da7f8d3e883239dc5f39e11ef901a1d0b6a6771eb1a1305ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-lint-node24.txt",
+    "status": "new",
+    "sha256": "1ae1337aeba973977246672f0e68dd60519dc12dc1a6b76aae78d9380f654869"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-build-node24.txt",
+    "status": "new",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/typecheck-first.txt",
+    "status": "new",
+    "sha256": "fd028c32b6407f6da7f8d3e883239dc5f39e11ef901a1d0b6a6771eb1a1305ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-behavior-red.txt",
+    "status": "new",
+    "sha256": "4b2148b83ed8d9253d71c5ed80251560337aa371d4aeb23391ccd3143a5f98a4"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/candidate-rehearsal.json",
+    "status": "new",
+    "sha256": "a5198053d14c404d1f572b950be0cc45245547ac6e4c976db0d00676cf434938"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-installed-green-node22.txt",
+    "status": "new",
+    "sha256": "f47f7730b1270ec032135904b7fa1130b8d69e3ff24a8630c0100aff65ecef73"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/npm-pack.json",
+    "status": "new",
+    "sha256": "366927de2f9602a93f436631c5784c2b6e8c9731786c3eb06b0d336c162536ae"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-lint-node22.txt",
+    "status": "new",
+    "sha256": "1ae1337aeba973977246672f0e68dd60519dc12dc1a6b76aae78d9380f654869"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/validate_remaining.py",
+    "status": "new",
+    "sha256": "8ffffd0822638888a9a37db2a35988bf12796d458c534db2ddd44e9211c80698"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-matrix.json",
+    "status": "new",
+    "sha256": "31ad9c3fea5dafcbc264835d61ecfdd93ba8db9879e2c2475a14d30fdb81bc3e"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/python-full.txt",
+    "status": "new",
+    "sha256": "91c164575b823792423573dba5ff017375b4ee6a226c6e34124bb47245f5b52e"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/python-lint.txt",
+    "status": "new",
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-build-node22.txt",
+    "status": "new",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/build.txt",
+    "status": "new",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/python-lint-first.txt",
+    "status": "new",
+    "sha256": "d0313ea98ed3a31fbc37c8f0969f2d4cbb1af1d23502417959c3d82408a37a1d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-installed-green-node24.txt",
+    "status": "new",
+    "sha256": "8dcbb8d78fde2a1a9c70c82e663bf1c5988f56f638b3e6b170def82045e3c6fc"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/media-red.txt",
+    "status": "new",
+    "sha256": "7aece01b434cbad49313720d51ffef264ae2842a912b91e2c020ce728a9116df"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/owner-green.txt",
+    "status": "new",
+    "sha256": "657efc051bed88e47ad53601a015657c60f950aedd2d4a89cb6b0505d09d2738"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/demo-node-node22.txt",
+    "status": "new",
+    "sha256": "beee980076d8f967c54b7ba055585e350ec638abab61a53cd6dd36c887c06254"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/demo-check-node22.txt",
+    "status": "new",
+    "sha256": "ee8b1e07b95f64988f8f9c0033ce4ff89177e4113c12bc0c72c4f831df5cddf2"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/python-lint-final.txt",
+    "status": "new",
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/owner-behavior-red.txt",
+    "status": "new",
+    "sha256": "cccafaf6bb7bce160a431b7fa455153f3b6eca888dfcb9cf2c523fcd9f2703c6"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-typecheck-node22.txt",
+    "status": "new",
+    "sha256": "483d675d99f3e66b9850d5a4d76f130405e3ea60841ce0e46195989a547e0c37"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-proof-node22.txt",
+    "status": "new",
+    "sha256": "834bde6ca704225bb2f49955e72fd8accfddce633518f1438536366a489707fe"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/validate.py",
+    "status": "new",
+    "sha256": "7e31c3a13f344f6ca17d4665ce8a8bab057d83a7dbbe766528e3ac568cf3c28f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-lint-node22.txt",
+    "status": "new",
+    "sha256": "546dbf624c898b50a0ab6cb5506a84098d5706b75e3a6a59369eb58cd24e2a7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/baseline.json",
+    "status": "new",
+    "sha256": "c674943c7a829a62824b3030dce72756e21733ce2f2de1dd682dc775afa41ebc"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/RESULTS.md",
+    "status": "new",
+    "sha256": "a8f49d6f5ae1aa47ef2fc691afe764bb1a76ff258ed0711995dd5c77658c4f51"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-backend-node24.txt",
+    "status": "new",
+    "sha256": "2b43e9882bb7aa1d025a6572dd2446787221ec443ac56b3fcb651c9842de1f0d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/installed-ready-node22.txt",
+    "status": "new",
+    "sha256": "b3ecda6a5ed28a5df1137fcfaa1acf3b163f51e9334ca238569fffa1aa57d1c7"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-full-node24.txt",
+    "status": "new",
+    "sha256": "e1f8993f4a043b5c4e5618f5291806e0dc67b748bc50765ee700add165683eca"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/demo-node-node24.txt",
+    "status": "new",
+    "sha256": "27973706eb1c4a1549abd49e73397615c93fa1d653730fea3df4b58f2439f43a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/demo-check-node24.txt",
+    "status": "new",
+    "sha256": "b76530b109a0b0bf5361c6bce4b7243cc153c05a96fe9c034872123a0cecec25"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/owner-red.txt",
+    "status": "new",
+    "sha256": "01a64577d49b5df9f6304b016ec890587f7a4af31924255aa952eb97ee8c8e28"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/matrix.json",
+    "status": "new",
+    "sha256": "b82003ec00515cc917bcda79c0a3d8e0724ba53a132d44a97d22ae0a6a022be2"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-typecheck-node24.txt",
+    "status": "new",
+    "sha256": "483d675d99f3e66b9850d5a4d76f130405e3ea60841ce0e46195989a547e0c37"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/host-first.txt",
+    "status": "new",
+    "sha256": "2935232f49d132ceefd6f3a38750b4fc647f9538c437e669f3ef7e7b08254fba"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-proof-node24.txt",
+    "status": "new",
+    "sha256": "8d00312ba9bd89e470cf02d630b699ff2e53c9c3100fff50a67b9c2e40e01f0a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-lint-node24.txt",
+    "status": "new",
+    "sha256": "546dbf624c898b50a0ab6cb5506a84098d5706b75e3a6a59369eb58cd24e2a7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/owner-host-green.txt",
+    "status": "new",
+    "sha256": "4104d22d5d3f053ff39afc2a8f6d82eff29d36c0b5358cf3cc40ea7641ef5b7c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-backend-node22.txt",
+    "status": "new",
+    "sha256": "95eb5f6e574344aadeac8cb993efaee4800d7688913d04dc12ff8fda38cc77eb"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-full-node22.txt",
+    "status": "new",
+    "sha256": "2a7a11bb78312018e34aece8443252100508ba31a7daa2b339e9a60bfc53029b"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-installed-node24.txt",
+    "status": "new",
+    "sha256": "ea9b530f2ccfb58237ea32b727ae2bcb3f5c4e0866f92e13608701fcc754fb3c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/host-green.txt",
+    "status": "new",
+    "sha256": "ed294784a429385bba46a5581cdbf07fde69af376f08ee3a493dc2ac6cddca8c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-typecheck-node22.txt",
+    "status": "new",
+    "sha256": "fd028c32b6407f6da7f8d3e883239dc5f39e11ef901a1d0b6a6771eb1a1305ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/BRIEF.md",
+    "status": "new",
+    "sha256": "368ed0a218ece6b0a25c7d5f9def4f81337af09dbd0a512f5886dc4251921cf4"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/verify.py",
+    "status": "new",
+    "sha256": "3617837e1cc3342ca5f9aaed1b5a0c1d3ed2eedb2e1dc280f955f9df7b20b337"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-build-node22.txt",
+    "status": "new",
+    "sha256": "8a873daa1ca20b95a886725faf877248972a848210dbcdcfdbb63765f77a50f4"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/relay-node22.txt",
+    "status": "new",
+    "sha256": "ae38497c3b1295598d8c88d53a0db25ec7bf208bb651e7a7db64d1a826464c42"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/python-full-final.txt",
+    "status": "new",
+    "sha256": "c527ca3848e0ecf41960187c840f215b6899bbe70ae9847d0a24c6d36d7478c6"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/validate_final_cli.py",
+    "status": "new",
+    "sha256": "1790ede3d41d4542fe127061d3ad33228dc2af7e18563f883b6b2de1c6a524ef"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-build-node22.txt",
+    "status": "new",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-installed-node22.txt",
+    "status": "new",
+    "sha256": "ed4ad9863af901a05571b6c1eb1ed18ffc03ff5d9fda4c68171d5eaf5e3ae646"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/cli-typecheck-node24.txt",
+    "status": "new",
+    "sha256": "fd028c32b6407f6da7f8d3e883239dc5f39e11ef901a1d0b6a6771eb1a1305ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/HOST.md",
+    "status": "new",
+    "sha256": "a859706afec849077b1f6f3ba63964c7f783357a833629bf87142f51ebb9045b"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/backend-build-node24.txt",
+    "status": "new",
+    "sha256": "55025036701dd35f70641b5164c1e971ca5becba0f0dc3d2ba949830bab5e784"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/relay-node24.txt",
+    "status": "new",
+    "sha256": "b4b55540664612c0d8021c44be38cb5f3bfe8fa7c00fa8485dd7d64547702557"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/artifacts.json",
+    "status": "new",
+    "sha256": "ede886e6959214e4dc7df5b3b1647e261b6db3e1b08350bb0fb01205f5d0e4d1"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/npm-pack-final.json",
+    "status": "new",
+    "sha256": "87ab3c1aec3d2c043ef016a8502bd664b790a01f7852fdfdf2adf9b7e383e5c0"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/talking-head-compatibility/final-cli-build-node24.txt",
+    "status": "new",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/contract.ts",
+    "status": "modified",
+    "sha256": "547a86635a6ea79d94500c3586d3e86d8524121c4da60873544481670b67f01f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/journal.ts",
+    "status": "modified",
+    "sha256": "274bf234ea18556293b8e1de1ba60216572a38d8f4efe7470bc22048cd821d84"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/runtime/connector.ts",
+    "status": "modified",
+    "sha256": "4ad046a229136aa5f523f84abb1924f5d1b36a935336629e13850f18cd7406e6"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/protocol/v1.ts",
+    "status": "modified",
+    "sha256": "38c7e99bfd9bd2f46564fe042c8d0ede28d1fbfc99f8f13777692236939c7b0d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/tsconfig.tsbuildinfo",
+    "status": "modified",
+    "sha256": "39b7b6e9d0282a463a94831cad7d914d1b2171c48de2a3128c9d3a0339a836e4"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/tests/connector-service.test.ts",
+    "status": "modified",
+    "sha256": "4013dd2f4ee99c506344457d2142bb77a1f9119ebf37dd4a3717d3d7c1e8090f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/tests/connectors.test.ts",
+    "status": "modified",
+    "sha256": "e9eb5766d4614117f42641b3ad149659699acad5b7f48faf7f8cc7e1c4b0b26a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/docs/API_CONTRACT.md",
+    "status": "modified",
+    "sha256": "54138cfe19e4c374a258b115abcd2bc3f46ce4e31be64b7818f53a18e9c8fcb3"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/supabase/migrations/20260930043204_connector_byor_video.sql",
+    "status": "new",
+    "sha256": "d3371d67a1d967a7f0878f9d2326b08907fac69a7c86913ab32325d5dbae22f7"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/tests/muse-startup.test.mjs",
+    "status": "modified",
+    "sha256": "9301dca31c91dd6811b8bda23179df18f2a83f09903635786ebd64e533858374"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/tests/agent-startup.test.mjs",
+    "status": "modified",
+    "sha256": "cc003f06dc9b438eeee16250189c41b845652769160117a7a1235eb5ddea2255"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/server.py",
+    "status": "modified",
+    "sha256": "8ce3fdfcb0bea5fde5b8994714b967a5e406a0602e68604befe64aa1dfac556a"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/control.py",
+    "status": "new",
+    "sha256": "41c52c54f45717d5a08213456f1b0a7b266990d3bba81c3bb7e4e0e78b1cc684"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/README.md",
+    "status": "modified",
+    "sha256": "a3b736ea4672aa15ed289d61cac2a796f46971774607eaa4aa5baa092ba6e343"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/ready_adapter.py",
+    "status": "new",
+    "sha256": "d9f0f2a1142baa8f48ff8ec56630923d63af72fc42353baab274c53be25a33cc"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/ready_owner.py",
+    "status": "new",
+    "sha256": "facfbaf2b12119e47a5e1533e1ca13f9d945a9678bb9f53643ae6b5ce090aab0"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/host/chert-byor.service",
+    "status": "new",
+    "sha256": "f8de48ee28e505191cdec87f7661d0934297e35b7f36948ab679815370250c97"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/host/talking-head-owner.service",
+    "status": "new",
+    "sha256": "be4f8b324990417dc4c42953b1dfe6563e2627643835f5405e5bba766d8c7ceb"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/tests/fixture_server.py",
+    "status": "modified",
+    "sha256": "4174f89ed0dd1f1da7b2ea77b36ee6dd2387d30466c0e8b3a74d6786b203a71c"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/tests/substitutes.py",
+    "status": "modified",
+    "sha256": "ac9ec68898e6520d2e77e81191b7b4ee6bf7feab7b5862a603a571e5853637fc"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/tests/test_host.py",
+    "status": "new",
+    "sha256": "95e18b0c0eee0dc588e1d64c6c00c46463d4257da73194ce9c823e16cf64d454"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/tests/test_ready_owner.py",
+    "status": "new",
+    "sha256": "446b664d44d306028cba7e4e938e3daf01b750b87c66e583efe41a473769ad0b"
+  }
+]

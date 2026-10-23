@@ -1,0 +1,44 @@
+{
+  "at": "2026-09-29T20:46:53.768Z",
+  "mode": "preflight",
+  "node": "v22.23.2",
+  "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "read_only": true,
+  "inventories": [
+    {
+      "label": "original",
+      "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+      "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+      "room_sid": "RM_mrfsEGe5SAUK",
+      "rooms": [],
+      "dispatches": {
+        "status": "unknown",
+        "error_class": "Error",
+        "error_code": "unclassified"
+      },
+      "phase": "dispatch_pending",
+      "create_pending": true,
+      "cleanup_debt": true,
+      "audit_decision": "Retain debt: unacknowledged dispatch; original send/settlement evidence missing."
+    },
+    {
+      "label": "diagnostic",
+      "operation": "98084e96-5778-4721-8110-6601358270a8",
+      "room": "72ff56d4-1fd4-4fd8-9b60-078599d276a0",
+      "room_sid": "RM_uciFtuAa76x9",
+      "rooms": [],
+      "dispatches": {
+        "status": "unknown",
+        "error_class": "Error",
+        "error_code": "unclassified"
+      },
+      "phase": "dispatch_ack",
+      "create_pending": false,
+      "cleanup_debt": true,
+      "audit_decision": "Retain debt: historical final hook lacks complete operation/nonce/marker and no durable exact terminal/deletion receipt. Do not fabricate them from room absence."
+    }
+  ],
+  "historical_evidence_unchanged": true,
+  "unrelated_demo_files_unchanged": true,
+  "local_probe_workers": 0
+}

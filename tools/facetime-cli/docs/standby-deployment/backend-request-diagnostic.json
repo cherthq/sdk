@@ -1,0 +1,9 @@
+{
+  "sample_size": 100,
+  "statuses": {
+    "200": 100
+  },
+  "sample_first_ms": 1790777870089,
+  "sample_last_ms": 1790777902459,
+  "five_xx_query_entries": 0
+}

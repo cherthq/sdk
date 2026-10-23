@@ -1,0 +1,51 @@
+{
+  "application": {
+    "serviceInstance": {
+      "activeDeployments": [
+        {
+          "id": "998b7608-c0ee-40fd-8a70-1a93af55b21c",
+          "instances": [
+            {
+              "id": "249e6161-9b20-48e0-a5a5-b2535aaf5d70",
+              "status": "RUNNING"
+            }
+          ],
+          "status": "SUCCESS"
+        }
+      ],
+      "drainingSeconds": 70,
+      "healthcheckPath": "/healthz",
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "restartPolicyType": "NEVER",
+      "sleepApplication": false,
+      "source": {
+        "image": null,
+        "repo": null
+      }
+    }
+  },
+  "relay": {
+    "serviceInstance": {
+      "activeDeployments": [
+        {
+          "id": "ecced424-a7e9-46d7-a52f-314dc5555058",
+          "instances": [
+            {
+              "id": "331cbfd2-a165-4960-8c6b-0daa2fdd3cb7",
+              "status": "RUNNING"
+            }
+          ],
+          "status": "SUCCESS"
+        }
+      ],
+      "drainingSeconds": 30,
+      "healthcheckPath": "/healthz",
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "restartPolicyType": "ON_FAILURE",
+      "sleepApplication": false,
+      "source": null
+    }
+  }
+}

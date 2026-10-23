@@ -1,0 +1,23 @@
+{
+  "at": "2026-09-29T20:47:48.688Z",
+  "read_only": true,
+  "node": "v22.23.2",
+  "timeout_ms": 2000,
+  "observations": [
+    {
+      "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+      "sdk_server_error": true,
+      "status": 404,
+      "code": "not_found",
+      "elapsed_ms": 1112
+    },
+    {
+      "room": "72ff56d4-1fd4-4fd8-9b60-078599d276a0",
+      "sdk_server_error": true,
+      "status": 404,
+      "code": "not_found",
+      "elapsed_ms": 1063
+    }
+  ],
+  "settles_historical_operations": false
+}

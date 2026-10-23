@@ -1,0 +1,10 @@
+{"level":"info","timestamp":"2026-09-30T19:30:21.349730238Z","message":"Starting Container"}
+{"message":"npm warn config production Use `--omit=dev` instead.","level":"error","timestamp":"2026-09-30T19:30:21.355086905Z"}
+{"timestamp":"2026-09-30T19:30:21.355091705Z","level":"info","message":""}
+{"message":"> @chert/connector-relay@0.0.0 start","level":"info","timestamp":"2026-09-30T19:30:21.355096305Z"}
+{"message":"> node main.mjs","level":"info","timestamp":"2026-09-30T19:30:21.355100704Z"}
+{"timestamp":"2026-09-30T19:30:21.355105304Z","level":"info","message":""}
+{"event":"relay_authority_failure","message":"","level":"info","code":"authority_timeout","timestamp":"2026-09-30T19:32:01.429521455Z","action":"poll","status":503}
+{"timestamp":"2026-09-30T19:41:13.716385711Z","level":"info","message":"","event":"relay_authority_failure","code":"authority_timeout","action":"poll","status":503}
+{"message":"","code":"authority_timeout","level":"info","event":"relay_authority_failure","timestamp":"2026-09-30T19:42:13.969216916Z","status":503,"action":"poll"}
+{"message":"","timestamp":"2026-09-30T19:42:44.053019266Z","code":"authority_timeout","action":"poll","event":"relay_authority_failure","status":503,"level":"info"}

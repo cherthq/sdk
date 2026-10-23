@@ -1,0 +1,34 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --run tests/connectors.test.ts tests/connector-service.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime/control-plane
+
+ ❯ tests/connector-service.test.ts (3 tests | 1 failed) 5594ms
+     × commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections 1560ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-service.test.ts > integrated connector service and relay > commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections
+AssertionError: expected '2' to be '0' // Object.is equality
+
+Expected: "0"
+Received: "2"
+
+ ❯ tests/connector-service.test.ts:81:132
+     79|    recoverySocket.send(JSON.stringify({...owner(terminal),v:1,type:'li…
+     80|    await new Promise(resolve=>setTimeout(resolve,100));
+     81|    expect(db.sql(`select count(*) from facetime_connector_deliveries w…
+       |                                                                                                                                    ^
+     82|    await expect(backend.runtime({credential:enrollment.credentials.con…
+     83|    recoverySocket.terminate();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 7 passed (8)
+   Start at  18:29:53
+   Duration  5.75s (transform 68ms, setup 0ms, import 112ms, tests 11.25s, environment 0ms)
+

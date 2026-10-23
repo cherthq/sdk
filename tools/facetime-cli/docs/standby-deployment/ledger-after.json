@@ -1,0 +1,207 @@
+[
+  {
+    "version": "20260819205731",
+    "name": "0006_development_audio_authorization",
+    "statements_md5": "0efaf988e8f6d329be9ef99e0974b1b6"
+  },
+  {
+    "version": "20260820145658",
+    "name": "0007_secure_call_transcripts",
+    "statements_md5": "526d311f6a1fd16b4dc8dc81765055ba"
+  },
+  {
+    "version": "20260826044026",
+    "name": "0008_b1_call_event_contract",
+    "statements_md5": "705207637392da5973e2fb52f97cd1af"
+  },
+  {
+    "version": "20260826050138",
+    "name": "0009_b1_event_ingestion_metadata",
+    "statements_md5": "b63cea61f1fafbf368cff87e87d83bc0"
+  },
+  {
+    "version": "20260826115036",
+    "name": "b2_session_lifecycle",
+    "statements_md5": "952394b4b53b9dc80d5b761c51a3b257"
+  },
+  {
+    "version": "20260826124951",
+    "name": "b3_webhook_core",
+    "statements_md5": "0995f01a2e9528094d32c1d69545d589"
+  },
+  {
+    "version": "20260826125312",
+    "name": "b3_webhook_core_append_only_fix",
+    "statements_md5": "e2d0aaf4ecf420f471ecea1786f27993"
+  },
+  {
+    "version": "20260826125628",
+    "name": "b3_webhook_core_registration_context",
+    "statements_md5": "ea6acce32992baaf713251d7e2ce5ae0"
+  },
+  {
+    "version": "20260826125721",
+    "name": "b3_webhook_core_registration_ownership",
+    "statements_md5": "e3b5d2041f5662ee8d62709d71a7c31f"
+  },
+  {
+    "version": "20260826130029",
+    "name": "b3_webhook_core_wall_clock_created_at",
+    "statements_md5": "7a5c943a2b13d1daa1f68553a96b9f1e"
+  },
+  {
+    "version": "20260826130246",
+    "name": "b3_webhook_core_bounded_ingestion_time",
+    "statements_md5": "776d2e31075833d5670c455eddb08439"
+  },
+  {
+    "version": "20260826130922",
+    "name": "b3_webhook_core_foreign_key_indexes",
+    "statements_md5": "fec485de82bf86ea36b0d8b2575c4c39"
+  },
+  {
+    "version": "20260826130934",
+    "name": "b3_webhook_core_endpoint_index",
+    "statements_md5": "273de83644b35583e52b031dc7df49ad"
+  },
+  {
+    "version": "20260827024119",
+    "name": "b4_sealed_credentials",
+    "statements_md5": "a5ee5f5e58846124efd84d68a95add01"
+  },
+  {
+    "version": "20260827142611",
+    "name": "additional_project_creation",
+    "statements_md5": "70d816ceb897a8cd1e4dfa6b8c514699"
+  },
+  {
+    "version": "20260827142730",
+    "name": "project_livekit_allowed_hosts",
+    "statements_md5": "69bf5a719f198a26d8633a1a3647da7b"
+  },
+  {
+    "version": "20260827183854",
+    "name": "0014_bw_session_lifecycle_amendment",
+    "statements_md5": "7a1d31117023b373df996530fdfab1c4"
+  },
+  {
+    "version": "20260827185247",
+    "name": "heartbeat_rejection_evidence",
+    "statements_md5": "497c1994387fb2b1734e85f94f9646d6"
+  },
+  {
+    "version": "20260904024011",
+    "name": "incoming_webhook_decline_cleanup",
+    "statements_md5": "36df4af9f12a0cf9489d670f798633ee"
+  },
+  {
+    "version": "20260904230436",
+    "name": "start_bridge_failure_reconciliation",
+    "statements_md5": "4aaf29432ab0701ce94cc7bead6a6e44"
+  },
+  {
+    "version": "20260905000847",
+    "name": "call_webhook_logical_idempotency",
+    "statements_md5": "9aeb493ed01da297e2757fe84ad45af9"
+  },
+  {
+    "version": "20260906023207",
+    "name": "reconcile_expired_start_bridge_commands",
+    "statements_md5": "23a1b95934226dc6f911dbe2d8676798"
+  },
+  {
+    "version": "20260911131327",
+    "name": "line_integrations",
+    "statements_md5": "186c627c62d65966781c4cb4332d2807"
+  },
+  {
+    "version": "20260911140856",
+    "name": "line_integration_service_grants",
+    "statements_md5": "b5dfcb3b91049a85ee19e79d40076475"
+  },
+  {
+    "version": "20260911151650",
+    "name": "line_integrations_release_transport",
+    "statements_md5": "c90edbc07bd11594376a352b8358c5a7"
+  },
+  {
+    "version": "20260911213624",
+    "name": "automatic_worker_readiness",
+    "statements_md5": "13594f01d4a07a435d2df59e61ac8df2"
+  },
+  {
+    "version": "20260911233536",
+    "name": "dashboard_console",
+    "statements_md5": "b63c82aa7ab29657a0beeefbef51be28"
+  },
+  {
+    "version": "20260912002808",
+    "name": "automatic_worker_readiness_release_transport",
+    "statements_md5": "83e294515b3cd2c2363172b46d5cdbed"
+  },
+  {
+    "version": "20260912013442",
+    "name": "dashboard_console_release_transport",
+    "statements_md5": "d998e2581d25cb9bf2d1108745e43d38"
+  },
+  {
+    "version": "20260912131914",
+    "name": "dashboard_media_observations",
+    "statements_md5": "9cb01ed080bde987c60e2aae159a2534"
+  },
+  {
+    "version": "20260912142000",
+    "name": "dashboard_recovery_qualification",
+    "statements_md5": "f5059b91b310cdc5ddade495ba8fb0f3"
+  },
+  {
+    "version": "20260912144429",
+    "name": "readiness_dashboard_release_transport",
+    "statements_md5": "f87ad71553d70dfdfbd925f33b6b5772"
+  },
+  {
+    "version": "20260913044930",
+    "name": "guarded_worker_onboarding",
+    "statements_md5": "0515bd56ec4ac740a228ba24509dc433"
+  },
+  {
+    "version": "20260913124823",
+    "name": "guarded_worker_onboarding_release_transport",
+    "statements_md5": "01beed40d7aee1dd1146726410066ec1"
+  },
+  {
+    "version": "20260915191852",
+    "name": "optional_webhook_signing",
+    "statements_md5": "339a274efcbe24011fad6a53d3ca66d6"
+  },
+  {
+    "version": "20260916002957",
+    "name": "line_video_framing",
+    "statements_md5": "8589663ce0bae11eeed41bb9c07aaab2"
+  },
+  {
+    "version": "20260920010713",
+    "name": "project_user_management",
+    "statements_md5": "0868e76115c664c764b735ce48154f86"
+  },
+  {
+    "version": "20260921142141",
+    "name": "device_agent_audits",
+    "statements_md5": "8a30505d381069bb4594255882d8624b"
+  },
+  {
+    "version": "20260923192701",
+    "name": "outbound_byor_audio_compatible_release",
+    "statements_md5": "ee1ad2be18678f76d821d28149d550ea"
+  },
+  {
+    "version": "20260924200520",
+    "name": "outbound_byor_video",
+    "statements_md5": "c7bcba37a860754225cc86b192d4c206"
+  },
+  {
+    "version": "20260930140442",
+    "name": "connector_backend_compatible_release",
+    "statements_md5": "8eb980fc085264e42136bdcc3dad5ad6"
+  }
+]

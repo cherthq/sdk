@@ -1,0 +1,2 @@
+{"python_claim_reopen": true, "node_sigkill_retains_lock": true, "unsafe_node_restart_refused": true, "independent_python_expiry_cleanup": true, "creates": 3, "deletes": 3, "health": {"healthy": false, "mode": "degraded", "session_readiness": "unavailable", "acceptance_authority": "per_call_validation_required", "processes": {"owner": "running", "node": "crash_lock_review_required"}, "ipc": false, "connector_connected": false}}
+{"bounded_owner_restart_budget": true, "lock_preserved": true}

@@ -1,0 +1,71 @@
+{
+  "rules": [
+    {
+      "id": "rule_line_release_quiesce_Zr6KPK",
+      "name": "line-release-retired-deployments",
+      "conditionGroup": [
+        {
+          "conditions": [
+            {
+              "op": "inc",
+              "value": [
+                "facetime.trychert.com",
+                "chert-facetime-control-plane.vercel.app",
+                "chert-facetime-control-plane-chert-technologies.vercel.app",
+                "chert-facetime-control-plane-ktlll30lu-chert-technologies.vercel.app"
+              ],
+              "neg": true,
+              "type": "host"
+            }
+          ]
+        }
+      ],
+      "action": {
+        "mitigate": {
+          "action": "deny"
+        }
+      },
+      "active": true,
+      "valid": true,
+      "validationErrors": null,
+      "_status": "live"
+    },
+    {
+      "active": true,
+      "action": {
+        "mitigate": {
+          "action": "deny"
+        }
+      },
+      "name": "byor-release-drain-20260930",
+      "id": "rule_byor_release_drain_20260930_2DhKoO",
+      "conditionGroup": [
+        {
+          "conditions": [
+            {
+              "op": "inc",
+              "type": "method",
+              "value": [
+                "GET",
+                "HEAD",
+                "OPTIONS"
+              ],
+              "neg": true
+            },
+            {
+              "value": "^/api/(internal/v1/(calls/[^/]+/(events|transcript)|sessions/[^/]+/credentials/redeem|workers/(heartbeat|commands/claim|commands/[^/]+/(complete|outbound-lease))|webhooks/dispatch|audits/(poll|report))|v1/(calls/[^/]+/(answer|reject|end)|previews/[^/]+/stop))/?$",
+              "op": "re",
+              "type": "path",
+              "neg": true
+            }
+          ]
+        }
+      ],
+      "valid": true,
+      "validationErrors": null,
+      "_status": "added"
+    }
+  ],
+  "hasDraft": true,
+  "pendingChanges": 1
+}

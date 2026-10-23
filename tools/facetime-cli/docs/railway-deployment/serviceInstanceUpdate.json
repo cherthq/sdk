@@ -1,0 +1,44 @@
+{
+  "matches": [
+    {
+      "args": [
+        {
+          "defaultValue": null,
+          "description": "[Experimental] Environment ID. If the environment is a fork, the service will only be updated in it. Otherwise it will updated in all environments that are not forks of other environments",
+          "name": "environmentId",
+          "namedType": "String",
+          "required": false,
+          "type": "String"
+        },
+        {
+          "defaultValue": null,
+          "description": null,
+          "name": "input",
+          "namedType": "ServiceInstanceUpdateInput",
+          "required": true,
+          "type": "ServiceInstanceUpdateInput!"
+        },
+        {
+          "defaultValue": null,
+          "description": null,
+          "name": "serviceId",
+          "namedType": "String",
+          "required": true,
+          "type": "String!"
+        }
+      ],
+      "deprecationReason": null,
+      "description": "Update a service instance",
+      "isDeprecated": false,
+      "kind": "mutation",
+      "name": "serviceInstanceUpdate",
+      "namedType": "Boolean",
+      "parent": "Mutation",
+      "requiredArgs": [
+        "input",
+        "serviceId"
+      ],
+      "type": "Boolean!"
+    }
+  ]
+}

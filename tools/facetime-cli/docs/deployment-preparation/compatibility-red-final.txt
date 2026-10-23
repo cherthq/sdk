@@ -1,0 +1,72 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connector-production-compatibility.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/deployment-preparation/candidate/control-plane
+
+ ❯ tests/connector-production-compatibility.test.ts (3 tests | 3 failed) 2495ms
+     × retains unsigned incoming pin, context and acceptance without signing keys 779ms
+     × rejects stale automatic readiness at legacy acceptance commit 755ms
+     × retains outbound call.started at bridge_ready rather than active 961ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > retains unsigned incoming pin, context and acceptance without signing keys
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-c2qxEa -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  integration_unavailable
+CONTEXT:  PL/pgSQL function facetime_pin_call_integration() line 47 at RAISE
+SQL statement "insert into public.facetime_calls (
+    id, project_id, direction, mode, media, assistant_id, assistant_version_id,
+    worker_id, line_id, masked_identity, status, detected_at, incoming_request_data, incoming_decision_deadline_at
+  ) values (
+    p_call_id, v_line.project_id, 'inbound', v_mode, p_media,
+    case when v_mode = 'managed' then v_assistant.id else null end, v_version_id,
+    p_worker_id, p_line_id, p_masked_identity, 'incoming', now(),
+    jsonb_build_object('from_handle_hash',p_payload->'from_handle_hash','occurred_at',coalesce(p_payload->'__b1_occurred_at',to_jsonb(now()))),
+    clock_timestamp() + make_interval(secs => coalesce((p_payload->>'__li_deadline_ms')::double precision,5000)/1000)
+  )"
+PL/pgSQL function facetime_register_inbound_call(uuid,uuid,uuid,text,text,jsonb,jsonb) line 85 at SQL statement
+PL/pgSQL function facetime_register_inbound_call_b3(uuid,uuid,uuid,text,text,jsonb,jsonb) line 4 at assignment
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/connector-production-compatibility.test.ts:12:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > rejects stale automatic readiness at legacy acceptance commit
+AssertionError: expected [Function] to throw an error
+ ❯ tests/connector-production-compatibility.test.ts:22:113
+     20|   try{
+     21|    db.sql(fixture());db.sql(`update facetime_workers set automatic_rea…
+     22|    expect(()=>db.sql(`select facetime_guard_incoming_accept('${project…
+       |                                                                                                                 ^
+     23|   }finally{db.close();}
+     24|  },30000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > retains outbound call.started at bridge_ready rather than active
+AssertionError: expected '1' to be '0' // Object.is equality
+
+Expected: "0"
+Received: "1"
+
+ ❯ tests/connector-production-compatibility.test.ts:31:128
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  22:15:50
+   Duration  2.58s (transform 17ms, setup 9ms, import 14ms, tests 2.49s, environment 0ms)
+

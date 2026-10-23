@@ -1,0 +1,51 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run tests/connectors.test.ts tests/connector-service.test.ts tests/connector-incoming.test.ts tests/connector-production-compatibility.test.ts tests/session-cleanup-ordering.test.ts tests/optional-signing.test.ts tests/automatic-readiness.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/Users/garygao/chert-facetime-cli/.local/deployment-release/candidate/control-plane[39m
+
+ [32m✓[39m tests/automatic-readiness.test.ts [2m([22m[2m73 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/connector-incoming.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/optional-signing.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 2572[2mms[22m[39m
+   [33m[2m✓[22m[39m creates unsigned revisions and generates a key only on opt-in [33m 1350[2mms[22m[39m
+   [33m[2m✓[22m[39m pins unsigned calls and authorizes unsigned lifecycle delivery without keys [33m 1212[2mms[22m[39m
+ [32m✓[39m tests/connector-production-compatibility.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 5060[2mms[22m[39m
+     [33m[2m✓[22m[39m retains unsigned incoming pin, context and acceptance without signing keys [33m 1362[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects stale automatic readiness at legacy acceptance commit [33m 1124[2mms[22m[39m
+     [33m[2m✓[22m[39m retains outbound call.started at bridge_ready rather than active [33m 1530[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects connector acceptance when automatic worker readiness has gone stale [33m 1042[2mms[22m[39m
+ [32m✓[39m tests/session-cleanup-ordering.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 9371[2mms[22m[39m
+     [33m[2m✓[22m[39m failed: records cleanup with cleanupFirst=true [33m 1390[2mms[22m[39m
+     [33m[2m✓[22m[39m failed: records cleanup with cleanupFirst=false [33m 1212[2mms[22m[39m
+     [33m[2m✓[22m[39m ended: records cleanup with cleanupFirst=true [33m 1658[2mms[22m[39m
+     [33m[2m✓[22m[39m ended: records cleanup with cleanupFirst=false [33m 917[2mms[22m[39m
+     [33m[2m✓[22m[39m rejected: records cleanup with cleanupFirst=true [33m 910[2mms[22m[39m
+     [33m[2m✓[22m[39m rejected: records cleanup with cleanupFirst=false [33m 1143[2mms[22m[39m
+     [33m[2m✓[22m[39m ignores customer cleanup that cannot establish terminal cleanup [33m 1169[2mms[22m[39m
+     [33m[2m✓[22m[39m ignores worker cleanup that cannot establish terminal cleanup [33m 970[2mms[22m[39m
+ [32m✓[39m tests/connector-service.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 10764[2mms[22m[39m
+     [33m[2m✓[22m[39m commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (create-room) [33m 1942[2mms[22m[39m
+     [33m[2m✓[22m[39m commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor) [33m 1752[2mms[22m[39m
+     [33m[2m✓[22m[39m commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor-video) [33m 1487[2mms[22m[39m
+     [33m[2m✓[22m[39m settles an expired uncommitted request through recovery without a relay and rejects foreign owners [33m 955[2mms[22m[39m
+     [33m[2m✓[22m[39m enrolls over TLS without activation, activates explicitly and declines unavailable health through the real relay [33m 4626[2mms[22m[39m
+ [32m✓[39m tests/connectors.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 14381[2mms[22m[39m
+     [33m[2m✓[22m[39m enrolls standby without changing the legacy route and rejects foreign membership [33m 1381[2mms[22m[39m
+     [33m[2m✓[22m[39m requires exact line selection and an explicit activation compare-and-swap [33m 1213[2mms[22m[39m
+     [33m[2m✓[22m[39m pins ownership, rejects stale/foreign decisions and deduplicates a committed decision [33m 2082[2mms[22m[39m
+     [33m[2m✓[22m[39m revokes admission but preserves recovery and immutable pins through replacement [33m 974[2mms[22m[39m
+     [33m[2m✓[22m[39m serializes concurrent activations and refuses ambiguous line cardinality [33m 1029[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects zero-line projects and development activation without changing routing [33m 1177[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the connection credential revoked after drain while owned recovery survives restart [33m 1441[2mms[22m[39m
+     [33m[2m✓[22m[39m allows scoped drain and revoke after a second line without relaxing enrollment or activation [33m 1196[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps revocation terminal with revoke holding the management lock [33m 1138[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps revocation terminal with drain holding the management lock [33m 887[2mms[22m[39m
+     [33m[2m✓[22m[39m pins BYOR enrollment and gives it a two-hour credential-bounded ceiling without changing legacy mode [33m 880[2mms[22m[39m
+     [33m[2m✓[22m[39m retains the create-room audio-only commit restriction and private delegate permissions [33m 980[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[32m109 passed[39m[22m[90m (109)[39m
+[2m   Start at [22m 00:59:49
+[2m   Duration [22m 14.50s[2m (transform 334ms, setup 83ms, import 335ms, tests 42.26s, environment 0ms)[22m
+

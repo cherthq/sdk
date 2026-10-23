@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "ok": true,
+  "kind": "private_synthetic_loopback",
+  "node": "v22.23.2",
+  "sample_count": 20,
+  "commits": 20,
+  "effects": {
+    "rooms": 20,
+    "jobs": 20,
+    "providers": 20,
+    "deleted": 20
+  },
+  "remaining_resources": 0,
+  "remaining_debt": 0,
+  "configured_budgets_ms": {
+    "preparation": 4000,
+    "authority_commit": 5000,
+    "real_mac_context_only": 6000
+  },
+  "latency": {
+    "request_ms": {
+      "count": 20,
+      "p50": 11.724,
+      "p95": 15.074,
+      "max": 15.42
+    },
+    "preparation_ms": {
+      "count": 20,
+      "p50": 20.158,
+      "p95": 22.03,
+      "max": 22.378
+    },
+    "response_ms": {
+      "count": 20,
+      "p50": 1.08,
+      "p95": 3.464,
+      "max": 4.053
+    },
+    "commit_ms": {
+      "count": 20,
+      "p50": 4.269,
+      "p95": 4.754,
+      "max": 4.761
+    },
+    "total_ms": {
+      "count": 20,
+      "p50": 37.997,
+      "p95": 41.991,
+      "max": 43.678
+    }
+  },
+  "limitations": [
+    "No real LiveKit, provider, Mac, TLS, database or deployed relay verification."
+  ]
+}

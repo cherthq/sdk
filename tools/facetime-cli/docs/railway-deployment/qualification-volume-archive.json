@@ -1,0 +1,389 @@
+{
+  "observed_at": "2026-09-30T13:09:08.522442+00:00",
+  "archive": "/Users/garygao/chert-facetime-cli/.local/railway-deployment/qualification-volume-20260930.tar.gz",
+  "sha256": "b4df74c3c36c11568049d521a9c4074c392c0a5e85c56b97f86ee954cd3d3063",
+  "bytes": 5735,
+  "mode": "0o600",
+  "members": [
+    {
+      "name": ".",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./lost+found",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./grace-timer-70.py",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 351,
+      "type": "0",
+      "sha256": "45bd0c0625c0feda09e14a263e42a2468bd7892d3f50cfd6bef3d900bba9896f"
+    },
+    {
+      "name": "./grace-timer.py",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 348,
+      "type": "0",
+      "sha256": "91e43d32ceb540cd9d1c0cd6fb2ec5efbdb51100a858a36ea97ab908668d5b4d"
+    },
+    {
+      "name": "./grace-probe.json",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "bytes": 147,
+      "type": "0",
+      "sha256": "9b92850ed91974f0951d55fbc35cd5b1b8e777f2a0f0468b836468afcc3f35c7"
+    },
+    {
+      "name": "./grace-timing.jsonl",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 8214,
+      "type": "0",
+      "sha256": "59ee682659ddc2b4b65cd190bb39fabbf0c7603dc40c4fbcc64b39a353d11c1d"
+    },
+    {
+      "name": "./chert-pilot",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./chert-pilot/volume-id",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 36,
+      "type": "0",
+      "sha256": "e94d3365001c18e257782c9c16915ee656b8803949cfb3452d59128f01ae48b3"
+    },
+    {
+      "name": "./chert-pilot/supervisor.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./chert-pilot/initialized",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 16,
+      "type": "0",
+      "sha256": "df1f40337561c115a214c86f84b7656f0c361d02f814d3bc573bc97563567cbe"
+    },
+    {
+      "name": "./chert-pilot/ipc",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./chert-pilot/ipc/admin.sock.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./chert-pilot/ipc/owner.sock.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./chert-pilot/application",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./chert-pilot/application/operations.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 738,
+      "type": "0",
+      "sha256": "29369a4aa5bd5e4383c788f6b49d76b814b567b12cf305d0392266c2ecb7370a"
+    },
+    {
+      "name": "./chert-pilot/application/control.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 13,
+      "type": "0",
+      "sha256": "7adba69c161c72f31362f2041f4d4a3867b89bf33478c399648fdafbff892445"
+    },
+    {
+      "name": "./chert-pilot/application/operations.json.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./chert-pilot/application/resources.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 196,
+      "type": "0",
+      "sha256": "b228aa327e6a0a283d44631a00634cd5fce136d5660a46f138fb21605f77a4b4"
+    },
+    {
+      "name": "./chert-pilot/application/resources.json.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./chert-pilot/application/provider.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 596,
+      "type": "0",
+      "sha256": "8f471ee4310f1b0415dd18d7bd552e24f1a063cf988919b08e88b56e61837147"
+    },
+    {
+      "name": "./chert-pilot/connector",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./chert-pilot/connector/journal.preserved",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 330,
+      "type": "0",
+      "sha256": "31e1de3d49c7c081be4d078c736fd54e595f133d316058609a41f9093d52d075"
+    },
+    {
+      "name": "./chert-pilot/connector/config.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 579,
+      "type": "0",
+      "sha256": "35af29b21b0ba9adf4c7262cb3a0e803bea7c5c9b96b0e7b5cbf3f7557c30ace"
+    },
+    {
+      "name": "./archived-case-1",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./archived-case-1/volume-id",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 36,
+      "type": "0",
+      "sha256": "e94d3365001c18e257782c9c16915ee656b8803949cfb3452d59128f01ae48b3"
+    },
+    {
+      "name": "./archived-case-1/supervisor.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./archived-case-1/initialized",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 16,
+      "type": "0",
+      "sha256": "df1f40337561c115a214c86f84b7656f0c361d02f814d3bc573bc97563567cbe"
+    },
+    {
+      "name": "./archived-case-1/ipc",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./archived-case-1/ipc/admin.sock.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./archived-case-1/ipc/owner.sock.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./archived-case-1/application",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./archived-case-1/application/operations.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 3362,
+      "type": "0",
+      "sha256": "5d10f5ba30a0da6dfe9ca26b9b91ee39b3e035745b42a2b1fe6a2b8cc87a0db3"
+    },
+    {
+      "name": "./archived-case-1/application/operations.json.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./archived-case-1/application/resources.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 146,
+      "type": "0",
+      "sha256": "8854f047b5bf917cbb98a8750361c2780c6f48f3f111635b781b3c2b886bf367"
+    },
+    {
+      "name": "./archived-case-1/application/resources.json.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./archived-case-1/application/short-ttl",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 0,
+      "type": "0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "./archived-case-1/application/provider.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 83,
+      "type": "0",
+      "sha256": "010f6867245699ff3e9ba0e96a91c3cd6ae4e3eead88bfe7ac6c62ef705898d8"
+    },
+    {
+      "name": "./archived-case-1/connector",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o700",
+      "bytes": 0,
+      "type": "5"
+    },
+    {
+      "name": "./archived-case-1/connector/journal.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 330,
+      "type": "0",
+      "sha256": "31e1de3d49c7c081be4d078c736fd54e595f133d316058609a41f9093d52d075"
+    },
+    {
+      "name": "./archived-case-1/connector/config.json",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 579,
+      "type": "0",
+      "sha256": "35af29b21b0ba9adf4c7262cb3a0e803bea7c5c9b96b0e7b5cbf3f7557c30ace"
+    },
+    {
+      "name": "./archived-case-1/connector/journal.json.lock",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 10,
+      "type": "0",
+      "sha256": "faee563eecb3010dd2bae77b7a2f463b7d7684a55e5f0e6eeabb7959e69160cd"
+    },
+    {
+      "name": "./archived-case-1/qualification-call.json",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "bytes": 275,
+      "type": "0",
+      "sha256": "61f6571abc2ba3a0a038cb0e783f02f310b5de123dc46e3efb6ca01c2fc0f685"
+    },
+    {
+      "name": "./grace-timing-70.jsonl",
+      "uid": 10001,
+      "gid": 10001,
+      "mode": "0o600",
+      "bytes": 10426,
+      "type": "0",
+      "sha256": "ef25b30a021e93ae3b34580dcfbd3377b2ef5d641412f5a0413d7cf38dcb91c9"
+    }
+  ],
+  "stderr": "tar: ./chert-pilot/ipc/owner.sock: socket ignored\ntar: ./chert-pilot/ipc/admin.sock: socket ignored\ntar: ./archived-case-1/ipc/node.sock: socket ignored\n",
+  "real_work": false,
+  "note": "Synthetic uncertain fixtures and crash locks preserved. Disposing this test volume is not provider cleanup."
+}

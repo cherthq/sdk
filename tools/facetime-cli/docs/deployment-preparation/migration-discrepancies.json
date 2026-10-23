@@ -1,0 +1,22 @@
+{
+  "duplicate_local_prefixes": {
+    "0013": [
+      "0013_additional_project_creation.sql",
+      "0013_project_livekit_allowed_hosts.sql"
+    ]
+  },
+  "deployed_source_migrations_missing_locally": [
+    "20260906023207_reconcile_expired_start_bridge_commands.sql",
+    "20260911213624_automatic_worker_readiness.sql",
+    "20260911233536_dashboard_console.sql",
+    "20260912131914_dashboard_media_observations.sql",
+    "20260912142000_dashboard_recovery_qualification.sql",
+    "20260913044930_guarded_worker_onboarding.sql",
+    "20260915191435_optional_webhook_signing.sql",
+    "20260916002957_line_video_framing.sql",
+    "20260920010713_project_user_management.sql",
+    "20260921044014_device_agent_audits.sql",
+    "20260923192701_outbound_byor_audio_compatible_release.sql",
+    "20260924194048_outbound_byor_video.sql"
+  ]
+}

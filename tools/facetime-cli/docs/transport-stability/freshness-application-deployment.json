@@ -1,0 +1,65 @@
+{
+  "deployment": {
+    "id": "1707de5b-fc2b-4378-ae1f-648025d20fdd",
+    "instances": [
+      {
+        "id": "03499b64-af08-40d1-a1cd-e6c977db5438",
+        "status": "RUNNING"
+      }
+    ],
+    "meta": {
+      "buildOnly": false,
+      "cliAgentSessionId": "01a0f013-3591-7a50-a8ab-6ac3fa0aaddb",
+      "cliCaller": "codex",
+      "fileServiceManifest": {},
+      "imageDigest": "sha256:2f2aeccb6b9e2693b08c57fa7d2b19775f5d82cd8b12c0b6fa4906f84c390ac3",
+      "logsV2": true,
+      "nixpacksProviders": [],
+      "propertyFileMapping": {},
+      "reason": "deploy",
+      "rootDirectory": "/",
+      "runtime": "V2",
+      "serviceManifest": {
+        "build": {
+          "buildCommand": "",
+          "buildEnvironment": "V3",
+          "builder": "DOCKERFILE",
+          "dockerfilePath": "Dockerfile",
+          "nixpacksConfigPath": null,
+          "nixpacksPlan": null,
+          "watchPatterns": []
+        },
+        "deploy": {
+          "cronSchedule": null,
+          "drainingSeconds": 70,
+          "healthcheckPath": "/healthz",
+          "healthcheckTimeout": 120,
+          "ipv6EgressEnabled": false,
+          "limitOverride": null,
+          "multiRegionConfig": {
+            "us-west2": {
+              "numReplicas": 1
+            }
+          },
+          "numReplicas": 1,
+          "overlapSeconds": 0,
+          "preDeployCommand": [],
+          "preDeployTimeoutSeconds": null,
+          "region": null,
+          "registryCredentials": null,
+          "requiredMountPath": null,
+          "restartPolicyMaxRetries": null,
+          "restartPolicyType": "NEVER",
+          "runtime": "V2",
+          "sleepApplication": false,
+          "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /opt/chert-pilot/railway-20260930-r1/runtime/runtime.py run",
+          "useLegacyStacker": false
+        }
+      },
+      "volumeMounts": [
+        "/state"
+      ]
+    },
+    "status": "SUCCESS"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "settings": {
+    "builder": "RAILPACK",
+    "dockerfilePath": "Dockerfile",
+    "buildCommand": "",
+    "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+    "healthcheckPath": "",
+    "healthcheckTimeout": 120,
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "NEVER",
+    "drainingSeconds": 70,
+    "overlapSeconds": 0,
+    "preDeployCommand": [],
+    "rootDirectory": "/"
+  },
+  "result": {
+    "serviceInstanceUpdate": true
+  }
+}

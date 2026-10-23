@@ -1,0 +1,106 @@
+TAP version 13
+# Subtest: completed terminal call stays debt-free at wall expiry during throw reconciliation
+ok 1 - completed terminal call stays debt-free at wall expiry during throw reconciliation
+  ---
+  duration_ms: 6.599875
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during unknown reconciliation
+ok 2 - completed terminal call stays debt-free at wall expiry during unknown reconciliation
+  ---
+  duration_ms: 1.216375
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during forbidden reconciliation
+ok 3 - completed terminal call stays debt-free at wall expiry during forbidden reconciliation
+  ---
+  duration_ms: 0.680958
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during not_found reconciliation
+ok 4 - completed terminal call stays debt-free at wall expiry during not_found reconciliation
+  ---
+  duration_ms: 0.559042
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during throw reconciliation
+ok 5 - completed terminal call stays debt-free at monotonic expiry during throw reconciliation
+  ---
+  duration_ms: 1.221583
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during unknown reconciliation
+ok 6 - completed terminal call stays debt-free at monotonic expiry during unknown reconciliation
+  ---
+  duration_ms: 0.661209
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during forbidden reconciliation
+ok 7 - completed terminal call stays debt-free at monotonic expiry during forbidden reconciliation
+  ---
+  duration_ms: 0.894292
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during not_found reconciliation
+ok 8 - completed terminal call stays debt-free at monotonic expiry during not_found reconciliation
+  ---
+  duration_ms: 0.478083
+  type: 'test'
+  ...
+# Subtest: completed terminal journal reopens after expiry without writes or dependency on authority/management
+ok 9 - completed terminal journal reopens after expiry without writes or dependency on authority/management
+  ---
+  duration_ms: 95.337334
+  type: 'test'
+  ...
+# Subtest: authoritative decline with verified cleanup also stays complete after expiry
+ok 10 - authoritative decline with verified cleanup also stays complete after expiry
+  ---
+  duration_ms: 0.997208
+  type: 'test'
+  ...
+# Subtest: accepted still reconciles and retains debt across failed expiry reconciliation
+ok 11 - accepted still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.8855
+  type: 'test'
+  ...
+# Subtest: uncertain still reconciles and retains debt across failed expiry reconciliation
+ok 12 - uncertain still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.673125
+  type: 'test'
+  ...
+# Subtest: local_departure still reconciles and retains debt across failed expiry reconciliation
+ok 13 - local_departure still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.743458
+  type: 'test'
+  ...
+# Subtest: terminal but unsettled creation retains debt and reconciliation through expiry
+ok 14 - terminal but unsettled creation retains debt and reconciliation through expiry
+  ---
+  duration_ms: 0.723875
+  type: 'test'
+  ...
+# Subtest: terminal but unverified cleanup is never treated as completed at expiry
+ok 15 - terminal but unverified cleanup is never treated as completed at expiry
+  ---
+  duration_ms: 0.587292
+  type: 'test'
+  ...
+# Subtest: reconciliation started before terminal cleanup cannot reopen completed debt when its read returns
+ok 16 - reconciliation started before terminal cleanup cannot reopen completed debt when its read returns
+  ---
+  duration_ms: 0.461583
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 177.382458

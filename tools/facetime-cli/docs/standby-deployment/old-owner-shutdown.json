@@ -1,0 +1,11 @@
+{
+  "signal_at": "2026-09-30T14:10:19.018085+00:00",
+  "cleanup_at": "2026-09-30T14:10:20.423922+00:00",
+  "shutdown_at": "2026-09-30T14:10:20.424622+00:00",
+  "shutdown_receipts": 0,
+  "original_pid": 2,
+  "room_at_shutdown": "demo-byor-04a23d08835048c4b050b0908ca8f08e",
+  "livekit_project_empty_after_shutdown": true,
+  "evidence": "original-provider-after-drain.json",
+  "historical_failed_session_rows_modified": false
+}

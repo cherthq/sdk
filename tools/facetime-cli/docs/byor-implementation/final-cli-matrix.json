@@ -1,0 +1,92 @@
+[
+  {
+    "node": "22",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "22",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "22",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "22",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "22",
+    "command": [
+      "npm",
+      "run",
+      "proof:transport"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "command": [
+      "npm",
+      "run",
+      "proof:transport"
+    ],
+    "exit_code": 0
+  }
+]

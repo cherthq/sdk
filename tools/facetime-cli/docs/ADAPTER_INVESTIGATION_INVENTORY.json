@@ -1,0 +1,22 @@
+{
+  "node": "v22.23.2",
+  "at": "2026-09-25T20:13:04.499Z",
+  "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+  "scope": "exact_test_room_only",
+  "current_project_fingerprint": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "original_project_fingerprint": "not_recorded",
+  "checks": {
+    "rooms": {
+      "count": 0,
+      "original_sid_present": false
+    },
+    "dispatches": {
+      "error": {
+        "class": "Error",
+        "code": "not_found",
+        "status": 404
+      }
+    }
+  },
+  "settlement": "unknown"
+}

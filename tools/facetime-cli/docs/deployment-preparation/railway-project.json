@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-09-30T02:29:53.264732+00:00",
+  "action": "Created empty private project following explicit user request; no service or deployment",
+  "workspace_id": "4d1ddeeb-ba8e-4bd8-a411-3b5a0cf1adcd",
+  "workspace_name": "Yannaner\u2019s Projects",
+  "project_id": "1e6ab885-d595-4bfd-aac3-90ca1fc90d4f",
+  "project_name": "chert-facetime-connectors",
+  "environment_id": "ef40a0a1-6968-4a30-92e0-1b7e8d613b1b",
+  "environment_name": "production",
+  "visibility": "PRIVATE",
+  "url": "https://railway.com/project/1e6ab885-d595-4bfd-aac3-90ca1fc90d4f",
+  "service_id": null,
+  "deployment_id": null,
+  "ingress_origin": null,
+  "auth": "Existing authenticated browser session; stored CLI credentials still rejected"
+}

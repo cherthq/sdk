@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-09-30T14:19:59.514755+00:00",
+  "probe_generations": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "runtime_generations_observed": [
+    5,
+    6,
+    7
+  ],
+  "latest_connected": true,
+  "generation_7_observed_from": "2026-09-30T14:17:30Z",
+  "generation_7_still_connected_at": "2026-09-30T14:21:21.681859+00:00",
+  "cause": "not established; backend sampled 100 authority responses all HTTP 200, no HTTP 5xx returned in deployment log query",
+  "relay_region": "us-west2",
+  "backend_region": "iad1",
+  "health_at_last_check": "HTTP 200; healthy standby; owner and Node running; IPC true"
+}

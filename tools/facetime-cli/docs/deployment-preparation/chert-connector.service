@@ -1,0 +1,30 @@
+# REVIEW TEMPLATE ONLY. Install after the host/user/paths are confirmed.
+[Unit]
+Description=Chert FaceTime pilot connector
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=chert-connector
+Group=chert-connector
+WorkingDirectory=/opt/chert-pilot
+EnvironmentFile=/etc/chert-pilot/runtime.env
+ExecStart=/opt/node-v22.23.2/bin/node /opt/chert-pilot/node_modules/chert-local-transport-proof/dist/src/cli/main.js run --config /var/lib/chert-pilot/config.json --json
+Restart=on-failure
+RestartPreventExitStatus=2 3 4 5
+RestartSec=5
+TimeoutStopSec=45
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/chert-pilot
+# No agent unit dependency: the owner operates the agent independently.
+
+[Install]
+WantedBy=multi-user.target

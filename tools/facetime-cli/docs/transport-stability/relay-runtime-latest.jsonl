@@ -1,0 +1,36 @@
+{"message":"npm warn config production Use `--omit=dev` instead.","timestamp":"2026-09-30T14:41:13.085128827Z","level":"error"}
+{"level":"info","message":"","timestamp":"2026-09-30T14:41:13.085132977Z"}
+{"message":"> @chert/connector-relay@0.0.0 start","timestamp":"2026-09-30T14:41:13.085136317Z","level":"info"}
+{"level":"info","timestamp":"2026-09-30T14:41:13.085140417Z","message":"> node main.mjs"}
+{"message":"","level":"info","timestamp":"2026-09-30T14:41:13.085144597Z"}
+{"timestamp":"2026-09-30T14:41:13.371213718Z","level":"info","message":"Starting Container"}
+{"event":"relay_authority_failure","timestamp":"2026-09-30T15:00:29.180359199Z","message":"","status":503,"level":"info","action":"poll","code":"authority_timeout"}
+{"timestamp":"2026-09-30T15:00:36.781524259Z","level":"info","message":"","event":"relay_authority_failure","code":"authority_timeout","action":"poll","status":503}
+{"event":"relay_authority_failure","level":"info","message":"","code":"authority_timeout","status":503,"action":"poll","timestamp":"2026-09-30T15:00:42.442022609Z"}
+{"event":"relay_authority_failure","message":"","timestamp":"2026-09-30T15:00:46.143583589Z","status":503,"level":"info","code":"authority_timeout","action":"poll"}
+{"code":"authority_timeout","status":503,"timestamp":"2026-09-30T15:00:51.450327566Z","event":"relay_authority_failure","level":"info","message":"","action":"poll"}
+{"timestamp":"2026-09-30T15:00:53.429099160Z","level":"info","code":"authority_timeout","action":"poll","status":503,"message":"","event":"relay_authority_failure"}
+{"action":"poll","code":"authority_timeout","message":"","timestamp":"2026-09-30T15:01:13.431050623Z","status":503,"event":"relay_authority_failure","level":"info"}
+{"message":"","event":"relay_authority_failure","action":"poll","timestamp":"2026-09-30T15:02:03.399702274Z","status":503,"code":"authority_timeout","level":"info"}
+{"event":"relay_authority_failure","code":"authority_timeout","action":"poll","message":"","status":503,"timestamp":"2026-09-30T15:02:05.418739923Z","level":"info"}
+{"code":"authority_timeout","message":"","timestamp":"2026-09-30T15:02:07.946702998Z","level":"info","action":"poll","event":"relay_authority_failure","status":503}
+{"timestamp":"2026-09-30T15:02:14.573110246Z","event":"relay_authority_failure","code":"authority_timeout","action":"poll","status":503,"message":"","level":"info"}
+{"code":"authority_timeout","action":"poll","status":503,"level":"info","timestamp":"2026-09-30T15:02:21.662673901Z","event":"relay_authority_failure","message":""}
+{"status":503,"message":"","level":"info","code":"authority_timeout","action":"poll","timestamp":"2026-09-30T15:02:24.152300271Z","event":"relay_authority_failure"}
+{"level":"info","code":"authority_timeout","timestamp":"2026-09-30T15:03:14.175904672Z","event":"relay_authority_failure","message":"","action":"poll","status":503}
+{"timestamp":"2026-09-30T15:10:05.775476437Z","code":"authority_timeout","action":"poll","event":"relay_authority_failure","message":"","status":503,"level":"info"}
+{"message":"","event":"relay_authority_failure","action":"poll","timestamp":"2026-09-30T15:15:06.973054182Z","code":"authority_timeout","status":503,"level":"info"}
+{"level":"info","status":503,"timestamp":"2026-09-30T15:15:10.941582421Z","message":"","code":"authority_timeout","event":"relay_authority_failure","action":"poll"}
+{"status":503,"timestamp":"2026-09-30T15:15:20.940746892Z","message":"","level":"info","code":"authority_timeout","action":"poll","event":"relay_authority_failure"}
+{"message":"","timestamp":"2026-09-30T15:15:29.626064176Z","level":"info","event":"relay_authority_failure","action":"poll","status":503,"code":"authority_timeout"}
+{"message":"","code":"authority_timeout","action":"poll","timestamp":"2026-09-30T15:16:09.608539968Z","status":503,"event":"relay_authority_failure","level":"info"}
+{"action":"poll","timestamp":"2026-09-30T15:21:31.506242968Z","status":503,"code":"authority_timeout","level":"info","message":"","event":"relay_authority_failure"}
+{"event":"relay_authority_failure","code":"authority_timeout","action":"poll","level":"info","status":503,"message":"","timestamp":"2026-09-30T15:30:45.258866848Z"}
+{"status":503,"timestamp":"2026-09-30T15:30:47.811110729Z","message":"","code":"authority_timeout","event":"relay_authority_failure","action":"poll","level":"info"}
+{"code":"authority_timeout","status":503,"action":"poll","level":"info","timestamp":"2026-09-30T15:30:50.232655922Z","message":"","event":"relay_authority_failure"}
+{"timestamp":"2026-09-30T15:31:10.233053502Z","status":503,"code":"authority_timeout","level":"info","action":"poll","message":"","event":"relay_authority_failure"}
+{"code":"authority_timeout","action":"poll","status":503,"level":"info","timestamp":"2026-09-30T15:40:13.104519661Z","event":"relay_authority_failure","message":""}
+{"level":"info","status":503,"message":"","event":"relay_authority_failure","code":"authority_timeout","action":"poll","timestamp":"2026-09-30T15:40:13.104523781Z"}
+{"code":"authority_timeout","status":503,"event":"relay_authority_failure","message":"","timestamp":"2026-09-30T15:46:14.133005560Z","level":"info","action":"poll"}
+{"code":"authority_timeout","status":503,"message":"","timestamp":"2026-09-30T15:55:16.484074182Z","event":"relay_authority_failure","action":"poll","level":"info"}
+{"status":503,"level":"info","timestamp":"2026-09-30T16:00:17.743907396Z","message":"","event":"relay_authority_failure","code":"authority_timeout","action":"poll"}

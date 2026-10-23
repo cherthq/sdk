@@ -1,0 +1,50 @@
+{
+  "node": "v22.23.2",
+  "checked_at": "2026-09-25T20:18:40.612Z",
+  "sdk": "2.19.0",
+  "network": "fetch_replaced_no_network",
+  "original_sha256": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "original": {
+    "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+    "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+    "room_sid": "RM_mrfsEGe5SAUK",
+    "phase": "dispatch_pending",
+    "create_pending": true,
+    "cleanup_debt": true,
+    "actual_dispatch_id_recorded": false,
+    "actual_job_id_recorded": false,
+    "target_recorded": false,
+    "operation_audit_recorded": false,
+    "exact_sdk_timeout_recorded": false,
+    "original_error_class_code_recorded": false,
+    "request_send_evidence_recorded": false
+  },
+  "reproduction": [
+    {
+      "input_ms": 3588.123,
+      "fetch_invocations": 0,
+      "outcome": "rejected",
+      "error_class": "RangeError",
+      "error_code": "ERR_OUT_OF_RANGE"
+    },
+    {
+      "input_ms": 3588,
+      "fetch_invocations": 1,
+      "outcome": "mock_acknowledgment"
+    }
+  ],
+  "rounded_elapsed_counterexample": {
+    "rounded_ms": 411,
+    "remaining_ms": [
+      3589,
+      3588.9
+    ]
+  },
+  "root_cause_attribution": "unresolved",
+  "original_settlement": "unknown",
+  "new_live_allocations": 0
+}

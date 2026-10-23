@@ -1,0 +1,25 @@
+{
+  "postgres": "postgres (PostgreSQL) 17.6",
+  "recorded_full_catalog": true,
+  "fresh_columns_match": true,
+  "fresh_ledger_records": 40,
+  "combined_atomic_apply": true,
+  "forced_late_failure_rolls_back_everything": true,
+  "drift_rejections": [
+    "facetime_pin_call_integration",
+    "facetime_pinned_incoming_context",
+    "facetime_guard_incoming_accept",
+    "facetime_enqueue_call_webhook",
+    "facetime_apply_call_event_to_session",
+    "production_column_drift",
+    "migration_history_drift",
+    "connector_runtime_drift"
+  ],
+  "shared_functions_unchanged_by_extension": true,
+  "automatic_readiness_runtime_preserved": true,
+  "permissions_and_rls_pass": true,
+  "repeat_rejected": true,
+  "bindings": 0,
+  "deliveries": 0,
+  "production_changes": false
+}

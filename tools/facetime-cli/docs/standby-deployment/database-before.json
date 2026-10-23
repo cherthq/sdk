@@ -1,0 +1,230 @@
+[
+  {
+    "observed_at": "2026-09-30 14:00:22.150538+00",
+    "version": "PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "ledger": [
+      {
+        "name": "0006_development_audio_authorization",
+        "version": "20260819205731",
+        "statements_md5": "3f8e2bc3570b3408c3081d04a762225a"
+      },
+      {
+        "name": "0007_secure_call_transcripts",
+        "version": "20260820145658",
+        "statements_md5": "97b1d8ff7a5272f1a887a4d1be09613e"
+      },
+      {
+        "name": "0008_b1_call_event_contract",
+        "version": "20260826044026",
+        "statements_md5": "8c139adec18a734897f1daa1081b2330"
+      },
+      {
+        "name": "0009_b1_event_ingestion_metadata",
+        "version": "20260826050138",
+        "statements_md5": "6b98d709b723d2e8e92db2b73239d2b6"
+      },
+      {
+        "name": "b2_session_lifecycle",
+        "version": "20260826115036",
+        "statements_md5": "41ceb99f16dca84f1c8117cc72104161"
+      },
+      {
+        "name": "b3_webhook_core",
+        "version": "20260826124951",
+        "statements_md5": "2069f1d4d04631c91a274f96b4aaba73"
+      },
+      {
+        "name": "b3_webhook_core_append_only_fix",
+        "version": "20260826125312",
+        "statements_md5": "434a020d3717b4654a7dbfd9fc563174"
+      },
+      {
+        "name": "b3_webhook_core_registration_context",
+        "version": "20260826125628",
+        "statements_md5": "e177a4e3678da9f600618ab348d04841"
+      },
+      {
+        "name": "b3_webhook_core_registration_ownership",
+        "version": "20260826125721",
+        "statements_md5": "7bcf1e1f13088cdf730146c38f77fa42"
+      },
+      {
+        "name": "b3_webhook_core_wall_clock_created_at",
+        "version": "20260826130029",
+        "statements_md5": "1f284ef745dec114308e1b00c630fcc4"
+      },
+      {
+        "name": "b3_webhook_core_bounded_ingestion_time",
+        "version": "20260826130246",
+        "statements_md5": "974e57baf7e5731434b4e12aa18c7b0a"
+      },
+      {
+        "name": "b3_webhook_core_foreign_key_indexes",
+        "version": "20260826130922",
+        "statements_md5": "c27084a88cef88f8685fd5224a3effe0"
+      },
+      {
+        "name": "b3_webhook_core_endpoint_index",
+        "version": "20260826130934",
+        "statements_md5": "dc9648aac9a1924c5fdd1f554742b6ae"
+      },
+      {
+        "name": "b4_sealed_credentials",
+        "version": "20260827024119",
+        "statements_md5": "1a510d504deb3e2032bc76269ae337a0"
+      },
+      {
+        "name": "additional_project_creation",
+        "version": "20260827142611",
+        "statements_md5": "e054c59263bbcf7b8ac047b23462e06a"
+      },
+      {
+        "name": "project_livekit_allowed_hosts",
+        "version": "20260827142730",
+        "statements_md5": "b67a8d5252d8ef91bad9d6755a053f52"
+      },
+      {
+        "name": "0014_bw_session_lifecycle_amendment",
+        "version": "20260827183854",
+        "statements_md5": "1421b2e1e575d33a95dd7f7c54996634"
+      },
+      {
+        "name": "heartbeat_rejection_evidence",
+        "version": "20260827185247",
+        "statements_md5": "56918415aee72e72d3c1c767348ce4a7"
+      },
+      {
+        "name": "incoming_webhook_decline_cleanup",
+        "version": "20260904024011",
+        "statements_md5": "33ba69ea812e64fe2644fa09be2e907f"
+      },
+      {
+        "name": "start_bridge_failure_reconciliation",
+        "version": "20260904230436",
+        "statements_md5": "238cfb63a6bb00ad94a2d3f08f5dd910"
+      },
+      {
+        "name": "call_webhook_logical_idempotency",
+        "version": "20260905000847",
+        "statements_md5": "339bbeb21dc78c23d5286a238845ee7a"
+      },
+      {
+        "name": "reconcile_expired_start_bridge_commands",
+        "version": "20260906023207",
+        "statements_md5": "870f4a34a71fb16c035ffcf276c4021a"
+      },
+      {
+        "name": "line_integrations",
+        "version": "20260911131327",
+        "statements_md5": "d123c5a58508306a733a8938849c99c4"
+      },
+      {
+        "name": "line_integration_service_grants",
+        "version": "20260911140856",
+        "statements_md5": "dd405fd126f10a002a5be2abe958d78f"
+      },
+      {
+        "name": "line_integrations_release_transport",
+        "version": "20260911151650",
+        "statements_md5": "371fa69ffb1b9384183860ef9ca0009f"
+      },
+      {
+        "name": "automatic_worker_readiness",
+        "version": "20260911213624",
+        "statements_md5": "f9bb5961c4c76ecaf45f97a99a492383"
+      },
+      {
+        "name": "dashboard_console",
+        "version": "20260911233536",
+        "statements_md5": "e917034cef1b5ddbe6bc493164cd1ec9"
+      },
+      {
+        "name": "automatic_worker_readiness_release_transport",
+        "version": "20260912002808",
+        "statements_md5": "6f115192b8bb03db890ee2591c31cca3"
+      },
+      {
+        "name": "dashboard_console_release_transport",
+        "version": "20260912013442",
+        "statements_md5": "bdb82e1e9b1cf5d290b83de717d797c9"
+      },
+      {
+        "name": "dashboard_media_observations",
+        "version": "20260912131914",
+        "statements_md5": "1ebd0a4dd89dca9f7ab747ec52feadf2"
+      },
+      {
+        "name": "dashboard_recovery_qualification",
+        "version": "20260912142000",
+        "statements_md5": "33ca17c4c587da6669729280378ee415"
+      },
+      {
+        "name": "readiness_dashboard_release_transport",
+        "version": "20260912144429",
+        "statements_md5": "78fd2458d9e823cf3962956ec287f685"
+      },
+      {
+        "name": "guarded_worker_onboarding",
+        "version": "20260913044930",
+        "statements_md5": "c2bbba24ff0eb663bbec37725369ca7d"
+      },
+      {
+        "name": "guarded_worker_onboarding_release_transport",
+        "version": "20260913124823",
+        "statements_md5": "e4032241c385542cf01968e2ab690aae"
+      },
+      {
+        "name": "optional_webhook_signing",
+        "version": "20260915191852",
+        "statements_md5": "eccc42bce67217bf0c5596530a40c3fd"
+      },
+      {
+        "name": "line_video_framing",
+        "version": "20260916002957",
+        "statements_md5": "7016d8251a084df202b007f61fbc5b19"
+      },
+      {
+        "name": "project_user_management",
+        "version": "20260920010713",
+        "statements_md5": "7842f88109736de1fc66deb06104a4b0"
+      },
+      {
+        "name": "device_agent_audits",
+        "version": "20260921142141",
+        "statements_md5": "5e3579bb0cc4e7cf420bf08fdb8bc5dc"
+      },
+      {
+        "name": "outbound_byor_audio_compatible_release",
+        "version": "20260923192701",
+        "statements_md5": "a92812b54b4e04e87488cd04a49f7b2a"
+      },
+      {
+        "name": "outbound_byor_video",
+        "version": "20260924200520",
+        "statements_md5": "63e452a8f58fafc994f7c9a3cc6119b4"
+      }
+    ],
+    "shared_function_preimages": [
+      {
+        "name": "facetime_apply_call_event_to_session",
+        "definition": "CREATE OR REPLACE FUNCTION public.facetime_apply_call_event_to_session()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\ndeclare\n  v_session public.facetime_sessions%rowtype;\n  v_failure_reason text;\nbegin\n  if new.event_type='agent_connected' then\n    update public.facetime_calls set media_status=jsonb_build_object('audio','ready','video',case when media->>'video'='true' then coalesce(media_status->>'video','pending') else 'disabled' end)\n      where id=new.call_id and project_id=new.project_id and outbound_request_fingerprint is not null and status='active';\n  end if;\n  if new.event_type in ('ended','failed','rejected') then\n    update public.facetime_calls set media_status=jsonb_build_object('audio','disconnected','video',case when media->>'video'='true' then 'disconnected' else 'disabled' end)\n      where id=new.call_id and project_id=new.project_id and outbound_request_fingerprint is not null;\n  end if;\n  if new.event_type in ('remote_video_ready','remote_video_unavailable') then\n    update public.facetime_calls set media_status=jsonb_set(media_status,'{video}',\n      to_jsonb(case when new.event_type='remote_video_ready' then 'rendered'::text else 'unavailable'::text end))\n      where id=new.call_id and project_id=new.project_id and outbound_request_fingerprint is not null\n        and media->>'video'='true' and status='active';\n  end if;\n  if new.event_type = 'bridge_ready' then\n    update public.facetime_sessions\n    set state = 'active', active_at = new.occurred_at\n    where call_id = new.call_id and project_id = new.project_id and state = 'dispatched';\n  elsif new.event_type = 'ended' then\n    update public.facetime_sessions set\n      state = 'ended',\n      ended_at = new.occurred_at,\n      terminal_reason = new.terminal_reason,\n      terminal_reason_detail = new.terminal_reason_detail\n    where call_id = new.call_id and project_id = new.project_id and (state = 'active' or (state in ('created','dispatched') and exists(\n        select 1 from public.facetime_calls c where c.id=new.call_id and c.direction='outbound')))\n    returning * into v_session;\n    if found then perform public.facetime_enqueue_session_stop(v_session); end if;\n  elsif new.event_type in ('failed', 'rejected') then\n    v_failure_reason := case\n      when new.terminal_reason_detail = 'bridge_failed' then 'bridge_failed'\n      else coalesce(new.terminal_reason, 'bridge_failed')\n    end;\n    update public.facetime_sessions set\n      state = 'failed',\n      failed_at = new.occurred_at,\n      terminal_reason = v_failure_reason,\n      terminal_reason_detail = new.terminal_reason_detail\n    where call_id = new.call_id and project_id = new.project_id\n      and state in ('created', 'dispatched', 'active')\n    returning * into v_session;\n    if found then perform public.facetime_enqueue_session_stop(v_session); end if;\n  elsif new.event_type = 'cleanup_complete' then\n    update public.facetime_sessions\n    set state = 'cleaned', cleaned_at = new.occurred_at\n    where call_id = new.call_id and project_id = new.project_id\n      and state in ('ended', 'expired', 'failed');\n  end if;\n  return new;\nend;\n$function$\n"
+      },
+      {
+        "name": "facetime_enqueue_call_webhook",
+        "definition": "CREATE OR REPLACE FUNCTION public.facetime_enqueue_call_webhook()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\ndeclare\n  v_endpoint public.facetime_integration_revisions%rowtype;\n  v_secret public.facetime_webhook_secret_versions%rowtype;\n  v_call public.facetime_calls%rowtype;\n  v_type text;\n  v_event_id uuid := gen_random_uuid();\n  v_created_at timestamptz := new.created_at;\n  v_data jsonb;\n  v_body jsonb;\nbegin\n  v_type := case new.event_type\n    when 'active' then case when exists(select 1 from public.facetime_calls where id=new.call_id and outbound_request_fingerprint is not null) then null else 'call.started' end\n    when 'bridge_ready' then case when exists(select 1 from public.facetime_calls where id=new.call_id and outbound_request_fingerprint is not null) then 'call.started' else null end\n    when 'ended' then 'call.ended'\n    when 'failed' then 'call.failed'\n    when 'rejected' then 'call.failed'\n    else null\n  end;\n  if v_type is null then return new; end if;\n  if exists(select 1 from public.facetime_webhook_events where project_id=new.project_id and call_id=new.call_id and logical_transition=v_type) then\n    return new;\n  end if;\n\n  select * into v_call from public.facetime_calls where id=new.call_id and project_id=new.project_id;\n  if not found or v_call.binding_disposition='none' then return new; end if;\n  if v_call.binding_disposition='legacy_unresolved' then\n    perform public.facetime_record_blocked_delivery(new.project_id,new.call_id,v_type,'legacy_unresolved');\n    return new;\n  end if;\n  select * into v_endpoint from public.facetime_integration_revisions\n    where id=v_call.integration_revision_id and project_id=new.project_id;\n  select * into v_secret from public.facetime_webhook_secret_versions\n    where id=v_endpoint.secret_version_id and project_id=new.project_id;\n  if v_secret.revoked_at is not null then\n    perform public.facetime_record_blocked_delivery(new.project_id,new.call_id,v_type,'signing_version_revoked');\n    return new;\n  end if;\n\n  v_data := jsonb_build_object(\n    'call_id', v_call.id,\n    'line_id', v_call.line_id,\n    'media', v_call.media\n  );\n  if v_type = 'call.started' then\n    v_data := v_data || jsonb_build_object('started_at', v_call.answered_at);\n  elsif v_type = 'call.ended' then\n    v_data := v_data || jsonb_build_object(\n      'ended_at', v_call.ended_at,\n      'duration_seconds', case when v_call.ended_at is not null and v_call.active_at is not null\n        then floor(extract(epoch from (v_call.ended_at - v_call.active_at)))::integer else null end,\n      'reason', coalesce(new.terminal_reason, v_call.terminal_reason, 'unknown')\n    );\n  else\n    v_data := v_data || jsonb_build_object(\n      'ended_at', v_call.ended_at,\n      'reason', coalesce(new.terminal_reason, v_call.terminal_reason, 'unknown')\n    );\n  end if;\n  v_body := jsonb_build_object(\n    'event_id', v_event_id,\n    'type', v_type,\n    'created_at', v_created_at,\n    'data', v_data\n  );\n\n  insert into public.facetime_webhook_events (\n    event_id, project_id, call_id, source_call_event_id, endpoint_id,\n    endpoint_url, secret_version_id, secret_version, event_type,\n    logical_transition, payload, raw_body, created_at, next_attempt_at\n  ) values (\n    v_event_id, new.project_id, new.call_id, new.id, v_endpoint.integration_id,\n    v_endpoint.endpoint_url, v_secret.id, v_secret.version, v_type, v_type, v_body,\n    v_body::text, v_created_at, v_created_at\n  ) on conflict (project_id, call_id, logical_transition)\n    where logical_transition is not null do nothing;\n  return new;\nend;\n$function$\n"
+      },
+      {
+        "name": "facetime_guard_incoming_accept",
+        "definition": "CREATE OR REPLACE FUNCTION public.facetime_guard_incoming_accept(p_project_id uuid, p_call_id uuid, p_source_event_id text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\ndeclare c public.facetime_calls%rowtype; r public.facetime_integration_revisions%rowtype; w public.facetime_workers%rowtype;\nbegin\n select * into c from public.facetime_calls where id=p_call_id and project_id=p_project_id for update;\n if not found or not exists(select 1 from public.facetime_call_events where project_id=p_project_id and call_id=p_call_id\n  and source='worker' and source_event_id=p_source_event_id and event_type='incoming_registered') then\n  raise exception 'call_not_found' using errcode='P0002'; end if;\n if c.incoming_webhook_decision is not null then return; end if;\n if c.mode <> 'customer_managed' or c.resolved_inbound_policy <> 'customer_decides' or c.binding_disposition <> 'pinned'\n   or c.status <> 'incoming' or clock_timestamp() >= c.incoming_decision_deadline_at then\n  raise exception 'incoming_accept_unavailable' using errcode='55000'; end if;\n select * into w from public.facetime_workers where id=c.worker_id;\n if w.automatic_readiness_enabled then\n  select * into w from public.facetime_workers where id=c.worker_id for update;\n end if;\n if w.automatic_readiness_enabled and (not w.enabled or w.status <> 'accepting'\n   or not public.facetime_worker_automatic_ready(w,clock_timestamp(),false)) then\n  raise exception 'incoming_accept_unavailable' using errcode='55000'; end if;\n select * into r from public.facetime_integration_revisions where id=c.integration_revision_id and project_id=p_project_id;\n perform 1 from public.facetime_webhook_endpoints where id=r.integration_id and project_id=p_project_id for update;\n if clock_timestamp() >= c.incoming_decision_deadline_at then\n  raise exception 'incoming_accept_unavailable' using errcode='55000'; end if;\n -- Re-evaluate after the endpoint lock: elapsed lock time cannot extend readiness.\n if w.automatic_readiness_enabled and not public.facetime_worker_automatic_ready(w,clock_timestamp(),false) then\n  raise exception 'incoming_accept_unavailable' using errcode='55000'; end if;\n if r.signing_enabled and not exists(select 1 from public.facetime_webhook_secret_versions where id=r.secret_version_id and project_id=p_project_id and revoked_at is null) then\n  raise exception 'incoming_accept_unavailable' using errcode='55000'; end if;\nend; $function$\n"
+      },
+      {
+        "name": "facetime_pin_call_integration",
+        "definition": "CREATE OR REPLACE FUNCTION public.facetime_pin_call_integration()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\ndeclare l public.facetime_lines%rowtype; e public.facetime_webhook_endpoints%rowtype;\n r public.facetime_integration_revisions%rowtype; policy text;\nbegin\n if tg_op='UPDATE' then\n  if (new.id,new.project_id,new.line_id,new.worker_id) is distinct from (old.id,old.project_id,old.line_id,old.worker_id) then\n   raise exception 'call_binding_immutable' using errcode='55000'; end if;\n  if (new.integration_revision_id,new.integration_assignment_generation,new.resolved_inbound_policy,new.resolved_livekit_allowed_hosts,new.binding_disposition,\n      new.incoming_request_id,new.incoming_request_created_at,new.incoming_decision_deadline_at,new.incoming_request_data)\n   is distinct from (old.integration_revision_id,old.integration_assignment_generation,old.resolved_inbound_policy,old.resolved_livekit_allowed_hosts,old.binding_disposition,\n      old.incoming_request_id,old.incoming_request_created_at,old.incoming_decision_deadline_at,old.incoming_request_data) then\n    raise exception 'call_binding_immutable' using errcode='55000';\n  end if;\n  return new;\n end if;\n select * into l from public.facetime_lines where id=new.line_id and project_id=new.project_id for update;\n if not found then raise exception 'line_not_found' using errcode='P0002'; end if;\n new.resolved_inbound_policy := l.inbound_policy;\n if new.assistant_version_id is not null then\n  select config->>'inbound_policy' into policy from public.realtime_assistant_versions\n   where id=new.assistant_version_id and project_id=new.project_id;\n  if policy is not null then new.resolved_inbound_policy := policy::public.facetime_inbound_policy; end if;\n end if;\n if new.direction='inbound' and new.mode='managed' and new.resolved_inbound_policy='customer_decides' then\n  raise exception 'ambiguous_decision_authority' using errcode='55000';\n end if;\n new.integration_assignment_generation := l.assignment_generation;\n new.binding_disposition := 'none'; new.integration_revision_id := null;\n select livekit_allowed_hosts into new.resolved_livekit_allowed_hosts from public.facetime_project_settings where project_id=new.project_id;\n new.resolved_livekit_allowed_hosts := coalesce(new.resolved_livekit_allowed_hosts,'{}'::text[]);\n if l.integration_id is not null then\n  select * into e from public.facetime_webhook_endpoints where id=l.integration_id and project_id=new.project_id for update;\n  select * into r from public.facetime_integration_revisions where id=e.active_revision_id and project_id=new.project_id;\n  if e.enabled and r.id is not null then\n   perform 1 from public.facetime_webhook_secret_versions where id=r.secret_version_id and revoked_at is null and retired_at is null;\n   if found or not r.signing_enabled then new.integration_revision_id:=r.id; new.binding_disposition:='pinned'; new.resolved_livekit_allowed_hosts:=r.livekit_allowed_hosts; end if;\n  end if;\n end if;\n if new.direction='inbound' and new.mode='customer_managed' and new.resolved_inbound_policy='customer_decides'\n  and new.binding_disposition <> 'pinned' then\n  raise exception 'integration_unavailable' using errcode='55000';\n end if;\n if new.direction='inbound' then\n  new.incoming_request_id := gen_random_uuid();\n  new.incoming_request_created_at := clock_timestamp();\n  new.incoming_decision_deadline_at := coalesce(new.incoming_decision_deadline_at,new.incoming_request_created_at + interval '5 seconds');\n  new.incoming_request_data := jsonb_build_object('call_id',new.id,'line_id',new.line_id,'media',new.media,\n    'from_handle_hash',new.incoming_request_data->'from_handle_hash','occurred_at',coalesce(new.incoming_request_data->'occurred_at',to_jsonb(new.detected_at)));\n end if;\n return new;\nend; $function$\n"
+      },
+      {
+        "name": "facetime_pinned_incoming_context",
+        "definition": "CREATE OR REPLACE FUNCTION public.facetime_pinned_incoming_context(p_project_id uuid, p_worker_id uuid, p_call_id uuid, p_source_event_id text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\ndeclare c public.facetime_calls%rowtype; r public.facetime_integration_revisions%rowtype;\n s public.facetime_webhook_secret_versions%rowtype;\nbegin\n select * into c from public.facetime_calls where id=p_call_id and project_id=p_project_id and worker_id=p_worker_id;\n if not found or not exists(select 1 from public.facetime_call_events where project_id=p_project_id and call_id=p_call_id\n   and source='worker' and source_event_id=p_source_event_id and event_type='incoming_registered') then\n  raise exception 'call_not_found' using errcode='P0002'; end if;\n if c.incoming_webhook_decision is not null then return jsonb_build_object('webhook_decision',c.incoming_webhook_decision); end if;\n if c.binding_disposition='legacy_unresolved' then\n  perform public.facetime_record_blocked_delivery(p_project_id,p_call_id,'call.incoming','legacy_unresolved');\n  return '{}'::jsonb;\n end if;\n if c.mode='managed' or c.resolved_inbound_policy <> 'customer_decides' then return '{}'::jsonb; end if;\n if c.binding_disposition <> 'pinned' then return jsonb_build_object('webhook_unavailable',true); end if;\n select * into r from public.facetime_integration_revisions where id=c.integration_revision_id and project_id=p_project_id;\n perform 1 from public.facetime_webhook_endpoints where id=r.integration_id and project_id=p_project_id for update;\n select * into s from public.facetime_webhook_secret_versions where id=r.secret_version_id and project_id=p_project_id;\n if s.revoked_at is not null then return jsonb_build_object('webhook_unavailable',true); end if;\n return jsonb_build_object('webhook_endpoint',jsonb_build_object('endpoint_url',r.endpoint_url,'payload_version',r.payload_version),\n  'webhook_signing_enabled',r.signing_enabled,'webhook_secret_ciphertext',s.ciphertext,'webhook_secret_key_version',s.encryption_key_version,\n  'webhook_secret_version',r.secret_version,'webhook_call',c.incoming_request_data,\n  'webhook_allowed_hosts',r.livekit_allowed_hosts,'webhook_request_id',c.incoming_request_id,\n  'webhook_created_at',c.incoming_request_created_at,'webhook_deadline_at',c.incoming_decision_deadline_at);\nend; $function$\n"
+      }
+    ]
+  }
+]

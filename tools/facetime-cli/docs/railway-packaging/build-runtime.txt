@@ -1,0 +1,156 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.76kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#2 ...
+
+#3 [internal] load metadata for docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#3 DONE 0.9s
+
+#2 [internal] load metadata for docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#2 DONE 0.9s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 232.47kB done
+#5 DONE 0.0s
+
+#6 [build  1/11] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#6 resolve docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e done
+#6 sha256:7c6fab1667eb7d9029684d783e4c127f11dd7ed5120829f875b799a0b9431558 249B / 249B 0.1s done
+#6 sha256:1c5e03f304918f89aed0c098c8f4b6f163f7bf9d2702991696bf0132a2853e30 0B / 3.53MB 0.2s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 0B / 13.67MB 0.2s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 0B / 28.24MB 0.2s
+#6 sha256:1c5e03f304918f89aed0c098c8f4b6f163f7bf9d2702991696bf0132a2853e30 1.05MB / 3.53MB 0.3s
+#6 sha256:1c5e03f304918f89aed0c098c8f4b6f163f7bf9d2702991696bf0132a2853e30 2.10MB / 3.53MB 0.6s
+#6 sha256:1c5e03f304918f89aed0c098c8f4b6f163f7bf9d2702991696bf0132a2853e30 3.53MB / 3.53MB 0.9s done
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 1.05MB / 13.67MB 1.1s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 2.10MB / 13.67MB 1.8s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 2.10MB / 28.24MB 2.4s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 3.15MB / 13.67MB 2.7s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 4.19MB / 13.67MB 3.3s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 5.24MB / 13.67MB 3.9s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 4.19MB / 28.24MB 4.1s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 6.29MB / 13.67MB 4.5s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 7.34MB / 13.67MB 5.2s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 8.39MB / 13.67MB 6.2s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 6.29MB / 28.24MB 6.1s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 9.44MB / 13.67MB 6.9s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 10.49MB / 13.67MB 7.6s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 8.39MB / 28.24MB 8.1s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 11.53MB / 13.67MB 8.4s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 12.58MB / 13.67MB 9.6s
+#6 ...
+
+#7 [node 1/1] FROM docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#7 resolve docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9 done
+#7 sha256:b571db164614a1290b74286b3e4f7ad934430b830515f81e922b39c75cf1dc7e 447B / 447B 0.1s done
+#7 sha256:e53f92c42dd657487b7f7f027b206c996cd3760cda60adda79e44449b2753a29 1.71MB / 1.71MB 2.9s done
+#7 sha256:60f37e2c93ec479af36bf1f7a41277e572d820f3b1abbea47d8073b1f01aa502 22.02MB / 49.94MB 9.2s
+#7 sha256:d456d1aa143e47912621240cd8e79286732dc069a35b0e02b03449f60df966df 3.31kB / 3.31kB 0.2s done
+#7 ...
+
+#6 [build  1/11] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 13.67MB / 13.67MB 11.0s
+#6 sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 13.67MB / 13.67MB 11.1s done
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 10.49MB / 28.24MB 11.1s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 12.58MB / 28.24MB 12.9s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 14.68MB / 28.24MB 13.9s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 16.78MB / 28.24MB 15.1s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 18.87MB / 28.24MB 16.5s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 20.97MB / 28.24MB 17.7s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 23.07MB / 28.24MB 18.9s
+#6 ...
+
+#7 [node 1/1] FROM docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#7 sha256:60f37e2c93ec479af36bf1f7a41277e572d820f3b1abbea47d8073b1f01aa502 49.94MB / 49.94MB 18.5s done
+#7 DONE 19.4s
+
+#6 [build  1/11] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 25.17MB / 28.24MB 19.9s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 27.26MB / 28.24MB 20.6s
+#6 sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 28.24MB / 28.24MB 20.9s done
+#6 extracting sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150
+#6 extracting sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150 0.4s done
+#6 DONE 21.3s
+
+#6 [build  1/11] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#6 extracting sha256:1c5e03f304918f89aed0c098c8f4b6f163f7bf9d2702991696bf0132a2853e30 0.1s done
+#6 extracting sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8
+#6 extracting sha256:a2e58067964fcd8f46a6b5992975e9c8ab34e7620d96204e08e99bf0fdf4dab8 0.2s done
+#6 DONE 21.5s
+
+#7 [node 1/1] FROM docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#7 extracting sha256:d456d1aa143e47912621240cd8e79286732dc069a35b0e02b03449f60df966df done
+#7 extracting sha256:60f37e2c93ec479af36bf1f7a41277e572d820f3b1abbea47d8073b1f01aa502
+#7 ...
+
+#6 [build  1/11] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#6 extracting sha256:7c6fab1667eb7d9029684d783e4c127f11dd7ed5120829f875b799a0b9431558 done
+#6 DONE 21.5s
+
+#7 [node 1/1] FROM docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#7 extracting sha256:60f37e2c93ec479af36bf1f7a41277e572d820f3b1abbea47d8073b1f01aa502 0.6s done
+#7 DONE 20.0s
+
+#7 [node 1/1] FROM docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#7 extracting sha256:e53f92c42dd657487b7f7f027b206c996cd3760cda60adda79e44449b2753a29 0.0s done
+#7 extracting sha256:b571db164614a1290b74286b3e4f7ad934430b830515f81e922b39c75cf1dc7e done
+#7 DONE 20.0s
+
+#8 [build  2/11] COPY --from=node /usr/local/bin/node /usr/local/bin/node
+#8 DONE 0.4s
+
+#9 [build  3/11] COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+#9 DONE 0.1s
+
+#10 [build  4/11] RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+#10 DONE 0.1s
+
+#11 [build  5/11] WORKDIR /opt/chert-pilot/railway-20260930-r1
+#11 DONE 0.0s
+
+#12 [build  6/11] COPY package.json package-lock.json cli.tgz ./
+#12 DONE 0.1s
+
+#13 [build  7/11] RUN npm ci --ignore-scripts --no-audit --no-fund
+#13 2.498 
+#13 2.498 added 10 packages in 2s
+#13 2.500 npm notice
+#13 2.500 npm notice New major version of npm available! 10.9.8 -> 12.1.0
+#13 2.500 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.1.0
+#13 2.500 npm notice To update run: npm install -g npm@12.1.0
+#13 2.500 npm notice
+#13 DONE 2.7s
+
+#14 [build  8/11] COPY application/connector/handler.ts handler/handler.ts
+#14 DONE 0.0s
+
+#15 [build  9/11] RUN ./node_modules/.bin/tsc handler/handler.ts --outDir handler --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
+#15 1.183 handler/handler.ts(1,25): error TS2591: Cannot find name 'node:net'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+#15 1.183 handler/handler.ts(7,16): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+#15 1.183 handler/handler.ts(19,23): error TS7006: Parameter 'data' implicitly has an 'any' type.
+#15 1.183 handler/handler.ts(21,11): error TS2552: Cannot find name 'Buffer'. Did you mean 'buffer'?
+#15 ERROR: process "/bin/sh -c ./node_modules/.bin/tsc handler/handler.ts --outDir handler --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck && npm prune --omit=dev --ignore-scripts --no-audit --no-fund" did not complete successfully: exit code: 2
+------
+ > [build  9/11] RUN ./node_modules/.bin/tsc handler/handler.ts --outDir handler --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck && npm prune --omit=dev --ignore-scripts --no-audit --no-fund:
+1.183 handler/handler.ts(1,25): error TS2591: Cannot find name 'node:net'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+1.183 handler/handler.ts(7,16): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+1.183 handler/handler.ts(19,23): error TS7006: Parameter 'data' implicitly has an 'any' type.
+1.183 handler/handler.ts(21,11): error TS2552: Cannot find name 'Buffer'. Did you mean 'buffer'?
+------
+Dockerfile:11
+--------------------
+   9 |     RUN npm ci --ignore-scripts --no-audit --no-fund
+  10 |     COPY application/connector/handler.ts handler/handler.ts
+  11 | >>> RUN ./node_modules/.bin/tsc handler/handler.ts --outDir handler --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
+  12 |     COPY application/receiver/requirements.lock ./requirements.lock
+  13 |     RUN python -m pip download --only-binary=:all: --no-deps -r requirements.lock -d /wheels && sha256sum /wheels/* > python-wheels.sha256 && python -m pip install --no-index --find-links=/wheels --no-deps --target=/python -r requirements.lock
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c ./node_modules/.bin/tsc handler/handler.ts --outDir handler --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck && npm prune --omit=dev --ignore-scripts --no-audit --no-fund" did not complete successfully: exit code: 2

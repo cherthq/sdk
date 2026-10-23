@@ -1,0 +1,32 @@
+{
+  "historical_evidence_unchanged": true,
+  "checked_cli_text_files": 82,
+  "whitespace_issues": [],
+  "cli_matrix": {
+    "22": {
+      "tests": 161,
+      "pass": 161,
+      "fail": 0,
+      "synthetic_proof": true
+    },
+    "24": {
+      "tests": 161,
+      "pass": 161,
+      "fail": 0,
+      "synthetic_proof": true
+    }
+  },
+  "new_run_sha256": {
+    "result.json": "1c0fc3683ecba0e90de3dd443e843d6fba3860e3c34ae2256b45fb9e5b700f0f",
+    "adapter.json": "2f6d3b13a1f132766463d4c228d37b6a24bb1b6e9f027d248ae2d8ad23ed1ae3",
+    "journal.json": "b7e1e25959d4534eef546a60009ec39ca792d29696c44e95b47046fe9033767e"
+  },
+  "second_slot_reserved": false,
+  "source_sha256": {
+    "src/adapters/livekit.ts": "77a70efb794b45b3ab29891eb784c9aa4cc48ca2787737b5945e624c8278dcb0",
+    "src/adapters/livekit-receipts.ts": "ed4f3f56e70e8ab14bd4ac58268b2c0de11c7c0533dc2382d597505a25e9ec64",
+    "src/adapters/livekit-hook.ts": "590bf02ff1ad031bd5dbe068487c9e732976d90a07e5c2694071c6d7ff44d0e2",
+    "tests/livekit-proof.ts": "bfb054a99975596efc59f788e1bd6e2afc70adfba56e9f037773b16ca60d667e",
+    "/Users/garygao/demo-agent-0-connector-test/scripts/connector-worker.mjs": "7125599d1bc61b1557dc7f4267d2bd409f80eeb5b213579964ebb72bdcf3999a"
+  }
+}

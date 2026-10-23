@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-09-30T13:45:07.780191+00:00",
+  "run_mode": "continuous",
+  "journal_configured": true,
+  "journal_sha256": "9c2a8440fd0c29994e598ae448bd1557435fd34187f87cad257cb69027a35c1e",
+  "journal_schema": null,
+  "collection_sizes": {
+    "receipts": 1,
+    "decisions": 12,
+    "terminals": 8
+  }
+}

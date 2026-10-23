@@ -1,0 +1,12 @@
+{
+  "baseline_files": 43909,
+  "changed": [
+    "/Users/garygao/chert-facetime-cli/docs/DEPLOYMENT_READINESS.md",
+    "/Users/garygao/chert-facetime-cli/docs/BACKEND_PILOT_RUNBOOK.md"
+  ],
+  "missing": [],
+  "unexpected_changes": [],
+  "main_document_previous_bytes_preserved": true,
+  "artifact_hashes_match": true,
+  "archive_hygiene_pass": true
+}

@@ -1,0 +1,22 @@
+{
+  "no_qualification_owner_or_connector_process": true,
+  "fixtures": {
+    "archived-case-1": {
+      "creates": 3,
+      "deletes": 3,
+      "room_count": 0,
+      "node_crash_lock_retained": true,
+      "journal_present": true,
+      "preserved_journal_present": false
+    },
+    "chert-pilot": {
+      "creates": 1,
+      "deletes": 0,
+      "room_count": 1,
+      "node_crash_lock_retained": false,
+      "journal_present": false,
+      "preserved_journal_present": true
+    }
+  },
+  "cap_eff": "00000000800405fb"
+}

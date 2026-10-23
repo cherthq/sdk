@@ -1,0 +1,310 @@
+[
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "node",
+      "--version"
+    ],
+    "exit_code": 0,
+    "seconds": 0.01
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 1.05
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0,
+    "seconds": 0.73
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 1.19
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 12.21
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "proof:transport"
+    ],
+    "exit_code": 0,
+    "seconds": 2.1
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 23.32
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 1.7
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0,
+    "seconds": 2.86
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 4.23
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime/connector-relay",
+    "command": [
+      "npm",
+      "run",
+      "check"
+    ],
+    "exit_code": 0,
+    "seconds": 0.12
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/chert-facetime/connector-relay",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 0.2
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/demo-agent-0",
+    "command": [
+      "node",
+      "--check",
+      "src/byor.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.02
+  },
+  {
+    "node": "22",
+    "cwd": "/Users/garygao/demo-agent-0",
+    "command": [
+      "node",
+      "--test",
+      "tests/preparation.test.mjs",
+      "tests/outbound-session.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.62
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "node",
+      "--version"
+    ],
+    "exit_code": 0,
+    "seconds": 0.05
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 1.04
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0,
+    "seconds": 0.9
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 1.03
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 11.69
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime-cli",
+    "command": [
+      "npm",
+      "run",
+      "proof:transport"
+    ],
+    "exit_code": 0,
+    "seconds": 1.86
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 23.31
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 0.77
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0,
+    "seconds": 2.77
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime/control-plane",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 3.67
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime/connector-relay",
+    "command": [
+      "npm",
+      "run",
+      "check"
+    ],
+    "exit_code": 0,
+    "seconds": 0.15
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/chert-facetime/connector-relay",
+    "command": [
+      "npm",
+      "run",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 0.21
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/demo-agent-0",
+    "command": [
+      "node",
+      "--check",
+      "src/byor.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.02
+  },
+  {
+    "node": "24",
+    "cwd": "/Users/garygao/demo-agent-0",
+    "command": [
+      "node",
+      "--test",
+      "tests/preparation.test.mjs",
+      "tests/outbound-session.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.55
+  }
+]

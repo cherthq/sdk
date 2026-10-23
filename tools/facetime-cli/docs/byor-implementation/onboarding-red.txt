@@ -1,0 +1,55 @@
+TAP version 13
+# Subtest: receiver-free init defaults to BYOR and generates a trusted callback without LiveKit or a hook
+not ok 1 - receiver-free init defaults to BYOR and generates a trusted callback without LiveKit or a hook
+  ---
+  duration_ms: 98.027584
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/cli/byor-onboarding.test.js:9:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"schema_version":1,"command":"init","code":"missing_input","action":"Provide required options: --agent-name, --deployment, --boot, --livekit-url, --hook-origin."}
+
+
+    2 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/byor-onboarding.test.js:14:16)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: BYOR transport carries a pinned mode and explicit duration beyond the prototype ceiling
+not ok 2 - BYOR transport carries a pinned mode and explicit duration beyond the prototype ceiling
+  ---
+  duration_ms: 4.01375
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/cli/byor-onboarding.test.js:29:1'
+  failureType: 'testCodeFailure'
+  error: 'invalid_frame'
+  code: 'invalid_frame'
+  name: 'Fault'
+  stack: |-
+    parseFrame (file:///Users/garygao/chert-facetime-cli/dist/src/protocol/v1.js:79:15)
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/byor-onboarding.test.js:30:19)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 244.0935

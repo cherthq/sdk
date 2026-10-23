@@ -1,0 +1,79 @@
+{
+  "serviceInstance": {
+    "activeDeployments": [
+      {
+        "id": "8b19eaef-e01d-412f-ad5a-3af08f0d89e0",
+        "instances": [
+          {
+            "id": "0bcf3724-2acf-4cfe-acb2-2404203f66c7",
+            "status": "RUNNING"
+          }
+        ],
+        "status": "SUCCESS"
+      }
+    ],
+    "latestDeployment": {
+      "id": "8b19eaef-e01d-412f-ad5a-3af08f0d89e0",
+      "instances": [
+        {
+          "id": "0bcf3724-2acf-4cfe-acb2-2404203f66c7",
+          "status": "RUNNING"
+        }
+      ],
+      "meta": {
+        "buildOnly": false,
+        "cliAgentSessionId": "01a0f013-3591-7a50-a8ab-6ac3fa0aaddb",
+        "cliCaller": "codex",
+        "fileServiceManifest": {},
+        "imageDigest": "sha256:2f2aeccb6b9e2693b08c57fa7d2b19775f5d82cd8b12c0b6fa4906f84c390ac3",
+        "logsV2": true,
+        "nixpacksProviders": [],
+        "propertyFileMapping": {},
+        "reason": "deploy",
+        "rootDirectory": "/",
+        "runtime": "V2",
+        "serviceManifest": {
+          "build": {
+            "buildCommand": "",
+            "buildEnvironment": "V3",
+            "builder": "DOCKERFILE",
+            "dockerfilePath": "Dockerfile",
+            "nixpacksConfigPath": null,
+            "nixpacksPlan": null,
+            "watchPatterns": []
+          },
+          "deploy": {
+            "cronSchedule": null,
+            "drainingSeconds": 70,
+            "healthcheckPath": null,
+            "healthcheckTimeout": null,
+            "ipv6EgressEnabled": false,
+            "limitOverride": null,
+            "multiRegionConfig": {
+              "us-west2": {
+                "numReplicas": 1
+              }
+            },
+            "numReplicas": 1,
+            "overlapSeconds": 0,
+            "preDeployCommand": [],
+            "preDeployTimeoutSeconds": null,
+            "region": null,
+            "registryCredentials": null,
+            "requiredMountPath": null,
+            "restartPolicyMaxRetries": null,
+            "restartPolicyType": "NEVER",
+            "runtime": "V2",
+            "sleepApplication": false,
+            "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+            "useLegacyStacker": false
+          }
+        },
+        "volumeMounts": [
+          "/state"
+        ]
+      },
+      "status": "SUCCESS"
+    }
+  }
+}

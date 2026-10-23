@@ -1,0 +1,78 @@
+{
+  "initialized": true,
+  "old_journal_unchanged": true,
+  "files": [
+    {
+      "path": "/state/chert-pilot/volume-id",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 36
+    },
+    {
+      "path": "/state/chert-pilot/initialized",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 16
+    },
+    {
+      "path": "/state/chert-pilot/ipc",
+      "uid": 10001,
+      "mode": "0o700",
+      "size": 4096
+    },
+    {
+      "path": "/state/chert-pilot/connector",
+      "uid": 10001,
+      "mode": "0o700",
+      "size": 4096
+    },
+    {
+      "path": "/state/chert-pilot/supervisor.lock",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 0
+    },
+    {
+      "path": "/state/chert-pilot/application",
+      "uid": 10001,
+      "mode": "0o700",
+      "size": 4096
+    },
+    {
+      "path": "/state/chert-pilot/connector/config.json",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 805
+    },
+    {
+      "path": "/state/chert-pilot/connector/journal.json",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 451
+    },
+    {
+      "path": "/state/chert-pilot/application/operations.json",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 161
+    },
+    {
+      "path": "/state/chert-pilot/application/resources.json",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 146
+    },
+    {
+      "path": "/state/chert-pilot/application/operations.json.lock",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 0
+    },
+    {
+      "path": "/state/chert-pilot/application/resources.json.lock",
+      "uid": 10001,
+      "mode": "0o600",
+      "size": 0
+    }
+  ]
+}

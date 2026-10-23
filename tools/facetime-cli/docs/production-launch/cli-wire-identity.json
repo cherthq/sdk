@@ -1,0 +1,6 @@
+{
+  "member": "dist/src/transport/connector-wire.js",
+  "sha256": "84da994f7564723706848185ac23949e39088c1163baec811f16bd59c4bfb153",
+  "cli_archive_sha256": "f436de564c5eb6572570b04b67f6b5e18f93c35603e7a73e00b43674979f3f89",
+  "remote_hashes_matched": true
+}

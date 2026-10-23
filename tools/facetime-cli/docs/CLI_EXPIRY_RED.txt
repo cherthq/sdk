@@ -1,0 +1,1169 @@
+TAP version 13
+# Subtest: completed terminal call stays debt-free at wall expiry during throw reconciliation
+not ok 1 - completed terminal call stays debt-free at wall expiry during throw reconciliation
+  ---
+  duration_ms: 9.251042
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:afcb3a0d-6273-4514-be3a-a9859b66165a:req_afcb3a0d-6273-4514-be3a-a9859b66165a': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '3c4af99ba0f58a7a354cabe26019b5189215fc117a21256a1cbdc57280fcd514',
+            job: 'f46db97f-8b58-471a-89d9-789831a5424f',
+            marker: '3df89b43-a236-479d-9d4a-8c84d2463b9a',
+            nonce: 'cb36ae22-6a77-4158-9a0e-9758b72c878c',
+    ...
+            participant: '5a79c3f0-ad84-438e-9774-206bb04c93d2',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: '731f0d84-51cd-43d6-b10f-509a822c251d',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:afcb3a0d-6273-4514-be3a-a9859b66165a:req_afcb3a0d-6273-4514-be3a-a9859b66165a:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: 'afcb3a0d-6273-4514-be3a-a9859b66165a'
+          request_id: 'req_afcb3a0d-6273-4514-be3a-a9859b66165a'
+        digest: '3c4af99ba0f58a7a354cabe26019b5189215fc117a21256a1cbdc57280fcd514'
+        room: '731f0d84-51cd-43d6-b10f-509a822c251d'
+        job: 'f46db97f-8b58-471a-89d9-789831a5424f'
+        marker: '3df89b43-a236-479d-9d4a-8c84d2463b9a'
+        nonce: 'cb36ae22-6a77-4158-9a0e-9758b72c878c'
+        participant: '5a79c3f0-ad84-438e-9774-206bb04c93d2'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '12bc8f28-14e5-4a20-97ec-33ec3613438a'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:afcb3a0d-6273-4514-be3a-a9859b66165a:req_afcb3a0d-6273-4514-be3a-a9859b66165a:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: 'afcb3a0d-6273-4514-be3a-a9859b66165a'
+          request_id: 'req_afcb3a0d-6273-4514-be3a-a9859b66165a'
+        digest: '3c4af99ba0f58a7a354cabe26019b5189215fc117a21256a1cbdc57280fcd514'
+        room: '731f0d84-51cd-43d6-b10f-509a822c251d'
+        job: 'f46db97f-8b58-471a-89d9-789831a5424f'
+        marker: '3df89b43-a236-479d-9d4a-8c84d2463b9a'
+        nonce: 'cb36ae22-6a77-4158-9a0e-9758b72c878c'
+        participant: '5a79c3f0-ad84-438e-9774-206bb04c93d2'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '12bc8f28-14e5-4a20-97ec-33ec3613438a'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during unknown reconciliation
+not ok 2 - completed terminal call stays debt-free at wall expiry during unknown reconciliation
+  ---
+  duration_ms: 1.004166
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:51d895c6-2b14-4d76-8667-371ce10d15f2:req_51d895c6-2b14-4d76-8667-371ce10d15f2': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '01f8bc210476dc5582bc35d8256ff00d47d62fe60f54fe23558df8cba0178312',
+            job: 'd3e8e2e7-0213-47f9-a286-d44b09c278e7',
+            marker: 'eaa5e770-8298-42c4-954c-7fb3a5743cc7',
+            nonce: '356edcc3-ad28-49a4-99fd-eb4728d2579e',
+    ...
+            participant: 'd15ac0d6-bd51-4159-aa4a-01d6c0df7994',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: '683f7443-3889-47e7-90cc-31834973c343',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:51d895c6-2b14-4d76-8667-371ce10d15f2:req_51d895c6-2b14-4d76-8667-371ce10d15f2:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '51d895c6-2b14-4d76-8667-371ce10d15f2'
+          request_id: 'req_51d895c6-2b14-4d76-8667-371ce10d15f2'
+        digest: '01f8bc210476dc5582bc35d8256ff00d47d62fe60f54fe23558df8cba0178312'
+        room: '683f7443-3889-47e7-90cc-31834973c343'
+        job: 'd3e8e2e7-0213-47f9-a286-d44b09c278e7'
+        marker: 'eaa5e770-8298-42c4-954c-7fb3a5743cc7'
+        nonce: '356edcc3-ad28-49a4-99fd-eb4728d2579e'
+        participant: 'd15ac0d6-bd51-4159-aa4a-01d6c0df7994'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'efafe7eb-5b30-4c46-b048-95d3b603a6e9'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:51d895c6-2b14-4d76-8667-371ce10d15f2:req_51d895c6-2b14-4d76-8667-371ce10d15f2:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '51d895c6-2b14-4d76-8667-371ce10d15f2'
+          request_id: 'req_51d895c6-2b14-4d76-8667-371ce10d15f2'
+        digest: '01f8bc210476dc5582bc35d8256ff00d47d62fe60f54fe23558df8cba0178312'
+        room: '683f7443-3889-47e7-90cc-31834973c343'
+        job: 'd3e8e2e7-0213-47f9-a286-d44b09c278e7'
+        marker: 'eaa5e770-8298-42c4-954c-7fb3a5743cc7'
+        nonce: '356edcc3-ad28-49a4-99fd-eb4728d2579e'
+        participant: 'd15ac0d6-bd51-4159-aa4a-01d6c0df7994'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'efafe7eb-5b30-4c46-b048-95d3b603a6e9'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during forbidden reconciliation
+not ok 3 - completed terminal call stays debt-free at wall expiry during forbidden reconciliation
+  ---
+  duration_ms: 0.94275
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6:req_66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '84d09d2ced0aad5e433f92bfc532b93d630e518c3e88321ca0b9ff9db458c8c8',
+            job: '226ef2d0-493a-474f-b035-fdfe6dc7ae1d',
+            marker: 'b6a82f44-3c1d-4465-a720-8495c900fe18',
+            nonce: '0e637acc-0c7e-43f1-b1b9-15b88d9c5d6d',
+    ...
+            participant: '49e1d684-7cf0-4ecf-8dc7-7b416b708997',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: '8668967c-a972-4981-bfc3-d20f24dc552d',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6:req_66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6'
+          request_id: 'req_66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6'
+        digest: '84d09d2ced0aad5e433f92bfc532b93d630e518c3e88321ca0b9ff9db458c8c8'
+        room: '8668967c-a972-4981-bfc3-d20f24dc552d'
+        job: '226ef2d0-493a-474f-b035-fdfe6dc7ae1d'
+        marker: 'b6a82f44-3c1d-4465-a720-8495c900fe18'
+        nonce: '0e637acc-0c7e-43f1-b1b9-15b88d9c5d6d'
+        participant: '49e1d684-7cf0-4ecf-8dc7-7b416b708997'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '0bbf739f-8473-4b97-8485-fe324408284a'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6:req_66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6'
+          request_id: 'req_66ee7f9e-5d9c-4e16-8f61-7832bfeb22a6'
+        digest: '84d09d2ced0aad5e433f92bfc532b93d630e518c3e88321ca0b9ff9db458c8c8'
+        room: '8668967c-a972-4981-bfc3-d20f24dc552d'
+        job: '226ef2d0-493a-474f-b035-fdfe6dc7ae1d'
+        marker: 'b6a82f44-3c1d-4465-a720-8495c900fe18'
+        nonce: '0e637acc-0c7e-43f1-b1b9-15b88d9c5d6d'
+        participant: '49e1d684-7cf0-4ecf-8dc7-7b416b708997'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '0bbf739f-8473-4b97-8485-fe324408284a'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during not_found reconciliation
+not ok 4 - completed terminal call stays debt-free at wall expiry during not_found reconciliation
+  ---
+  duration_ms: 0.687791
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:b179708c-91ee-4946-b988-3608c6f69fe0:req_b179708c-91ee-4946-b988-3608c6f69fe0': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '4ce1f3f90dd2c3f706bec849053820a046751e8870a62b820bfecc2a649168fc',
+            job: '7379069d-659f-4972-92c7-c0cbaa67d7e1',
+            marker: 'f3f2797c-27d3-4092-a6de-c54741f30263',
+            nonce: '9526581f-6e4f-49c0-ad07-f28311b61107',
+    ...
+            participant: '87260e38-c80c-4089-97c6-9ebf2d8331b9',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: '7f9928d2-8331-4e85-86a1-a59003f308f1',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:b179708c-91ee-4946-b988-3608c6f69fe0:req_b179708c-91ee-4946-b988-3608c6f69fe0:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: 'b179708c-91ee-4946-b988-3608c6f69fe0'
+          request_id: 'req_b179708c-91ee-4946-b988-3608c6f69fe0'
+        digest: '4ce1f3f90dd2c3f706bec849053820a046751e8870a62b820bfecc2a649168fc'
+        room: '7f9928d2-8331-4e85-86a1-a59003f308f1'
+        job: '7379069d-659f-4972-92c7-c0cbaa67d7e1'
+        marker: 'f3f2797c-27d3-4092-a6de-c54741f30263'
+        nonce: '9526581f-6e4f-49c0-ad07-f28311b61107'
+        participant: '87260e38-c80c-4089-97c6-9ebf2d8331b9'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '5d536f5c-dedf-4b75-a307-0b70695f3fdb'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:b179708c-91ee-4946-b988-3608c6f69fe0:req_b179708c-91ee-4946-b988-3608c6f69fe0:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: 'b179708c-91ee-4946-b988-3608c6f69fe0'
+          request_id: 'req_b179708c-91ee-4946-b988-3608c6f69fe0'
+        digest: '4ce1f3f90dd2c3f706bec849053820a046751e8870a62b820bfecc2a649168fc'
+        room: '7f9928d2-8331-4e85-86a1-a59003f308f1'
+        job: '7379069d-659f-4972-92c7-c0cbaa67d7e1'
+        marker: 'f3f2797c-27d3-4092-a6de-c54741f30263'
+        nonce: '9526581f-6e4f-49c0-ad07-f28311b61107'
+        participant: '87260e38-c80c-4089-97c6-9ebf2d8331b9'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '5d536f5c-dedf-4b75-a307-0b70695f3fdb'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during throw reconciliation
+not ok 5 - completed terminal call stays debt-free at monotonic expiry during throw reconciliation
+  ---
+  duration_ms: 2.024375
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:9cd5456b-b238-45de-b19c-8409b98a2b87:req_9cd5456b-b238-45de-b19c-8409b98a2b87': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '1b229d9cd75fca465998ad265daab33759dca91868f744de37ca4839b503f73e',
+            job: 'a729874e-1bc4-4301-a14b-77337049bc7d',
+            marker: '5dc94005-d33f-4f7c-b991-5f61dea12258',
+            nonce: 'fa645798-fa86-40d4-b9fc-5acf69fd3300',
+    ...
+            participant: 'b82b3a8c-0c5a-4e29-ae0c-6081c2e8debb',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: '42cf2321-0dc4-490e-8112-555ddc151ef6',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:9cd5456b-b238-45de-b19c-8409b98a2b87:req_9cd5456b-b238-45de-b19c-8409b98a2b87:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '9cd5456b-b238-45de-b19c-8409b98a2b87'
+          request_id: 'req_9cd5456b-b238-45de-b19c-8409b98a2b87'
+        digest: '1b229d9cd75fca465998ad265daab33759dca91868f744de37ca4839b503f73e'
+        room: '42cf2321-0dc4-490e-8112-555ddc151ef6'
+        job: 'a729874e-1bc4-4301-a14b-77337049bc7d'
+        marker: '5dc94005-d33f-4f7c-b991-5f61dea12258'
+        nonce: 'fa645798-fa86-40d4-b9fc-5acf69fd3300'
+        participant: 'b82b3a8c-0c5a-4e29-ae0c-6081c2e8debb'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '6cfd4a2e-7d4d-4975-9a31-10109534dd47'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:9cd5456b-b238-45de-b19c-8409b98a2b87:req_9cd5456b-b238-45de-b19c-8409b98a2b87:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '9cd5456b-b238-45de-b19c-8409b98a2b87'
+          request_id: 'req_9cd5456b-b238-45de-b19c-8409b98a2b87'
+        digest: '1b229d9cd75fca465998ad265daab33759dca91868f744de37ca4839b503f73e'
+        room: '42cf2321-0dc4-490e-8112-555ddc151ef6'
+        job: 'a729874e-1bc4-4301-a14b-77337049bc7d'
+        marker: '5dc94005-d33f-4f7c-b991-5f61dea12258'
+        nonce: 'fa645798-fa86-40d4-b9fc-5acf69fd3300'
+        participant: 'b82b3a8c-0c5a-4e29-ae0c-6081c2e8debb'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '6cfd4a2e-7d4d-4975-9a31-10109534dd47'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during unknown reconciliation
+not ok 6 - completed terminal call stays debt-free at monotonic expiry during unknown reconciliation
+  ---
+  duration_ms: 0.658875
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:259154fd-0e35-4a78-95c3-a84a3556e8f8:req_259154fd-0e35-4a78-95c3-a84a3556e8f8': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '834f5834e922c36b6323c5312d7f1a3d277955c5e2a1d3e9a7356008d6ddef04',
+            job: '7d425538-3364-4974-a614-320226d0d1ab',
+            marker: '93e0f3f9-7947-4726-8583-2ad4284b98a3',
+            nonce: 'ce517f4d-9c17-43f6-9d53-23241429591d',
+    ...
+            participant: 'be16f1b3-c0d9-4d94-afe3-b927d753992c',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: '1717e80f-71be-4732-af72-7b012afa887d',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:259154fd-0e35-4a78-95c3-a84a3556e8f8:req_259154fd-0e35-4a78-95c3-a84a3556e8f8:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '259154fd-0e35-4a78-95c3-a84a3556e8f8'
+          request_id: 'req_259154fd-0e35-4a78-95c3-a84a3556e8f8'
+        digest: '834f5834e922c36b6323c5312d7f1a3d277955c5e2a1d3e9a7356008d6ddef04'
+        room: '1717e80f-71be-4732-af72-7b012afa887d'
+        job: '7d425538-3364-4974-a614-320226d0d1ab'
+        marker: '93e0f3f9-7947-4726-8583-2ad4284b98a3'
+        nonce: 'ce517f4d-9c17-43f6-9d53-23241429591d'
+        participant: 'be16f1b3-c0d9-4d94-afe3-b927d753992c'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'c4907b9b-4fc1-412b-8546-410f4f6183cf'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:259154fd-0e35-4a78-95c3-a84a3556e8f8:req_259154fd-0e35-4a78-95c3-a84a3556e8f8:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '259154fd-0e35-4a78-95c3-a84a3556e8f8'
+          request_id: 'req_259154fd-0e35-4a78-95c3-a84a3556e8f8'
+        digest: '834f5834e922c36b6323c5312d7f1a3d277955c5e2a1d3e9a7356008d6ddef04'
+        room: '1717e80f-71be-4732-af72-7b012afa887d'
+        job: '7d425538-3364-4974-a614-320226d0d1ab'
+        marker: '93e0f3f9-7947-4726-8583-2ad4284b98a3'
+        nonce: 'ce517f4d-9c17-43f6-9d53-23241429591d'
+        participant: 'be16f1b3-c0d9-4d94-afe3-b927d753992c'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'c4907b9b-4fc1-412b-8546-410f4f6183cf'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during forbidden reconciliation
+not ok 7 - completed terminal call stays debt-free at monotonic expiry during forbidden reconciliation
+  ---
+  duration_ms: 0.684291
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:851f3891-e0c7-4b16-ab04-81b8395d1142:req_851f3891-e0c7-4b16-ab04-81b8395d1142': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '5e9276bc329d23f76e0efea12a9557bf606af8abf38ef228360d91576273ac8a',
+            job: '218f9688-3910-4adb-a0a8-2894b787d7ca',
+            marker: 'ad92f25d-6d09-4a73-8d4e-ccfddfe29658',
+            nonce: '40faf61c-1fd9-43e6-9a07-48ff0a5771f0',
+    ...
+            participant: '6a8f4306-cdcd-41cd-9073-248c53bc9d3a',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: '16f4a08d-68ee-405e-b367-9422bd6e7853',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:851f3891-e0c7-4b16-ab04-81b8395d1142:req_851f3891-e0c7-4b16-ab04-81b8395d1142:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '851f3891-e0c7-4b16-ab04-81b8395d1142'
+          request_id: 'req_851f3891-e0c7-4b16-ab04-81b8395d1142'
+        digest: '5e9276bc329d23f76e0efea12a9557bf606af8abf38ef228360d91576273ac8a'
+        room: '16f4a08d-68ee-405e-b367-9422bd6e7853'
+        job: '218f9688-3910-4adb-a0a8-2894b787d7ca'
+        marker: 'ad92f25d-6d09-4a73-8d4e-ccfddfe29658'
+        nonce: '40faf61c-1fd9-43e6-9a07-48ff0a5771f0'
+        participant: '6a8f4306-cdcd-41cd-9073-248c53bc9d3a'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'e3b04eef-f645-4d08-8c34-22dda224c20b'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:851f3891-e0c7-4b16-ab04-81b8395d1142:req_851f3891-e0c7-4b16-ab04-81b8395d1142:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '851f3891-e0c7-4b16-ab04-81b8395d1142'
+          request_id: 'req_851f3891-e0c7-4b16-ab04-81b8395d1142'
+        digest: '5e9276bc329d23f76e0efea12a9557bf606af8abf38ef228360d91576273ac8a'
+        room: '16f4a08d-68ee-405e-b367-9422bd6e7853'
+        job: '218f9688-3910-4adb-a0a8-2894b787d7ca'
+        marker: 'ad92f25d-6d09-4a73-8d4e-ccfddfe29658'
+        nonce: '40faf61c-1fd9-43e6-9a07-48ff0a5771f0'
+        participant: '6a8f4306-cdcd-41cd-9073-248c53bc9d3a'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'e3b04eef-f645-4d08-8c34-22dda224c20b'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during not_found reconciliation
+not ok 8 - completed terminal call stays debt-free at monotonic expiry during not_found reconciliation
+  ---
+  duration_ms: 0.650875
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:20:9'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:51bf374d-02bb-4843-b571-62ea1fd3c319:req_51bf374d-02bb-4843-b571-62ea1fd3c319': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '094e8a997bb2c82418b262ca47290036ca12beff0ec6d0c30e2403d51a16a700',
+            job: 'c6ec2e6e-7f2e-4e73-99fd-06cc3448096c',
+            marker: 'd3aa829c-8e30-4818-8d2a-0bdf63e55e12',
+            nonce: 'ed9dc6bb-3630-4291-a684-f3da92b2db2b',
+    ...
+            participant: 'fd831f99-ab55-4f95-8750-6dcecbd1aafa',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: 'be148378-3f96-4547-adf6-117adbb9ee5a',
+            state: 'terminal',
+            terminal: true,
+            version: 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:51bf374d-02bb-4843-b571-62ea1fd3c319:req_51bf374d-02bb-4843-b571-62ea1fd3c319:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '51bf374d-02bb-4843-b571-62ea1fd3c319'
+          request_id: 'req_51bf374d-02bb-4843-b571-62ea1fd3c319'
+        digest: '094e8a997bb2c82418b262ca47290036ca12beff0ec6d0c30e2403d51a16a700'
+        room: 'be148378-3f96-4547-adf6-117adbb9ee5a'
+        job: 'c6ec2e6e-7f2e-4e73-99fd-06cc3448096c'
+        marker: 'd3aa829c-8e30-4818-8d2a-0bdf63e55e12'
+        nonce: 'ed9dc6bb-3630-4291-a684-f3da92b2db2b'
+        participant: 'fd831f99-ab55-4f95-8750-6dcecbd1aafa'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '5d210552-0d6f-4094-a2dc-0e314cf8c313'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:51bf374d-02bb-4843-b571-62ea1fd3c319:req_51bf374d-02bb-4843-b571-62ea1fd3c319:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '51bf374d-02bb-4843-b571-62ea1fd3c319'
+          request_id: 'req_51bf374d-02bb-4843-b571-62ea1fd3c319'
+        digest: '094e8a997bb2c82418b262ca47290036ca12beff0ec6d0c30e2403d51a16a700'
+        room: 'be148378-3f96-4547-adf6-117adbb9ee5a'
+        job: 'c6ec2e6e-7f2e-4e73-99fd-06cc3448096c'
+        marker: 'd3aa829c-8e30-4818-8d2a-0bdf63e55e12'
+        nonce: 'ed9dc6bb-3630-4291-a684-f3da92b2db2b'
+        participant: 'fd831f99-ab55-4f95-8750-6dcecbd1aafa'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: '5d210552-0d6f-4094-a2dc-0e314cf8c313'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:38:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: completed terminal journal reopens after expiry without writes or dependency on authority/management
+not ok 9 - completed terminal journal reopens after expiry without writes or dependency on authority/management
+  ---
+  duration_ms: 93.190958
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:48:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '{"schema_version":1,"scope":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1},"entries":{"project_1:binding_1:1:faccfc87-d8db-488f-81f1-d72669098109:req_faccfc87-d8db-488f-81f1-d72669098109":{"owner":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1,"call_id":"faccfc87-d8db-488f-81f1-d72669098109","request_id":"req_faccfc87-d8db-488f-81f1-d72669098109"},"digest":"e4f3206ce4f2b52dd56b5a2e10838edcde7aacf5b764a2ce428f31ffdd345aa1","room":"9a5a3bee-84c2-46cb-bd98-8752319756d5","job":"6c514d24-e198-4d1a-822e-dc5747fc4c82","marker":"bb2e7a79-776f-44d3-a96a-a256b36fcde9","nonce":"010f7d11-82e1-4dc3-87ea-7a70e7332ef4","participant":"00781c45-5291-43c4-bb2d-4d66bd59dd2f","resource_expires_at":160000,"state":"terminal","version":2,"terminal":true,"cleanup_debt":true,"reconcile_debt":true,"create_pending":false,"bridge_seen":false}},"tombstones":{},"cursor":1,"receipts":{"1":"cc03689b-d2b5-4a16-8b85-ff19f56fb79a"}}'
+    - '{"schema_version":1,"scope":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1},"entries":{"project_1:binding_1:1:faccfc87-d8db-488f-81f1-d72669098109:req_faccfc87-d8db-488f-81f1-d72669098109":{"owner":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1,"call_id":"faccfc87-d8db-488f-81f1-d72669098109","request_id":"req_faccfc87-d8db-488f-81f1-d72669098109"},"digest":"e4f3206ce4f2b52dd56b5a2e10838edcde7aacf5b764a2ce428f31ffdd345aa1","room":"9a5a3bee-84c2-46cb-bd98-8752319756d5","job":"6c514d24-e198-4d1a-822e-dc5747fc4c82","marker":"bb2e7a79-776f-44d3-a96a-a256b36fcde9","nonce":"010f7d11-82e1-4dc3-87ea-7a70e7332ef4","participant":"00781c45-5291-43c4-bb2d-4d66bd59dd2f","resource_expires_at":160000,"state":"terminal","version":2,"terminal":true,"cleanup_debt":false,"reconcile_debt":false,"create_pending":false,"bridge_seen":false}},"tombstones":{},"cursor":1,"receipts":{"1":"cc03689b-d2b5-4a16-8b85-ff19f56fb79a"}}'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '{"schema_version":1,"scope":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1},"entries":{"project_1:binding_1:1:faccfc87-d8db-488f-81f1-d72669098109:req_faccfc87-d8db-488f-81f1-d72669098109":{"owner":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1,"call_id":"faccfc87-d8db-488f-81f1-d72669098109","request_id":"req_faccfc87-d8db-488f-81f1-d72669098109"},"digest":"e4f3206ce4f2b52dd56b5a2e10838edcde7aacf5b764a2ce428f31ffdd345aa1","room":"9a5a3bee-84c2-46cb-bd98-8752319756d5","job":"6c514d24-e198-4d1a-822e-dc5747fc4c82","marker":"bb2e7a79-776f-44d3-a96a-a256b36fcde9","nonce":"010f7d11-82e1-4dc3-87ea-7a70e7332ef4","participant":"00781c45-5291-43c4-bb2d-4d66bd59dd2f","resource_expires_at":160000,"state":"terminal","version":2,"terminal":true,"cleanup_debt":false,"reconcile_debt":false,"create_pending":false,"bridge_seen":false}},"tombstones":{},"cursor":1,"receipts":{"1":"cc03689b-d2b5-4a16-8b85-ff19f56fb79a"}}'
+  actual: '{"schema_version":1,"scope":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1},"entries":{"project_1:binding_1:1:faccfc87-d8db-488f-81f1-d72669098109:req_faccfc87-d8db-488f-81f1-d72669098109":{"owner":{"project_id":"project_1","line_id":"line_1","binding_id":"binding_1","binding_epoch":1,"instance_id":"instance_1","connection_generation":1,"call_id":"faccfc87-d8db-488f-81f1-d72669098109","request_id":"req_faccfc87-d8db-488f-81f1-d72669098109"},"digest":"e4f3206ce4f2b52dd56b5a2e10838edcde7aacf5b764a2ce428f31ffdd345aa1","room":"9a5a3bee-84c2-46cb-bd98-8752319756d5","job":"6c514d24-e198-4d1a-822e-dc5747fc4c82","marker":"bb2e7a79-776f-44d3-a96a-a256b36fcde9","nonce":"010f7d11-82e1-4dc3-87ea-7a70e7332ef4","participant":"00781c45-5291-43c4-bb2d-4d66bd59dd2f","resource_expires_at":160000,"state":"terminal","version":2,"terminal":true,"cleanup_debt":true,"reconcile_debt":true,"create_pending":false,"bridge_seen":false}},"tombstones":{},"cursor":1,"receipts":{"1":"cc03689b-d2b5-4a16-8b85-ff19f56fb79a"}}'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:71:16)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: authoritative decline with verified cleanup also stays complete after expiry
+not ok 10 - authoritative decline with verified cleanup also stays complete after expiry
+  ---
+  duration_ms: 1.517792
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:81:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        cursor: 0,
+        entries: {
+          'project_1:binding_1:1:c9f61407-327a-4f6d-8f02-b54d86a75145:req_c9f61407-327a-4f6d-8f02-b54d86a75145': {
+            bridge_seen: false,
+    ...
+            participant: '2729df58-89e3-4262-b72f-5c15823f661b',
+    +       reconcile_debt: true,
+    -       reconcile_debt: false,
+            resource_expires_at: 160000,
+            room: 'e2e81403-fa54-4819-ae48-69239b67967b',
+    +       state: 'terminal',
+    -       state: 'declined',
+            terminal: true,
+            version: 1
+          }
+        },
+        receipts: {},
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:c9f61407-327a-4f6d-8f02-b54d86a75145:req_c9f61407-327a-4f6d-8f02-b54d86a75145:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: 'c9f61407-327a-4f6d-8f02-b54d86a75145'
+          request_id: 'req_c9f61407-327a-4f6d-8f02-b54d86a75145'
+        digest: '6c1168c360990189a4963c63640396050ffa0cbc6749fab3807b9172ff0f640e'
+        room: 'e2e81403-fa54-4819-ae48-69239b67967b'
+        job: '2a0266de-8de8-41cb-832a-a53b12f994c7'
+        marker: '32af4c68-40db-49df-8320-cfbf0e1a7397'
+        nonce: '1b6abce1-b3ef-4c7b-a41f-84211fb7c2f5'
+        participant: '2729df58-89e3-4262-b72f-5c15823f661b'
+        resource_expires_at: 160000
+        state: 'declined'
+        version: 1
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 0
+    receipts:
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:c9f61407-327a-4f6d-8f02-b54d86a75145:req_c9f61407-327a-4f6d-8f02-b54d86a75145:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: 'c9f61407-327a-4f6d-8f02-b54d86a75145'
+          request_id: 'req_c9f61407-327a-4f6d-8f02-b54d86a75145'
+        digest: '6c1168c360990189a4963c63640396050ffa0cbc6749fab3807b9172ff0f640e'
+        room: 'e2e81403-fa54-4819-ae48-69239b67967b'
+        job: '2a0266de-8de8-41cb-832a-a53b12f994c7'
+        marker: '32af4c68-40db-49df-8320-cfbf0e1a7397'
+        nonce: '1b6abce1-b3ef-4c7b-a41f-84211fb7c2f5'
+        participant: '2729df58-89e3-4262-b72f-5c15823f661b'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 1
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: true
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 0
+    receipts:
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:92:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: accepted still reconciles and retains debt across failed expiry reconciliation
+not ok 11 - accepted still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 1.05525
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:96:5'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:128:16)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: uncertain still reconciles and retains debt across failed expiry reconciliation
+not ok 12 - uncertain still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.759
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:96:5'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:128:16)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: local_departure still reconciles and retains debt across failed expiry reconciliation
+not ok 13 - local_departure still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.819625
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:96:5'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:128:16)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: terminal but unsettled creation retains debt and reconciliation through expiry
+ok 14 - terminal but unsettled creation retains debt and reconciliation through expiry
+  ---
+  duration_ms: 1.455625
+  type: 'test'
+  ...
+# Subtest: terminal but unverified cleanup is never treated as completed at expiry
+ok 15 - terminal but unverified cleanup is never treated as completed at expiry
+  ---
+  duration_ms: 0.551708
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 2
+# fail 13
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 190.424208

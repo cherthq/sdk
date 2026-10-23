@@ -1,0 +1,60 @@
+
+> chert-local-transport-proof@0.0.0 proof:transport
+> node dist/tests/proof.js
+
+{
+  "schema_version": 1,
+  "ok": true,
+  "kind": "private_synthetic_loopback",
+  "node": "v24.14.0",
+  "sample_count": 20,
+  "commits": 20,
+  "effects": {
+    "rooms": 20,
+    "jobs": 20,
+    "providers": 20,
+    "deleted": 20
+  },
+  "remaining_resources": 0,
+  "remaining_debt": 0,
+  "configured_budgets_ms": {
+    "preparation": 4000,
+    "authority_commit": 5000,
+    "real_mac_context_only": 6000
+  },
+  "latency": {
+    "request_ms": {
+      "count": 20,
+      "p50": 10.806,
+      "p95": 14.022,
+      "max": 15.477
+    },
+    "preparation_ms": {
+      "count": 20,
+      "p50": 20.092,
+      "p95": 22.2,
+      "max": 24.169
+    },
+    "response_ms": {
+      "count": 20,
+      "p50": 0.734,
+      "p95": 2.586,
+      "max": 3.223
+    },
+    "commit_ms": {
+      "count": 20,
+      "p50": 4.541,
+      "p95": 4.899,
+      "max": 5.109
+    },
+    "total_ms": {
+      "count": 20,
+      "p50": 35.868,
+      "p95": 43.011,
+      "max": 46.445
+    }
+  },
+  "limitations": [
+    "No real LiveKit, provider, Mac, TLS, database or deployed relay verification."
+  ]
+}

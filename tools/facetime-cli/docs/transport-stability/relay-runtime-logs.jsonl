@@ -1,0 +1,6 @@
+{"level":"error","message":"npm warn config production Use `--omit=dev` instead.","timestamp":"2026-09-30T14:41:13.085128827Z"}
+{"level":"info","message":"","timestamp":"2026-09-30T14:41:13.085132977Z"}
+{"timestamp":"2026-09-30T14:41:13.085136317Z","message":"> @chert/connector-relay@0.0.0 start","level":"info"}
+{"timestamp":"2026-09-30T14:41:13.085140417Z","message":"> node main.mjs","level":"info"}
+{"timestamp":"2026-09-30T14:41:13.085144597Z","message":"","level":"info"}
+{"level":"info","message":"Starting Container","timestamp":"2026-09-30T14:41:13.371213718Z"}

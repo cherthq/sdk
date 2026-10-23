@@ -1,0 +1,586 @@
+
+> demo-agent-0@1.0.0 check
+> node --check src/agent.mjs && node --check src/byor.mjs && node --check src/remote-video.mjs && node --check src/caller-vision.mjs && node --check scripts/receive-video.mjs && node --experimental-test-module-mocks --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: unset and explicit classic select the existing implementation
+ok 1 - unset and explicit classic select the existing implementation
+  ---
+  duration_ms: 0.893708
+  type: 'test'
+  ...
+# Subtest: demo is explicitly unimplemented and resolves to the exact classic implementation
+ok 2 - demo is explicitly unimplemented and resolves to the exact classic implementation
+  ---
+  duration_ms: 0.07975
+  type: 'test'
+  ...
+# Subtest: unknown, blank and inherited names fail with a sanitized configuration error
+ok 3 - unknown, blank and inherited names fail with a sanitized configuration error
+  ---
+  duration_ms: 0.4595
+  type: 'test'
+  ...
+# Subtest: muse selects its own implementation without demo fallback
+ok 4 - muse selects its own implementation without demo fallback
+  ---
+  duration_ms: 0.063125
+  type: 'test'
+  ...
+# Subtest: continuous classic dispatch cannot start Muse
+ok 5 - continuous classic dispatch cannot start Muse
+  ---
+  duration_ms: 0.105458
+  type: 'test'
+  ...
+# (node:71304) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: standalone unset preserves audio, greeting, camera tool and avatar
+ok 6 - standalone unset preserves audio, greeting, camera tool and avatar
+  ---
+  duration_ms: 6.672208
+  type: 'test'
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: BYOR unset preserves warmup, readiness, delayed greeting and audio binding
+ok 7 - BYOR unset preserves warmup, readiness, delayed greeting and audio binding
+  ---
+  duration_ms: 6.067209
+  type: 'test'
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: standalone classic preserves audio, greeting, camera tool and avatar
+ok 8 - standalone classic preserves audio, greeting, camera tool and avatar
+  ---
+  duration_ms: 4.938875
+  type: 'test'
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: BYOR classic preserves warmup, readiness, delayed greeting and audio binding
+ok 9 - BYOR classic preserves warmup, readiness, delayed greeting and audio binding
+  ---
+  duration_ms: 2.439792
+  type: 'test'
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: standalone demo preserves audio, greeting, camera tool and avatar
+ok 10 - standalone demo preserves audio, greeting, camera tool and avatar
+  ---
+  duration_ms: 2.257459
+  type: 'test'
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: BYOR demo preserves warmup, readiness, delayed greeting and audio binding
+ok 11 - BYOR demo preserves warmup, readiness, delayed greeting and audio binding
+  ---
+  duration_ms: 2.547208
+  type: 'test'
+  ...
+# Subtest: invalid configuration fails before worker registration, acceptance or session work
+ok 12 - invalid configuration fails before worker registration, acceptance or session work
+  ---
+  duration_ms: 11.527542
+  type: 'test'
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: profile selection stays fixed across environment changes and delayed BYOR arrival
+ok 13 - profile selection stays fixed across environment changes and delayed BYOR arrival
+  ---
+  duration_ms: 1.740917
+  type: 'test'
+  ...
+# Subtest: job acceptance preserves dispatch name, identities and malformed BYOR rejection
+ok 14 - job acceptance preserves dispatch name, identities and malformed BYOR rejection
+  ---
+  duration_ms: 4.310667
+  type: 'test'
+  ...
+# Subtest: profile requirement rejects before acceptance and session initialization
+ok 15 - profile requirement rejects before acceptance and session initialization
+  ---
+  duration_ms: 1.779834
+  type: 'test'
+  ...
+# Subtest: outbound audio stays silent until matching administrative activation
+ok 16 - outbound audio stays silent until matching administrative activation
+  ---
+  duration_ms: 1.886666
+  type: 'test'
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: outbound video stays silent until matching administrative activation
+ok 17 - outbound video stays silent until matching administrative activation
+  ---
+  duration_ms: 2.343042
+  type: 'test'
+  ...
+# Subtest: avatar publishes valid native frames and animates the mouth while speaking
+ok 18 - avatar publishes valid native frames and animates the mouth while speaking
+  ---
+  duration_ms: 109.640917
+  type: 'test'
+  ...
+# Subtest: describe sends only a fresh received image, then invalidates on mute
+ok 19 - describe sends only a fresh received image, then invalidates on mute
+  ---
+  duration_ms: 1.485833
+  type: 'test'
+  ...
+# Subtest: stale frame, cancellation and closed call do not send an image
+ok 20 - stale frame, cancellation and closed call do not send an image
+  ---
+  duration_ms: 0.121583
+  type: 'test'
+  ...
+# Subtest: one in-flight request; mute aborts and suppresses a late provider result
+ok 21 - one in-flight request; mute aborts and suppresses a late provider result
+  ---
+  duration_ms: 5.900625
+  type: 'test'
+  ...
+# Subtest: cancellation during encoding prevents transmission; API failures are sanitized
+ok 22 - cancellation during encoding prevents transmission; API failures are sanitized
+  ---
+  duration_ms: 0.662042
+  type: 'test'
+  ...
+# Subtest: native JPEG encoding maps SDK rotation enums without stretching
+ok 23 - native JPEG encoding maps SDK rotation enums without stretching
+  ---
+  duration_ms: 5.5655
+  type: 'test'
+  ...
+# Subtest: readiness speech completes without being sent to the avatar or audio output
+ok 24 - readiness speech completes without being sent to the avatar or audio output
+  ---
+  duration_ms: 0.775375
+  type: 'test'
+  ...
+# Subtest: live speech waits for provider playback and emits actual media start once
+ok 25 - live speech waits for provider playback and emits actual media start once
+  ---
+  duration_ms: 191.662541
+  type: 'test'
+  ...
+# Subtest: interruption mutes immediately, drains old speech and fences a late completion
+ok 26 - interruption mutes immediately, drains old speech and fences a late completion
+  ---
+  duration_ms: 404.425667
+  type: 'test'
+  ...
+# Subtest: large model frames are split into bounded chunks and closing releases playback
+ok 27 - large model frames are split into bounded chunks and closing releases playback
+  ---
+  duration_ms: 0.3625
+  type: 'test'
+  ...
+# Subtest: scene requests only become confirmed after renderer completion; repeats are idempotent
+ok 28 - scene requests only become confirmed after renderer completion; repeats are idempotent
+  ---
+  duration_ms: 0.455833
+  type: 'test'
+  ...
+# Subtest: conflicting requests retain only latest destination and reject stale completion
+ok 29 - conflicting requests retain only latest destination and reject stale completion
+  ---
+  duration_ms: 0.14
+  type: 'test'
+  ...
+# Subtest: failed transition preserves settled state; late callbacks cannot revive a closed scene
+ok 30 - failed transition preserves settled state; late callbacks cannot revive a closed scene
+  ---
+  duration_ms: 0.23075
+  type: 'test'
+  ...
+# Subtest: portrait composite preserves alpha, background, and subject proportions
+ok 31 - portrait composite preserves alpha, background, and subject proportions
+  ---
+  duration_ms: 14.584375
+  type: 'test'
+  ...
+# Subtest: compositor bounds work, rejects parallel renders, and releases busy state after errors
+ok 32 - compositor bounds work, rejects parallel renders, and releases busy state after errors
+  ---
+  duration_ms: 61.911292
+  type: 'test'
+  ...
+# Subtest: explicit chroma key removes green, preserves skin-colored pixels, and does not mutate input
+ok 33 - explicit chroma key removes green, preserves skin-colored pixels, and does not mutate input
+  ---
+  duration_ms: 0.611458
+  type: 'test'
+  ...
+# Subtest: render tokens are confined to a new private room and never grant administration
+ok 34 - render tokens are confined to a new private room and never grant administration
+  ---
+  duration_ms: 1.716959
+  type: 'test'
+  ...
+# Subtest: provider start failure removes only its own room and sanitizes the response
+ok 35 - provider start failure removes only its own room and sanitizes the response
+  ---
+  duration_ms: 1.153292
+  type: 'test'
+  ...
+# Subtest: audio uses exact PCM subarray, scoped destination, turn end and clear RPC
+ok 36 - audio uses exact PCM subarray, scoped destination, turn end and clear RPC
+  ---
+  duration_ms: 0.402416
+  type: 'test'
+  ...
+# Subtest: configuration is validated without echoing sensitive values
+ok 37 - configuration is validated without echoing sensitive values
+  ---
+  duration_ms: 0.105292
+  type: 'test'
+  ...
+# Subtest: confirmed submission blocks duplicate paid generation
+ok 38 - confirmed submission blocks duplicate paid generation
+  ---
+  duration_ms: 225.459833
+  type: 'test'
+  ...
+# Subtest: finite route submits once with a 15-second budget and no matching last frame
+ok 39 - finite route submits once with a 15-second budget and no matching last frame
+  ---
+  duration_ms: 149.468
+  type: 'test'
+  ...
+# Subtest: explicit client rejection permits retry after account activation
+ok 40 - explicit client rejection permits retry after account activation
+  ---
+  duration_ms: 141.492542
+  type: 'test'
+  ...
+# Subtest: ambiguous transport failure preserves receipt and blocks resubmission
+ok 41 - ambiguous transport failure preserves receipt and blocks resubmission
+  ---
+  duration_ms: 68.17525
+  type: 'test'
+  ...
+# Subtest: transition waits for loop seam and confirms only after destination publication
+ok 42 - transition waits for loop seam and confirms only after destination publication
+  ---
+  duration_ms: 0.608917
+  type: 'test'
+  ...
+# Subtest: rapid reversal completes the current transition then starts the latest request
+ok 43 - rapid reversal completes the current transition then starts the latest request
+  ---
+  duration_ms: 0.262083
+  type: 'test'
+  ...
+# Subtest: scene failures preserve settled state and manifests reject escape paths and unbounded loops
+ok 44 - scene failures preserve settled state and manifests reject escape paths and unbounded loops
+  ---
+  duration_ms: 0.515583
+  type: 'test'
+  ...
+# Subtest: finite route slows immediately, confirms on presentation, holds exact position and resumes
+ok 45 - finite route slows immediately, confirms on presentation, holds exact position and resumes
+  ---
+  duration_ms: 0.254084
+  type: 'test'
+  ...
+# Subtest: route endpoint holds instead of rewinding, and rejects exhausted resume
+ok 46 - route endpoint holds instead of rewinding, and rejects exhausted resume
+  ---
+  duration_ms: 0.204209
+  type: 'test'
+  ...
+# Subtest: route ignores duplicate requests and serializes rapid reversal without position reset
+ok 47 - route ignores duplicate requests and serializes rapid reversal without position reset
+  ---
+  duration_ms: 0.16
+  type: 'test'
+  ...
+# Subtest: resume queued during endpoint stop fails instead of confirming impossible travel
+ok 48 - resume queued during endpoint stop fails instead of confirming impossible travel
+  ---
+  duration_ms: 0.088208
+  type: 'test'
+  ...
+# Subtest: manual control signs exact operation and session
+ok 49 - manual control signs exact operation and session
+  ---
+  duration_ms: 0.995042
+  type: 'test'
+  ...
+# Subtest: preflight stops immediately after ready without accepting a call
+ok 50 - preflight stops immediately after ready without accepting a call
+  ---
+  duration_ms: 0.490666
+  type: 'test'
+  ...
+# Subtest: Ctrl-C stops the exact session and never restarts
+ok 51 - Ctrl-C stops the exact session and never restarts
+  ---
+  duration_ms: 0.097083
+  type: 'test'
+  ...
+# Subtest: ambiguous network failure still requests cleanup without retrying start
+ok 52 - ambiguous network failure still requests cleanup without retrying start
+  ---
+  duration_ms: 0.168792
+  type: 'test'
+  ...
+# Subtest: failed preparation and unverified cleanup cannot pass preflight
+ok 53 - failed preparation and unverified cleanup cannot pass preflight
+  ---
+  duration_ms: 0.168292
+  type: 'test'
+  ...
+# Subtest: local summary shows safe settings and presence without secret values
+ok 54 - local summary shows safe settings and presence without secret values
+  ---
+  duration_ms: 0.267375
+  type: 'test'
+  ...
+# Subtest: hosted profile is confirmed separately from local env with mismatch notice
+ok 55 - hosted profile is confirmed separately from local env with mismatch notice
+  ---
+  duration_ms: 0.176292
+  type: 'test'
+  ...
+# Subtest: readiness speech completes without being sent to the avatar or audio output
+ok 56 - readiness speech completes without being sent to the avatar or audio output
+  ---
+  duration_ms: 0.74575
+  type: 'test'
+  ...
+# Subtest: live speech waits for provider playback and emits actual media start once
+ok 57 - live speech waits for provider playback and emits actual media start once
+  ---
+  duration_ms: 191.911167
+  type: 'test'
+  ...
+# Subtest: interruption mutes immediately, drains old speech and fences a late completion
+ok 58 - interruption mutes immediately, drains old speech and fences a late completion
+  ---
+  duration_ms: 406.354625
+  type: 'test'
+  ...
+# Subtest: large model frames are split into bounded chunks and closing releases playback
+ok 59 - large model frames are split into bounded chunks and closing releases playback
+  ---
+  duration_ms: 0.293459
+  type: 'test'
+  ...
+# Subtest: render tokens are confined to a new private room and never grant administration
+ok 60 - render tokens are confined to a new private room and never grant administration
+  ---
+  duration_ms: 1.64825
+  type: 'test'
+  ...
+# Subtest: provider start failure removes only its own room and sanitizes the response
+ok 61 - provider start failure removes only its own room and sanitizes the response
+  ---
+  duration_ms: 0.880875
+  type: 'test'
+  ...
+# Subtest: audio uses exact PCM subarray, scoped destination, turn end and clear RPC
+ok 62 - audio uses exact PCM subarray, scoped destination, turn end and clear RPC
+  ---
+  duration_ms: 0.572958
+  type: 'test'
+  ...
+# Subtest: configuration is validated without echoing sensitive values
+ok 63 - configuration is validated without echoing sensitive values
+  ---
+  duration_ms: 0.102833
+  type: 'test'
+  ...
+# Subtest: hosted internal LiveKit address is kept separate from the public renderer URL
+ok 64 - hosted internal LiveKit address is kept separate from the public renderer URL
+  ---
+  duration_ms: 0.066334
+  type: 'test'
+  ...
+# (node:71316) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Muse BYOR binds caller, hides warmup and publishes returned media
+ok 65 - Muse BYOR binds caller, hides warmup and publishes returned media
+  ---
+  duration_ms: 1.903875
+  type: 'test'
+  ...
+# Subtest: Muse Console binds caller, hides warmup and publishes returned media
+ok 66 - Muse Console binds caller, hides warmup and publishes returned media
+  ---
+  duration_ms: 0.288542
+  type: 'test'
+  ...
+# Subtest: Muse startup failure cleans renderer without advertising ready
+ok 67 - Muse startup failure cleans renderer without advertising ready
+  ---
+  duration_ms: 0.314375
+  type: 'test'
+  ...
+# Subtest: Muse outbound video publishes silent audio before renderer readiness and gates speech by call
+ok 68 - Muse outbound video publishes silent audio before renderer readiness and gates speech by call
+  ---
+  duration_ms: 0.67025
+  type: 'test'
+  ...
+# Subtest: expired call preparation starts no Muse renderer
+ok 69 - expired call preparation starts no Muse renderer
+  ---
+  duration_ms: 0.067875
+  type: 'test'
+  ...
+# Subtest: inbound requires no outbound configuration; explicit outbound metadata fails closed
+ok 70 - inbound requires no outbound configuration; explicit outbound metadata fails closed
+  ---
+  duration_ms: 0.710416
+  type: 'test'
+  ...
+# Subtest: only matching activation greets once; active locks the call ID
+ok 71 - only matching activation greets once; active locks the call ID
+  ---
+  duration_ms: 0.155125
+  type: 'test'
+  ...
+# Subtest: terminal before activation and expired control lease suppress late activation
+ok 72 - terminal before activation and expired control lease suppress late activation
+  ---
+  duration_ms: 0.417416
+  type: 'test'
+  ...
+# Subtest: outbound media accepts legacy audio and explicit video, rejects malformed choices
+ok 73 - outbound media accepts legacy audio and explicit video, rejects malformed choices
+  ---
+  duration_ms: 1.244792
+  type: 'test'
+  ...
+# Subtest: expired inbound dispatch is rejected before any provider work
+ok 74 - expired inbound dispatch is rejected before any provider work
+  ---
+  duration_ms: 0.611917
+  type: 'test'
+  ...
+# Subtest: cold preparation has a fixed deadline; old and outbound jobs keep their bound
+ok 75 - cold preparation has a fixed deadline; old and outbound jobs keep their bound
+  ---
+  duration_ms: 19.921125
+  type: 'test'
+  ...
+# (node:71322) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: existing subscribed camera: metadata, dimensions, sanitized diagnostics and idempotence
+ok 76 - existing subscribed camera: metadata, dimensions, sanitized diagnostics and idempotence
+  ---
+  duration_ms: 11.322875
+  type: 'test'
+  ...
+# Subtest: no video is nonblocking; delayed participant and later publication subscribe once; audio untouched
+ok 77 - no video is nonblocking; delayed participant and later publication subscribe once; audio untouched
+  ---
+  duration_ms: 0.324917
+  type: 'test'
+  ...
+# Subtest: existing unpublished subscription is requested on initial scan
+ok 78 - existing unpublished subscription is requested on initial scan
+  ---
+  duration_ms: 0.128417
+  type: 'test'
+  ...
+# Subtest: selection is camera-only, same participant, deterministic and sticky through mute
+ok 79 - selection is camera-only, same participant, deterministic and sticky through mute
+  ---
+  duration_ms: 6.795542
+  type: 'test'
+  ...
+# Subtest: explicit participant/name filters do not fall back; disabled receiver has no listeners
+ok 80 - explicit participant/name filters do not fall back; disabled receiver has no listeners
+  ---
+  duration_ms: 0.3885
+  type: 'test'
+  ...
+# Subtest: unpublish, participant departure and reconnect cancel and rebuild exactly one reader
+ok 81 - unpublish, participant departure and reconnect cancel and rebuild exactly one reader
+  ---
+  duration_ms: 1.399084
+  type: 'test'
+  ...
+# Subtest: unsubscribe and replacement track cancel old stream; failure retries with bounded cadence
+ok 82 - unsubscribe and replacement track cancel old stream; failure retries with bounded cadence
+  ---
+  duration_ms: 0.382
+  type: 'test'
+  ...
+# Subtest: bounded slow consumer: newest pending only, sampling and stale/input resolution drops
+ok 83 - bounded slow consumer: newest pending only, sampling and stale/input resolution drops
+  ---
+  duration_ms: 1.646375
+  type: 'test'
+  ...
+# Subtest: consumer errors and decode EOF are isolated and recover; shutdown aborts in-flight work
+ok 84 - consumer errors and decode EOF are isolated and recover; shutdown aborts in-flight work
+  ---
+  duration_ms: 0.564667
+  type: 'test'
+  ...
+# Subtest: mute aborts a pending consumer and drops buffered work
+ok 85 - mute aborts a pending consumer and drops buffered work
+  ---
+  duration_ms: 0.529458
+  type: 'test'
+  ...
+# Subtest: resize caps dimensions, preserves aspect and emits RGB24 without native conversion
+ok 86 - resize caps dimensions, preserves aspect and emits RGB24 without native conversion
+  ---
+  duration_ms: 0.074333
+  type: 'test'
+  ...
+# Subtest: configuration rejects unbounded values; setup failure never rejects audio startup
+ok 87 - configuration rejects unbounded values; setup failure never rejects audio startup
+  ---
+  duration_ms: 0.225958
+  type: 'test'
+  ...
+# Subtest: receive-first probe gates only return publication and fails closed when frames are absent
+ok 88 - receive-first probe gates only return publication and fails closed when frames are absent
+  ---
+  duration_ms: 1.167459
+  type: 'test'
+  ...
+# Subtest: consumer timeout aborts work, permits later frames only after settlement, and clears shutdown
+ok 89 - consumer timeout aborts work, permits later frames only after settlement, and clears shutdown
+  ---
+  duration_ms: 3.550208
+  type: 'test'
+  ...
+# Subtest: stream setup/read failures are sanitized and retry; disconnect removes all listeners
+ok 90 - stream setup/read failures are sanitized and retry; disconnect removes all listeners
+  ---
+  duration_ms: 0.474416
+  type: 'test'
+  ...
+# Subtest: uncooperative timed-out consumer cannot create duplicate work or hold up shutdown
+ok 91 - uncooperative timed-out consumer cannot create duplicate work or hold up shutdown
+  ---
+  duration_ms: 0.476083
+  type: 'test'
+  ...
+# Subtest: receiver invalidates cached vision on mute, camera removal and shutdown
+ok 92 - receiver invalidates cached vision on mute, camera removal and shutdown
+  ---
+  duration_ms: 0.738625
+  type: 'test'
+  ...
+# Subtest: decoded camera reaches the voice tool provider request and mute removes access
+ok 93 - decoded camera reaches the voice tool provider request and mute removes access
+  ---
+  duration_ms: 473.867625
+  type: 'test'
+  ...
+1..93
+# tests 93
+# suites 0
+# pass 93
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1860.155083

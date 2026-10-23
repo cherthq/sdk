@@ -1,0 +1,366 @@
+
+Node 24: npm run typecheck
+
+> chert-local-transport-proof@0.0.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+Exit code: 0
+
+Node 24: npm run lint
+
+> chert-local-transport-proof@0.0.0 lint
+> eslint src tests
+
+Exit code: 0
+
+Node 24: npm run build
+
+> chert-local-transport-proof@0.0.0 build
+> tsc -p tsconfig.json
+
+Exit code: 0
+
+Node 24: npm run test
+
+> chert-local-transport-proof@0.0.0 test
+> npm run build && node --test dist/tests/transport/*.test.js dist/tests/adapter/*.test.js dist/tests/cli/*.test.js
+
+
+> chert-local-transport-proof@0.0.0 build
+> tsc -p tsconfig.json
+
+✔ default refuses retained state; explicit exception preserves it and is single use (20.875208ms)
+✔ exception requires original evidence and cannot create an unlinked run (0.398084ms)
+✔ one application dispatch budget is consumed even when the first rejects (0.240584ms)
+✔ qualification slots preserve both old runs, consume failures and gate the second on complete cleanup (23.961666ms)
+✔ reviewed retry is single use, preserves all prior runs and does not unlock old slot (12.95575ms)
+✔ correlation review requires clean previous run, is single use and preserves its evidence (11.804875ms)
+✔ authenticated hook rejects none and invalidates prior health (35.386791ms)
+✔ authenticated hook rejects signature and invalidates prior health (8.936625ms)
+✔ authenticated hook rejects challenge and invalidates prior health (9.131416ms)
+✔ authenticated hook rejects boot and invalidates prior health (9.311041ms)
+✔ authenticated hook rejects project and invalidates prior health (6.958125ms)
+✔ authenticated hook rejects name and invalidates prior health (4.734167ms)
+✔ authenticated hook rejects deployment and invalidates prior health (3.273583ms)
+✔ authenticated hook rejects stale and invalidates prior health (5.0115ms)
+✔ authenticated hook rejects replay and invalidates prior health (3.305208ms)
+✔ authenticated cancellation metadata does not invalidate subsequent availability samples (1.59975ms)
+✔ missing health creates zero real-adapter effects (8.96025ms)
+✔ stale health creates zero real-adapter effects (0.299417ms)
+✔ disconnected health creates zero real-adapter effects (0.190292ms)
+✔ full health creates zero real-adapter effects (0.167792ms)
+✔ draining health creates zero real-adapter effects (0.178042ms)
+✔ one correlated real-adapter dispatch, duplicate replay and uncertain reconnect preserve room (23.927708ms)
+✔ wrong readiness job cannot accept (1.191125ms)
+✔ wrong readiness nonce cannot accept (0.743375ms)
+✔ wrong readiness participant cannot accept (0.65675ms)
+✔ wrong readiness track cannot accept (0.634791ms)
+✔ wrong readiness muted cannot accept (0.591083ms)
+✔ wrong readiness extra_audio cannot accept (0.578709ms)
+✔ wrong readiness room cannot accept (0.572584ms)
+✔ wrong readiness worker cannot accept (0.465875ms)
+✔ wrong readiness dispatch cannot accept (5.207625ms)
+✔ wrong readiness ended cannot accept (0.716459ms)
+✔ wrong readiness disconnected cannot accept (0.567417ms)
+✔ rejected room create remains debt through receipt reopen and initially absent inspection (130.233292ms)
+✔ uncertain dispatch rejection and absent room never settle the operation (1.945875ms)
+✔ cancel while combined room/dispatch creation is in flight cleans the late acknowledged job (4.938459ms)
+✔ foreign room replacement is never deleted (0.67225ms)
+✔ delete failure and vanished room with running job retain cleanup debt (0.858333ms)
+✔ unverifiable connected state disables admission without effects (0.095584ms)
+✔ receipt from another deployment or instance never authorizes cleanup (0.528125ms)
+✔ proven pre-send room validation settles both unsent effects after reopen (145.993ms)
+✔ proven unsent room clears debt without invoking fetch or inventing an acknowledgment (0.8465ms)
+✔ lookalike RangeError after fetch retains debt and sanitized uncertain diagnostics (1.551375ms)
+✔ not-sent phase requires evidence; historical ambiguous receipts cannot be reclassified (0.411625ms)
+✔ failed evidence persistence cannot advance the in-memory receipt (233.484125ms)
+✔ extra unnamed service dispatch blocks readiness even with a fully matching isolated publication (1.602667ms)
+✔ room delete acknowledgment followed by stale inventory and dispatch 404 verifies cleanup (1.757917ms)
+✔ combined creation journals dispatch intent before sending and never explicitly redispatches (2.897416ms)
+✔ configured topology rejects unexpected extra_job (0.697292ms)
+✔ configured topology rejects unexpected video_publisher (154.413292ms)
+✔ configured topology rejects unexpected deployment (1.295208ms)
+✔ configured topology rejects unexpected restart (0.746291ms)
+✔ late assignment after cancellation is correlated, stopped and never accepted (1.591792ms)
+✔ durable terminal receipts survive reopen and worker shutdown after stale_inventory (520.915333ms)
+✔ durable terminal receipts survive reopen and worker shutdown after delete_unavailable (549.484666ms)
+✔ acknowledged deletion does not clear debt on plain404 (2.212583ms)
+✔ acknowledged deletion does not clear debt on auth (1.673333ms)
+✔ acknowledged deletion does not clear debt on timeout (1.560625ms)
+✔ acknowledged deletion does not clear debt on management_unavailable (1.187917ms)
+✔ acknowledged deletion does not clear debt on replacement (0.765084ms)
+✔ terminal observation is durable before a management failure and needs no retired hook on retry (1.241125ms)
+✔ cancellation of a not-yet-assigned dispatch persists tombstone and verified deletion (0.973833ms)
+✔ readiness diagnostics retain nonce rejection when listed job room is omitted (0.414458ms)
+✔ SDK dispatch decoding preserves omission versus contradiction under the room correlation contract (1.047667ms)
+✔ omitted listed job room accepts only a correlated owned dispatch and persists assignment before token (1.496292ms)
+✔ room correlation refuses nested_wrong even when the listed job omits room (0.42825ms)
+✔ room correlation refuses nested_empty even when the listed job omits room (1.911542ms)
+✔ room correlation refuses parent_room even when the listed job omits room (0.503917ms)
+✔ room correlation refuses hook_dispatch_missing even when the listed job omits room (0.435625ms)
+✔ room correlation refuses hook_dispatch_wrong even when the listed job omits room (0.350208ms)
+✔ room correlation refuses job_dispatch even when the listed job omits room (0.332958ms)
+✔ room correlation refuses job_id even when the listed job omits room (0.403417ms)
+✔ room correlation refuses hook_room even when the listed job omits room (0.304125ms)
+✔ room correlation refuses hook_marker even when the listed job omits room (0.296708ms)
+✔ room correlation refuses hook_nonce even when the listed job omits room (0.315791ms)
+✔ omitted job room cannot bypass deadline during actual preparation (0.616458ms)
+✔ omitted job room cannot bypass room_sid during actual preparation (0.770417ms)
+✔ omitted job room cannot bypass room_marker during actual preparation (0.325458ms)
+✔ omitted job room cannot bypass nested_wrong during actual preparation (154.374333ms)
+✔ omitted job room cannot bypass hook_dispatch during actual preparation (155.062084ms)
+✔ pinned SDK accepts fractional remaining budget without a pre-network timeout error (3.502583ms)
+✔ subsecond budget fails before any SDK request rather than extending deadline (0.274417ms)
+✔ original fractional timeout throws before fetch; integer budget reaches fetch (0.877125ms)
+✔ same rounded elapsed time can leave integer or fractional original Budget values (0.110792ms)
+✔ integer original timeout can be followed by service rejection or lost response (0.609416ms)
+✔ runtime/config validation and timeout conversion precede SDK effects (0.311791ms)
+✔ pre-send proof binds operation, room and exact input; error codes alone confer nothing (0.253667ms)
+✔ CreateRoom explicitly configures the only intended dispatch, including deployment and no restart (0.595042ms)
+✔ receiver-free init defaults to BYOR and generates a trusted callback without LiveKit or a hook (312.827375ms)
+✔ BYOR transport carries a pinned mode and explicit duration beyond the prototype ceiling (2.385875ms)
+✔ explicit create-room startup stays idle and legacy run remains distinct from v2 mode (1530.674125ms)
+✔ installed BYOR tarball serves a clean application without a receiver, coalesces requests and recovers without any wrapper LiveKit operations (5983.303458ms)
+✔ compiled chert executable provides help without configuration or credentials (178.353916ms)
+✔ usage errors are JSON and sanitized: login (103.295875ms)
+✔ usage errors are JSON and sanitized: init (118.694875ms)
+✔ usage errors are JSON and sanitized: init --config (105.101083ms)
+✔ usage errors are JSON and sanitized: run --config (108.61825ms)
+✔ init is private, exclusive, non-allocating and never saves environment values (326.783666ms)
+✔ config rejects unknown_key before effects (293.090542ms)
+✔ config rejects secret_value before effects (241.920167ms)
+✔ config rejects wrong_version before effects (260.534875ms)
+✔ config rejects remote_hook before effects (239.568459ms)
+✔ config rejects relative_state before effects (236.585709ms)
+✔ config rejects url_credentials before effects (249.643875ms)
+✔ config rejects unsafe_permissions before effects (221.757209ms)
+✔ config rejects symlink before effects (233.445209ms)
+✔ unsupported Node rejects before reading config or printing supplied input (24.173292ms)
+✔ check separates available health from authorization and allocates nothing (247.928375ms)
+✔ check separates unavailable health from authorization and allocates nothing (221.804875ms)
+✔ check separates unknown health from authorization and allocates nothing (230.759042ms)
+✔ check separates stale health from authorization and allocates nothing (219.674333ms)
+✔ check separates signature health from authorization and allocates nothing (220.192ms)
+✔ check separates missing_credentials health from authorization and allocates nothing (204.370667ms)
+✔ status is read-only and marks saved observations non-live; unsafe state refuses runtime (323.240292ms)
+✔ development SDK override cannot use a non-loopback destination (0.271833ms)
+✔ version works without configuration (90.97625ms)
+✔ init schema rejects a development backend that points outside literal loopback (102.586958ms)
+✔ programmatic config writer applies the same strict schema (2.112042ms)
+✔ orphaned adapter evidence blocks a new runtime journal (215.006083ms)
+✔ hosted enrollment configuration accepts encrypted origins without activating (2.783542ms)
+✔ hosted diagnostics distinguish HTTP 403 (26.27675ms)
+✔ hosted diagnostics distinguish HTTP 503 (0.77775ms)
+✔ hosted diagnostics reject a credential bound to another scope (1.16525ms)
+✔ hosted configuration rejects plaintext signaling (0.932666ms)
+✔ packed npm artifact installs with production dependencies only and runs the fixture lifecycle outside the checkout (5164.635084ms)
+✔ reconciliation malformed never settles uncertainty or follows redirects (38.354542ms)
+✔ reconciliation oversized never settles uncertainty or follows redirects (4.399333ms)
+✔ reconciliation forbidden never settles uncertainty or follows redirects (1.720792ms)
+✔ reconciliation unavailable never settles uncertainty or follows redirects (3.892916ms)
+✔ reconciliation redirect never settles uncertainty or follows redirects (1.513334ms)
+✔ development process fetch policy rejects non-loopback network before invoking fetch (0.475875ms)
+✔ CLI actual adapter traverses HTTP/WS, commits once, acknowledges terminal and cleans; status does not take writer lock (2352.924833ms)
+✔ interrupt preserves possibly accepted work; reopened runtime reconciles without redispatch (1972.158292ms)
+✔ disconnect preserves possibly accepted work; reopened runtime reconciles without redispatch (1830.621375ms)
+✔ lost_receipt preserves possibly accepted work; reopened runtime reconciles without redispatch (1672.152041ms)
+✔ interrupt during preparation joins local completion and cleans only its owned late room (484.523084ms)
+✔ unavailable agent declines with no SDK allocations while runtime remains connected (271.304333ms)
+✔ failed relay authorization is actionable and releases its new local writer (222.471167ms)
+✔ a stale crash lock is never automatically removed or used as permission to discard evidence (418.937958ms)
+✔ foreign binding cannot reopen an existing journal (359.539125ms)
+✔ SDK malformed failure stays local and never logs raw error bodies (311.436375ms)
+✔ SDK redirect failure stays local and never logs raw error bodies (309.64525ms)
+✔ connector forwards only adapter-provided call-scoped bridge credentials (6.981667ms)
+✔ BYOR coalesces preparation, carries 600s lifetime, rejects conflicts and records no wrapper resources or credentials (11.887709ms)
+✔ late preparation after timeout stays uncertain, never prepares twice, and can clean after terminal recovery (1.824084ms)
+✔ rejected local preparation and absent resources do not establish operation settlement (3.865958ms)
+✔ lost acceptance and journal reopen reconcile original operation; lifecycle ack alone leaves cleanup debt (422.575417ms)
+✔ missing recovery and application acknowledgment retain exact limitations; foreign and stale frames fail closed (1.675292ms)
+✔ invalid credentials decline without persisting secret values or assuming cleanup (0.51ms)
+✔ expiry during failed reconciliation never clears uncertain acceptance or invents terminal state (0.550417ms)
+✔ authoritative terminal before incoming suppresses preparation and remains debt-free (0.209959ms)
+✔ terminal cleanup during an in-flight reconciliation is not undone by its stale accepted result (0.744208ms)
+✔ application lifecycle replay after reopen uses the durable event identity (283.236167ms)
+✔ completed preparation duplicates cannot reuse credentials after the original deadline (0.648875ms)
+✔ clock rollback cannot renew final or preparation budgets (0.40575ms)
+✔ signed smaller remaining budget and queue delay are charged (0.063291ms)
+✔ invalid ordering and excessive future skew fail closed (0.191583ms)
+✔ 4s preparation and 5s final boundaries are exclusive (0.051584ms)
+✔ resource expiry retains its monotonic cap across rollback before allocation (0.05775ms)
+✔ completed terminal call stays debt-free at wall expiry during throw reconciliation (7.99025ms)
+✔ completed terminal call stays debt-free at wall expiry during unknown reconciliation (0.815417ms)
+✔ completed terminal call stays debt-free at wall expiry during forbidden reconciliation (0.669291ms)
+✔ completed terminal call stays debt-free at wall expiry during not_found reconciliation (1.771375ms)
+✔ completed terminal call stays debt-free at monotonic expiry during throw reconciliation (0.730834ms)
+✔ completed terminal call stays debt-free at monotonic expiry during unknown reconciliation (0.53475ms)
+✔ completed terminal call stays debt-free at monotonic expiry during forbidden reconciliation (0.498834ms)
+✔ completed terminal call stays debt-free at monotonic expiry during not_found reconciliation (0.530875ms)
+✔ completed terminal journal reopens after expiry without writes or dependency on authority/management (308.305958ms)
+✔ authoritative decline with verified cleanup also stays complete after expiry (0.766125ms)
+✔ accepted still reconciles and retains debt across failed expiry reconciliation (1.08775ms)
+✔ uncertain still reconciles and retains debt across failed expiry reconciliation (0.72675ms)
+✔ local_departure still reconciles and retains debt across failed expiry reconciliation (0.709ms)
+✔ terminal but unsettled creation retains debt and reconciliation through expiry (0.716083ms)
+✔ terminal but unverified cleanup is never treated as completed at expiry (0.524875ms)
+✔ reconciliation started before terminal cleanup cannot reopen completed debt when its read returns (0.434875ms)
+✔ exclusive writer and live-lock recovery fail closed without touching data (69.296875ms)
+✔ atomic journal before_rename leaves a complete old or new snapshot (96.093708ms)
+✔ atomic journal after_rename leaves a complete old or new snapshot (128.48425ms)
+✔ corrupt, wrong-scope and extra secret-bearing journal fields fail closed (95.438333ms)
+✔ SIGKILL after intent: reopen without retry or delete-all (201.830583ms)
+✔ SIGKILL after prepared: reopen without retry or delete-all (258.821333ms)
+✔ SIGKILL after decision_sent: reopen without retry or delete-all (313.905083ms)
+✔ lifecycle is durable before ack; failed write cannot acknowledge or delete (246.896541ms)
+✔ pre-incoming terminal tombstone survives file close and reopen (154.477459ms)
+✔ rejected local preparation retains remote create debt (225.780959ms)
+✔ rejected local preparation retains remote create debt after journal reopen (159.047208ms)
+✔ real HTTP → WS → HTTP plus separate committed receipt and lifecycle ack (337.675792ms)
+✔ loopback destination policy rejects external addresses, credentials and schemes (0.291375ms)
+✔ HTTP verifies exact signed bytes, not parsed/reserialized JSON (138.49525ms)
+✔ handshake requires mapped credentials and denies query-token authorization (49.935ms)
+✔ bounded HTTP and WebSocket rejection: malformed (24.87725ms)
+✔ bounded HTTP and WebSocket rejection: version (44.940417ms)
+✔ bounded HTTP and WebSocket rejection: oversized (75.12075ms)
+✔ HTTP cancellation records authoritative terminality and cleans late readiness (311.1365ms)
+✔ dropped commit receipt preserves resources, socket closure and reconnect reconcile without dispatch (444.567ms)
+✔ socket closure during preparation stops new work, reconnect declines interrupted request (299.706ms)
+✔ lost lifecycle delivery and lost ack converge through reconcile and replay (311.981834ms)
+✔ tenant routing never forwards a call to another authenticated tenant (133.464125ms)
+✔ transient bridge secret is absent from durable files and diagnostics (100.546875ms)
+✔ signed HTTP tenant/request substitution and revoked owner fail before allocation (24.931167ms)
+✔ concurrent identical incoming HTTP requests keep the connector usable after both decisions (132.875958ms)
+✔ conflicting duplicate decision action is rejected without another commit (226.620958ms)
+✔ conflicting duplicate decision participant_token is rejected without another commit (224.973917ms)
+✔ conflicting duplicate decision remote_participant_identity is rejected without another commit (173.910042ms)
+✔ conflicting incoming duplicate does not alter the legitimate pending request (109.440583ms)
+✔ late HTTP retry reconciles instead of resending an acceptance or disconnecting (111.733333ms)
+✔ foreign duplicate decision project_id cannot use a completed request (51.412375ms)
+✔ foreign duplicate decision line_id cannot use a completed request (58.189917ms)
+✔ foreign duplicate decision instance_id cannot use a completed request (56.355792ms)
+✔ foreign duplicate decision request_id cannot use a completed request (62.026417ms)
+✔ stale duplicate decision cannot cross a connection generation (124.710417ms)
+✔ revoked credential cannot bypass authentication with a matching duplicate decision (46.328291ms)
+✔ matching duplicate decision never renews the original deadline under rollback (66.344959ms)
+✔ health stale/replay/mismatch and unauthenticated signals never refresh admission (5.916042ms)
+✔ availability recovery respects activation and local standby cannot replace production (0.304083ms)
+✔ deadline transit and retry cannot prepare past the original boundary (3.290375ms)
+✔ reconnect rejects old generation without dispatching or resending acceptance (1.3035ms)
+✔ accepted calls survive relay loss, stale health and revocation, recovery scope is read-only (1.179916ms)
+✔ ambiguous create never retries and unknown management retains debt (0.689083ms)
+✔ cleanup debt survives deletion failure and exact marker protects unrelated objects (2.964708ms)
+✔ lifecycle duplicates, cursor gaps and delayed starts cannot resurrect terminal work (1.03375ms)
+✔ initial bridge absence is harmless, verified departure after presence cleans exact resources (0.636417ms)
+✔ independent hard expiry and connector expiry preserve debt during authority outage (0.864125ms)
+✔ periodic reconciliation recovers a missing terminal event (0.438541ms)
+✔ drain holds old ownership until both active calls and cleanup debt reach zero (0.484417ms)
+✔ decline response is not held hostage by slow deletion (0.241542ms)
+✔ reopened connector never treats in-flight external create absence as settled deletion (0.3345ms)
+✔ failed intent persistence allocates nothing; failed fake commit cannot report acceptance (0.252125ms)
+✔ create collision never adopts or overwrites a foreign resource (0.237417ms)
+✔ terminal cancellation delivered before incoming persists a no-allocation tombstone (0.323333ms)
+✔ terminal lifecycle before incoming is acknowledged durably and prevents late preparation (0.12875ms)
+✔ idle unknown health allocates nothing (5.843083ms)
+✔ idle unavailable health allocates nothing (0.238333ms)
+✔ idle full health allocates nothing (0.159667ms)
+✔ idle draining health allocates nothing (0.138417ms)
+✔ fast available agent prepares once and only receipt settles acceptance (2.805083ms)
+✔ duplicates share preparation and semantic conflicts cannot allocate (0.836334ms)
+✔ uncancellable late allocation after preparation timeout is deleted exactly (2.331917ms)
+✔ commit rechecks clock and revocation after waiting on serialized lock (1.056083ms)
+✔ concurrent identical replies commit one decision (3.730375ms)
+✔ fence project_id before disclosure or commit (0.359584ms)
+✔ fence line_id before disclosure or commit (0.239375ms)
+✔ fence binding_id before disclosure or commit (0.224333ms)
+✔ fence binding_epoch before disclosure or commit (0.21975ms)
+✔ fence instance_id before disclosure or commit (0.213209ms)
+✔ fence connection_generation before disclosure or commit (0.19775ms)
+✔ fence call_id before disclosure or commit (3.800208ms)
+✔ fence request_id before disclosure or commit (0.32025ms)
+✔ readiness rejects mismatched participant (0.263666ms)
+✔ readiness rejects mismatched job (0.198125ms)
+✔ readiness rejects mismatched nonce (0.191584ms)
+✔ readiness rejects mismatched room (0.195209ms)
+✔ readiness rejects mismatched publishers (0.202625ms)
+✔ lost receipt and unavailable reconciliation preserve uncertain media (0.570542ms)
+✔ terminal cancellation aborts readiness, late completion cannot resurrect (0.406209ms)
+✔ incoming project_id injection has zero allocation effects (0.093708ms)
+✔ incoming line_id injection has zero allocation effects (0.069541ms)
+✔ incoming binding_id injection has zero allocation effects (0.054459ms)
+✔ incoming binding_epoch injection has zero allocation effects (0.054083ms)
+✔ incoming instance_id injection has zero allocation effects (0.051958ms)
+✔ incoming connection_generation injection has zero allocation effects (0.049667ms)
+✔ immutable deadlines remain conflicting even with fresh transport metadata (0.215125ms)
+✔ authoritative decline for a non-allocating health rejection records a tombstone without disconnecting (0.389583ms)
+ℹ tests 263
+ℹ suites 0
+ℹ pass 263
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10389.805625
+Exit code: 0
+
+Node 24: npm run proof:transport
+
+> chert-local-transport-proof@0.0.0 proof:transport
+> node dist/tests/proof.js
+
+{
+  "schema_version": 1,
+  "ok": true,
+  "kind": "private_synthetic_loopback",
+  "node": "v24.14.0",
+  "sample_count": 20,
+  "commits": 20,
+  "effects": {
+    "rooms": 20,
+    "jobs": 20,
+    "providers": 20,
+    "deleted": 20
+  },
+  "remaining_resources": 0,
+  "remaining_debt": 0,
+  "configured_budgets_ms": {
+    "preparation": 4000,
+    "authority_commit": 5000,
+    "real_mac_context_only": 6000
+  },
+  "latency": {
+    "request_ms": {
+      "count": 20,
+      "p50": 9.267,
+      "p95": 11.051,
+      "max": 12.073
+    },
+    "preparation_ms": {
+      "count": 20,
+      "p50": 18.07,
+      "p95": 20.346,
+      "max": 22.318
+    },
+    "response_ms": {
+      "count": 20,
+      "p50": 0.702,
+      "p95": 1.821,
+      "max": 3.412
+    },
+    "commit_ms": {
+      "count": 20,
+      "p50": 4.293,
+      "p95": 4.893,
+      "max": 5.023
+    },
+    "total_ms": {
+      "count": 20,
+      "p50": 32.488,
+      "p95": 38.948,
+      "max": 39.905
+    }
+  },
+  "limitations": [
+    "No real LiveKit, provider, Mac, TLS, database or deployed relay verification."
+  ]
+}
+Exit code: 0

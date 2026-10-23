@@ -1,0 +1,132 @@
+{
+  "id": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5",
+  "name": "chert-facetime-control-plane",
+  "accountId": "team_Z3LEzgyI0Ki1wEurc5kaLy01",
+  "rootDirectory": "control-plane",
+  "nodeVersion": "24.x",
+  "commandForIgnoringBuildStep": "exit 0",
+  "link": {
+    "type": "github",
+    "repo": "chert-facetime",
+    "org": "cherthq",
+    "productionBranch": "main"
+  },
+  "targets": {
+    "production": {
+      "id": "dpl_5hvNa9Bhou2n747iqoNfT5o5CZTb",
+      "url": "chert-facetime-control-plane-6b1tu8aqy-chert-technologies.vercel.app",
+      "readyState": "CANCELED"
+    },
+    "preview": {
+      "id": "dpl_2ZWe7YPTxqc5f6Xhcvfa5BesJvaZ",
+      "url": "chert-facetime-control-plane-a4zrujqpt-chert-technologies.vercel.app",
+      "readyState": "BLOCKED"
+    }
+  },
+  "env": [
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787062467364
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787062468875
+    },
+    {
+      "key": "SUPABASE_SECRET_KEY",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787062470384
+    },
+    {
+      "key": "FACETIME_CREDENTIAL_PEPPER",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787062472040
+    },
+    {
+      "key": "FACETIME_DESTINATION_ENCRYPTION_KEY",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787062473570
+    },
+    {
+      "key": "FACETIME_DESTINATION_KEY_VERSION",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787062475135
+    },
+    {
+      "key": "FACETIME_TEST_PROJECT",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787062476750
+    },
+    {
+      "key": "CRON_SECRET",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive",
+      "updatedAt": 1787839816414
+    },
+    {
+      "key": "CHERT_READINESS_EVIDENCE_MAX_AGE_HOURS",
+      "target": [
+        "production"
+      ],
+      "type": "encrypted",
+      "updatedAt": 1787857098477
+    },
+    {
+      "key": "CHERT_AUDIT_ALERT_TO",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive",
+      "updatedAt": 1790009591650
+    },
+    {
+      "key": "CHERT_AUDIT_CONSOLE_ORIGIN",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive",
+      "updatedAt": 1790000477191
+    },
+    {
+      "key": "RESEND_API_KEY",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive",
+      "updatedAt": 1790009591650
+    },
+    {
+      "key": "CHERT_AUDIT_ALERT_FROM",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive",
+      "updatedAt": 1790009591650
+    }
+  ]
+}

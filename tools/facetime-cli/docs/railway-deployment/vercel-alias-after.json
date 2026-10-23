@@ -1,0 +1,9 @@
+{
+  "alias": "facetime.trychert.com",
+  "deploymentId": "dpl_CaaB7JWXnBi7w6dYzZPz4METHBks",
+  "deployment": {
+    "id": "dpl_CaaB7JWXnBi7w6dYzZPz4METHBks",
+    "url": "chert-facetime-control-plane-ktlll30lu-chert-technologies.vercel.app"
+  },
+  "projectId": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5"
+}

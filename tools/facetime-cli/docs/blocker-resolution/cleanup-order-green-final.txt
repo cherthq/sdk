@@ -1,0 +1,13 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/session-cleanup-ordering.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/blocker-resolution/candidate/control-plane
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  22:47:54
+   Duration  6.12s (transform 17ms, setup 9ms, import 14ms, tests 6.03s, environment 0ms)
+

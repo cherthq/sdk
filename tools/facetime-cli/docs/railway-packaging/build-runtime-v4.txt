@@ -1,0 +1,90 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 3.03kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [node 1/1] FROM docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#5 resolve docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9 done
+#5 DONE 0.0s
+
+#6 [build  1/11] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#6 resolve docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 1.91kB done
+#7 DONE 0.0s
+
+#8 [production  8/10] COPY runtime/runtime.py runtime/node.mjs runtime/state.mjs runtime/
+#8 CACHED
+
+#9 [build  8/11] COPY application/connector/handler.ts handler/handler.ts
+#9 CACHED
+
+#10 [build 10/11] COPY runtime/requirements-amd64.lock ./requirements.lock
+#10 CACHED
+
+#11 [build  7/11] RUN npm ci --ignore-scripts --no-audit --no-fund
+#11 CACHED
+
+#12 [production  6/10] COPY application/receiver/src application/receiver/src
+#12 CACHED
+
+#13 [production  7/10] COPY application/connector/*.py application/connector/
+#13 CACHED
+
+#14 [build  2/11] COPY --from=node /usr/local/bin/node /usr/local/bin/node
+#14 CACHED
+
+#15 [build  6/11] COPY package.json package-lock.json cli.tgz ./
+#15 CACHED
+
+#16 [build 11/11] RUN python -m pip download --require-hashes --only-binary=:all: --no-deps -r requirements.lock -d /wheels && sha256sum /wheels/* > python-wheels.sha256 && python -m pip install --require-hashes --no-index --find-links=/wheels --no-deps --target=/python -r requirements.lock
+#16 CACHED
+
+#17 [production  4/10] COPY --from=build /opt/chert-pilot/railway-20260930-r1 /opt/chert-pilot/railway-20260930-r1
+#17 CACHED
+
+#18 [build  5/11] WORKDIR /opt/chert-pilot/railway-20260930-r1
+#18 CACHED
+
+#19 [production  3/10] COPY --from=build /python /usr/local/lib/python3.12/site-packages
+#19 CACHED
+
+#20 [build  3/11] COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+#20 CACHED
+
+#21 [build  9/11] RUN ./node_modules/.bin/tsc handler/handler.ts --outDir handler --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck --types node && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
+#21 CACHED
+
+#22 [production  9/10] COPY inputs.json ./inputs.json
+#22 CACHED
+
+#23 [production  5/10] WORKDIR /opt/chert-pilot/railway-20260930-r1
+#23 CACHED
+
+#24 [build  4/11] RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+#24 CACHED
+
+#25 [production 10/10] RUN groupadd --gid 10001 chert && useradd --uid 10001 --gid 10001 --no-create-home --home-dir /nonexistent chert && chmod -R a-w /opt/chert-pilot
+#25 CACHED
+
+#26 exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:5a38ee8f8c5a705658a21a971061d3cb463e945fd8ec39b3c87a181f9a2a4099 done
+#26 exporting config sha256:c2092cc350986b1e43bbc45219a6b6f9c59b3c1009ee0097af50bf7ae8985228 done
+#26 exporting attestation manifest sha256:a9952bb192cbec6eeb7b50b7b91cc73c3a836fd42e71f373e3fa2549ebc363e9 done
+#26 exporting manifest list sha256:267de99513f72ce1c9044ac6cdaba3147c85d9f052ee3645984277382c1f45cf done
+#26 naming to docker.io/library/chert-railway:20260930-r1 done
+#26 DONE 0.0s

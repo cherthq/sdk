@@ -1,0 +1,23 @@
+[
+  {
+    "service_id": "03e04d92-fec4-461d-ada2-30add42ee8ea",
+    "result": {
+      "serviceDelete": true
+    },
+    "at": "2026-09-30T13:10:41.851572+00:00"
+  },
+  {
+    "service_id": "d165968f-20f5-4d47-aa59-7dbe7fa3490b",
+    "result": {
+      "serviceDelete": true
+    },
+    "at": "2026-09-30T13:10:47.412430+00:00"
+  },
+  {
+    "volume_id": "4e26cff0-5b63-44fe-a605-a18b245c6a38",
+    "result": {
+      "volumeDelete": true
+    },
+    "at": "2026-09-30T13:10:48.679016+00:00"
+  }
+]

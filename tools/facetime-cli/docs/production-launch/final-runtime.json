@@ -1,0 +1,237 @@
+{
+  "at": "2026-09-30T20:35:29.989256+00:00",
+  "files": {
+    "runtime/runtime.py": "74a56aaecc42e09eeab9f8226ba1eeb3f2de0abf6629d0cc6abd636048b0a1ac",
+    "runtime/node.mjs": "53a7635966405ed0bf2fcde33cc71e3074d8692bc55ed35e6cd9644d58fe37e4",
+    "runtime/state.mjs": "1c3c27bc642f10e08db8efd3268fefc8e5603214a0203558f75b33dc2e663808",
+    "application/connector/server.py": "8ce3fdfcb0bea5fde5b8994714b967a5e406a0602e68604befe64aa1dfac556a",
+    "application/connector/ready_owner.py": "facfbaf2b12119e47a5e1533e1ca13f9d945a9678bb9f53643ae6b5ce090aab0",
+    "application/connector/ready_adapter.py": "d9f0f2a1142baa8f48ff8ec56630923d63af72fc42353baab274c53be25a33cc",
+    "inputs.json": "11484713f4e57f3f0f3c6e32936e89c4d2f3d5a474d19649edb873ac5b19323a"
+  },
+  "processes": [
+    {
+      "pid": 1,
+      "cmd": "/run/podman-init -- /usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /opt/chert-pilot/railway-20260930-r1/runtime/runtime.py run ",
+      "uid": 10001,
+      "env_names": [
+        "CHERT_AGENT_RUN_MODE",
+        "CHERT_CAPACITY",
+        "CHERT_CONFIG_REVISION",
+        "CHERT_CONNECTION_TOKEN",
+        "CHERT_INBOUND_ENABLED",
+        "CHERT_JOURNAL_PATH",
+        "CHERT_MANUAL_ENABLED",
+        "CHERT_NAMESPACE",
+        "CHERT_RECOVERY_TOKEN",
+        "CHERT_RESOURCE_TTL_SECONDS",
+        "CHERT_SOURCE_SHA",
+        "CHERT_TOKEN_TTL_SECONDS",
+        "CHERT_WEBHOOK_ROUTES_JSON",
+        "GPG_KEY",
+        "HOME",
+        "HOSTNAME",
+        "LANG",
+        "LIVEKIT_API_KEY",
+        "LIVEKIT_API_SECRET",
+        "LIVEKIT_URL",
+        "PATH",
+        "PILOT_VOLUME_ID",
+        "PORT",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONUNBUFFERED",
+        "PYTHON_SHA256",
+        "PYTHON_VERSION",
+        "RAILWAY_BETA_ENABLE_RUNTIME_V2",
+        "RAILWAY_DEPLOYMENT_DRAINING_SECONDS",
+        "RAILWAY_DEPLOYMENT_ID",
+        "RAILWAY_DEPLOYMENT_OVERLAP_SECONDS",
+        "RAILWAY_ENVIRONMENT",
+        "RAILWAY_ENVIRONMENT_ID",
+        "RAILWAY_ENVIRONMENT_NAME",
+        "RAILWAY_GIT_REPO_OWNER",
+        "RAILWAY_PRIVATE_DOMAIN",
+        "RAILWAY_PROJECT_ID",
+        "RAILWAY_PROJECT_NAME",
+        "RAILWAY_PUBLIC_DOMAIN",
+        "RAILWAY_REPLICA_ID",
+        "RAILWAY_REPLICA_REGION",
+        "RAILWAY_RUN_UID",
+        "RAILWAY_SERVICE_ID",
+        "RAILWAY_SERVICE_NAME",
+        "RAILWAY_SERVICE_TALKING_HEAD_WEBHOOK_URL",
+        "RAILWAY_SNAPSHOT_ID",
+        "RAILWAY_STATIC_URL",
+        "RAILWAY_VOLUME_ID",
+        "RAILWAY_VOLUME_MOUNT_PATH",
+        "RAILWAY_VOLUME_NAME"
+      ]
+    },
+    {
+      "pid": 2,
+      "cmd": "/usr/local/bin/python /opt/chert-pilot/railway-20260930-r1/runtime/runtime.py run ",
+      "uid": 10001,
+      "env_names": [
+        "CHERT_AGENT_RUN_MODE",
+        "CHERT_CAPACITY",
+        "CHERT_CONFIG_REVISION",
+        "CHERT_CONNECTION_TOKEN",
+        "CHERT_INBOUND_ENABLED",
+        "CHERT_JOURNAL_PATH",
+        "CHERT_MANUAL_ENABLED",
+        "CHERT_NAMESPACE",
+        "CHERT_RECOVERY_TOKEN",
+        "CHERT_RESOURCE_TTL_SECONDS",
+        "CHERT_SOURCE_SHA",
+        "CHERT_TOKEN_TTL_SECONDS",
+        "CHERT_WEBHOOK_ROUTES_JSON",
+        "GPG_KEY",
+        "HOME",
+        "HOSTNAME",
+        "LANG",
+        "LIVEKIT_API_KEY",
+        "LIVEKIT_API_SECRET",
+        "LIVEKIT_URL",
+        "PATH",
+        "PILOT_VOLUME_ID",
+        "PORT",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONUNBUFFERED",
+        "PYTHON_SHA256",
+        "PYTHON_VERSION",
+        "RAILWAY_BETA_ENABLE_RUNTIME_V2",
+        "RAILWAY_DEPLOYMENT_DRAINING_SECONDS",
+        "RAILWAY_DEPLOYMENT_ID",
+        "RAILWAY_DEPLOYMENT_OVERLAP_SECONDS",
+        "RAILWAY_ENVIRONMENT",
+        "RAILWAY_ENVIRONMENT_ID",
+        "RAILWAY_ENVIRONMENT_NAME",
+        "RAILWAY_GIT_REPO_OWNER",
+        "RAILWAY_PRIVATE_DOMAIN",
+        "RAILWAY_PROJECT_ID",
+        "RAILWAY_PROJECT_NAME",
+        "RAILWAY_PUBLIC_DOMAIN",
+        "RAILWAY_REPLICA_ID",
+        "RAILWAY_REPLICA_REGION",
+        "RAILWAY_RUN_UID",
+        "RAILWAY_SERVICE_ID",
+        "RAILWAY_SERVICE_NAME",
+        "RAILWAY_SERVICE_TALKING_HEAD_WEBHOOK_URL",
+        "RAILWAY_SNAPSHOT_ID",
+        "RAILWAY_STATIC_URL",
+        "RAILWAY_VOLUME_ID",
+        "RAILWAY_VOLUME_MOUNT_PATH",
+        "RAILWAY_VOLUME_NAME"
+      ]
+    },
+    {
+      "pid": 3,
+      "cmd": "/usr/local/bin/python /opt/chert-pilot/railway-20260930-r1/application/connector/server.py ",
+      "uid": 10001,
+      "env_names": [
+        "CHERT_AGENT_RUN_MODE",
+        "CHERT_DECISION_BUDGET_MS",
+        "CHERT_JOURNAL_PATH",
+        "CHERT_NAMESPACE",
+        "CHERT_RESOURCE_TTL_SECONDS",
+        "CHERT_SIGNING_ENABLED",
+        "CHERT_TOKEN_TTL_SECONDS",
+        "CHERT_WEBHOOK_ROUTES_JSON",
+        "HOME",
+        "LANG",
+        "LIVEKIT_API_KEY",
+        "LIVEKIT_API_SECRET",
+        "LIVEKIT_URL",
+        "PATH",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONPATH",
+        "PYTHONUNBUFFERED",
+        "TALKING_HEAD_ADMIN_SOCKET",
+        "TALKING_HEAD_CALLBACK_SOCKET",
+        "TALKING_HEAD_OPERATION_JOURNAL"
+      ]
+    },
+    {
+      "pid": 78,
+      "cmd": "/usr/local/bin/node /opt/chert-pilot/railway-20260930-r1/runtime/node.mjs byor --config /state/chert-pilot/connector/config.json --json ",
+      "uid": 10001,
+      "env_names": [
+        "CHERT_CONNECTION_TOKEN",
+        "CHERT_RECOVERY_TOKEN",
+        "HOME",
+        "LANG",
+        "PATH",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONUNBUFFERED",
+        "TALKING_HEAD_CALLBACK_SOCKET"
+      ]
+    }
+  ],
+  "state_modes": {
+    "/state/chert-pilot": {
+      "uid": 10001,
+      "mode": "0o700"
+    },
+    "/state/chert-pilot/application": {
+      "uid": 10001,
+      "mode": "0o700"
+    },
+    "/state/chert-pilot/connector": {
+      "uid": 10001,
+      "mode": "0o700"
+    },
+    "/state/chert-pilot/ipc": {
+      "uid": 10001,
+      "mode": "0o700"
+    },
+    "/state/chert-pilot/connector/config.json": {
+      "uid": 10001,
+      "mode": "0o600"
+    },
+    "/state/chert-pilot/application/operations.json": {
+      "uid": 10001,
+      "mode": "0o600"
+    }
+  },
+  "qualification_present": false,
+  "retired_hashes": {
+    "volume-id": "23af1ba3816b885dcce303b616dd334497ea3d12c08a1777f545f346a6f8e5fe",
+    "initialized": "df1f40337561c115a214c86f84b7656f0c361d02f814d3bc573bc97563567cbe",
+    "supervisor.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ipc/admin.sock.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ipc/owner.sock.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "connector/config.json": "72435f400e799de92c0a9baa935c3a57af8da11f03beed51f7566a51e661c71b",
+    "connector/journal.json": "b65ffd17a071f473273c5dc77c6d50dd01fc8e0fe3d928da12662667e8db16ac",
+    "application/operations.json": "9c19c7d0aaa94c75cd590135fd882adfab3db8b0a65c0f69b586cde5ebb28f87",
+    "application/resources.json": "820e78271c7d2b22ef64f2f4d292b3b5adac7e7759bba9244c4ac66a9dcdbddf",
+    "application/operations.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application/resources.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "health": {
+    "healthy": true,
+    "mode": "ready_slot_observed",
+    "session_readiness": "available",
+    "acceptance_authority": "per_call_validation_required",
+    "processes": {
+      "owner": "running",
+      "node": "running"
+    },
+    "ipc": true,
+    "connector_connected": true,
+    "continuous": "ready"
+  },
+  "authority": {
+    "scope": {
+      "line_id": "59b3e3d0-945b-45da-b907-027103941a65",
+      "binding_id": "bb0d9eef-a165-4e5f-bec1-a0dcad5c6f87",
+      "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+      "instance_id": "2d7104b6-9c32-4b69-90f0-005b540b607e",
+      "session_mode": "byor",
+      "binding_epoch": 1,
+      "connection_generation": 2
+    },
+    "state": "active",
+    "connected": true,
+    "recovery_only": false
+  }
+}

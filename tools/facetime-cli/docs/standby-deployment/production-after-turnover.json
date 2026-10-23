@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-09-30T20:35:30.086275+00:00",
+  "rooms": [
+    {
+      "name": "demo-byor-e8d6097bf2d9488ca2382836451222e7",
+      "sid": "RM_vTzmdPhmyLeU",
+      "metadata": "{\"callback_owner\": \"586b4c6969b94766ac1399c62d434537\"}",
+      "participants": 1,
+      "dispatches": [
+        {
+          "id": "AD_q38W27GfFKnF",
+          "agent_name": ""
+        },
+        {
+          "id": "AD_McrbYtHh9Y9T",
+          "agent_name": "demo-agent-0"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+# REVIEW TEMPLATE ONLY. Do not install until application qualification is complete.
+[Unit]
+Description=Chert FaceTime Test BYOR connector
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=chert-pilot
+Group=chert-pilot
+WorkingDirectory=/opt/chert-pilot/current
+EnvironmentFile=/etc/chert-pilot/connector.env
+ExecStart=/opt/node-v22.23.2/bin/node /opt/chert-pilot/current/node_modules/chert-local-transport-proof/dist/src/cli/main.js byor --config /var/lib/chert-pilot/byor-v1/config.json --json
+Restart=on-failure
+RestartPreventExitStatus=2 3 4 5
+RestartSec=5
+TimeoutStopSec=45
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/chert-pilot/byor-v1
+# No agent or warming unit dependency. Application owner is separately supervised.
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,1 @@
+{"pids": {"supervisor": 2, "owner": 75}, "frozen_at_epoch": 1790773071.406723, "purpose": "synthetic-only hung-process platform termination grace"}

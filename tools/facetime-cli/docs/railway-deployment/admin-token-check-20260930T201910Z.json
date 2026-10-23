@@ -1,0 +1,11 @@
+{
+  "observed_at": "2026-09-30T20:19:10.786390+00:00",
+  "credential_source": "/Users/garygao/chert-facetime/.env.local",
+  "source_variable": "CHERT_ADMIN_LOGIN_TOKEN",
+  "cli_variable": "CHERT_USER_ACCESS_TOKEN",
+  "credential_file_mode": "0600",
+  "file_permissions_tightened": false,
+  "projects_http_status": null,
+  "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+  "owner_admin_verified": false
+}

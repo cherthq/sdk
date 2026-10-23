@@ -1,0 +1,18 @@
+{
+  "id": "dpl_CaaB7JWXnBi7w6dYzZPz4METHBks",
+  "url": "chert-facetime-control-plane-ktlll30lu-chert-technologies.vercel.app",
+  "readyState": "READY",
+  "target": "production",
+  "regions": [
+    "iad1"
+  ],
+  "createdAt": 1790306686735,
+  "projectId": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5",
+  "gitSource": null,
+  "meta": {
+    "githubCommitSha": "cbb22ee854e26219aea92d67fa401433cdb4d84c",
+    "githubCommitRef": "main"
+  },
+  "nodeVersion": "24.x",
+  "observedAt": "2026-09-30T05:02:12.937308+00:00"
+}

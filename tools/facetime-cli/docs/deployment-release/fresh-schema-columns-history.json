@@ -1,0 +1,2913 @@
+{
+  "observed_at": "2026-09-30 04:57:58.350598+00",
+  "postgres_version": "17.6",
+  "connectors": null,
+  "history": [
+    {
+      "name": "0006_development_audio_authorization",
+      "version": "20260819205731"
+    },
+    {
+      "name": "0007_secure_call_transcripts",
+      "version": "20260820145658"
+    },
+    {
+      "name": "0008_b1_call_event_contract",
+      "version": "20260826044026"
+    },
+    {
+      "name": "0009_b1_event_ingestion_metadata",
+      "version": "20260826050138"
+    },
+    {
+      "name": "b2_session_lifecycle",
+      "version": "20260826115036"
+    },
+    {
+      "name": "b3_webhook_core",
+      "version": "20260826124951"
+    },
+    {
+      "name": "b3_webhook_core_append_only_fix",
+      "version": "20260826125312"
+    },
+    {
+      "name": "b3_webhook_core_registration_context",
+      "version": "20260826125628"
+    },
+    {
+      "name": "b3_webhook_core_registration_ownership",
+      "version": "20260826125721"
+    },
+    {
+      "name": "b3_webhook_core_wall_clock_created_at",
+      "version": "20260826130029"
+    },
+    {
+      "name": "b3_webhook_core_bounded_ingestion_time",
+      "version": "20260826130246"
+    },
+    {
+      "name": "b3_webhook_core_foreign_key_indexes",
+      "version": "20260826130922"
+    },
+    {
+      "name": "b3_webhook_core_endpoint_index",
+      "version": "20260826130934"
+    },
+    {
+      "name": "b4_sealed_credentials",
+      "version": "20260827024119"
+    },
+    {
+      "name": "additional_project_creation",
+      "version": "20260827142611"
+    },
+    {
+      "name": "project_livekit_allowed_hosts",
+      "version": "20260827142730"
+    },
+    {
+      "name": "0014_bw_session_lifecycle_amendment",
+      "version": "20260827183854"
+    },
+    {
+      "name": "heartbeat_rejection_evidence",
+      "version": "20260827185247"
+    },
+    {
+      "name": "incoming_webhook_decline_cleanup",
+      "version": "20260904024011"
+    },
+    {
+      "name": "start_bridge_failure_reconciliation",
+      "version": "20260904230436"
+    },
+    {
+      "name": "call_webhook_logical_idempotency",
+      "version": "20260905000847"
+    },
+    {
+      "name": "reconcile_expired_start_bridge_commands",
+      "version": "20260906023207"
+    },
+    {
+      "name": "line_integrations",
+      "version": "20260911131327"
+    },
+    {
+      "name": "line_integration_service_grants",
+      "version": "20260911140856"
+    },
+    {
+      "name": "line_integrations_release_transport",
+      "version": "20260911151650"
+    },
+    {
+      "name": "automatic_worker_readiness",
+      "version": "20260911213624"
+    },
+    {
+      "name": "dashboard_console",
+      "version": "20260911233536"
+    },
+    {
+      "name": "automatic_worker_readiness_release_transport",
+      "version": "20260912002808"
+    },
+    {
+      "name": "dashboard_console_release_transport",
+      "version": "20260912013442"
+    },
+    {
+      "name": "dashboard_media_observations",
+      "version": "20260912131914"
+    },
+    {
+      "name": "dashboard_recovery_qualification",
+      "version": "20260912142000"
+    },
+    {
+      "name": "readiness_dashboard_release_transport",
+      "version": "20260912144429"
+    },
+    {
+      "name": "guarded_worker_onboarding",
+      "version": "20260913044930"
+    },
+    {
+      "name": "guarded_worker_onboarding_release_transport",
+      "version": "20260913124823"
+    },
+    {
+      "name": "optional_webhook_signing",
+      "version": "20260915191852"
+    },
+    {
+      "name": "line_video_framing",
+      "version": "20260916002957"
+    },
+    {
+      "name": "project_user_management",
+      "version": "20260920010713"
+    },
+    {
+      "name": "device_agent_audits",
+      "version": "20260921142141"
+    },
+    {
+      "name": "outbound_byor_audio_compatible_release",
+      "version": "20260923192701"
+    },
+    {
+      "name": "outbound_byor_video",
+      "version": "20260924200520"
+    }
+  ],
+  "columns": [
+    {
+      "type": "uuid",
+      "table": "facetime_admin_audit",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_admin_audit",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_admin_audit",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_admin_audit",
+      "column": "action",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_admin_audit",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_api_keys",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_api_keys",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_api_keys",
+      "column": "name",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_api_keys",
+      "column": "key_prefix",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_api_keys",
+      "column": "key_hash",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text[]",
+      "table": "facetime_api_keys",
+      "column": "scopes",
+      "default": "ARRAY['facetime:read'::text]",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_api_keys",
+      "column": "created_by",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_api_keys",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_api_keys",
+      "column": "last_used_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_api_keys",
+      "column": "revoked_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_api_keys",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "run_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "device_label",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "kind",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "fingerprint",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_notifications",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_audit_notifications",
+      "column": "attempts",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_notifications",
+      "column": "next_attempt_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "state",
+      "default": "'pending'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "provider_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_notifications",
+      "column": "accepted_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "run_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_requests",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runners",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runners",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "credential_hash",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "host",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "approved_release",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_audit_runners",
+      "column": "enabled",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runners",
+      "column": "registered_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runners",
+      "column": "last_seen_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runners",
+      "column": "next_due_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runners",
+      "column": "last_scheduled_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runners",
+      "column": "last_claimed_slot",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "incident",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runners",
+      "column": "incident_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_audit_runners",
+      "column": "reminder_sent",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "approved_release",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "trigger",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "state",
+      "default": "'queued'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runs",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runs",
+      "column": "scheduled_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runs",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runs",
+      "column": "started_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runs",
+      "column": "lease_until",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "claim_token",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runs",
+      "column": "completed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_audit_runs",
+      "column": "received_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_audit_runs",
+      "column": "result",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "verdict",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_call_events",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_call_events",
+      "column": "call_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_call_events",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_call_events",
+      "column": "event_type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "facetime_call_events",
+      "column": "sequence",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_call_events",
+      "column": "payload",
+      "default": "'{}'::jsonb",
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_event_source",
+      "table": "facetime_call_events",
+      "column": "source",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_call_events",
+      "column": "source_event_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_call_events",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_call_events",
+      "column": "occurred_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_call_events",
+      "column": "worker_sequence",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_call_events",
+      "column": "terminal_reason",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_call_events",
+      "column": "terminal_reason_detail",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_call_transcripts",
+      "column": "call_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_call_transcripts",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_call_transcripts",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_call_transcripts",
+      "column": "schema_version",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_call_transcripts",
+      "column": "turns",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_call_transcripts",
+      "column": "content_hash",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_call_transcripts",
+      "column": "source_event_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_call_transcripts",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_call_direction",
+      "table": "facetime_calls",
+      "column": "direction",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_call_mode",
+      "table": "facetime_calls",
+      "column": "mode",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_calls",
+      "column": "media",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "assistant_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "assistant_version_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "line_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "identity_ciphertext",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "identity_type",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_calls",
+      "column": "identity_key_version",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "identity_retention_until",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "masked_identity",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "facetime_call_status",
+      "table": "facetime_calls",
+      "column": "status",
+      "default": "'queued'::facetime_call_status",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_calls",
+      "column": "media_status",
+      "default": "'{}'::jsonb",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "terminal_reason",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "idempotency_key",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "requested_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "detected_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "answered_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "active_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "ended_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "terminal_reason_detail",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "incoming_webhook_source_event_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_calls",
+      "column": "incoming_webhook_decision",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "integration_revision_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "facetime_calls",
+      "column": "integration_assignment_generation",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "facetime_inbound_policy",
+      "table": "facetime_calls",
+      "column": "resolved_inbound_policy",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text[]",
+      "table": "facetime_calls",
+      "column": "resolved_livekit_allowed_hosts",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "binding_disposition",
+      "default": "'legacy_unresolved'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_calls",
+      "column": "incoming_request_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "incoming_request_created_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_calls",
+      "column": "incoming_decision_deadline_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_calls",
+      "column": "incoming_request_data",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "video_framing",
+      "default": "'fit'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "outbound_request_fingerprint",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_configuration_audit",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_configuration_audit",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_configuration_audit",
+      "column": "resource_type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_configuration_audit",
+      "column": "resource_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_configuration_audit",
+      "column": "operation",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_configuration_audit",
+      "column": "previous_configuration",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_configuration_audit",
+      "column": "next_configuration",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_configuration_audit",
+      "column": "database_actor",
+      "default": "SESSION_USER",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_configuration_audit",
+      "column": "created_at",
+      "default": "clock_timestamp()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_development_windows",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_development_windows",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_development_windows",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_development_windows",
+      "column": "line_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_development_windows",
+      "column": "purpose",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_development_windows",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_development_windows",
+      "column": "consumed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_development_windows",
+      "column": "created_by",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_development_windows",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_integration_revisions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_integration_revisions",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_integration_revisions",
+      "column": "integration_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "facetime_integration_revisions",
+      "column": "generation",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_integration_revisions",
+      "column": "endpoint_url",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_integration_revisions",
+      "column": "payload_version",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text[]",
+      "table": "facetime_integration_revisions",
+      "column": "livekit_allowed_hosts",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_integration_revisions",
+      "column": "secret_version_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_integration_revisions",
+      "column": "secret_version",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_integration_revisions",
+      "column": "created_at",
+      "default": "clock_timestamp()",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_integration_revisions",
+      "column": "signing_enabled",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_lines",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_lines",
+      "column": "project_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_lines",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_lines",
+      "column": "line_key",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_lines",
+      "column": "display_name",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_lines",
+      "column": "masked_identity",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_lines",
+      "column": "identity_ciphertext",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "facetime_line_status",
+      "table": "facetime_lines",
+      "column": "status",
+      "default": "'offline'::facetime_line_status",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_lines",
+      "column": "current_call_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_lines",
+      "column": "default_assistant_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "facetime_inbound_policy",
+      "table": "facetime_lines",
+      "column": "inbound_policy",
+      "default": "'customer_decides'::facetime_inbound_policy",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_lines",
+      "column": "supports_audio",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_lines",
+      "column": "supports_video",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_lines",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_lines",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_lines",
+      "column": "integration_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "facetime_lines",
+      "column": "assignment_generation",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_lines",
+      "column": "video_framing",
+      "default": "'fit'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "call_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "line_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "observer_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "capability",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "kind",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "outcome",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "reason",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_media_observations",
+      "column": "observed_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_media_observations",
+      "column": "received_at",
+      "default": "clock_timestamp()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "build",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "device_binding",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "config_binding",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "runtime_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_media_observations",
+      "column": "recovery_qualified",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "target_user_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_membership_audit",
+      "column": "old_role",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_membership_audit",
+      "column": "new_role",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_membership_audit",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_platform_admins",
+      "column": "user_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_platform_admins",
+      "column": "granted_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_project_memberships",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_project_memberships",
+      "column": "user_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_project_memberships",
+      "column": "role",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_project_memberships",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_project_settings",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text[]",
+      "table": "facetime_project_settings",
+      "column": "livekit_allowed_hosts",
+      "default": "'{}'::text[]",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_project_settings",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_project_settings",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_projects",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "slug",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "name",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_projects",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_projects",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_projects",
+      "column": "crm_project_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "name_snapshot",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "status",
+      "default": "'enabled'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "website_domain",
+      "default": "''::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "logo_data",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_session_credential_seals",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_session_credential_seals",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_session_credential_seals",
+      "column": "session_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_session_credential_seals",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_session_credential_seals",
+      "column": "livekit_url_ciphertext",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_session_credential_seals",
+      "column": "participant_token_ciphertext",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_session_credential_seals",
+      "column": "token_fingerprint",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_session_credential_seals",
+      "column": "encryption_key_version",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_session_credential_seals",
+      "column": "token_expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_session_credential_seals",
+      "column": "lease_expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_session_credential_seals",
+      "column": "state",
+      "default": "'sealed'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_session_credential_seals",
+      "column": "consumed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_session_credential_seals",
+      "column": "deleted_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_session_credential_seals",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_sessions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_sessions",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_sessions",
+      "column": "call_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_sessions",
+      "column": "line_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_sessions",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_session_kind",
+      "table": "facetime_sessions",
+      "column": "kind",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_session_state",
+      "table": "facetime_sessions",
+      "column": "state",
+      "default": "'created'::facetime_session_state",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_sessions",
+      "column": "room_reference",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_sessions",
+      "column": "expected_participant_identity",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_sessions",
+      "column": "terminal_reason",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_sessions",
+      "column": "terminal_reason_detail",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "dispatched_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "active_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "ended_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "expired_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "failed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_sessions",
+      "column": "cleaned_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "webhook_event_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "attempt_number",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "secret_version",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "status",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "status_code",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "latency_ms",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "error",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "attempted_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "started_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "completed_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_delivery_attempts",
+      "column": "next_attempt_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_endpoints",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_endpoints",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_endpoints",
+      "column": "endpoint_url",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_webhook_endpoints",
+      "column": "enabled",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_endpoints",
+      "column": "payload_version",
+      "default": "1",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_endpoints",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_endpoints",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_endpoints",
+      "column": "name",
+      "default": "'Default integration'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text[]",
+      "table": "facetime_webhook_endpoints",
+      "column": "livekit_allowed_hosts",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_webhook_endpoints",
+      "column": "legacy_default",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_endpoints",
+      "column": "active_revision_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_webhook_endpoints",
+      "column": "signing_enabled",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_events",
+      "column": "event_id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_events",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_events",
+      "column": "call_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_events",
+      "column": "source_call_event_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_events",
+      "column": "endpoint_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_events",
+      "column": "endpoint_url",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_events",
+      "column": "secret_version_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_events",
+      "column": "secret_version",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_events",
+      "column": "event_type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_webhook_events",
+      "column": "payload",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_events",
+      "column": "raw_body",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_events",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_webhook_event_state",
+      "table": "facetime_webhook_events",
+      "column": "state",
+      "default": "'pending'::facetime_webhook_event_state",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_events",
+      "column": "attempt_count",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_events",
+      "column": "next_attempt_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_events",
+      "column": "lease_owner",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_events",
+      "column": "lease_expires_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_events",
+      "column": "delivered_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_events",
+      "column": "dead_letter_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_events",
+      "column": "last_error",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_events",
+      "column": "logical_transition",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_secret_versions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_secret_versions",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_webhook_secret_versions",
+      "column": "endpoint_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_secret_versions",
+      "column": "version",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_webhook_secret_versions",
+      "column": "ciphertext",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_webhook_secret_versions",
+      "column": "encryption_key_version",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_secret_versions",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_secret_versions",
+      "column": "revoked_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_webhook_secret_versions",
+      "column": "retired_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_commands",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_commands",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_commands",
+      "column": "call_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_commands",
+      "column": "line_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "facetime_command_type",
+      "table": "facetime_worker_commands",
+      "column": "command_type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_worker_commands",
+      "column": "payload",
+      "default": "'{}'::jsonb",
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_command_status",
+      "table": "facetime_worker_commands",
+      "column": "status",
+      "default": "'queued'::facetime_command_status",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_commands",
+      "column": "idempotency_key",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_commands",
+      "column": "lease_owner",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_commands",
+      "column": "lease_token_hash",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_commands",
+      "column": "lease_expires_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_worker_commands",
+      "column": "attempt_count",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "facetime_worker_commands",
+      "column": "maximum_attempts",
+      "default": "3",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_commands",
+      "column": "available_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_commands",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_worker_commands",
+      "column": "result",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_commands",
+      "column": "error_code",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_commands",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_commands",
+      "column": "completed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_credentials",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_credentials",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_credentials",
+      "column": "credential_prefix",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_credentials",
+      "column": "credential_hash",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_credentials",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_credentials",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_credentials",
+      "column": "last_used_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_credentials",
+      "column": "revoked_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_credentials",
+      "column": "rotated_from_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "token_prefix",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "token_hash",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "consumed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_enrollment_tokens",
+      "column": "revoked_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "line_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "created_by",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_onboarding",
+      "column": "activated_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_onboarding",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "request_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "input",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "token_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_workers",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_workers",
+      "column": "worker_key",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_workers",
+      "column": "display_name",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "facetime_worker_status",
+      "table": "facetime_workers",
+      "column": "status",
+      "default": "'offline'::facetime_worker_status",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_workers",
+      "column": "enabled",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_workers",
+      "column": "last_heartbeat_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_workers",
+      "column": "software_version",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_workers",
+      "column": "capabilities",
+      "default": "'{}'::jsonb",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_workers",
+      "column": "readiness",
+      "default": "'{\"audio_ready\": false, \"video_ready\": false, \"control_ready\": false, \"avatar_capable\": false, \"facetime_signed_in\": false, \"accessibility_ready\": false, \"screen_capture_ready\": false, \"production_media_ready\": false}'::jsonb",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_workers",
+      "column": "current_call_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_workers",
+      "column": "enrolled_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_workers",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "facetime_workers",
+      "column": "last_heartbeat_attempt_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_workers",
+      "column": "last_heartbeat_rejection_reason",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "facetime_workers",
+      "column": "automatic_readiness_enabled",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistant_versions",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistant_versions",
+      "column": "assistant_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistant_versions",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "realtime_assistant_versions",
+      "column": "version",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "realtime_assistant_versions",
+      "column": "schema_version",
+      "default": "1",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "realtime_assistant_versions",
+      "column": "config",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistant_versions",
+      "column": "published_by",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "realtime_assistant_versions",
+      "column": "published_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "realtime_assistant_versions",
+      "column": "content_hash",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistants",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistants",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "realtime_assistants",
+      "column": "name",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "realtime_assistants",
+      "column": "description",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "facetime_assistant_status",
+      "table": "realtime_assistants",
+      "column": "status",
+      "default": "'draft'::facetime_assistant_status",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "realtime_assistants",
+      "column": "draft_config",
+      "default": "'{}'::jsonb",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "realtime_assistants",
+      "column": "draft_revision",
+      "default": "1",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistants",
+      "column": "active_version_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "realtime_assistants",
+      "column": "created_by",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "realtime_assistants",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "realtime_assistants",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "realtime_assistants",
+      "column": "archived_at",
+      "default": null,
+      "nullable": "YES"
+    }
+  ],
+  "function_preimages": {
+    "facetime_enqueue_call_webhook": "75402284c3b1dd25b1fbf2accc25821e",
+    "facetime_pin_call_integration": "043fab84fc9167ebf1cefc4d671fbf2f",
+    "facetime_guard_incoming_accept": "8ca81b9b9422eff9bb9145a01a7833f9",
+    "facetime_pinned_incoming_context": "156b49fd3b9443726d21e9ff5c653241",
+    "facetime_apply_call_event_to_session": "8b3183b1613bcf9159011ba7c85194f9"
+  }
+}

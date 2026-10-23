@@ -1,0 +1,10 @@
+{
+  "node": "v22.23.2",
+  "cwd": "/app",
+  "files": {
+    "main.mjs": "113fec52f134d6e05031583b40eb32b958c5e0b492e7749aa29c314ad4dc4b35",
+    "relay.mjs": "d6b02d3c94f8bf0cec634a21f9deea3687f048116d5a1187a9eaef20e6ed655d",
+    "railway.json": "28aaecc8e5eb12e06942a23132b8f9657d542d19eea43ba19d3c3dbaf12df7d5",
+    "package-lock.json": "892d6a970edff99273027771d83e4d19d465630aa758b27b0c83a3ad8729ab22"
+  }
+}

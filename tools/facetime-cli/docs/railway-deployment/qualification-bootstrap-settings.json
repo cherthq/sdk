@@ -1,0 +1,9 @@
+{
+  "numReplicas": 1,
+  "sleepApplication": false,
+  "drainingSeconds": 65,
+  "overlapSeconds": 0,
+  "restartPolicyType": "NEVER",
+  "healthcheckPath": null,
+  "startCommand": "python -c \"import time; time.sleep(3600)\""
+}

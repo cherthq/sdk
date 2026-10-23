@@ -1,0 +1,32 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --run tests/connectors.test.ts -t BYOR mode ownership
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime/control-plane
+
+ ❯ tests/connectors.test.ts (11 tests | 1 failed | 10 skipped) 1644ms
+     × pins BYOR enrollment and gives it a two-hour credential-bounded ceiling without changing legacy mode 1644ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connectors.test.ts > BYOR mode ownership and duration > pins BYOR enrollment and gives it a two-hour credential-bounded ceiling without changing legacy mode
+AssertionError: expected undefined to be 'byor' // Object.is equality
+
+- Expected:
+"byor"
+
++ Received:
+undefined
+
+ ❯ tests/connectors.test.ts:209:33
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  23:37:17
+   Duration  1.75s (transform 23ms, setup 0ms, import 32ms, tests 1.64s, environment 0ms)
+

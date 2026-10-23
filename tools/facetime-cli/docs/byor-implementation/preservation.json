@@ -1,0 +1,70 @@
+{
+  "baseline_files": 3386,
+  "modified_baseline_files": [
+    "/Users/garygao/chert-facetime/control-plane/docs/API_CONTRACT.md",
+    "/Users/garygao/chert-facetime/control-plane/src/lib/facetime/connectors.ts",
+    "/Users/garygao/chert-facetime/control-plane/tests/connector-service.test.ts",
+    "/Users/garygao/chert-facetime/control-plane/tests/connectors.test.ts",
+    "/Users/garygao/chert-facetime/docs/operations/CONNECTORS.md",
+    "/Users/garygao/chert-facetime-cli/CLI_GUIDE.md",
+    "/Users/garygao/chert-facetime-cli/README.md",
+    "/Users/garygao/chert-facetime-cli/docs/BACKEND_PILOT_RUNBOOK.md",
+    "/Users/garygao/chert-facetime-cli/docs/DEPLOYMENT_READINESS.md",
+    "/Users/garygao/chert-facetime-cli/package.json",
+    "/Users/garygao/chert-facetime-cli/src/cli/backend.ts",
+    "/Users/garygao/chert-facetime-cli/src/cli/commands.ts",
+    "/Users/garygao/chert-facetime-cli/src/cli/config.ts",
+    "/Users/garygao/chert-facetime-cli/src/cli/diagnostics.ts",
+    "/Users/garygao/chert-facetime-cli/src/cli/run.ts",
+    "/Users/garygao/chert-facetime-cli/src/protocol/v1.ts",
+    "/Users/garygao/chert-facetime-cli/src/transport/connector-wire.ts",
+    "/Users/garygao/chert-facetime-cli/tests/cli/package.test.ts",
+    "/Users/garygao/chert-facetime-cli/tests/fixtures/cli-harness.ts",
+    "/Users/garygao/chert-facetime-cli/tests/fixtures/control-plane.ts",
+    "/Users/garygao/chert-facetime-cli/tsconfig.json"
+  ],
+  "new_files": 42,
+  "protected_groups": {
+    "historical_cli_local_files": {
+      "files": 2461,
+      "changed": []
+    },
+    "historical_deployment_and_qualification_artifacts": {
+      "files": 124,
+      "changed": []
+    },
+    "original_demo_repository_files": {
+      "files": 135,
+      "changed": []
+    },
+    "historical_json_text_evidence": {
+      "files": 189,
+      "changed": []
+    }
+  },
+  "whitespace_issues": [],
+  "git_diff_check": [
+    {
+      "repo": "/Users/garygao/chert-facetime-cli",
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "repo": "/Users/garygao/chert-facetime",
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "repo": "/Users/garygao/demo-agent-0",
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "documentation_check": {
+    "exit_code": 1,
+    "output": "document is not indexed: PATENT_TECHNICAL_DISCLOSURE.md\ndocument is not indexed: output/fleet-investigation-2026-09-29.md\n"
+  },
+  "new_validation_logs_normalized": "trailing whitespace only; earlier logs/artifacts unchanged",
+  "production_access": false,
+  "removed_new_tool_cache": "/Users/garygao/chert-facetime/control-plane/supabase/.temp/cli-latest"
+}

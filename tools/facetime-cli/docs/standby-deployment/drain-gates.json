@@ -1,0 +1,12 @@
+[
+  {
+    "observed_at": "2026-09-30 13:59:35.947634+00",
+    "active_calls": 0,
+    "pending_commands": 0,
+    "line_reservations": 0,
+    "worker_reservations": 0,
+    "retained_ciphertext": 0,
+    "queued_deliveries": 0,
+    "development_windows": 0
+  }
+]

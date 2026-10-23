@@ -1,0 +1,207 @@
+--- a/README.md
++++ b/README.md
+@@ -1,11 +1,11 @@
+ # Chert connector relay
+ 
+-Implemented, private, not deployed. This Node service transports JSON signaling only; customer LiveKit media never traverses it. The control-plane database owns authorization, activation, connection generations, call pins, decisions, sealed credentials and delivery acknowledgements.
++Private connector relay; pilot deployment evidence is tracked separately from media readiness. This Node service transports JSON signaling only; customer LiveKit media never traverses it. The control-plane database owns authorization, activation, connection generations, call pins, decisions, sealed credentials and delivery acknowledgements.
+ 
+ Use Node 22.23.2 or 24.14.0. `npm ci --ignore-scripts`, `npm run check`, `npm test`, then `npm start`. No Docker is required. Railway service root is `connector-relay/`; `railway.json` supplies the start command and process health check. Set `RAILPACK_NODE_VERSION=24.14.0`, `CHERT_CONTROL_ORIGIN=https://<control-plane-host>`, a generated secret-manager `CHERT_CONNECTOR_RELAY_SECRET` (at least 32 random characters), and the platform-provided `PORT`. Configure the same relay secret on the control plane. Preserve existing control-plane Supabase, credential pepper and destination encryption keys. Never place secret values in flags, logs or this repository.
+ 
+ Expose this service only through the platform HTTPS/WSS ingress. The application port is HTTP behind that ingress. `/healthz` proves process liveness, not control-plane authorization. Public endpoints are `/connect` (WebSocket), `/inspect` and `/reconcile` (POST). Browser Origin-bearing upgrades are rejected. Credential-bearing redirects are forbidden. Frame/body size is 32 KiB; a socket allows at most eight concurrent client operations and bounded buffered output. Management RPCs have a two-second transport timeout. A disconnected response never proves a decision failed; recover through reconciliation.
+ 
+-The relay polls the authenticated internal control-plane route every 200 ms while connected; the database lease lasts five seconds. Every connection acquires a new persisted generation. Multiple processes may run, but the most recent connection fences older ones. A state change from standby/active closes the socket; the supervised CLI restarts, reconciles and receives its new role. Recovery-only connections remain draining. Deliveries replay until durable acknowledgement. A receipt is retired from delivery after an owned lifecycle acknowledgement; authoritative receipts remain in the call row. No cleanup assertion is inferred from that acknowledgement: local journals and adapter receipts remain the cleanup authority.
++The relay polls the authenticated internal control-plane route every 200 ms while connected; the database lease lasts five seconds. A transient network failure, timeout, HTTP 429 or HTTP 5xx during polling receives at most one retry after 100 ms, within the last confirmed lease measured conservatively from request start. Each request remains bounded to two seconds or the shorter remaining lease. Authorization rejection and malformed responses close immediately; decisions and connection acquisition are never automatically replayed. No frames are forwarded while a poll is unavailable. Poll failures emit only a fixed category, action and numeric status, never credentials or response bodies. Every connection acquires a new persisted generation. Multiple processes may run, but the most recent connection fences older ones. A state change from standby/active closes the socket; the supervised CLI restarts, reconciles and receives its new role. Recovery-only connections remain draining. Deliveries replay until durable acknowledgement. A receipt is retired from delivery after an owned lifecycle acknowledgement; authoritative receipts remain in the call row. No cleanup assertion is inferred from that acknowledgement: local journals and adapter receipts remain the cleanup authority.
+ 
+ This is a bounded first-pilot implementation, not a high-volume relay benchmark. Request/DB load, ingress throttling, monitoring and secret rotation need deployment review. Retention intentionally favors recovery; no automated deletion of call pins, receipts or recovery credentials is provided. See [operations](../docs/operations/CONNECTORS.md).
+--- a/main.mjs
++++ b/main.mjs
+@@ -1,5 +1,5 @@
+ import { createRelay } from './relay.mjs';
+-const relay=createRelay({controlOrigin:process.env.CHERT_CONTROL_ORIGIN,secret:process.env.CHERT_CONNECTOR_RELAY_SECRET});
++const relay=createRelay({controlOrigin:process.env.CHERT_CONTROL_ORIGIN,secret:process.env.CHERT_CONNECTOR_RELAY_SECRET,onDiagnostic:event=>console.log(JSON.stringify({event:'relay_authority_failure',...event}))});
+ const port=Number(process.env.PORT ?? 8080);
+ if(!Number.isInteger(port) || port<1 || port>65535) throw new Error('invalid_port');
+ relay.server.listen(port,'0.0.0.0');
+--- a/relay.mjs
++++ b/relay.mjs
+@@ -2,7 +2,9 @@
+ import { createServer as createSecureServer } from 'node:https';
+ import { WebSocketServer, WebSocket } from 'ws';
+ const MAX = 32768;
+-class AuthorityError extends Error { constructor(status) { super('authority_rejected'); this.status=status; } }
++class AuthorityError extends Error {
++  constructor(status,code='authority_rejected',retryable=false) { super(code); this.status=status; this.retryable=retryable; }
++}
+ export function serviceOrigin(value, isolated = false) {
+   const u = new URL(value);
+   if (u.username || u.password || u.search || u.hash || u.pathname !== '/' ||
+@@ -14,16 +16,29 @@
+   for await (const chunk of stream) { length+=chunk.length; if(length>MAX) throw new Error('too_large'); chunks.push(chunk); }
+   return JSON.parse(Buffer.concat(chunks).toString());
+ }
+-export function createRelay({controlOrigin,secret,isolated=false,tls}) {
++export function createRelay({controlOrigin,secret,isolated=false,tls,onDiagnostic=()=>{}}) {
+   const endpoint=new URL('/api/internal/v1/connectors',serviceOrigin(controlOrigin,isolated));
+   if(!secret || secret.length<32) throw new Error('missing_relay_secret');
+   const wss=new WebSocketServer({noServer:true,maxPayload:MAX,perMessageDeflate:false});
+   const sockets=new Set();
+-  async function authority(credential,action,input={}) {
+-    const response=await fetch(endpoint,{method:'POST',redirect:'error',signal:AbortSignal.timeout(2000),headers:{authorization:`Bearer ${secret}`,'content-type':'application/json'},body:JSON.stringify({credential,action,input})});
+-    if(!response.ok) { await response.body?.cancel(); throw new AuthorityError(response.status); }
+-    const result=await json(response.body);
+-    return result.data;
++  async function authority(credential,action,input={},timeout=2000) {
++    try {
++      const response=await fetch(endpoint,{method:'POST',redirect:'error',signal:AbortSignal.timeout(timeout),headers:{authorization:`Bearer ${secret}`,'content-type':'application/json'},body:JSON.stringify({credential,action,input})});
++      if(!response.ok) {
++        await response.body?.cancel();
++        throw new AuthorityError(response.status,'authority_rejected',response.status===429 || response.status>=500);
++      }
++      const result=await json(response.body);
++      if(!result || typeof result!=='object' || !('data' in result)) throw new Error('invalid_authority_response');
++      return result.data;
++    } catch(error) {
++      const failure=error instanceof AuthorityError ? error : error?.name==='TimeoutError' ?
++        new AuthorityError(503,'authority_timeout',true) : error instanceof TypeError ?
++        new AuthorityError(503,'authority_network_error',true) : new AuthorityError(503,'authority_invalid_response');
++      // These fields are enums/numbers only: never log bodies, credentials or arbitrary errors.
++      try { onDiagnostic({code:failure.message,action,status:failure.status}); } catch { /* Logging cannot change authority. */ }
++      throw failure;
++    }
+   }
+   function credential(request) {
+     const match=/^Bearer (ftc_[A-Za-z0-9_-]{43})$/.exec(request.headers.authorization ?? '');
+@@ -44,17 +59,38 @@
+     void(async()=>{
+       if(req.url!=='/connect' || req.headers.origin) throw new Error('forbidden');
+       const token=credential(req);
++      const connectedAt=performance.now();
+       const welcome=await authority(token,'connect');
+       if(socket.destroyed) return;
+       wss.handleUpgrade(req,socket,head,ws=>{
+         sockets.add(ws); ws.send(JSON.stringify(welcome));
+         let stopped=false,timer,inflight=0;
++        let leaseDeadline=connectedAt+5000;
+         const seen=new Map();
+         const fail=()=>ws.close(1008,'authority_unavailable');
++        const pollAuthority=async()=>{
++          // A poll is replayable; decisions/connects are not. Stay inside the last
++          // confirmed five-second lease, conservatively measured from request start.
++          for(let attempt=0;attempt<2;attempt++) {
++            if(stopped) throw new Error('connection_closed');
++            const started=performance.now();
++            const budget=Math.min(2000,Math.floor(leaseDeadline-started));
++            if(budget<=0) throw new Error('lease_expired');
++            try {
++              const result=await authority(token,'poll',{connection_generation:welcome.connection_generation},budget);
++              leaseDeadline=started+5000;
++              return result;
++            } catch(error) {
++              if(attempt || !error.retryable || leaseDeadline-performance.now()<=100) throw error;
++              await new Promise(resolve=>setTimeout(resolve,100));
++            }
++          }
++        };
+         const poll=async()=>{
+           if(stopped) return;
+           try {
+-            const result=await authority(token,'poll',{connection_generation:welcome.connection_generation});
++            const result=await pollAuthority();
++            if(stopped) return;
+             const role=result.state==='revoked' || result.state==='draining' ? 'draining' : result.state;
+             if(welcome.role!=='draining' && role!==welcome.role) { ws.close(1012,'binding_changed'); return; }
+             for(const frame of result.frames) {
+--- a/tests/poll-recovery.test.mjs
++++ b/tests/poll-recovery.test.mjs
+@@ -0,0 +1,90 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { once } from 'node:events';
++import { createServer } from 'node:http';
++import { WebSocket } from 'ws';
++import { createRelay } from '../relay.mjs';
++
++const token=`ftc_${'a'.repeat(43)}`;
++async function rig(t, reply, connectDelay=0) {
++ let polls=0;const actions=[];const diagnostics=[];
++ const backend=createServer(async(req,res)=>{
++  let raw='';for await(const b of req)raw+=b;
++  const {action}=JSON.parse(raw);actions.push(action);
++  if(action==='connect'){if(connectDelay)await new Promise(r=>setTimeout(r,connectDelay));res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({data:{role:'standby',connection_generation:1}}));return;}
++  await reply({action,poll:action==='poll'?++polls:polls,res});
++ });
++ backend.listen(0,'127.0.0.1');await once(backend,'listening');
++ const relay=createRelay({controlOrigin:`http://127.0.0.1:${backend.address().port}`,secret:'test-secret-'.repeat(4),isolated:true,onDiagnostic:event=>diagnostics.push(event)});
++ relay.server.listen(0,'127.0.0.1');await once(relay.server,'listening');
++ const ws=new WebSocket(`ws://127.0.0.1:${relay.server.address().port}/connect`,{headers:{authorization:`Bearer ${token}`}});
++ ws.on('error',()=>{});
++ t.after(async()=>{ws.terminate();await relay.close();backend.closeAllConnections();await new Promise(r=>backend.close(r));});
++ return {ws,actions,diagnostics,get polls(){return polls;}};
++}
++const result=(res,data)=>{res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({data}));};
++const frame={type:'synthetic_delivery',message_id:'evidence'};
++
++test('a single stalled poll recovers without another connection or lost delivery', {timeout:6000},async t=>{
++ const r=await rig(t,async({poll,res})=>{
++  if(poll===1)return; // The request times out at the unchanged two-second bound.
++  result(res,{state:'standby',frames:[frame]});
++ });
++ const messages=[];
++ const delivered=new Promise((resolve,reject)=>{
++  r.ws.on('message',b=>{const v=JSON.parse(b);messages.push(v);if(v.type==='synthetic_delivery')resolve();});
++  r.ws.once('close',()=>reject(new Error('Transient poll failure closed the authenticated connection')));
++ });
++ await delivered;
++ assert.equal(messages.filter(x=>x.role==='standby').length,1);
++ assert.equal(r.actions.filter(x=>x==='connect').length,1);
++ assert.ok(r.polls>=2);
++ assert.ok(r.diagnostics.some(x=>x.code==='authority_timeout'&&x.action==='poll'));
++});
++
++for(const status of [401,403])test(`authorization ${status} closes immediately without retry`,async t=>{
++ const r=await rig(t,async({res})=>{res.writeHead(status);res.end('denied');});
++ const [code]=await once(r.ws,'close');assert.equal(code,1008);assert.equal(r.polls,1);
++});
++
++test('two unavailable polls close instead of retrying indefinitely',async t=>{
++ const r=await rig(t,async({res})=>{res.writeHead(503);res.end('unavailable');});
++ const [code]=await once(r.ws,'close');assert.equal(code,1008);assert.equal(r.polls,2);
++});
++
++test('invalid authority JSON closes without retry or raw-data diagnostics',async t=>{
++ const marker='SECRET_BODY_MUST_NOT_BE_LOGGED';
++ const r=await rig(t,async({res})=>{res.writeHead(200);res.end(marker);});
++ await once(r.ws,'close');assert.equal(r.polls,1);
++ assert.ok(!JSON.stringify(r.diagnostics).includes(marker));assert.ok(!JSON.stringify(r.diagnostics).includes(token));
++});
++
++test('a successful retry still honors the new binding role',async t=>{
++ const r=await rig(t,async({poll,res})=>{if(poll===1){res.writeHead(503);res.end();}else result(res,{state:'revoked',frames:[frame]});});
++ const delivered=[];r.ws.on('message',b=>delivered.push(JSON.parse(b)));
++ const [code]=await once(r.ws,'close');assert.equal(code,1012);assert.equal(r.polls,2);
++ assert.ok(!delivered.some(x=>x.type==='synthetic_delivery'));
++});
++
++test('decision failures are never replayed as poll retries',async t=>{
++ const r=await rig(t,async({action,res})=>{if(action==='decision'){res.writeHead(503);res.end();}else result(res,{state:'standby',frames:[]});});
++ await once(r.ws,'message');r.ws.send(JSON.stringify({type:'call.decision',connection_generation:1}));
++ await once(r.ws,'close');assert.equal(r.actions.filter(x=>x==='decision').length,1);
++});
++
++
++test('network reset on a poll is retried without changing generation',async t=>{
++ const r=await rig(t,async({poll,res})=>{if(poll===1){res.destroy();return;}result(res,{state:'standby',frames:[frame]});});
++ await new Promise((resolve,reject)=>{r.ws.on('message',b=>{if(JSON.parse(b).type==='synthetic_delivery')resolve();});r.ws.once('close',()=>reject(new Error('closed')));});
++ assert.equal(r.actions.filter(x=>x==='connect').length,1);
++ assert.ok(r.diagnostics.some(x=>x.code==='authority_network_error'));
++});
++
++test('retry is bounded by the last confirmed lease, not a fresh five seconds', {timeout:8000},async t=>{
++ const started=performance.now();
++ const r=await rig(t,async()=>{},1700);
++ const [code]=await once(r.ws,'close');
++ const elapsed=performance.now()-started;
++ assert.equal(code,1008);assert.equal(r.polls,2);
++ assert.ok(elapsed>=4900 && elapsed<5700,`lease close took ${elapsed} ms`);
++});

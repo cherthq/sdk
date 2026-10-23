@@ -1,0 +1,93 @@
+[
+  {
+    "key": "RESEND_API_KEY",
+    "target": [
+      "production"
+    ],
+    "type": "sensitive"
+  },
+  {
+    "key": "CHERT_AUDIT_ALERT_FROM",
+    "target": [
+      "production"
+    ],
+    "type": "sensitive"
+  },
+  {
+    "key": "CHERT_AUDIT_CONSOLE_ORIGIN",
+    "target": [
+      "production"
+    ],
+    "type": "sensitive"
+  },
+  {
+    "key": "CHERT_AUDIT_ALERT_TO",
+    "target": [
+      "production"
+    ],
+    "type": "sensitive"
+  },
+  {
+    "key": "CHERT_READINESS_EVIDENCE_MAX_AGE_HOURS",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  },
+  {
+    "key": "CRON_SECRET",
+    "target": [
+      "production"
+    ],
+    "type": "sensitive"
+  },
+  {
+    "key": "FACETIME_TEST_PROJECT",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  },
+  {
+    "key": "FACETIME_DESTINATION_KEY_VERSION",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  },
+  {
+    "key": "FACETIME_DESTINATION_ENCRYPTION_KEY",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  },
+  {
+    "key": "FACETIME_CREDENTIAL_PEPPER",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  },
+  {
+    "key": "SUPABASE_SECRET_KEY",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  },
+  {
+    "key": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  },
+  {
+    "key": "NEXT_PUBLIC_SUPABASE_URL",
+    "target": [
+      "production"
+    ],
+    "type": "encrypted"
+  }
+]

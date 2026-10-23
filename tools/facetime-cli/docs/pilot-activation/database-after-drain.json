@@ -1,0 +1,31 @@
+[
+  {
+    "observed_at": "2026-09-30 20:14:39.910915+00",
+    "binding_id": "0b758533-1c9a-4cc0-b5a5-cfcd2464b281",
+    "state": "draining",
+    "session_mode": "byor",
+    "generation": 16,
+    "lease_until": "2026-09-30 20:11:59.83359+00",
+    "connected": false,
+    "assignment_generation": 3,
+    "integration_id": "946445e1-2c0f-478d-a049-72c8dd9762f2",
+    "inbound_policy": "customer_decides",
+    "default_assistant_id": null,
+    "current_call_id": null,
+    "unacknowledged_deliveries": 0,
+    "calls": [
+      {
+        "id": "5f6ce432-4323-460a-a5cb-3d31e841e7b6",
+        "status": "ended",
+        "ended_at": "2026-09-30T20:07:05+00:00",
+        "terminal_reason": "remote_ended"
+      },
+      {
+        "id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "status": "ended",
+        "ended_at": "2026-09-30T20:10:24+00:00",
+        "terminal_reason": "remote_ended"
+      }
+    ]
+  }
+]

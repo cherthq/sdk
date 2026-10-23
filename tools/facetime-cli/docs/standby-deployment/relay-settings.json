@@ -1,0 +1,19 @@
+{
+  "service_id": "d2877bdb-d910-4e6d-b618-92b32fc7caf8",
+  "settings": {
+    "builder": "RAILPACK",
+    "buildCommand": "npm ci --omit=dev --ignore-scripts && npm run check",
+    "startCommand": "npm start",
+    "healthcheckPath": "/healthz",
+    "healthcheckTimeout": 60,
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10,
+    "overlapSeconds": 0,
+    "drainingSeconds": 30
+  },
+  "result": {
+    "serviceInstanceUpdate": true
+  }
+}

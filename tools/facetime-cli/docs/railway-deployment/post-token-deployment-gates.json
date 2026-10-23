@@ -1,0 +1,20 @@
+{
+  "query": "select clock_timestamp() observed_at,\n(select count(*) from facetime_calls where status not in ('ended','failed','rejected')) nonterminal_calls,\n(select count(*) from facetime_sessions where cleaned_at is null) uncleaned_sessions,\n(select count(*) from facetime_sessions where cleaned_at is null and project_id='5ee3afd6-f248-45a5-9fe8-bf30c4c961e7') pilot_uncleaned_sessions,\n(select count(*) from facetime_worker_commands where status in ('queued','leased')) executable_commands,\n(select count(*) from facetime_workers where current_call_id is not null) worker_reservations,\n(select count(*) from facetime_lines where current_call_id is not null) line_reservations,\n(select count(*) from facetime_session_credential_seals where livekit_url_ciphertext is not null or participant_token_ciphertext is not null) seals_with_ciphertext,\nto_regclass('public.facetime_connector_bindings') connector_table,\n(select jsonb_build_object('state',state,'cleaned_at',cleaned_at) from facetime_sessions where id='53945278-4dcf-4a4d-817a-73702d67799d') historical_pilot_session;",
+  "result": [
+    {
+      "observed_at": "2026-09-30 13:41:10.578188+00",
+      "nonterminal_calls": 0,
+      "uncleaned_sessions": 4,
+      "pilot_uncleaned_sessions": 1,
+      "executable_commands": 0,
+      "worker_reservations": 0,
+      "line_reservations": 0,
+      "seals_with_ciphertext": 0,
+      "connector_table": null,
+      "historical_pilot_session": {
+        "state": "failed",
+        "cleaned_at": null
+      }
+    }
+  ]
+}

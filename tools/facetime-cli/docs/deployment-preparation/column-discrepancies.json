@@ -1,0 +1,822 @@
+{
+  "production_only_columns": [
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_notifications",
+      "column": "accepted_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_admin_audit",
+      "column": "action",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_worker_onboarding",
+      "column": "activated_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_admin_audit",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "actor_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "approved_release",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "approved_release",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "int4",
+      "table": "facetime_audit_notifications",
+      "column": "attempts",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "bool",
+      "table": "facetime_workers",
+      "column": "automatic_readiness_enabled",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "build",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "call_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "capability",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "claim_token",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runs",
+      "column": "completed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "config_binding",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_admin_audit",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_notifications",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_requests",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runs",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_membership_audit",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_worker_onboarding",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "created_by",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "credential_hash",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_projects",
+      "column": "crm_project_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "device_binding",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "device_label",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "bool",
+      "table": "facetime_audit_runners",
+      "column": "enabled",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runs",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "fingerprint",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_platform_admins",
+      "column": "granted_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "host",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_admin_audit",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runners",
+      "column": "incident",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runners",
+      "column": "incident_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "input",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "kind",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "kind",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runners",
+      "column": "last_claimed_slot",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runners",
+      "column": "last_scheduled_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runners",
+      "column": "last_seen_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runs",
+      "column": "lease_until",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "line_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "line_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "logo_data",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "name_snapshot",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_membership_audit",
+      "column": "new_role",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_notifications",
+      "column": "next_attempt_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runners",
+      "column": "next_due_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_media_observations",
+      "column": "observed_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "observer_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_membership_audit",
+      "column": "old_role",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "outbound_request_fingerprint",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "outcome",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_admin_audit",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runners",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "project_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "provider_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_media_observations",
+      "column": "reason",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_media_observations",
+      "column": "received_at",
+      "default": "clock_timestamp()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runs",
+      "column": "received_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bool",
+      "table": "facetime_media_observations",
+      "column": "recovery_qualified",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runners",
+      "column": "registered_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bool",
+      "table": "facetime_audit_runners",
+      "column": "reminder_sent",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "request_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "facetime_audit_runs",
+      "column": "result",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "run_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "run_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "runtime_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runs",
+      "column": "scheduled_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bool",
+      "table": "facetime_integration_revisions",
+      "column": "signing_enabled",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "bool",
+      "table": "facetime_webhook_endpoints",
+      "column": "signing_enabled",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamptz",
+      "table": "facetime_audit_runs",
+      "column": "started_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_notifications",
+      "column": "state",
+      "default": "'pending'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "state",
+      "default": "'queued'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "status",
+      "default": "'enabled'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_membership_audit",
+      "column": "target_user_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "token_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "trigger",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_platform_admins",
+      "column": "user_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_audit_runs",
+      "column": "verdict",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "facetime_calls",
+      "column": "video_framing",
+      "default": "'fit'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_lines",
+      "column": "video_framing",
+      "default": "'fit'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "facetime_projects",
+      "column": "website_domain",
+      "default": "''::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_notifications",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_requests",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runners",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_audit_runs",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_media_observations",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "uuid",
+      "table": "facetime_worker_onboarding_requests",
+      "column": "worker_id",
+      "default": null,
+      "nullable": "NO"
+    }
+  ],
+  "local_only_columns": [],
+  "different_columns": [
+    {
+      "production": {
+        "type": "int4",
+        "table": "facetime_integration_revisions",
+        "column": "secret_version",
+        "default": null,
+        "nullable": "YES"
+      },
+      "local": {
+        "table": "facetime_integration_revisions",
+        "column": "secret_version",
+        "type": "int4",
+        "nullable": "NO",
+        "default": null
+      }
+    },
+    {
+      "production": {
+        "type": "int4",
+        "table": "facetime_webhook_delivery_attempts",
+        "column": "secret_version",
+        "default": null,
+        "nullable": "YES"
+      },
+      "local": {
+        "table": "facetime_webhook_delivery_attempts",
+        "column": "secret_version",
+        "type": "int4",
+        "nullable": "NO",
+        "default": null
+      }
+    },
+    {
+      "production": {
+        "type": "int4",
+        "table": "facetime_webhook_events",
+        "column": "secret_version",
+        "default": null,
+        "nullable": "YES"
+      },
+      "local": {
+        "table": "facetime_webhook_events",
+        "column": "secret_version",
+        "type": "int4",
+        "nullable": "NO",
+        "default": null
+      }
+    },
+    {
+      "production": {
+        "type": "uuid",
+        "table": "facetime_integration_revisions",
+        "column": "secret_version_id",
+        "default": null,
+        "nullable": "YES"
+      },
+      "local": {
+        "table": "facetime_integration_revisions",
+        "column": "secret_version_id",
+        "type": "uuid",
+        "nullable": "NO",
+        "default": null
+      }
+    },
+    {
+      "production": {
+        "type": "uuid",
+        "table": "facetime_webhook_events",
+        "column": "secret_version_id",
+        "default": null,
+        "nullable": "YES"
+      },
+      "local": {
+        "table": "facetime_webhook_events",
+        "column": "secret_version_id",
+        "type": "uuid",
+        "nullable": "NO",
+        "default": null
+      }
+    }
+  ]
+}

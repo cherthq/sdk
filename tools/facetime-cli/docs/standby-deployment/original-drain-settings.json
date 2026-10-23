@@ -1,0 +1,12 @@
+{
+  "result": {
+    "serviceInstanceUpdate": true
+  },
+  "settings": {
+    "restartPolicyType": "NEVER",
+    "drainingSeconds": 70,
+    "overlapSeconds": 0,
+    "numReplicas": 1,
+    "sleepApplication": false
+  }
+}

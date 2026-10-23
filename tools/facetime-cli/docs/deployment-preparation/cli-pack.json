@@ -1,0 +1,146 @@
+[
+  {
+    "id": "chert-local-transport-proof@0.0.0",
+    "name": "chert-local-transport-proof",
+    "version": "0.0.0",
+    "size": 35122,
+    "unpackedSize": 128819,
+    "shasum": "9976fcd99d7498158a0032b21aa3163f281e440e",
+    "integrity": "sha512-cj5GpVU6GX/DLtiXHMRl1P+aOJBpo1nRNpd59vfhlb5kd/c8iP8oj46L8todGhHGcwZ417Aybmlw1XDEsloyww==",
+    "filename": "chert-local-transport-proof-0.0.0.tgz",
+    "files": [
+      {
+        "path": "CLI_GUIDE.md",
+        "size": 14340,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 4891,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-hook.js",
+        "size": 3872,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-operation.js",
+        "size": 3969,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-receipts.js",
+        "size": 4393,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit.js",
+        "size": 19856,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/backend.js",
+        "size": 6649,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/commands.js",
+        "size": 7930,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/config.js",
+        "size": 4996,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/diagnostics.js",
+        "size": 3176,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/errors.js",
+        "size": 473,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/main.js",
+        "size": 1325,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/network-policy.js",
+        "size": 849,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/run.js",
+        "size": 6517,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/state.js",
+        "size": 3839,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/protocol/v1.js",
+        "size": 5235,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/agent.js",
+        "size": 44,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/availability.js",
+        "size": 2566,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/connector.js",
+        "size": 17914,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/deadline.js",
+        "size": 1908,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/journal.js",
+        "size": 6131,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/reconciliation.js",
+        "size": 53,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/connector-wire.js",
+        "size": 3762,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/http.js",
+        "size": 1499,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/reconcile.js",
+        "size": 1382,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 1250,
+        "mode": 420
+      }
+    ],
+    "entryCount": 26,
+    "bundled": []
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "committed_at": "2026-09-29T21:10:39.909Z",
+  "receipt": {
+    "project_id": "project_1",
+    "line_id": "line_1",
+    "binding_id": "5ed71d61-ccf3-4caf-a2cf-d86a24725dd3",
+    "binding_epoch": 1,
+    "instance_id": "1b4ec1bd-15e4-4ab4-8b1d-ec0fd5ee9582",
+    "connection_generation": 1,
+    "call_id": "7c01d29f-48ba-45f4-a866-2a988ce200f1",
+    "request_id": "req_7c01d29f-48ba-45f4-a866-2a988ce200f1",
+    "v": 1,
+    "type": "decision.committed",
+    "message_id": "9e0ba3fb-ed0c-45fc-9921-3e717e7265d8",
+    "action": "accept",
+    "call_version": 1,
+    "resource_expires_at": 1790716296435
+  }
+}

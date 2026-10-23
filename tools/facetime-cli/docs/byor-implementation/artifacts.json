@@ -1,0 +1,10 @@
+{
+  "cli": {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-implementation/artifacts/chert-local-transport-proof-0.0.0.tgz",
+    "sha256": "28d830f0be65f32ce17d76705d9841e51562eef8be5dd09cfd2f4078e7eb436c",
+    "private": true,
+    "published": false
+  },
+  "release_candidate_regenerated": false,
+  "production_approved": false
+}

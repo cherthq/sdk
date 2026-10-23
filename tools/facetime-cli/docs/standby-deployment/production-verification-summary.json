@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-09-30T14:17:30.547509+00:00",
+  "standby_healthy": true,
+  "zero_slots": true,
+  "zero_journal_debt": true,
+  "nonroot": true,
+  "private_permissions": true,
+  "environment_partition": true,
+  "old_journal_sha256_unchanged": "f1c6553adef9b7ba788e0e926fbc7447849c1ae4b697dc51faf6dbe8b2a7c0d2",
+  "supervisor_exclusion_verified": true,
+  "runtime_and_inputs_hashes_match_review": true
+}

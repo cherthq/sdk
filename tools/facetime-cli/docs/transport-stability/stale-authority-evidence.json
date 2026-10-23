@@ -1,0 +1,18 @@
+{
+  "source": "Read-only Supabase query and remote /proc inspection recorded during this task",
+  "database": {
+    "observed_at": "2026-09-30 19:24:39.677998+00",
+    "generation": 12,
+    "lease_until": "2026-09-30 16:00:17.29177+00",
+    "state": "standby"
+  },
+  "application_socket": {
+    "observed_at": "2026-09-30T19:26:05.686398+00:00",
+    "pid": 78,
+    "local_port": 36500,
+    "remote_port": 443,
+    "state": "ESTABLISHED"
+  },
+  "application_health_evidence": "pre-freshness-runtime.json",
+  "underlying_socket_cause": "unresolved"
+}

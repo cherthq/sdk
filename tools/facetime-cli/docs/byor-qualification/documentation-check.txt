@@ -1,0 +1,2 @@
+document is not indexed: PATENT_TECHNICAL_DISCLOSURE.md
+document is not indexed: output/fleet-investigation-2026-09-29.md

@@ -1,0 +1,1683 @@
+
+Node 22: npm run typecheck
+
+> chert-local-transport-proof@0.0.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+Exit code: 0
+
+Node 22: npm run lint
+
+> chert-local-transport-proof@0.0.0 lint
+> eslint src tests
+
+Exit code: 0
+
+Node 22: npm run build
+
+> chert-local-transport-proof@0.0.0 build
+> tsc -p tsconfig.json
+
+Exit code: 0
+
+Node 22: npm run test
+
+> chert-local-transport-proof@0.0.0 test
+> npm run build && node --test dist/tests/transport/*.test.js dist/tests/adapter/*.test.js dist/tests/cli/*.test.js
+
+
+> chert-local-transport-proof@0.0.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: default refuses retained state; explicit exception preserves it and is single use
+ok 1 - default refuses retained state; explicit exception preserves it and is single use
+  ---
+  duration_ms: 19.652375
+  type: 'test'
+  ...
+# Subtest: exception requires original evidence and cannot create an unlinked run
+ok 2 - exception requires original evidence and cannot create an unlinked run
+  ---
+  duration_ms: 0.342375
+  type: 'test'
+  ...
+# Subtest: one application dispatch budget is consumed even when the first rejects
+ok 3 - one application dispatch budget is consumed even when the first rejects
+  ---
+  duration_ms: 0.14875
+  type: 'test'
+  ...
+# Subtest: qualification slots preserve both old runs, consume failures and gate the second on complete cleanup
+ok 4 - qualification slots preserve both old runs, consume failures and gate the second on complete cleanup
+  ---
+  duration_ms: 22.252458
+  type: 'test'
+  ...
+# Subtest: reviewed retry is single use, preserves all prior runs and does not unlock old slot
+ok 5 - reviewed retry is single use, preserves all prior runs and does not unlock old slot
+  ---
+  duration_ms: 11.825708
+  type: 'test'
+  ...
+# Subtest: correlation review requires clean previous run, is single use and preserves its evidence
+ok 6 - correlation review requires clean previous run, is single use and preserves its evidence
+  ---
+  duration_ms: 15.959541
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects none and invalidates prior health
+ok 7 - authenticated hook rejects none and invalidates prior health
+  ---
+  duration_ms: 33.74675
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects signature and invalidates prior health
+ok 8 - authenticated hook rejects signature and invalidates prior health
+  ---
+  duration_ms: 6.93375
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects challenge and invalidates prior health
+ok 9 - authenticated hook rejects challenge and invalidates prior health
+  ---
+  duration_ms: 7.634834
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects boot and invalidates prior health
+ok 10 - authenticated hook rejects boot and invalidates prior health
+  ---
+  duration_ms: 3.9555
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects project and invalidates prior health
+ok 11 - authenticated hook rejects project and invalidates prior health
+  ---
+  duration_ms: 15.649791
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects name and invalidates prior health
+ok 12 - authenticated hook rejects name and invalidates prior health
+  ---
+  duration_ms: 6.456
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects deployment and invalidates prior health
+ok 13 - authenticated hook rejects deployment and invalidates prior health
+  ---
+  duration_ms: 4.55025
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects stale and invalidates prior health
+ok 14 - authenticated hook rejects stale and invalidates prior health
+  ---
+  duration_ms: 5.122459
+  type: 'test'
+  ...
+# Subtest: authenticated hook rejects replay and invalidates prior health
+ok 15 - authenticated hook rejects replay and invalidates prior health
+  ---
+  duration_ms: 4.959708
+  type: 'test'
+  ...
+# Subtest: authenticated cancellation metadata does not invalidate subsequent availability samples
+ok 16 - authenticated cancellation metadata does not invalidate subsequent availability samples
+  ---
+  duration_ms: 2.13725
+  type: 'test'
+  ...
+# Subtest: missing health creates zero real-adapter effects
+ok 17 - missing health creates zero real-adapter effects
+  ---
+  duration_ms: 4.046541
+  type: 'test'
+  ...
+# Subtest: stale health creates zero real-adapter effects
+ok 18 - stale health creates zero real-adapter effects
+  ---
+  duration_ms: 0.296542
+  type: 'test'
+  ...
+# Subtest: disconnected health creates zero real-adapter effects
+ok 19 - disconnected health creates zero real-adapter effects
+  ---
+  duration_ms: 0.253333
+  type: 'test'
+  ...
+# Subtest: full health creates zero real-adapter effects
+ok 20 - full health creates zero real-adapter effects
+  ---
+  duration_ms: 0.157416
+  type: 'test'
+  ...
+# Subtest: draining health creates zero real-adapter effects
+ok 21 - draining health creates zero real-adapter effects
+  ---
+  duration_ms: 0.195708
+  type: 'test'
+  ...
+# Subtest: one correlated real-adapter dispatch, duplicate replay and uncertain reconnect preserve room
+ok 22 - one correlated real-adapter dispatch, duplicate replay and uncertain reconnect preserve room
+  ---
+  duration_ms: 10.602584
+  type: 'test'
+  ...
+# Subtest: wrong readiness job cannot accept
+ok 23 - wrong readiness job cannot accept
+  ---
+  duration_ms: 1.303083
+  type: 'test'
+  ...
+# Subtest: wrong readiness nonce cannot accept
+ok 24 - wrong readiness nonce cannot accept
+  ---
+  duration_ms: 3.735541
+  type: 'test'
+  ...
+# Subtest: wrong readiness participant cannot accept
+ok 25 - wrong readiness participant cannot accept
+  ---
+  duration_ms: 1.228708
+  type: 'test'
+  ...
+# Subtest: wrong readiness track cannot accept
+ok 26 - wrong readiness track cannot accept
+  ---
+  duration_ms: 2.88575
+  type: 'test'
+  ...
+# Subtest: wrong readiness muted cannot accept
+ok 27 - wrong readiness muted cannot accept
+  ---
+  duration_ms: 0.989167
+  type: 'test'
+  ...
+# Subtest: wrong readiness extra_audio cannot accept
+ok 28 - wrong readiness extra_audio cannot accept
+  ---
+  duration_ms: 6.411625
+  type: 'test'
+  ...
+# Subtest: wrong readiness room cannot accept
+ok 29 - wrong readiness room cannot accept
+  ---
+  duration_ms: 0.816417
+  type: 'test'
+  ...
+# Subtest: wrong readiness worker cannot accept
+ok 30 - wrong readiness worker cannot accept
+  ---
+  duration_ms: 1.223667
+  type: 'test'
+  ...
+# Subtest: wrong readiness dispatch cannot accept
+ok 31 - wrong readiness dispatch cannot accept
+  ---
+  duration_ms: 0.640208
+  type: 'test'
+  ...
+# Subtest: wrong readiness ended cannot accept
+ok 32 - wrong readiness ended cannot accept
+  ---
+  duration_ms: 0.490375
+  type: 'test'
+  ...
+# Subtest: wrong readiness disconnected cannot accept
+ok 33 - wrong readiness disconnected cannot accept
+  ---
+  duration_ms: 0.45275
+  type: 'test'
+  ...
+# Subtest: rejected room create remains debt through receipt reopen and initially absent inspection
+ok 34 - rejected room create remains debt through receipt reopen and initially absent inspection
+  ---
+  duration_ms: 122.483625
+  type: 'test'
+  ...
+# Subtest: uncertain dispatch rejection and absent room never settle the operation
+ok 35 - uncertain dispatch rejection and absent room never settle the operation
+  ---
+  duration_ms: 0.657458
+  type: 'test'
+  ...
+# Subtest: cancel while combined room/dispatch creation is in flight cleans the late acknowledged job
+ok 36 - cancel while combined room/dispatch creation is in flight cleans the late acknowledged job
+  ---
+  duration_ms: 6.841792
+  type: 'test'
+  ...
+# Subtest: foreign room replacement is never deleted
+ok 37 - foreign room replacement is never deleted
+  ---
+  duration_ms: 1.105833
+  type: 'test'
+  ...
+# Subtest: delete failure and vanished room with running job retain cleanup debt
+ok 38 - delete failure and vanished room with running job retain cleanup debt
+  ---
+  duration_ms: 1.188292
+  type: 'test'
+  ...
+# Subtest: unverifiable connected state disables admission without effects
+ok 39 - unverifiable connected state disables admission without effects
+  ---
+  duration_ms: 0.116958
+  type: 'test'
+  ...
+# Subtest: receipt from another deployment or instance never authorizes cleanup
+ok 40 - receipt from another deployment or instance never authorizes cleanup
+  ---
+  duration_ms: 0.718041
+  type: 'test'
+  ...
+# Subtest: proven pre-send room validation settles both unsent effects after reopen
+ok 41 - proven pre-send room validation settles both unsent effects after reopen
+  ---
+  duration_ms: 119.491875
+  type: 'test'
+  ...
+# Subtest: proven unsent room clears debt without invoking fetch or inventing an acknowledgment
+ok 42 - proven unsent room clears debt without invoking fetch or inventing an acknowledgment
+  ---
+  duration_ms: 1.097125
+  type: 'test'
+  ...
+# Subtest: lookalike RangeError after fetch retains debt and sanitized uncertain diagnostics
+ok 43 - lookalike RangeError after fetch retains debt and sanitized uncertain diagnostics
+  ---
+  duration_ms: 1.847458
+  type: 'test'
+  ...
+# Subtest: not-sent phase requires evidence; historical ambiguous receipts cannot be reclassified
+ok 44 - not-sent phase requires evidence; historical ambiguous receipts cannot be reclassified
+  ---
+  duration_ms: 0.55925
+  type: 'test'
+  ...
+# Subtest: failed evidence persistence cannot advance the in-memory receipt
+ok 45 - failed evidence persistence cannot advance the in-memory receipt
+  ---
+  duration_ms: 257.649584
+  type: 'test'
+  ...
+# Subtest: extra unnamed service dispatch blocks readiness even with a fully matching isolated publication
+ok 46 - extra unnamed service dispatch blocks readiness even with a fully matching isolated publication
+  ---
+  duration_ms: 2.747291
+  type: 'test'
+  ...
+# Subtest: room delete acknowledgment followed by stale inventory and dispatch 404 verifies cleanup
+ok 47 - room delete acknowledgment followed by stale inventory and dispatch 404 verifies cleanup
+  ---
+  duration_ms: 2.164417
+  type: 'test'
+  ...
+# Subtest: combined creation journals dispatch intent before sending and never explicitly redispatches
+ok 48 - combined creation journals dispatch intent before sending and never explicitly redispatches
+  ---
+  duration_ms: 1.7395
+  type: 'test'
+  ...
+# Subtest: configured topology rejects unexpected extra_job
+ok 49 - configured topology rejects unexpected extra_job
+  ---
+  duration_ms: 0.790541
+  type: 'test'
+  ...
+# Subtest: configured topology rejects unexpected video_publisher
+ok 50 - configured topology rejects unexpected video_publisher
+  ---
+  duration_ms: 153.943708
+  type: 'test'
+  ...
+# Subtest: configured topology rejects unexpected deployment
+ok 51 - configured topology rejects unexpected deployment
+  ---
+  duration_ms: 4.673791
+  type: 'test'
+  ...
+# Subtest: configured topology rejects unexpected restart
+ok 52 - configured topology rejects unexpected restart
+  ---
+  duration_ms: 1.5815
+  type: 'test'
+  ...
+# Subtest: late assignment after cancellation is correlated, stopped and never accepted
+ok 53 - late assignment after cancellation is correlated, stopped and never accepted
+  ---
+  duration_ms: 3.679875
+  type: 'test'
+  ...
+# Subtest: durable terminal receipts survive reopen and worker shutdown after stale_inventory
+ok 54 - durable terminal receipts survive reopen and worker shutdown after stale_inventory
+  ---
+  duration_ms: 450.85425
+  type: 'test'
+  ...
+# Subtest: durable terminal receipts survive reopen and worker shutdown after delete_unavailable
+ok 55 - durable terminal receipts survive reopen and worker shutdown after delete_unavailable
+  ---
+  duration_ms: 594.608584
+  type: 'test'
+  ...
+# Subtest: acknowledged deletion does not clear debt on plain404
+ok 56 - acknowledged deletion does not clear debt on plain404
+  ---
+  duration_ms: 2.123291
+  type: 'test'
+  ...
+# Subtest: acknowledged deletion does not clear debt on auth
+ok 57 - acknowledged deletion does not clear debt on auth
+  ---
+  duration_ms: 1.936791
+  type: 'test'
+  ...
+# Subtest: acknowledged deletion does not clear debt on timeout
+ok 58 - acknowledged deletion does not clear debt on timeout
+  ---
+  duration_ms: 1.805042
+  type: 'test'
+  ...
+# Subtest: acknowledged deletion does not clear debt on management_unavailable
+ok 59 - acknowledged deletion does not clear debt on management_unavailable
+  ---
+  duration_ms: 1.355625
+  type: 'test'
+  ...
+# Subtest: acknowledged deletion does not clear debt on replacement
+ok 60 - acknowledged deletion does not clear debt on replacement
+  ---
+  duration_ms: 0.884208
+  type: 'test'
+  ...
+# Subtest: terminal observation is durable before a management failure and needs no retired hook on retry
+ok 61 - terminal observation is durable before a management failure and needs no retired hook on retry
+  ---
+  duration_ms: 1.28175
+  type: 'test'
+  ...
+# Subtest: cancellation of a not-yet-assigned dispatch persists tombstone and verified deletion
+ok 62 - cancellation of a not-yet-assigned dispatch persists tombstone and verified deletion
+  ---
+  duration_ms: 2.453958
+  type: 'test'
+  ...
+# Subtest: readiness diagnostics retain nonce rejection when listed job room is omitted
+ok 63 - readiness diagnostics retain nonce rejection when listed job room is omitted
+  ---
+  duration_ms: 0.618125
+  type: 'test'
+  ...
+# Subtest: SDK dispatch decoding preserves omission versus contradiction under the room correlation contract
+ok 64 - SDK dispatch decoding preserves omission versus contradiction under the room correlation contract
+  ---
+  duration_ms: 1.748083
+  type: 'test'
+  ...
+# Subtest: omitted listed job room accepts only a correlated owned dispatch and persists assignment before token
+ok 65 - omitted listed job room accepts only a correlated owned dispatch and persists assignment before token
+  ---
+  duration_ms: 1.765083
+  type: 'test'
+  ...
+# Subtest: room correlation refuses nested_wrong even when the listed job omits room
+ok 66 - room correlation refuses nested_wrong even when the listed job omits room
+  ---
+  duration_ms: 0.426542
+  type: 'test'
+  ...
+# Subtest: room correlation refuses nested_empty even when the listed job omits room
+ok 67 - room correlation refuses nested_empty even when the listed job omits room
+  ---
+  duration_ms: 0.375792
+  type: 'test'
+  ...
+# Subtest: room correlation refuses parent_room even when the listed job omits room
+ok 68 - room correlation refuses parent_room even when the listed job omits room
+  ---
+  duration_ms: 0.423916
+  type: 'test'
+  ...
+# Subtest: room correlation refuses hook_dispatch_missing even when the listed job omits room
+ok 69 - room correlation refuses hook_dispatch_missing even when the listed job omits room
+  ---
+  duration_ms: 0.3575
+  type: 'test'
+  ...
+# Subtest: room correlation refuses hook_dispatch_wrong even when the listed job omits room
+ok 70 - room correlation refuses hook_dispatch_wrong even when the listed job omits room
+  ---
+  duration_ms: 0.3495
+  type: 'test'
+  ...
+# Subtest: room correlation refuses job_dispatch even when the listed job omits room
+ok 71 - room correlation refuses job_dispatch even when the listed job omits room
+  ---
+  duration_ms: 0.34
+  type: 'test'
+  ...
+# Subtest: room correlation refuses job_id even when the listed job omits room
+ok 72 - room correlation refuses job_id even when the listed job omits room
+  ---
+  duration_ms: 0.3625
+  type: 'test'
+  ...
+# Subtest: room correlation refuses hook_room even when the listed job omits room
+ok 73 - room correlation refuses hook_room even when the listed job omits room
+  ---
+  duration_ms: 0.334459
+  type: 'test'
+  ...
+# Subtest: room correlation refuses hook_marker even when the listed job omits room
+ok 74 - room correlation refuses hook_marker even when the listed job omits room
+  ---
+  duration_ms: 0.3395
+  type: 'test'
+  ...
+# Subtest: room correlation refuses hook_nonce even when the listed job omits room
+ok 75 - room correlation refuses hook_nonce even when the listed job omits room
+  ---
+  duration_ms: 0.344292
+  type: 'test'
+  ...
+# Subtest: omitted job room cannot bypass deadline during actual preparation
+ok 76 - omitted job room cannot bypass deadline during actual preparation
+  ---
+  duration_ms: 0.760042
+  type: 'test'
+  ...
+# Subtest: omitted job room cannot bypass room_sid during actual preparation
+ok 77 - omitted job room cannot bypass room_sid during actual preparation
+  ---
+  duration_ms: 1.259791
+  type: 'test'
+  ...
+# Subtest: omitted job room cannot bypass room_marker during actual preparation
+ok 78 - omitted job room cannot bypass room_marker during actual preparation
+  ---
+  duration_ms: 0.363291
+  type: 'test'
+  ...
+# Subtest: omitted job room cannot bypass nested_wrong during actual preparation
+ok 79 - omitted job room cannot bypass nested_wrong during actual preparation
+  ---
+  duration_ms: 155.139375
+  type: 'test'
+  ...
+# Subtest: omitted job room cannot bypass hook_dispatch during actual preparation
+ok 80 - omitted job room cannot bypass hook_dispatch during actual preparation
+  ---
+  duration_ms: 154.142125
+  type: 'test'
+  ...
+# Subtest: pinned SDK accepts fractional remaining budget without a pre-network timeout error
+ok 81 - pinned SDK accepts fractional remaining budget without a pre-network timeout error
+  ---
+  duration_ms: 3.800916
+  type: 'test'
+  ...
+# Subtest: subsecond budget fails before any SDK request rather than extending deadline
+ok 82 - subsecond budget fails before any SDK request rather than extending deadline
+  ---
+  duration_ms: 0.320584
+  type: 'test'
+  ...
+# Subtest: original fractional timeout throws before fetch; integer budget reaches fetch
+ok 83 - original fractional timeout throws before fetch; integer budget reaches fetch
+  ---
+  duration_ms: 1.192458
+  type: 'test'
+  ...
+# Subtest: same rounded elapsed time can leave integer or fractional original Budget values
+ok 84 - same rounded elapsed time can leave integer or fractional original Budget values
+  ---
+  duration_ms: 0.114791
+  type: 'test'
+  ...
+# Subtest: integer original timeout can be followed by service rejection or lost response
+ok 85 - integer original timeout can be followed by service rejection or lost response
+  ---
+  duration_ms: 0.804916
+  type: 'test'
+  ...
+# Subtest: runtime/config validation and timeout conversion precede SDK effects
+ok 86 - runtime/config validation and timeout conversion precede SDK effects
+  ---
+  duration_ms: 0.374792
+  type: 'test'
+  ...
+# Subtest: pre-send proof binds operation, room and exact input; error codes alone confer nothing
+ok 87 - pre-send proof binds operation, room and exact input; error codes alone confer nothing
+  ---
+  duration_ms: 0.259958
+  type: 'test'
+  ...
+# Subtest: CreateRoom explicitly configures the only intended dispatch, including deployment and no restart
+ok 88 - CreateRoom explicitly configures the only intended dispatch, including deployment and no restart
+  ---
+  duration_ms: 0.89075
+  type: 'test'
+  ...
+# Subtest: receiver-free init defaults to BYOR and generates a trusted callback without LiveKit or a hook
+ok 89 - receiver-free init defaults to BYOR and generates a trusted callback without LiveKit or a hook
+  ---
+  duration_ms: 336.533708
+  type: 'test'
+  ...
+# Subtest: BYOR transport carries a pinned mode and explicit duration beyond the prototype ceiling
+ok 90 - BYOR transport carries a pinned mode and explicit duration beyond the prototype ceiling
+  ---
+  duration_ms: 2.566875
+  type: 'test'
+  ...
+# Subtest: explicit create-room startup stays idle and legacy run remains distinct from v2 mode
+ok 91 - explicit create-room startup stays idle and legacy run remains distinct from v2 mode
+  ---
+  duration_ms: 1644.791583
+  type: 'test'
+  ...
+# Subtest: installed BYOR tarball serves a clean application without a receiver, coalesces requests and recovers without any wrapper LiveKit operations
+ok 92 - installed BYOR tarball serves a clean application without a receiver, coalesces requests and recovers without any wrapper LiveKit operations
+  ---
+  duration_ms: 6440.577041
+  type: 'test'
+  ...
+# Subtest: compiled chert executable provides help without configuration or credentials
+ok 93 - compiled chert executable provides help without configuration or credentials
+  ---
+  duration_ms: 170.545958
+  type: 'test'
+  ...
+# Subtest: usage errors are JSON and sanitized: login
+ok 94 - usage errors are JSON and sanitized: login
+  ---
+  duration_ms: 111.382875
+  type: 'test'
+  ...
+# Subtest: usage errors are JSON and sanitized: init
+ok 95 - usage errors are JSON and sanitized: init
+  ---
+  duration_ms: 113.298958
+  type: 'test'
+  ...
+# Subtest: usage errors are JSON and sanitized: init --config
+ok 96 - usage errors are JSON and sanitized: init --config
+  ---
+  duration_ms: 125.69975
+  type: 'test'
+  ...
+# Subtest: usage errors are JSON and sanitized: run --config
+ok 97 - usage errors are JSON and sanitized: run --config
+  ---
+  duration_ms: 126.366666
+  type: 'test'
+  ...
+# Subtest: init is private, exclusive, non-allocating and never saves environment values
+ok 98 - init is private, exclusive, non-allocating and never saves environment values
+  ---
+  duration_ms: 377.925166
+  type: 'test'
+  ...
+# Subtest: config rejects unknown_key before effects
+ok 99 - config rejects unknown_key before effects
+  ---
+  duration_ms: 290.410041
+  type: 'test'
+  ...
+# Subtest: config rejects secret_value before effects
+ok 100 - config rejects secret_value before effects
+  ---
+  duration_ms: 268.90525
+  type: 'test'
+  ...
+# Subtest: config rejects wrong_version before effects
+ok 101 - config rejects wrong_version before effects
+  ---
+  duration_ms: 266.996875
+  type: 'test'
+  ...
+# Subtest: config rejects remote_hook before effects
+ok 102 - config rejects remote_hook before effects
+  ---
+  duration_ms: 263.27125
+  type: 'test'
+  ...
+# Subtest: config rejects relative_state before effects
+ok 103 - config rejects relative_state before effects
+  ---
+  duration_ms: 232.586833
+  type: 'test'
+  ...
+# Subtest: config rejects url_credentials before effects
+ok 104 - config rejects url_credentials before effects
+  ---
+  duration_ms: 241.970791
+  type: 'test'
+  ...
+# Subtest: config rejects unsafe_permissions before effects
+ok 105 - config rejects unsafe_permissions before effects
+  ---
+  duration_ms: 255.424208
+  type: 'test'
+  ...
+# Subtest: config rejects symlink before effects
+ok 106 - config rejects symlink before effects
+  ---
+  duration_ms: 263.375333
+  type: 'test'
+  ...
+# Subtest: unsupported Node rejects before reading config or printing supplied input
+ok 107 - unsupported Node rejects before reading config or printing supplied input
+  ---
+  duration_ms: 23.94775
+  type: 'test'
+  ...
+# Subtest: check separates available health from authorization and allocates nothing
+ok 108 - check separates available health from authorization and allocates nothing
+  ---
+  duration_ms: 264.585709
+  type: 'test'
+  ...
+# Subtest: check separates unavailable health from authorization and allocates nothing
+ok 109 - check separates unavailable health from authorization and allocates nothing
+  ---
+  duration_ms: 242.491125
+  type: 'test'
+  ...
+# Subtest: check separates unknown health from authorization and allocates nothing
+ok 110 - check separates unknown health from authorization and allocates nothing
+  ---
+  duration_ms: 231.5945
+  type: 'test'
+  ...
+# Subtest: check separates stale health from authorization and allocates nothing
+ok 111 - check separates stale health from authorization and allocates nothing
+  ---
+  duration_ms: 241.860625
+  type: 'test'
+  ...
+# Subtest: check separates signature health from authorization and allocates nothing
+ok 112 - check separates signature health from authorization and allocates nothing
+  ---
+  duration_ms: 243.586042
+  type: 'test'
+  ...
+# Subtest: check separates missing_credentials health from authorization and allocates nothing
+ok 113 - check separates missing_credentials health from authorization and allocates nothing
+  ---
+  duration_ms: 228.07325
+  type: 'test'
+  ...
+# Subtest: status is read-only and marks saved observations non-live; unsafe state refuses runtime
+ok 114 - status is read-only and marks saved observations non-live; unsafe state refuses runtime
+  ---
+  duration_ms: 347.734167
+  type: 'test'
+  ...
+# Subtest: development SDK override cannot use a non-loopback destination
+ok 115 - development SDK override cannot use a non-loopback destination
+  ---
+  duration_ms: 0.2595
+  type: 'test'
+  ...
+# Subtest: version works without configuration
+ok 116 - version works without configuration
+  ---
+  duration_ms: 101.460792
+  type: 'test'
+  ...
+# Subtest: init schema rejects a development backend that points outside literal loopback
+ok 117 - init schema rejects a development backend that points outside literal loopback
+  ---
+  duration_ms: 105.976791
+  type: 'test'
+  ...
+# Subtest: programmatic config writer applies the same strict schema
+ok 118 - programmatic config writer applies the same strict schema
+  ---
+  duration_ms: 2.331833
+  type: 'test'
+  ...
+# Subtest: orphaned adapter evidence blocks a new runtime journal
+ok 119 - orphaned adapter evidence blocks a new runtime journal
+  ---
+  duration_ms: 214.911125
+  type: 'test'
+  ...
+# Subtest: hosted enrollment configuration accepts encrypted origins without activating
+ok 120 - hosted enrollment configuration accepts encrypted origins without activating
+  ---
+  duration_ms: 0.507166
+  type: 'test'
+  ...
+# Subtest: hosted diagnostics distinguish HTTP 403
+ok 121 - hosted diagnostics distinguish HTTP 403
+  ---
+  duration_ms: 17.153708
+  type: 'test'
+  ...
+# Subtest: hosted diagnostics distinguish HTTP 503
+ok 122 - hosted diagnostics distinguish HTTP 503
+  ---
+  duration_ms: 0.169583
+  type: 'test'
+  ...
+# Subtest: hosted diagnostics reject a credential bound to another scope
+ok 123 - hosted diagnostics reject a credential bound to another scope
+  ---
+  duration_ms: 1.552667
+  type: 'test'
+  ...
+# Subtest: hosted configuration rejects plaintext signaling
+ok 124 - hosted configuration rejects plaintext signaling
+  ---
+  duration_ms: 1.050667
+  type: 'test'
+  ...
+# Subtest: packed npm artifact installs with production dependencies only and runs the fixture lifecycle outside the checkout
+ok 125 - packed npm artifact installs with production dependencies only and runs the fixture lifecycle outside the checkout
+  ---
+  duration_ms: 5456.0205
+  type: 'test'
+  ...
+# Subtest: reconciliation malformed never settles uncertainty or follows redirects
+ok 126 - reconciliation malformed never settles uncertainty or follows redirects
+  ---
+  duration_ms: 27.134459
+  type: 'test'
+  ...
+# Subtest: reconciliation oversized never settles uncertainty or follows redirects
+ok 127 - reconciliation oversized never settles uncertainty or follows redirects
+  ---
+  duration_ms: 4.06775
+  type: 'test'
+  ...
+# Subtest: reconciliation forbidden never settles uncertainty or follows redirects
+ok 128 - reconciliation forbidden never settles uncertainty or follows redirects
+  ---
+  duration_ms: 2.363625
+  type: 'test'
+  ...
+# Subtest: reconciliation unavailable never settles uncertainty or follows redirects
+ok 129 - reconciliation unavailable never settles uncertainty or follows redirects
+  ---
+  duration_ms: 1.591917
+  type: 'test'
+  ...
+# Subtest: reconciliation redirect never settles uncertainty or follows redirects
+ok 130 - reconciliation redirect never settles uncertainty or follows redirects
+  ---
+  duration_ms: 1.55775
+  type: 'test'
+  ...
+# Subtest: development process fetch policy rejects non-loopback network before invoking fetch
+ok 131 - development process fetch policy rejects non-loopback network before invoking fetch
+  ---
+  duration_ms: 2.219792
+  type: 'test'
+  ...
+# Subtest: CLI actual adapter traverses HTTP/WS, commits once, acknowledges terminal and cleans; status does not take writer lock
+ok 132 - CLI actual adapter traverses HTTP/WS, commits once, acknowledges terminal and cleans; status does not take writer lock
+  ---
+  duration_ms: 2415.299792
+  type: 'test'
+  ...
+# Subtest: interrupt preserves possibly accepted work; reopened runtime reconciles without redispatch
+ok 133 - interrupt preserves possibly accepted work; reopened runtime reconciles without redispatch
+  ---
+  duration_ms: 1977.839292
+  type: 'test'
+  ...
+# Subtest: disconnect preserves possibly accepted work; reopened runtime reconciles without redispatch
+ok 134 - disconnect preserves possibly accepted work; reopened runtime reconciles without redispatch
+  ---
+  duration_ms: 1837.745667
+  type: 'test'
+  ...
+# Subtest: lost_receipt preserves possibly accepted work; reopened runtime reconciles without redispatch
+ok 135 - lost_receipt preserves possibly accepted work; reopened runtime reconciles without redispatch
+  ---
+  duration_ms: 1795.648834
+  type: 'test'
+  ...
+# Subtest: interrupt during preparation joins local completion and cleans only its owned late room
+ok 136 - interrupt during preparation joins local completion and cleans only its owned late room
+  ---
+  duration_ms: 526.074
+  type: 'test'
+  ...
+# Subtest: unavailable agent declines with no SDK allocations while runtime remains connected
+ok 137 - unavailable agent declines with no SDK allocations while runtime remains connected
+  ---
+  duration_ms: 292.327792
+  type: 'test'
+  ...
+# Subtest: failed relay authorization is actionable and releases its new local writer
+ok 138 - failed relay authorization is actionable and releases its new local writer
+  ---
+  duration_ms: 245.526625
+  type: 'test'
+  ...
+# Subtest: a stale crash lock is never automatically removed or used as permission to discard evidence
+ok 139 - a stale crash lock is never automatically removed or used as permission to discard evidence
+  ---
+  duration_ms: 448.1275
+  type: 'test'
+  ...
+# Subtest: foreign binding cannot reopen an existing journal
+ok 140 - foreign binding cannot reopen an existing journal
+  ---
+  duration_ms: 387.73775
+  type: 'test'
+  ...
+# Subtest: SDK malformed failure stays local and never logs raw error bodies
+ok 141 - SDK malformed failure stays local and never logs raw error bodies
+  ---
+  duration_ms: 331.095
+  type: 'test'
+  ...
+# Subtest: SDK redirect failure stays local and never logs raw error bodies
+ok 142 - SDK redirect failure stays local and never logs raw error bodies
+  ---
+  duration_ms: 344.152042
+  type: 'test'
+  ...
+# Subtest: connector forwards only adapter-provided call-scoped bridge credentials
+ok 143 - connector forwards only adapter-provided call-scoped bridge credentials
+  ---
+  duration_ms: 7.72075
+  type: 'test'
+  ...
+# Subtest: BYOR coalesces preparation, carries 600s lifetime, rejects conflicts and records no wrapper resources or credentials
+ok 144 - BYOR coalesces preparation, carries 600s lifetime, rejects conflicts and records no wrapper resources or credentials
+  ---
+  duration_ms: 9.933416
+  type: 'test'
+  ...
+# Subtest: late preparation after timeout stays uncertain, never prepares twice, and can clean after terminal recovery
+ok 145 - late preparation after timeout stays uncertain, never prepares twice, and can clean after terminal recovery
+  ---
+  duration_ms: 2.348625
+  type: 'test'
+  ...
+# Subtest: rejected local preparation and absent resources do not establish operation settlement
+ok 146 - rejected local preparation and absent resources do not establish operation settlement
+  ---
+  duration_ms: 0.739
+  type: 'test'
+  ...
+# Subtest: lost acceptance and journal reopen reconcile original operation; lifecycle ack alone leaves cleanup debt
+ok 147 - lost acceptance and journal reopen reconcile original operation; lifecycle ack alone leaves cleanup debt
+  ---
+  duration_ms: 361.741083
+  type: 'test'
+  ...
+# Subtest: missing recovery and application acknowledgment retain exact limitations; foreign and stale frames fail closed
+ok 148 - missing recovery and application acknowledgment retain exact limitations; foreign and stale frames fail closed
+  ---
+  duration_ms: 1.211958
+  type: 'test'
+  ...
+# Subtest: invalid credentials decline without persisting secret values or assuming cleanup
+ok 149 - invalid credentials decline without persisting secret values or assuming cleanup
+  ---
+  duration_ms: 0.449916
+  type: 'test'
+  ...
+# Subtest: expiry during failed reconciliation never clears uncertain acceptance or invents terminal state
+ok 150 - expiry during failed reconciliation never clears uncertain acceptance or invents terminal state
+  ---
+  duration_ms: 0.983542
+  type: 'test'
+  ...
+# Subtest: authoritative terminal before incoming suppresses preparation and remains debt-free
+ok 151 - authoritative terminal before incoming suppresses preparation and remains debt-free
+  ---
+  duration_ms: 0.400041
+  type: 'test'
+  ...
+# Subtest: terminal cleanup during an in-flight reconciliation is not undone by its stale accepted result
+ok 152 - terminal cleanup during an in-flight reconciliation is not undone by its stale accepted result
+  ---
+  duration_ms: 1.321667
+  type: 'test'
+  ...
+# Subtest: application lifecycle replay after reopen uses the durable event identity
+ok 153 - application lifecycle replay after reopen uses the durable event identity
+  ---
+  duration_ms: 320.886708
+  type: 'test'
+  ...
+# Subtest: completed preparation duplicates cannot reuse credentials after the original deadline
+ok 154 - completed preparation duplicates cannot reuse credentials after the original deadline
+  ---
+  duration_ms: 0.997166
+  type: 'test'
+  ...
+# Subtest: clock rollback cannot renew final or preparation budgets
+ok 155 - clock rollback cannot renew final or preparation budgets
+  ---
+  duration_ms: 0.443709
+  type: 'test'
+  ...
+# Subtest: signed smaller remaining budget and queue delay are charged
+ok 156 - signed smaller remaining budget and queue delay are charged
+  ---
+  duration_ms: 0.162542
+  type: 'test'
+  ...
+# Subtest: invalid ordering and excessive future skew fail closed
+ok 157 - invalid ordering and excessive future skew fail closed
+  ---
+  duration_ms: 0.246958
+  type: 'test'
+  ...
+# Subtest: 4s preparation and 5s final boundaries are exclusive
+ok 158 - 4s preparation and 5s final boundaries are exclusive
+  ---
+  duration_ms: 0.061166
+  type: 'test'
+  ...
+# Subtest: resource expiry retains its monotonic cap across rollback before allocation
+ok 159 - resource expiry retains its monotonic cap across rollback before allocation
+  ---
+  duration_ms: 0.067333
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during throw reconciliation
+ok 160 - completed terminal call stays debt-free at wall expiry during throw reconciliation
+  ---
+  duration_ms: 9.245375
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during unknown reconciliation
+ok 161 - completed terminal call stays debt-free at wall expiry during unknown reconciliation
+  ---
+  duration_ms: 1.55325
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during forbidden reconciliation
+ok 162 - completed terminal call stays debt-free at wall expiry during forbidden reconciliation
+  ---
+  duration_ms: 0.803166
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at wall expiry during not_found reconciliation
+ok 163 - completed terminal call stays debt-free at wall expiry during not_found reconciliation
+  ---
+  duration_ms: 0.653208
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during throw reconciliation
+ok 164 - completed terminal call stays debt-free at monotonic expiry during throw reconciliation
+  ---
+  duration_ms: 1.389917
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during unknown reconciliation
+ok 165 - completed terminal call stays debt-free at monotonic expiry during unknown reconciliation
+  ---
+  duration_ms: 3.013375
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during forbidden reconciliation
+ok 166 - completed terminal call stays debt-free at monotonic expiry during forbidden reconciliation
+  ---
+  duration_ms: 0.80375
+  type: 'test'
+  ...
+# Subtest: completed terminal call stays debt-free at monotonic expiry during not_found reconciliation
+ok 167 - completed terminal call stays debt-free at monotonic expiry during not_found reconciliation
+  ---
+  duration_ms: 0.610167
+  type: 'test'
+  ...
+# Subtest: completed terminal journal reopens after expiry without writes or dependency on authority/management
+ok 168 - completed terminal journal reopens after expiry without writes or dependency on authority/management
+  ---
+  duration_ms: 259.346167
+  type: 'test'
+  ...
+# Subtest: authoritative decline with verified cleanup also stays complete after expiry
+ok 169 - authoritative decline with verified cleanup also stays complete after expiry
+  ---
+  duration_ms: 1.115625
+  type: 'test'
+  ...
+# Subtest: accepted still reconciles and retains debt across failed expiry reconciliation
+ok 170 - accepted still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.805625
+  type: 'test'
+  ...
+# Subtest: uncertain still reconciles and retains debt across failed expiry reconciliation
+ok 171 - uncertain still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.52675
+  type: 'test'
+  ...
+# Subtest: local_departure still reconciles and retains debt across failed expiry reconciliation
+ok 172 - local_departure still reconciles and retains debt across failed expiry reconciliation
+  ---
+  duration_ms: 0.679125
+  type: 'test'
+  ...
+# Subtest: terminal but unsettled creation retains debt and reconciliation through expiry
+ok 173 - terminal but unsettled creation retains debt and reconciliation through expiry
+  ---
+  duration_ms: 0.660875
+  type: 'test'
+  ...
+# Subtest: terminal but unverified cleanup is never treated as completed at expiry
+ok 174 - terminal but unverified cleanup is never treated as completed at expiry
+  ---
+  duration_ms: 0.55125
+  type: 'test'
+  ...
+# Subtest: reconciliation started before terminal cleanup cannot reopen completed debt when its read returns
+ok 175 - reconciliation started before terminal cleanup cannot reopen completed debt when its read returns
+  ---
+  duration_ms: 1.226791
+  type: 'test'
+  ...
+# Subtest: exclusive writer and live-lock recovery fail closed without touching data
+ok 176 - exclusive writer and live-lock recovery fail closed without touching data
+  ---
+  duration_ms: 63.944833
+  type: 'test'
+  ...
+# Subtest: atomic journal before_rename leaves a complete old or new snapshot
+ok 177 - atomic journal before_rename leaves a complete old or new snapshot
+  ---
+  duration_ms: 107.922584
+  type: 'test'
+  ...
+# Subtest: atomic journal after_rename leaves a complete old or new snapshot
+ok 178 - atomic journal after_rename leaves a complete old or new snapshot
+  ---
+  duration_ms: 107.755
+  type: 'test'
+  ...
+# Subtest: corrupt, wrong-scope and extra secret-bearing journal fields fail closed
+ok 179 - corrupt, wrong-scope and extra secret-bearing journal fields fail closed
+  ---
+  duration_ms: 78.826333
+  type: 'test'
+  ...
+# Subtest: SIGKILL after intent: reopen without retry or delete-all
+ok 180 - SIGKILL after intent: reopen without retry or delete-all
+  ---
+  duration_ms: 246.179125
+  type: 'test'
+  ...
+# Subtest: SIGKILL after prepared: reopen without retry or delete-all
+ok 181 - SIGKILL after prepared: reopen without retry or delete-all
+  ---
+  duration_ms: 210.94925
+  type: 'test'
+  ...
+# Subtest: SIGKILL after decision_sent: reopen without retry or delete-all
+ok 182 - SIGKILL after decision_sent: reopen without retry or delete-all
+  ---
+  duration_ms: 267.073417
+  type: 'test'
+  ...
+# Subtest: lifecycle is durable before ack; failed write cannot acknowledge or delete
+ok 183 - lifecycle is durable before ack; failed write cannot acknowledge or delete
+  ---
+  duration_ms: 253.989459
+  type: 'test'
+  ...
+# Subtest: pre-incoming terminal tombstone survives file close and reopen
+ok 184 - pre-incoming terminal tombstone survives file close and reopen
+  ---
+  duration_ms: 169.878708
+  type: 'test'
+  ...
+# Subtest: rejected local preparation retains remote create debt
+ok 185 - rejected local preparation retains remote create debt
+  ---
+  duration_ms: 223.551083
+  type: 'test'
+  ...
+# Subtest: rejected local preparation retains remote create debt after journal reopen
+ok 186 - rejected local preparation retains remote create debt after journal reopen
+  ---
+  duration_ms: 219.925834
+  type: 'test'
+  ...
+# Subtest: real HTTP → WS → HTTP plus separate committed receipt and lifecycle ack
+ok 187 - real HTTP → WS → HTTP plus separate committed receipt and lifecycle ack
+  ---
+  duration_ms: 334.019083
+  type: 'test'
+  ...
+# Subtest: loopback destination policy rejects external addresses, credentials and schemes
+ok 188 - loopback destination policy rejects external addresses, credentials and schemes
+  ---
+  duration_ms: 0.348708
+  type: 'test'
+  ...
+# Subtest: HTTP verifies exact signed bytes, not parsed/reserialized JSON
+ok 189 - HTTP verifies exact signed bytes, not parsed/reserialized JSON
+  ---
+  duration_ms: 134.857459
+  type: 'test'
+  ...
+# Subtest: handshake requires mapped credentials and denies query-token authorization
+ok 190 - handshake requires mapped credentials and denies query-token authorization
+  ---
+  duration_ms: 54.973916
+  type: 'test'
+  ...
+# Subtest: bounded HTTP and WebSocket rejection: malformed
+ok 191 - bounded HTTP and WebSocket rejection: malformed
+  ---
+  duration_ms: 24.88375
+  type: 'test'
+  ...
+# Subtest: bounded HTTP and WebSocket rejection: version
+ok 192 - bounded HTTP and WebSocket rejection: version
+  ---
+  duration_ms: 20.4315
+  type: 'test'
+  ...
+# Subtest: bounded HTTP and WebSocket rejection: oversized
+ok 193 - bounded HTTP and WebSocket rejection: oversized
+  ---
+  duration_ms: 29.370417
+  type: 'test'
+  ...
+# Subtest: HTTP cancellation records authoritative terminality and cleans late readiness
+ok 194 - HTTP cancellation records authoritative terminality and cleans late readiness
+  ---
+  duration_ms: 183.847125
+  type: 'test'
+  ...
+# Subtest: dropped commit receipt preserves resources, socket closure and reconnect reconcile without dispatch
+ok 195 - dropped commit receipt preserves resources, socket closure and reconnect reconcile without dispatch
+  ---
+  duration_ms: 415.190667
+  type: 'test'
+  ...
+# Subtest: socket closure during preparation stops new work, reconnect declines interrupted request
+ok 196 - socket closure during preparation stops new work, reconnect declines interrupted request
+  ---
+  duration_ms: 318.100166
+  type: 'test'
+  ...
+# Subtest: lost lifecycle delivery and lost ack converge through reconcile and replay
+ok 197 - lost lifecycle delivery and lost ack converge through reconcile and replay
+  ---
+  duration_ms: 462.961625
+  type: 'test'
+  ...
+# Subtest: tenant routing never forwards a call to another authenticated tenant
+ok 198 - tenant routing never forwards a call to another authenticated tenant
+  ---
+  duration_ms: 123.824
+  type: 'test'
+  ...
+# Subtest: transient bridge secret is absent from durable files and diagnostics
+ok 199 - transient bridge secret is absent from durable files and diagnostics
+  ---
+  duration_ms: 113.398666
+  type: 'test'
+  ...
+# Subtest: signed HTTP tenant/request substitution and revoked owner fail before allocation
+ok 200 - signed HTTP tenant/request substitution and revoked owner fail before allocation
+  ---
+  duration_ms: 44.420458
+  type: 'test'
+  ...
+# Subtest: concurrent identical incoming HTTP requests keep the connector usable after both decisions
+ok 201 - concurrent identical incoming HTTP requests keep the connector usable after both decisions
+  ---
+  duration_ms: 103.592209
+  type: 'test'
+  ...
+# Subtest: conflicting duplicate decision action is rejected without another commit
+ok 202 - conflicting duplicate decision action is rejected without another commit
+  ---
+  duration_ms: 165.046542
+  type: 'test'
+  ...
+# Subtest: conflicting duplicate decision participant_token is rejected without another commit
+ok 203 - conflicting duplicate decision participant_token is rejected without another commit
+  ---
+  duration_ms: 252.836417
+  type: 'test'
+  ...
+# Subtest: conflicting duplicate decision remote_participant_identity is rejected without another commit
+ok 204 - conflicting duplicate decision remote_participant_identity is rejected without another commit
+  ---
+  duration_ms: 206.812583
+  type: 'test'
+  ...
+# Subtest: conflicting incoming duplicate does not alter the legitimate pending request
+ok 205 - conflicting incoming duplicate does not alter the legitimate pending request
+  ---
+  duration_ms: 157.193875
+  type: 'test'
+  ...
+# Subtest: late HTTP retry reconciles instead of resending an acceptance or disconnecting
+ok 206 - late HTTP retry reconciles instead of resending an acceptance or disconnecting
+  ---
+  duration_ms: 136.118458
+  type: 'test'
+  ...
+# Subtest: foreign duplicate decision project_id cannot use a completed request
+ok 207 - foreign duplicate decision project_id cannot use a completed request
+  ---
+  duration_ms: 63.424792
+  type: 'test'
+  ...
+# Subtest: foreign duplicate decision line_id cannot use a completed request
+ok 208 - foreign duplicate decision line_id cannot use a completed request
+  ---
+  duration_ms: 68.793459
+  type: 'test'
+  ...
+# Subtest: foreign duplicate decision instance_id cannot use a completed request
+ok 209 - foreign duplicate decision instance_id cannot use a completed request
+  ---
+  duration_ms: 55.296917
+  type: 'test'
+  ...
+# Subtest: foreign duplicate decision request_id cannot use a completed request
+ok 210 - foreign duplicate decision request_id cannot use a completed request
+  ---
+  duration_ms: 58.906875
+  type: 'test'
+  ...
+# Subtest: stale duplicate decision cannot cross a connection generation
+ok 211 - stale duplicate decision cannot cross a connection generation
+  ---
+  duration_ms: 144.197291
+  type: 'test'
+  ...
+# Subtest: revoked credential cannot bypass authentication with a matching duplicate decision
+ok 212 - revoked credential cannot bypass authentication with a matching duplicate decision
+  ---
+  duration_ms: 53.409208
+  type: 'test'
+  ...
+# Subtest: matching duplicate decision never renews the original deadline under rollback
+ok 213 - matching duplicate decision never renews the original deadline under rollback
+  ---
+  duration_ms: 78.296166
+  type: 'test'
+  ...
+# Subtest: health stale/replay/mismatch and unauthenticated signals never refresh admission
+ok 214 - health stale/replay/mismatch and unauthenticated signals never refresh admission
+  ---
+  duration_ms: 4.511875
+  type: 'test'
+  ...
+# Subtest: availability recovery respects activation and local standby cannot replace production
+ok 215 - availability recovery respects activation and local standby cannot replace production
+  ---
+  duration_ms: 0.525667
+  type: 'test'
+  ...
+# Subtest: deadline transit and retry cannot prepare past the original boundary
+ok 216 - deadline transit and retry cannot prepare past the original boundary
+  ---
+  duration_ms: 4.904292
+  type: 'test'
+  ...
+# Subtest: reconnect rejects old generation without dispatching or resending acceptance
+ok 217 - reconnect rejects old generation without dispatching or resending acceptance
+  ---
+  duration_ms: 1.86325
+  type: 'test'
+  ...
+# Subtest: accepted calls survive relay loss, stale health and revocation, recovery scope is read-only
+ok 218 - accepted calls survive relay loss, stale health and revocation, recovery scope is read-only
+  ---
+  duration_ms: 0.651458
+  type: 'test'
+  ...
+# Subtest: ambiguous create never retries and unknown management retains debt
+ok 219 - ambiguous create never retries and unknown management retains debt
+  ---
+  duration_ms: 0.54025
+  type: 'test'
+  ...
+# Subtest: cleanup debt survives deletion failure and exact marker protects unrelated objects
+ok 220 - cleanup debt survives deletion failure and exact marker protects unrelated objects
+  ---
+  duration_ms: 1.386292
+  type: 'test'
+  ...
+# Subtest: lifecycle duplicates, cursor gaps and delayed starts cannot resurrect terminal work
+ok 221 - lifecycle duplicates, cursor gaps and delayed starts cannot resurrect terminal work
+  ---
+  duration_ms: 1.416125
+  type: 'test'
+  ...
+# Subtest: initial bridge absence is harmless, verified departure after presence cleans exact resources
+ok 222 - initial bridge absence is harmless, verified departure after presence cleans exact resources
+  ---
+  duration_ms: 1.032042
+  type: 'test'
+  ...
+# Subtest: independent hard expiry and connector expiry preserve debt during authority outage
+ok 223 - independent hard expiry and connector expiry preserve debt during authority outage
+  ---
+  duration_ms: 1.478167
+  type: 'test'
+  ...
+# Subtest: periodic reconciliation recovers a missing terminal event
+ok 224 - periodic reconciliation recovers a missing terminal event
+  ---
+  duration_ms: 0.577584
+  type: 'test'
+  ...
+# Subtest: drain holds old ownership until both active calls and cleanup debt reach zero
+ok 225 - drain holds old ownership until both active calls and cleanup debt reach zero
+  ---
+  duration_ms: 1.043166
+  type: 'test'
+  ...
+# Subtest: decline response is not held hostage by slow deletion
+ok 226 - decline response is not held hostage by slow deletion
+  ---
+  duration_ms: 0.557208
+  type: 'test'
+  ...
+# Subtest: reopened connector never treats in-flight external create absence as settled deletion
+ok 227 - reopened connector never treats in-flight external create absence as settled deletion
+  ---
+  duration_ms: 0.491459
+  type: 'test'
+  ...
+# Subtest: failed intent persistence allocates nothing; failed fake commit cannot report acceptance
+ok 228 - failed intent persistence allocates nothing; failed fake commit cannot report acceptance
+  ---
+  duration_ms: 0.30925
+  type: 'test'
+  ...
+# Subtest: create collision never adopts or overwrites a foreign resource
+ok 229 - create collision never adopts or overwrites a foreign resource
+  ---
+  duration_ms: 0.261041
+  type: 'test'
+  ...
+# Subtest: terminal cancellation delivered before incoming persists a no-allocation tombstone
+ok 230 - terminal cancellation delivered before incoming persists a no-allocation tombstone
+  ---
+  duration_ms: 0.30775
+  type: 'test'
+  ...
+# Subtest: terminal lifecycle before incoming is acknowledged durably and prevents late preparation
+ok 231 - terminal lifecycle before incoming is acknowledged durably and prevents late preparation
+  ---
+  duration_ms: 0.140708
+  type: 'test'
+  ...
+# Subtest: idle unknown health allocates nothing
+ok 232 - idle unknown health allocates nothing
+  ---
+  duration_ms: 3.710042
+  type: 'test'
+  ...
+# Subtest: idle unavailable health allocates nothing
+ok 233 - idle unavailable health allocates nothing
+  ---
+  duration_ms: 0.290875
+  type: 'test'
+  ...
+# Subtest: idle full health allocates nothing
+ok 234 - idle full health allocates nothing
+  ---
+  duration_ms: 0.2005
+  type: 'test'
+  ...
+# Subtest: idle draining health allocates nothing
+ok 235 - idle draining health allocates nothing
+  ---
+  duration_ms: 0.132291
+  type: 'test'
+  ...
+# Subtest: fast available agent prepares once and only receipt settles acceptance
+ok 236 - fast available agent prepares once and only receipt settles acceptance
+  ---
+  duration_ms: 4.234292
+  type: 'test'
+  ...
+# Subtest: duplicates share preparation and semantic conflicts cannot allocate
+ok 237 - duplicates share preparation and semantic conflicts cannot allocate
+  ---
+  duration_ms: 1.358958
+  type: 'test'
+  ...
+# Subtest: uncancellable late allocation after preparation timeout is deleted exactly
+ok 238 - uncancellable late allocation after preparation timeout is deleted exactly
+  ---
+  duration_ms: 1.300875
+  type: 'test'
+  ...
+# Subtest: commit rechecks clock and revocation after waiting on serialized lock
+ok 239 - commit rechecks clock and revocation after waiting on serialized lock
+  ---
+  duration_ms: 1.074
+  type: 'test'
+  ...
+# Subtest: concurrent identical replies commit one decision
+ok 240 - concurrent identical replies commit one decision
+  ---
+  duration_ms: 0.577584
+  type: 'test'
+  ...
+# Subtest: fence project_id before disclosure or commit
+ok 241 - fence project_id before disclosure or commit
+  ---
+  duration_ms: 0.531791
+  type: 'test'
+  ...
+# Subtest: fence line_id before disclosure or commit
+ok 242 - fence line_id before disclosure or commit
+  ---
+  duration_ms: 0.352542
+  type: 'test'
+  ...
+# Subtest: fence binding_id before disclosure or commit
+ok 243 - fence binding_id before disclosure or commit
+  ---
+  duration_ms: 1.369167
+  type: 'test'
+  ...
+# Subtest: fence binding_epoch before disclosure or commit
+ok 244 - fence binding_epoch before disclosure or commit
+  ---
+  duration_ms: 1.001292
+  type: 'test'
+  ...
+# Subtest: fence instance_id before disclosure or commit
+ok 245 - fence instance_id before disclosure or commit
+  ---
+  duration_ms: 0.288667
+  type: 'test'
+  ...
+# Subtest: fence connection_generation before disclosure or commit
+ok 246 - fence connection_generation before disclosure or commit
+  ---
+  duration_ms: 0.354
+  type: 'test'
+  ...
+# Subtest: fence call_id before disclosure or commit
+ok 247 - fence call_id before disclosure or commit
+  ---
+  duration_ms: 0.414084
+  type: 'test'
+  ...
+# Subtest: fence request_id before disclosure or commit
+ok 248 - fence request_id before disclosure or commit
+  ---
+  duration_ms: 0.225333
+  type: 'test'
+  ...
+# Subtest: readiness rejects mismatched participant
+ok 249 - readiness rejects mismatched participant
+  ---
+  duration_ms: 0.301416
+  type: 'test'
+  ...
+# Subtest: readiness rejects mismatched job
+ok 250 - readiness rejects mismatched job
+  ---
+  duration_ms: 0.236542
+  type: 'test'
+  ...
+# Subtest: readiness rejects mismatched nonce
+ok 251 - readiness rejects mismatched nonce
+  ---
+  duration_ms: 0.27675
+  type: 'test'
+  ...
+# Subtest: readiness rejects mismatched room
+ok 252 - readiness rejects mismatched room
+  ---
+  duration_ms: 0.231209
+  type: 'test'
+  ...
+# Subtest: readiness rejects mismatched publishers
+ok 253 - readiness rejects mismatched publishers
+  ---
+  duration_ms: 0.25825
+  type: 'test'
+  ...
+# Subtest: lost receipt and unavailable reconciliation preserve uncertain media
+ok 254 - lost receipt and unavailable reconciliation preserve uncertain media
+  ---
+  duration_ms: 0.706417
+  type: 'test'
+  ...
+# Subtest: terminal cancellation aborts readiness, late completion cannot resurrect
+ok 255 - terminal cancellation aborts readiness, late completion cannot resurrect
+  ---
+  duration_ms: 0.916916
+  type: 'test'
+  ...
+# Subtest: incoming project_id injection has zero allocation effects
+ok 256 - incoming project_id injection has zero allocation effects
+  ---
+  duration_ms: 0.215958
+  type: 'test'
+  ...
+# Subtest: incoming line_id injection has zero allocation effects
+ok 257 - incoming line_id injection has zero allocation effects
+  ---
+  duration_ms: 0.096084
+  type: 'test'
+  ...
+# Subtest: incoming binding_id injection has zero allocation effects
+ok 258 - incoming binding_id injection has zero allocation effects
+  ---
+  duration_ms: 0.080375
+  type: 'test'
+  ...
+# Subtest: incoming binding_epoch injection has zero allocation effects
+ok 259 - incoming binding_epoch injection has zero allocation effects
+  ---
+  duration_ms: 0.152625
+  type: 'test'
+  ...
+# Subtest: incoming instance_id injection has zero allocation effects
+ok 260 - incoming instance_id injection has zero allocation effects
+  ---
+  duration_ms: 0.07275
+  type: 'test'
+  ...
+# Subtest: incoming connection_generation injection has zero allocation effects
+ok 261 - incoming connection_generation injection has zero allocation effects
+  ---
+  duration_ms: 0.0615
+  type: 'test'
+  ...
+# Subtest: immutable deadlines remain conflicting even with fresh transport metadata
+ok 262 - immutable deadlines remain conflicting even with fresh transport metadata
+  ---
+  duration_ms: 0.359083
+  type: 'test'
+  ...
+# Subtest: authoritative decline for a non-allocating health rejection records a tombstone without disconnecting
+ok 263 - authoritative decline for a non-allocating health rejection records a tombstone without disconnecting
+  ---
+  duration_ms: 0.637709
+  type: 'test'
+  ...
+1..263
+# tests 263
+# suites 0
+# pass 263
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10808.111375
+Exit code: 0
+
+Node 22: npm run proof:transport
+
+> chert-local-transport-proof@0.0.0 proof:transport
+> node dist/tests/proof.js
+
+{
+  "schema_version": 1,
+  "ok": true,
+  "kind": "private_synthetic_loopback",
+  "node": "v22.23.2",
+  "sample_count": 20,
+  "commits": 20,
+  "effects": {
+    "rooms": 20,
+    "jobs": 20,
+    "providers": 20,
+    "deleted": 20
+  },
+  "remaining_resources": 0,
+  "remaining_debt": 0,
+  "configured_budgets_ms": {
+    "preparation": 4000,
+    "authority_commit": 5000,
+    "real_mac_context_only": 6000
+  },
+  "latency": {
+    "request_ms": {
+      "count": 20,
+      "p50": 11.109,
+      "p95": 12.782,
+      "max": 13.547
+    },
+    "preparation_ms": {
+      "count": 20,
+      "p50": 18.082,
+      "p95": 21.21,
+      "max": 23.142
+    },
+    "response_ms": {
+      "count": 20,
+      "p50": 0.734,
+      "p95": 1.894,
+      "max": 3.863
+    },
+    "commit_ms": {
+      "count": 20,
+      "p50": 4.502,
+      "p95": 6.57,
+      "max": 6.857
+    },
+    "total_ms": {
+      "count": 20,
+      "p50": 34.158,
+      "p95": 40.744,
+      "max": 42.362
+    }
+  },
+  "limitations": [
+    "No real LiveKit, provider, Mac, TLS, database or deployed relay verification."
+  ]
+}
+Exit code: 0

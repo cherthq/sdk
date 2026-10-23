@@ -1,0 +1,87 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connector-production-compatibility.test.ts tests/connectors.test.ts tests/connector-service.test.ts tests/connector-incoming.test.ts tests/optional-signing.test.ts tests/automatic-readiness-migration.test.ts tests/line-integrations.test.ts tests/webhook-core.test.ts tests/line-webhook-authorization.test.ts tests/outbound-admission-wire.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/deployment-preparation/candidate/control-plane
+
+ ❯ tests/line-integrations.test.ts (30 tests | 4 failed | 1 skipped) 20336ms
+     × preserves legacy ciphertext and event bytes, blocks unresolved late events, and requires drain 772ms
+     × holds activation preflight behind concurrent registration 739ms
+     × holds activation preflight behind concurrent host-removal 764ms
+     × holds activation preflight behind concurrent host-row-removal 734ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/line-integrations.test.ts > line integration routing and signing > preserves legacy ciphertext and event bytes, blocks unresolved late events, and requires drain
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-Dxx2px -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  constraint "facetime_webhook_endpoints_project_id_key" of relation "facetime_webhook_endpoints" does not exist
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/line-integrations.test.ts:134:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/line-integrations.test.ts > activation and notification-only compatibility > holds activation preflight behind concurrent registration
+AssertionError: expected '1' to be '0' // Object.is equality
+
+Expected: "0"
+Received: "1"
+
+ ❯ tests/line-integrations.test.ts:414:152
+    412|       await writer.query("commit;");
+    413|       expect(await pending).toContain(operation === "registration" ? "…
+    414|       expect(db.sql("select count(*) from information_schema.columns w…
+       |                                                                                                                                                        ^
+    415|     } finally { writer.close(); migrator.close(); db.close(); }
+    416|   }, 30_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/line-integrations.test.ts > activation and notification-only compatibility > holds activation preflight behind concurrent host-removal
+AssertionError: expected 'ERROR:  constraint "facetime_webhook_…' to contain 'activated'
+
+- Expected
++ Received
+
+- activated
++ ERROR:  constraint "facetime_webhook_endpoints_project_id_key" of relation "facetime_webhook_endpoints" does not exist
++
+
+ ❯ tests/line-integrations.test.ts:413:29
+    411|       await waitForLock(db, "migration-activation-race");
+    412|       await writer.query("commit;");
+    413|       expect(await pending).toContain(operation === "registration" ? "…
+       |                             ^
+    414|       expect(db.sql("select count(*) from information_schema.columns w…
+    415|     } finally { writer.close(); migrator.close(); db.close(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/line-integrations.test.ts > activation and notification-only compatibility > holds activation preflight behind concurrent host-row-removal
+Error: ERROR:  configuration_deletion_forbidden
+CONTEXT:  PL/pgSQL function facetime_project_hosts_changed() line 4 at RAISE
+
+ ❯ ChildProcess.exited tests/helpers/isolated-postgres.ts:43:78
+     41|           return new Promise((resolve, reject) => {
+     42|             const marker = `done_${Math.random().toString(36).slice(2)…
+     43|             const exited = () => { child.stdout.off("data", receive); …
+       |                                                                              ^
+     44|             const receive = (chunk: Buffer) => {
+     45|               output += chunk;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed | 9 passed (10)
+      Tests  4 failed | 95 passed | 1 skipped (100)
+   Start at  22:16:45
+   Duration  56.61s (transform 268ms, setup 27ms, import 437ms, tests 55.55s, environment 0ms)
+

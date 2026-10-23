@@ -1,0 +1,10 @@
+{
+  "at": "2026-09-29T20:48:44.188Z",
+  "read_only": true,
+  "room": "50fe326c-2be7-4a11-9384-3a3342ca91ec",
+  "rooms": [],
+  "dispatches": {
+    "error_class": "Error",
+    "error_code": "not_found"
+  }
+}

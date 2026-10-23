@@ -1,0 +1,30 @@
+{
+  "patch_applies_to_base": true,
+  "candidate_files_verified": 25,
+  "artifacts": [
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/chert-local-transport-proof-0.0.0.tgz",
+      "sha256": "28d830f0be65f32ce17d76705d9841e51562eef8be5dd09cfd2f4078e7eb436c",
+      "bytes": 56924
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/connector-relay-source.tar.gz",
+      "sha256": "1c914af674250c9eee58e50250adf3d9932d9c0b7600bec51930bbd38fbc2aa7",
+      "bytes": 5050
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/control-plane-source.tar.gz",
+      "sha256": "edb636caf7a896a6e62d25119ddec8ee99d76c9e49ff3a9dd0124d8c8d083068",
+      "bytes": 1687185
+    }
+  ]
+}
+{
+  "application_patch_applies": true,
+  "application_files": 7,
+  "artifact": {
+    "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/talking-head-bridge-source.tar.gz",
+    "sha256": "2613f241c49dc1c94680a1f4a76d144ca08a6d8884d0c7828480395615950f2d",
+    "bytes": 16206212
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "historical_files_checked": 53,
+  "changed_historical_files": [],
+  "whitespace_issues": [],
+  "cli_matrix": {
+    "22": {
+      "tests": 179,
+      "pass": 179,
+      "fail": 0
+    },
+    "24": {
+      "tests": 179,
+      "pass": 179,
+      "fail": 0
+    }
+  },
+  "real_sessions_started": 0,
+  "debt_or_authorization_changes": false
+}

@@ -1,0 +1,69 @@
+{
+  "base": "52b43a4be253bc815e32b205a8f1118870b85955",
+  "files": [
+    {
+      "path": "connector/README.md",
+      "sha256": "a3b736ea4672aa15ed289d61cac2a796f46971774607eaa4aa5baa092ba6e343"
+    },
+    {
+      "path": "connector/control.py",
+      "sha256": "41c52c54f45717d5a08213456f1b0a7b266990d3bba81c3bb7e4e0e78b1cc684"
+    },
+    {
+      "path": "connector/handler.ts",
+      "sha256": "6d40ff74d8a0c1734d97705dea0890e4a1443fad246cf826918cb6a5c4fb4657"
+    },
+    {
+      "path": "connector/host/chert-byor.service",
+      "sha256": "2ee2995bd573e5b379fd66746996f8f0bb53bbcfd368b4750833b6c22a72d311"
+    },
+    {
+      "path": "connector/host/talking-head-owner.service",
+      "sha256": "14ddf30737ae8a1ace8b2584c444bba8190cdb4da6663e1e3de502b951650d5c"
+    },
+    {
+      "path": "connector/owner.py",
+      "sha256": "f5635014c0ac1ea3a50ff6eada6480d0615cd6414105636601124bd87cb324f2"
+    },
+    {
+      "path": "connector/ready_adapter.py",
+      "sha256": "d9f0f2a1142baa8f48ff8ec56630923d63af72fc42353baab274c53be25a33cc"
+    },
+    {
+      "path": "connector/ready_owner.py",
+      "sha256": "facfbaf2b12119e47a5e1533e1ca13f9d945a9678bb9f53643ae6b5ce090aab0"
+    },
+    {
+      "path": "connector/server.py",
+      "sha256": "8ce3fdfcb0bea5fde5b8994714b967a5e406a0602e68604befe64aa1dfac556a"
+    },
+    {
+      "path": "connector/tests/fixture_server.py",
+      "sha256": "4174f89ed0dd1f1da7b2ea77b36ee6dd2387d30466c0e8b3a74d6786b203a71c"
+    },
+    {
+      "path": "connector/tests/substitutes.py",
+      "sha256": "ac9ec68898e6520d2e77e81191b7b4ee6bf7feab7b5862a603a571e5853637fc"
+    },
+    {
+      "path": "connector/tests/test_host.py",
+      "sha256": "95e18b0c0eee0dc588e1d64c6c00c46463d4257da73194ce9c823e16cf64d454"
+    },
+    {
+      "path": "connector/tests/test_owner.py",
+      "sha256": "031ac4730e3ee3034951d6f256dd94a409a91ef284375531eaf94c7347bac9fd"
+    },
+    {
+      "path": "connector/tests/test_ready_owner.py",
+      "sha256": "446b664d44d306028cba7e4e938e3daf01b750b87c66e583efe41a473769ad0b"
+    },
+    {
+      "path": "tests/agent-startup.test.mjs",
+      "sha256": "cc003f06dc9b438eeee16250189c41b845652769160117a7a1235eb5ddea2255"
+    },
+    {
+      "path": "tests/muse-startup.test.mjs",
+      "sha256": "9301dca31c91dd6811b8bda23179df18f2a83f09903635786ebd64e533858374"
+    }
+  ]
+}

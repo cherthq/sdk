@@ -1,0 +1,132 @@
+
+> @chert/facetime-control-plane@0.1.0 build
+> next build
+
+▲ Next.js 16.3.7 (Turbopack)
+⚠ Warning: Next.js ignored package-lock.json in /Users/garygao because it is outside the current Git repository (/Users/garygao/chert-facetime-cli).
+ To use this directory, set `turbopack.root` in your Next.js config.
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/garygao/chert-facetime-cli/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/package-lock.json
+
+✓ Running next.config.mjs took 7ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1529ms
+  Running TypeScript ...
+  Finished TypeScript in 3.0s ...
+  Collecting page data using 13 workers ...
+  Generating static pages using 13 workers (0/43) ...
+  Generating static pages using 13 workers (10/43) 
+  Generating static pages using 13 workers (21/43) 
+  Generating static pages using 13 workers (32/43) 
+✓ Generating static pages using 13 workers (43/43) in 194ms
+Turbopack build encountered 1 warning:
+./.local/byor-qualification/candidate/control-plane/src/lib/facetime/preview.ts:10:20
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m 8 |[0m
+  [90m 9 |[0m [36mconst[0m execute = promisify(execFile);
+[33m[1m>[0m [90m10 |[0m [36mconst[0m repository = resolve(process.cwd(), [32m".."[0m);
+  [90m   |[0m                    [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mconst[0m python = resolve(repository, [32m".venv-agent/bin/python"[0m);
+  [90m12 |[0m [36mconst[0m envFile = resolve(repository, [32m".env.agent.local"[0m);
+  [90m13 |[0m [36mconst[0m stateRoot = resolve(process.cwd(), [32m"test-results/preview"[0m);
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import trace:
+  App Route:
+    ./.local/byor-qualification/candidate/control-plane/src/lib/facetime/preview.ts
+    ./.local/byor-qualification/candidate/control-plane/app/api/v1/previews/[sessionId]/stop/route.ts
+
+
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├   /[tab]
+│ ├ ● /overview
+│ ├ ● /assistants
+│ ├ ● /calls
+│ └ ● [+3 more paths]
+├ ○ /account
+├ ○ /admin
+├ ○ /admin/users
+├ ƒ /api/admin/projects
+├ ƒ /api/admin/users
+├ ƒ /api/health
+├ ƒ /api/internal/v1/audits/dispatch
+├ ƒ /api/internal/v1/audits/poll
+├ ƒ /api/internal/v1/audits/report
+├ ƒ /api/internal/v1/calls/[callId]/events
+├ ƒ /api/internal/v1/calls/[callId]/transcript
+├ ƒ /api/internal/v1/connectors
+├ ƒ /api/internal/v1/sessions/[sessionId]/credentials/redeem
+├ ƒ /api/internal/v1/webhooks/dispatch
+├ ƒ /api/internal/v1/workers/commands/[commandId]/complete
+├ ƒ /api/internal/v1/workers/commands/[commandId]/outbound-lease
+├ ƒ /api/internal/v1/workers/commands/claim
+├ ƒ /api/internal/v1/workers/enroll
+├ ƒ /api/internal/v1/workers/heartbeat
+├ ƒ /api/v1/account
+├ ƒ /api/v1/api-keys
+├ ƒ /api/v1/api-keys/[keyId]/revoke
+├ ƒ /api/v1/assistants
+├ ƒ /api/v1/assistants/[assistantId]
+├ ƒ /api/v1/assistants/[assistantId]/preview
+├ ƒ /api/v1/assistants/[assistantId]/publish
+├ ƒ /api/v1/bootstrap
+├ ƒ /api/v1/calls
+├ ƒ /api/v1/calls/[callId]
+├ ƒ /api/v1/calls/[callId]/answer
+├ ƒ /api/v1/calls/[callId]/end
+├ ƒ /api/v1/calls/[callId]/events
+├ ƒ /api/v1/calls/[callId]/reject
+├ ƒ /api/v1/calls/[callId]/transcript
+├ ƒ /api/v1/connectors
+├ ƒ /api/v1/development/test-window
+├ ƒ /api/v1/integrations
+├ ƒ /api/v1/integrations/[integrationId]
+├ ƒ /api/v1/integrations/[integrationId]/rotate-secret
+├ ƒ /api/v1/integrations/[integrationId]/secret-versions/[versionId]/revoke
+├ ƒ /api/v1/lines
+├ ƒ /api/v1/lines/[lineId]
+├ ƒ /api/v1/previews/[sessionId]
+├ ƒ /api/v1/previews/[sessionId]/stop
+├ ƒ /api/v1/projects
+├ ƒ /api/v1/projects/[projectId]/identity
+├ ƒ /api/v1/settings
+├ ƒ /api/v1/webhooks
+├ ƒ /api/v1/webhooks/events/[eventId]
+├ ƒ /api/v1/webhooks/events/[eventId]/attempts
+├ ƒ /api/v1/webhooks/rotate-secret
+├ ƒ /api/v1/webhooks/secret-versions/[versionId]
+├ ƒ /api/v1/webhooks/secret-versions/[versionId]/revoke
+├ ƒ /api/v1/workers
+├ ƒ /api/v1/workers/[workerId]/audits
+├ ƒ /api/v1/workers/[workerId]/diagnostics
+├ ƒ /api/v1/workers/[workerId]/media-observations
+├ ƒ /api/v1/workers/development
+├ ƒ /api/v1/workers/development/local-enroll
+├ ○ /apple-icon.png
+├ ○ /icon.png
+├ ƒ /public/docs
+└ ○ /reset-password
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

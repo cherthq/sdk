@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/garygao/chert-facetime-cli/docs/byor-qualification/rehearse.py", line 65, in <module>
+    rejected=sql('begin;'+changed+'commit;',False);assert 'connector_runtime_drift' in rejected.stderr
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

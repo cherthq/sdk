@@ -1,0 +1,19 @@
+{
+  "archived_to": "/state/chert-pilot-retired-20260930",
+  "files_sha256": {
+    "volume-id": "23af1ba3816b885dcce303b616dd334497ea3d12c08a1777f545f346a6f8e5fe",
+    "initialized": "df1f40337561c115a214c86f84b7656f0c361d02f814d3bc573bc97563567cbe",
+    "supervisor.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ipc/admin.sock.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ipc/owner.sock.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "connector/config.json": "72435f400e799de92c0a9baa935c3a57af8da11f03beed51f7566a51e661c71b",
+    "connector/journal.json": "b65ffd17a071f473273c5dc77c6d50dd01fc8e0fe3d928da12662667e8db16ac",
+    "application/operations.json": "9c19c7d0aaa94c75cd590135fd882adfab3db8b0a65c0f69b586cde5ebb28f87",
+    "application/resources.json": "820e78271c7d2b22ef64f2f4d292b3b5adac7e7759bba9244c4ac66a9dcdbddf",
+    "application/operations.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application/resources.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fresh_subtree": "/state/chert-pilot",
+  "old_entries": 2,
+  "old_slots": 2
+}

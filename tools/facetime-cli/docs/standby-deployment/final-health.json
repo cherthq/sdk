@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-09-30T14:25:45.832457+00:00",
+  "status": 503,
+  "body": {
+    "healthy": false,
+    "mode": "degraded",
+    "session_readiness": "unavailable",
+    "acceptance_authority": "per_call_validation_required",
+    "processes": {
+      "owner": "running",
+      "node": "restart_budget_exhausted_or_fatal"
+    },
+    "ipc": false,
+    "connector_connected": false
+  }
+}

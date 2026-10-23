@@ -1,0 +1,20 @@
+{
+  "name": "byor-release-quiesce-20260930",
+  "conditionGroup": [
+    {
+      "conditions": [
+        {
+          "type": "path",
+          "op": "pre",
+          "value": "/"
+        }
+      ]
+    }
+  ],
+  "action": {
+    "mitigate": {
+      "action": "deny"
+    }
+  },
+  "active": true
+}

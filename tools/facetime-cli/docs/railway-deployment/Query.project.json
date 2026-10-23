@@ -1,0 +1,27 @@
+{
+  "matches": [
+    {
+      "args": [
+        {
+          "defaultValue": null,
+          "description": null,
+          "name": "id",
+          "namedType": "String",
+          "required": true,
+          "type": "String!"
+        }
+      ],
+      "deprecationReason": null,
+      "description": "Get a project by ID",
+      "isDeprecated": false,
+      "kind": "field",
+      "name": "project",
+      "namedType": "Project",
+      "parent": "Query",
+      "requiredArgs": [
+        "id"
+      ],
+      "type": "Project!"
+    }
+  ]
+}

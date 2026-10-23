@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-09-30T14:09:12.414502+00:00",
+  "path": "/Users/garygao/chert-facetime-cli/.local/railway-deployment/original-volume-before-transition-20260930.tar.gz",
+  "sha256": "cc9e9fff3e2b47cb3ccf7c01215e35fb62bf703e8722893f4b2e08f056b096b6",
+  "bytes": 1663,
+  "mode": "0600",
+  "phase": "before graceful old-owner shutdown; receipts may evolve until drain",
+  "volume_id": "22f39489-ca8e-4c04-8d42-d6d3e194b379"
+}

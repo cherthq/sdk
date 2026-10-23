@@ -1,0 +1,264 @@
+{
+  "node": "v22.23.2",
+  "sdk": "2.19.0",
+  "agents": "1.8.0",
+  "rtc": "0.13.35",
+  "started_at": "2026-09-29T21:10:33.304Z",
+  "run_id": "5826fc94-7077-4ce2-8baa-d10719a9e28d",
+  "instance_id": "1b4ec1bd-15e4-4ab4-8b1d-ec0fd5ee9582",
+  "worker_name": "chert-connector-test-5826fc94-7077-4ce2-8baa-d10719a9e28d",
+  "deployment": "chert-test-5826fc94-7077-4ce2-8baa-d10719a9e28d",
+  "boot": "5826fc94-7077-4ce2-8baa-d10719a9e28d",
+  "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "prior_local_probe_workers": 0,
+  "original_status": "unresolved",
+  "original_sha256": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "redispatch": false,
+  "status": "passed",
+  "provider_sessions": 0,
+  "before_room_count": 0,
+  "room_creates": 1,
+  "dispatch_creates": 0,
+  "deleted_rooms": 1,
+  "stage": "done",
+  "original_inventory": {
+    "at": "2026-09-29T21:10:34.483Z",
+    "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+    "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+    "rooms": 0,
+    "dispatch": {
+      "status": "unknown",
+      "error_class": "Error",
+      "error_code": "not_found"
+    },
+    "cleanup_debt": true,
+    "create_pending": true,
+    "settlement": "unknown"
+  },
+  "worker_runtime": "v22.23.2",
+  "worker_start_ms": 542,
+  "idle_new_rooms": 0,
+  "idle_jobs": 0,
+  "deadlines": {
+    "created_at": 1790716236435,
+    "prepare_deadline_at": 1790716240435,
+    "decision_deadline_at": 1790716241435,
+    "resource_expires_at": 1790716296435
+  },
+  "room_create_ms": 530,
+  "room_triggered_dispatches": 1,
+  "readiness": {
+    "at": "2026-09-29T21:10:39.872Z",
+    "operation": "b0bd2f37-dd90-4279-8b56-23d3f8c89ca7",
+    "room": "d27d7995-039a-47b9-9fa1-88cbd41e6af6",
+    "dispatch": "AD_w7bA75onRGhP",
+    "job": "AJ_x2PpBvRt3Ud7",
+    "worker": "AW_2HfhGjdtyWPT",
+    "participant": "36e3ffd2-399a-48dd-ba38-449310e37219",
+    "track": "TR_AMWvRmhZqXTaZi",
+    "nonce_matches": true,
+    "nested_job_room_omitted": true,
+    "exact_ready_predicate": true,
+    "sole_unmuted_audio": true,
+    "decoded_audio": false
+  },
+  "readiness_checks": {
+    "hook_connected": true,
+    "not_draining": true,
+    "session_matches": true,
+    "not_cancelled": true,
+    "session_ready": true,
+    "hook_worker_matches": true,
+    "one_job": true,
+    "job_matches": true,
+    "dispatch_matches": true,
+    "job_running": true,
+    "job_room_matches": true,
+    "job_participant_matches": true,
+    "job_worker_matches": true,
+    "no_foreign_participants": true,
+    "participant_present": true,
+    "nonce_matches": true,
+    "participant_job_matches": true,
+    "sole_unmuted_audio": true,
+    "track_matches": true
+  },
+  "decision": "accept",
+  "preparation_ms": 3473,
+  "accepted_at": "2026-09-29T21:10:39.914Z",
+  "acceptance_version": 1,
+  "acceptance_delivered": true,
+  "authority_commits": 1,
+  "actual_job_correlated": true,
+  "room_sid": "RM_3FghZH353wCp",
+  "bridge": {
+    "signature_verified": true,
+    "call_scoped_room": true,
+    "call_scoped_identity": true,
+    "publication_and_subscription": true,
+    "token_logged": false,
+    "bridge_connected": false
+  },
+  "full_health_verified": true,
+  "terminal": {
+    "event": "9122c55d-144f-4588-812e-137bd6d74159",
+    "version": 2,
+    "delivered": true,
+    "acknowledged": true
+  },
+  "cleanup_ms": 2738,
+  "job_ended": {
+    "job": "AJ_x2PpBvRt3Ud7",
+    "worker": "AW_2HfhGjdtyWPT",
+    "status": "ended",
+    "at": "2026-09-29T21:10:42.774Z"
+  },
+  "draining_health_verified": true,
+  "stage_before_cleanup": "done",
+  "cleanup_debt": 0,
+  "adapter_phase": "clean",
+  "operation": {
+    "logical": "b0bd2f37-dd90-4279-8b56-23d3f8c89ca7",
+    "room": "d27d7995-039a-47b9-9fa1-88cbd41e6af6",
+    "room_sid": "RM_3FghZH353wCp",
+    "dispatch": "AD_w7bA75onRGhP",
+    "actual_job": "AJ_x2PpBvRt3Ud7"
+  },
+  "final_hook": {
+    "connected": true,
+    "worker": "AW_2HfhGjdtyWPT",
+    "draining": true,
+    "session": {
+      "job": "AJ_x2PpBvRt3Ud7",
+      "worker": "AW_2HfhGjdtyWPT",
+      "status": "ended",
+      "cancelled": true
+    }
+  },
+  "operation_audit": [
+    {
+      "operation": "room",
+      "phase": "pending",
+      "at": 1790716236534,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3901,
+      "effective_timeout_ms": 3000
+    },
+    {
+      "operation": "room",
+      "phase": "acknowledged",
+      "at": 1790716237073,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3901,
+      "effective_timeout_ms": 3000
+    }
+  ],
+  "cleanup_evidence": [
+    {
+      "kind": "cancelled",
+      "at": 1790716240118,
+      "roomSid": "RM_3FghZH353wCp",
+      "dispatchId": "AD_w7bA75onRGhP",
+      "observation": {
+        "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+        "name": "chert-connector-test-5826fc94-7077-4ce2-8baa-d10719a9e28d",
+        "deployment": "chert-test-5826fc94-7077-4ce2-8baa-d10719a9e28d",
+        "boot": "5826fc94-7077-4ce2-8baa-d10719a9e28d",
+        "worker": "AW_2HfhGjdtyWPT",
+        "sequence": 51,
+        "observed_at": 1790716240117,
+        "challenge": "8468a3f8-7076-41fd-9170-20368fa7ed9e",
+        "connected": true,
+        "draining": false,
+        "capacity": 0,
+        "session": {
+          "operation": "b0bd2f37-dd90-4279-8b56-23d3f8c89ca7",
+          "room": "d27d7995-039a-47b9-9fa1-88cbd41e6af6",
+          "marker": "445c913a-eaa2-4e7c-9dc3-fa90cc4208d7",
+          "nonce": "492d26cf-a5aa-4b95-aa83-5125cc99b526",
+          "participant": "36e3ffd2-399a-48dd-ba38-449310e37219",
+          "job": "AJ_x2PpBvRt3Ud7",
+          "dispatch": "AD_w7bA75onRGhP",
+          "worker": "AW_2HfhGjdtyWPT",
+          "status": "ready",
+          "cancelled": true,
+          "track": "TR_AMWvRmhZqXTaZi"
+        },
+        "cancelled_operation": "b0bd2f37-dd90-4279-8b56-23d3f8c89ca7"
+      }
+    },
+    {
+      "kind": "dispatch_deleted",
+      "at": 1790716240250,
+      "roomSid": "RM_3FghZH353wCp",
+      "dispatchId": "AD_w7bA75onRGhP"
+    },
+    {
+      "kind": "ended",
+      "at": 1790716240264,
+      "roomSid": "RM_3FghZH353wCp",
+      "dispatchId": "AD_w7bA75onRGhP",
+      "observation": {
+        "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+        "name": "chert-connector-test-5826fc94-7077-4ce2-8baa-d10719a9e28d",
+        "deployment": "chert-test-5826fc94-7077-4ce2-8baa-d10719a9e28d",
+        "boot": "5826fc94-7077-4ce2-8baa-d10719a9e28d",
+        "worker": "AW_2HfhGjdtyWPT",
+        "sequence": 54,
+        "observed_at": 1790716240264,
+        "challenge": "3ef24e75-c336-4e1c-9a1f-7ece586c3040",
+        "connected": true,
+        "draining": false,
+        "capacity": 0,
+        "session": {
+          "operation": "b0bd2f37-dd90-4279-8b56-23d3f8c89ca7",
+          "room": "d27d7995-039a-47b9-9fa1-88cbd41e6af6",
+          "marker": "445c913a-eaa2-4e7c-9dc3-fa90cc4208d7",
+          "nonce": "492d26cf-a5aa-4b95-aa83-5125cc99b526",
+          "participant": "36e3ffd2-399a-48dd-ba38-449310e37219",
+          "job": "AJ_x2PpBvRt3Ud7",
+          "dispatch": "AD_w7bA75onRGhP",
+          "worker": "AW_2HfhGjdtyWPT",
+          "status": "ended",
+          "cancelled": true,
+          "track": "TR_AMWvRmhZqXTaZi"
+        },
+        "cancelled_operation": "b0bd2f37-dd90-4279-8b56-23d3f8c89ca7"
+      }
+    },
+    {
+      "kind": "room_deleted",
+      "at": 1790716240443,
+      "roomSid": "RM_3FghZH353wCp",
+      "dispatchId": "AD_w7bA75onRGhP"
+    },
+    {
+      "kind": "absent",
+      "at": 1790716241611,
+      "roomSid": "RM_3FghZH353wCp",
+      "dispatchId": "AD_w7bA75onRGhP"
+    }
+  ],
+  "topology": "room_agent",
+  "worker_stopped": true,
+  "worker_exit": {
+    "code": 0,
+    "signal": null
+  },
+  "final_global_list_owned_room_count": 0,
+  "final_owned_rooms": 0,
+  "final_scoped_room_observations": [],
+  "unrelated_rooms_unchanged": true,
+  "baseline_unrelated_rooms": 0,
+  "original_sha256_after": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "original_evidence_unchanged": true,
+  "finished_at": "2026-09-29T21:10:45.345Z"
+}

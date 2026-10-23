@@ -1,0 +1,65 @@
+{
+  "deployment": {
+    "id": "98b51a9d-e613-4a69-af39-609edc760fae",
+    "instances": [
+      {
+        "id": "b01ac238-c473-4fd6-873b-65e8fbcb8d13",
+        "status": "RUNNING"
+      }
+    ],
+    "meta": {
+      "buildOnly": false,
+      "cliAgentSessionId": "01a0f013-3591-7a50-a8ab-6ac3fa0aaddb",
+      "cliCaller": "codex",
+      "cliMessage": "Qualification only: end signal timing probe",
+      "fileServiceManifest": {},
+      "logsV2": true,
+      "nixpacksProviders": [],
+      "propertyFileMapping": {},
+      "reason": "deploy",
+      "rootDirectory": null,
+      "runtime": "V2",
+      "serviceManifest": {
+        "build": {
+          "buildCommand": null,
+          "buildEnvironment": "V3",
+          "builder": "DOCKERFILE",
+          "dockerfilePath": "/Dockerfile",
+          "nixpacksConfigPath": null,
+          "nixpacksPlan": null,
+          "watchPatterns": []
+        },
+        "deploy": {
+          "cronSchedule": null,
+          "drainingSeconds": 65,
+          "healthcheckPath": null,
+          "healthcheckTimeout": null,
+          "ipv6EgressEnabled": false,
+          "limitOverride": null,
+          "multiRegionConfig": {
+            "us-west2": {
+              "numReplicas": 1
+            }
+          },
+          "numReplicas": 1,
+          "overlapSeconds": 0,
+          "preDeployCommand": null,
+          "preDeployTimeoutSeconds": null,
+          "region": null,
+          "registryCredentials": null,
+          "requiredMountPath": null,
+          "restartPolicyMaxRetries": null,
+          "restartPolicyType": "NEVER",
+          "runtime": "V2",
+          "sleepApplication": false,
+          "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+          "useLegacyStacker": false
+        }
+      },
+      "volumeMounts": [
+        "/state"
+      ]
+    },
+    "status": "DEPLOYING"
+  }
+}

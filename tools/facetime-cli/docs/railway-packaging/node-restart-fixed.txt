@@ -1,0 +1,6 @@
+test_node_restart_sigkill_and_independent_expiry (test_container.Containers.test_node_restart_sigkill_and_independent_expiry) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 25.738s
+
+OK

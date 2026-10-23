@@ -1,0 +1,21 @@
+[
+  {
+    "observed_at": "2026-09-30 03:12:51.622002+00",
+    "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+    "line_id": "59b3e3d0-945b-45da-b907-027103941a65",
+    "assignment_generation": 3,
+    "status": "available",
+    "current_call_id": null,
+    "inbound_policy": "customer_decides",
+    "default_assistant_id": null,
+    "integration_id": "946445e1-2c0f-478d-a049-72c8dd9762f2",
+    "enabled": true,
+    "endpoint_url": "https://talking-head-webhook-production.up.railway.app/webhooks/talking-head",
+    "signing_enabled": false,
+    "payload_version": 1,
+    "active_revision_id": "f6613a73-98ef-4450-8a8e-b8a5979d201e",
+    "integration_generation": 11,
+    "livekit_allowed_hosts": [],
+    "uncleaned_sessions": 1
+  }
+]

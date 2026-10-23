@@ -1,0 +1,45 @@
+{
+  "source_base": "cbb22ee854e26219aea92d67fa401433cdb4d84c",
+  "artifacts": [
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/chert-local-transport-proof-0.0.0.tgz",
+      "sha256": "ea5da6543cd9b766b076901270fb2535d5681c45a030df8456a4e198b9ed11bc",
+      "bytes": 57002
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/connector-relay-source.tar.gz",
+      "sha256": "1c914af674250c9eee58e50250adf3d9932d9c0b7600bec51930bbd38fbc2aa7",
+      "bytes": 5050
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/control-plane-source.tar.gz",
+      "sha256": "3335d617e8e0177fca6e7520017d82c11d6d95bdddc3cf689cb930f4eb2885ee",
+      "bytes": 1687803
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/talking-head-bridge-source.tar.gz",
+      "sha256": "4bf75b1ab87ce784dbe38aff2ec08000462ea50422261f2f620ad9f69484cc43",
+      "bytes": 16215165
+    }
+  ],
+  "configuration": [
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-release/migration.payload.sql",
+      "sha256": "573a8b3aab2d2b9002bf6609d31fa439c93e8b7a505dbfd0be5ef7eb2f274d7e"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-release/chert-byor.service",
+      "sha256": "2ee2995bd573e5b379fd66746996f8f0bb53bbcfd368b4750833b6c22a72d311"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-release/talking-head-owner.service",
+      "sha256": "14ddf30737ae8a1ace8b2584c444bba8190cdb4da6663e1e3de502b951650d5c"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-release/runtime.env.names",
+      "sha256": "924bc3e04e2787594e59f3e1994b135bb3c022cfba17060814ed5374da518506"
+    }
+  ],
+  "application_base": "52b43a4be253bc815e32b205a8f1118870b85955",
+  "release": "byor-av-pilot-20260930-r1"
+}

@@ -1,0 +1,53 @@
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime/control-plane
+
+ ❯ tests/connectors.test.ts (2 tests | 2 failed) 2011ms
+     × enrolls standby without changing the legacy route and rejects foreign membership 1067ms
+     × requires exact line selection and an explicit activation compare-and-swap 943ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connectors.test.ts > connector authoritative database boundary > enrolls standby without changing the legacy route and rejects foreign membership
+Error: Command failed: /opt/homebrew/opt/postgresql@15/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-0wGD4H -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  function facetime_connector_manage(unknown, unknown, unknown, jsonb) does not exist
+LINE 1: select facetime_connector_manage('11000000-0000-4000-8000-00...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/connectors.test.ts:24:38
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/connectors.test.ts > connector authoritative database boundary > requires exact line selection and an explicit activation compare-and-swap
+Error: Command failed: /opt/homebrew/opt/postgresql@15/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-YHOTGI -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  function facetime_connector_manage(unknown, unknown, unknown, jsonb) does not exist
+LINE 1: select facetime_connector_manage('11000000-0000-4000-8000-00...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/connectors.test.ts:37:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:20:33
+   Duration  2.11s (transform 17ms, setup 0ms, import 23ms, tests 2.01s, environment 0ms)
+

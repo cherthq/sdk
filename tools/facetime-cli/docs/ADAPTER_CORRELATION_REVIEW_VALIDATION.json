@@ -1,0 +1,18 @@
+{
+  "at": "2026-09-29T21:12:01.349Z",
+  "cli_tests": {
+    "v22.23.2": 180,
+    "v24.14.0": 180
+  },
+  "demo_tests": {
+    "v22.23.2": 97
+  },
+  "typecheck": true,
+  "lint": true,
+  "build": true,
+  "synthetic_proofs": true,
+  "historical_hashes_verified": 59,
+  "new_evidence_unchanged": true,
+  "live_attempts": 1,
+  "live_status": "passed"
+}

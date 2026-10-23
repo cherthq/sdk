@@ -1,0 +1,13 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run tests/connectors.test.ts tests/connector-service.test.ts tests/connector-incoming.test.ts tests/connector-production-compatibility.test.ts tests/session-cleanup-ordering.test.ts tests/optional-signing.test.ts tests/automatic-readiness.test.ts
+
+
+ RUN  v4.1.11 /Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane
+
+
+ Test Files  7 passed (7)
+      Tests  107 passed (107)
+   Start at  00:15:13
+   Duration  16.87s (transform 629ms, setup 73ms, import 421ms, tests 52.30s, environment 0ms)
+

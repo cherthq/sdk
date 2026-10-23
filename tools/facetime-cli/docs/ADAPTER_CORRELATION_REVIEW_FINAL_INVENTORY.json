@@ -1,0 +1,92 @@
+{
+  "at": "2026-09-29T21:11:15.193Z",
+  "mode": "final",
+  "node": "v22.23.2",
+  "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "read_only": true,
+  "inventories": [
+    {
+      "label": "original",
+      "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+      "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+      "room_sid": "RM_mrfsEGe5SAUK",
+      "rooms": [],
+      "dispatches": {
+        "status": "unknown",
+        "error_class": "Error",
+        "error_code": "not_found"
+      },
+      "phase": "dispatch_pending",
+      "create_pending": true,
+      "cleanup_debt": true,
+      "audit_decision": "Retain debt: unacknowledged dispatch; original send/settlement evidence missing."
+    },
+    {
+      "label": "diagnostic",
+      "operation": "98084e96-5778-4721-8110-6601358270a8",
+      "room": "72ff56d4-1fd4-4fd8-9b60-078599d276a0",
+      "room_sid": "RM_uciFtuAa76x9",
+      "rooms": [],
+      "dispatches": {
+        "status": "unknown",
+        "error_class": "Error",
+        "error_code": "not_found"
+      },
+      "phase": "dispatch_ack",
+      "create_pending": false,
+      "cleanup_debt": true,
+      "audit_decision": "Retain debt: historical final hook lacks complete operation/nonce/marker and no durable exact terminal/deletion receipt. Do not fabricate them from room absence."
+    },
+    {
+      "label": "qualification_1",
+      "operation": "9eb53515-ef44-4f86-9a69-1aac0103c1e7",
+      "room": "50fe326c-2be7-4a11-9384-3a3342ca91ec",
+      "room_sid": "RM_zdHQ2njHAvmh",
+      "rooms": [],
+      "dispatches": {
+        "status": "unknown",
+        "error_class": "Error",
+        "error_code": "not_found"
+      },
+      "phase": "clean",
+      "create_pending": false,
+      "cleanup_debt": false,
+      "audit_decision": "Verified new cleanup; durable exact terminal/deletion evidence present."
+    },
+    {
+      "label": "readiness_review",
+      "operation": "9bc1d097-ec66-4b06-9a24-af3803ac2851",
+      "room": "998fb937-5f5d-4082-bf13-cd42d135d20f",
+      "room_sid": "RM_vAT5DHxbKQ33",
+      "rooms": [],
+      "dispatches": {
+        "status": "unknown",
+        "error_class": "Error",
+        "error_code": "not_found"
+      },
+      "phase": "clean",
+      "create_pending": false,
+      "cleanup_debt": false,
+      "audit_decision": "Verified new cleanup; durable exact terminal/deletion evidence present."
+    },
+    {
+      "label": "correlation_review",
+      "operation": "b0bd2f37-dd90-4279-8b56-23d3f8c89ca7",
+      "room": "d27d7995-039a-47b9-9fa1-88cbd41e6af6",
+      "room_sid": "RM_3FghZH353wCp",
+      "rooms": [],
+      "dispatches": {
+        "status": "unknown",
+        "error_class": "Error",
+        "error_code": "not_found"
+      },
+      "phase": "clean",
+      "create_pending": false,
+      "cleanup_debt": false,
+      "audit_decision": "Verified new cleanup; durable exact terminal/deletion evidence present."
+    }
+  ],
+  "historical_evidence_unchanged": true,
+  "unrelated_demo_files_unchanged": true,
+  "local_probe_workers": 0
+}

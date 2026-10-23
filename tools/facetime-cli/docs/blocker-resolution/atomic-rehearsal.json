@@ -1,0 +1,13 @@
+{
+  "postgres": "postgres (PostgreSQL) 17.6",
+  "baseline": "production catalog public schema; synthetic auth stub; no rows",
+  "late_failure_atomic_rollback": true,
+  "shared_function_rollback": true,
+  "function_drift_rejected": true,
+  "cleanup_function_drift_rejected": true,
+  "migration_applied_once": true,
+  "repeat_rejected": true,
+  "bindings_created": 0,
+  "deliveries_created": 0,
+  "production_access": false
+}

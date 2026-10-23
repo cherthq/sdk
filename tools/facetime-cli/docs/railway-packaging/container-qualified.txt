@@ -1,0 +1,13 @@
+test_child_restart_refuses_missing_journal_without_stopping_owner (test_container.Containers.test_child_restart_refuses_missing_journal_without_stopping_owner) ... ok
+test_missing_mount_journal_and_foreign_marker_refuse (test_container.Containers.test_missing_mount_journal_and_foreign_marker_refuse) ... ok
+test_node_restart_sigkill_and_independent_expiry (test_container.Containers.test_node_restart_sigkill_and_independent_expiry) ... ok
+test_production_image_standby_and_bad_node_config_leave_owner_alive (test_container.Containers.test_production_image_standby_and_bad_node_config_leave_owner_alive) ... ok
+test_python_crash_reopens_claim_and_preserves_interrupted_staging (test_container.Containers.test_python_crash_reopens_claim_and_preserves_interrupted_staging) ... ok
+test_shutdown_preserves_uncertainty_and_bounds_restart_storm (test_container.Containers.test_shutdown_preserves_uncertainty_and_bounds_restart_storm) ... ok
+test_standby_permissions_credentials_and_zero_allocations (test_container.Containers.test_standby_permissions_credentials_and_zero_allocations) ... ok
+test_writer_exclusion_restart_and_container_replacement (test_container.Containers.test_writer_exclusion_restart_and_container_replacement) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 119.365s
+
+OK

@@ -1,0 +1,346 @@
+[
+  {
+    "id": "chert-local-transport-proof@0.0.0",
+    "name": "chert-local-transport-proof",
+    "version": "0.0.0",
+    "size": 56924,
+    "unpackedSize": 259836,
+    "shasum": "1e8b1845ecd3af9e0271efde8fd4c32799975201",
+    "integrity": "sha512-UWRYB70rvpIZDXlbrfVl3VX0+jAlow8nvOSZsW9HqTrOek7b8UWSROIfE5fANx8mvEcUZ0mdyfEokBzqLVz6Sg==",
+    "filename": "chert-local-transport-proof-0.0.0.tgz",
+    "files": [
+      {
+        "path": "CLI_GUIDE.md",
+        "size": 11455,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 3287,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-hook.d.ts",
+        "size": 2369,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-hook.js",
+        "size": 3872,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-operation.d.ts",
+        "size": 3944,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-operation.js",
+        "size": 3969,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-receipts.d.ts",
+        "size": 5892,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit-receipts.js",
+        "size": 4393,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit.d.ts",
+        "size": 3189,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/adapters/livekit.js",
+        "size": 19856,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/connector.d.ts",
+        "size": 1499,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/connector.js",
+        "size": 16731,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/contract.d.ts",
+        "size": 2070,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/contract.js",
+        "size": 47,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/handler.d.ts",
+        "size": 251,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/handler.js",
+        "size": 3556,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/journal.d.ts",
+        "size": 6320,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/journal.js",
+        "size": 4930,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/run.d.ts",
+        "size": 1700,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/run.js",
+        "size": 8255,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/scaffold.d.ts",
+        "size": 1575,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/byor/scaffold.js",
+        "size": 1572,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/backend.d.ts",
+        "size": 303,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/backend.js",
+        "size": 6874,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/commands.d.ts",
+        "size": 63,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/commands.js",
+        "size": 10745,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/config.d.ts",
+        "size": 14952,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/config.js",
+        "size": 6094,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/diagnostics.d.ts",
+        "size": 3636,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/diagnostics.js",
+        "size": 3306,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/errors.d.ts",
+        "size": 251,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/errors.js",
+        "size": 473,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/main.d.ts",
+        "size": 31,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/main.js",
+        "size": 1325,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/network-policy.d.ts",
+        "size": 235,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/network-policy.js",
+        "size": 849,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/run.d.ts",
+        "size": 229,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/run.js",
+        "size": 6517,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/state.d.ts",
+        "size": 5870,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/cli/state.js",
+        "size": 3839,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/protocol/v1.d.ts",
+        "size": 17415,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/protocol/v1.js",
+        "size": 5452,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/agent.d.ts",
+        "size": 601,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/agent.js",
+        "size": 44,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/availability.d.ts",
+        "size": 1035,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/availability.js",
+        "size": 2566,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/connector.d.ts",
+        "size": 1825,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/connector.js",
+        "size": 17914,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/deadline.d.ts",
+        "size": 701,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/deadline.js",
+        "size": 1908,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/journal.d.ts",
+        "size": 4919,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/journal.js",
+        "size": 6131,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/reconciliation.d.ts",
+        "size": 207,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/runtime/reconciliation.js",
+        "size": 53,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/connector-wire.d.ts",
+        "size": 883,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/connector-wire.js",
+        "size": 3762,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/http.d.ts",
+        "size": 287,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/http.js",
+        "size": 1499,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/reconcile.d.ts",
+        "size": 347,
+        "mode": 420
+      },
+      {
+        "path": "dist/src/transport/reconcile.js",
+        "size": 1382,
+        "mode": 420
+      },
+      {
+        "path": "docs/BYOR_OWNERSHIP.md",
+        "size": 6192,
+        "mode": 420
+      },
+      {
+        "path": "examples/byor/handler.ts",
+        "size": 596,
+        "mode": 420
+      },
+      {
+        "path": "examples/byor/README.md",
+        "size": 2414,
+        "mode": 420
+      },
+      {
+        "path": "examples/byor/sessions.ts",
+        "size": 3683,
+        "mode": 420
+      },
+      {
+        "path": "examples/byor/tsconfig.json",
+        "size": 231,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 1465,
+        "mode": 420
+      }
+    ],
+    "entryCount": 66,
+    "bundled": []
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "postgres": "postgres (PostgreSQL) 17.6",
+  "baseline": "recorded production catalog + preserved blocker-resolution payload",
+  "byor_extension_applied": true,
+  "forced_late_failure_rolls_back_column_functions_and_rename": true,
+  "five_shared_function_bodies_unchanged": true,
+  "automatic_readiness_runtime_body_preserved": true,
+  "delegated_runtime_not_callable_by_service_role": true,
+  "public_and_authenticated_execute_denied": true,
+  "no_enrollment_or_routing": true,
+  "production_access": false,
+  "candidate_artifacts_modified": false
+}

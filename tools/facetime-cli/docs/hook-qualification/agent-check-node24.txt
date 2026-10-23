@@ -1,0 +1,134 @@
+
+> demo-agent-0@1.0.0 check
+> node --check src/agent.mjs && node --check src/byor.mjs && node --check src/remote-video.mjs && node --check src/caller-vision.mjs && node --check scripts/receive-video.mjs && node --experimental-test-module-mocks --test tests/*.test.mjs
+
+✔ unset and explicit classic select the existing implementation (0.670166ms)
+✔ demo is explicitly unimplemented and resolves to the exact classic implementation (0.062917ms)
+✔ unknown, blank and inherited names fail with a sanitized configuration error (0.245292ms)
+✔ muse selects its own implementation without demo fallback (0.055833ms)
+✔ continuous classic dispatch cannot start Muse (0.095458ms)
+file:///Users/garygao/demo-agent-0/node_modules/@livekit/rtc-node/dist/index.js?node-test-mock=0:63
+export let module.exports = $__exports.namedExports["module.exports"];
+                 ^
+
+SyntaxError: Unexpected token '.'
+    at compileSourceTextModule (node:internal/modules/esm/utils:318:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:99:18)
+    at #translate (node:internal/modules/esm/loader:473:20)
+    at afterLoad (node:internal/modules/esm/loader:529:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:534:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:577:36)
+    at afterResolve (node:internal/modules/esm/loader:625:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:631:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:245:17)
+
+Node.js v24.14.0
+✖ tests/agent-startup.test.mjs (432.292875ms)
+✔ avatar publishes valid native frames and animates the mouth while speaking (73.036833ms)
+✔ describe sends only a fresh received image, then invalidates on mute (0.743708ms)
+✔ stale frame, cancellation and closed call do not send an image (0.097292ms)
+✔ one in-flight request; mute aborts and suppresses a late provider result (4.76ms)
+✔ cancellation during encoding prevents transmission; API failures are sanitized (0.499125ms)
+✔ native JPEG encoding maps SDK rotation enums without stretching (5.610958ms)
+✔ readiness speech completes without being sent to the avatar or audio output (0.819667ms)
+✔ live speech waits for provider playback and emits actual media start once (193.051417ms)
+✔ interruption mutes immediately, drains old speech and fences a late completion (404.958708ms)
+✔ large model frames are split into bounded chunks and closing releases playback (0.455667ms)
+✔ scene requests only become confirmed after renderer completion; repeats are idempotent (0.427791ms)
+✔ conflicting requests retain only latest destination and reject stale completion (0.107042ms)
+✔ failed transition preserves settled state; late callbacks cannot revive a closed scene (0.180584ms)
+✔ portrait composite preserves alpha, background, and subject proportions (6.813708ms)
+✔ compositor bounds work, rejects parallel renders, and releases busy state after errors (19.71525ms)
+✔ explicit chroma key removes green, preserves skin-colored pixels, and does not mutate input (0.227666ms)
+✔ render tokens are confined to a new private room and never grant administration (1.616667ms)
+✔ provider start failure removes only its own room and sanitizes the response (1.024375ms)
+✔ audio uses exact PCM subarray, scoped destination, turn end and clear RPC (0.36275ms)
+✔ configuration is validated without echoing sensitive values (0.103667ms)
+✔ confirmed submission blocks duplicate paid generation (137.563208ms)
+✔ finite route submits once with a 15-second budget and no matching last frame (88.762042ms)
+✔ explicit client rejection permits retry after account activation (100.028875ms)
+✔ ambiguous transport failure preserves receipt and blocks resubmission (70.032166ms)
+✔ transition waits for loop seam and confirms only after destination publication (0.75925ms)
+✔ rapid reversal completes the current transition then starts the latest request (0.292334ms)
+✔ scene failures preserve settled state and manifests reject escape paths and unbounded loops (0.853375ms)
+✔ finite route slows immediately, confirms on presentation, holds exact position and resumes (0.311209ms)
+✔ route endpoint holds instead of rewinding, and rejects exhausted resume (0.135541ms)
+✔ route ignores duplicate requests and serializes rapid reversal without position reset (0.138916ms)
+✔ resume queued during endpoint stop fails instead of confirming impossible travel (0.099375ms)
+✔ manual control signs exact operation and session (2.319583ms)
+✔ preflight stops immediately after ready without accepting a call (0.444542ms)
+✔ Ctrl-C stops the exact session and never restarts (0.092625ms)
+✔ ambiguous network failure still requests cleanup without retrying start (0.161708ms)
+✔ failed preparation and unverified cleanup cannot pass preflight (0.178ms)
+✔ local summary shows safe settings and presence without secret values (0.261375ms)
+✔ hosted profile is confirmed separately from local env with mismatch notice (0.139041ms)
+✔ readiness speech completes without being sent to the avatar or audio output (0.795208ms)
+✔ live speech waits for provider playback and emits actual media start once (192.775375ms)
+✔ interruption mutes immediately, drains old speech and fences a late completion (405.223875ms)
+✔ large model frames are split into bounded chunks and closing releases playback (0.403458ms)
+✔ render tokens are confined to a new private room and never grant administration (1.608875ms)
+✔ provider start failure removes only its own room and sanitizes the response (0.798292ms)
+✔ audio uses exact PCM subarray, scoped destination, turn end and clear RPC (0.619292ms)
+✔ configuration is validated without echoing sensitive values (0.104875ms)
+✔ hosted internal LiveKit address is kept separate from the public renderer URL (0.069833ms)
+file:///Users/garygao/demo-agent-0/node_modules/@livekit/rtc-node/dist/index.js?node-test-mock=0:63
+export let module.exports = $__exports.namedExports["module.exports"];
+                 ^
+
+SyntaxError: Unexpected token '.'
+    at compileSourceTextModule (node:internal/modules/esm/utils:318:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:99:18)
+    at #translate (node:internal/modules/esm/loader:473:20)
+    at afterLoad (node:internal/modules/esm/loader:529:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:534:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:577:36)
+    at afterResolve (node:internal/modules/esm/loader:625:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:631:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:245:17)
+
+Node.js v24.14.0
+✖ tests/muse-startup.test.mjs (412.088166ms)
+✔ inbound requires no outbound configuration; explicit outbound metadata fails closed (0.700042ms)
+✔ only matching activation greets once; active locks the call ID (0.160125ms)
+✔ terminal before activation and expired control lease suppress late activation (0.354167ms)
+✔ outbound media accepts legacy audio and explicit video, rejects malformed choices (0.967ms)
+✔ expired inbound dispatch is rejected before any provider work (0.695167ms)
+✔ cold preparation has a fixed deadline; old and outbound jobs keep their bound (21.484375ms)
+✔ existing subscribed camera: metadata, dimensions, sanitized diagnostics and idempotence (3.17325ms)
+✔ no video is nonblocking; delayed participant and later publication subscribe once; audio untouched (0.232042ms)
+✔ existing unpublished subscription is requested on initial scan (0.089ms)
+✔ selection is camera-only, same participant, deterministic and sticky through mute (6.667417ms)
+✔ explicit participant/name filters do not fall back; disabled receiver has no listeners (0.303583ms)
+✔ unpublish, participant departure and reconnect cancel and rebuild exactly one reader (0.498125ms)
+✔ unsubscribe and replacement track cancel old stream; failure retries with bounded cadence (0.295375ms)
+✔ bounded slow consumer: newest pending only, sampling and stale/input resolution drops (1.245959ms)
+✔ consumer errors and decode EOF are isolated and recover; shutdown aborts in-flight work (0.348292ms)
+✔ mute aborts a pending consumer and drops buffered work (3.176084ms)
+✔ resize caps dimensions, preserves aspect and emits RGB24 without native conversion (0.07625ms)
+✔ configuration rejects unbounded values; setup failure never rejects audio startup (0.224292ms)
+✔ receive-first probe gates only return publication and fails closed when frames are absent (0.429167ms)
+✔ consumer timeout aborts work, permits later frames only after settlement, and clears shutdown (1.1765ms)
+✔ stream setup/read failures are sanitized and retry; disconnect removes all listeners (0.237416ms)
+✔ uncooperative timed-out consumer cannot create duplicate work or hold up shutdown (0.321291ms)
+✔ receiver invalidates cached vision on mute, camera removal and shutdown (0.144292ms)
+✔ decoded camera reaches the voice tool provider request and mute removes access (286.240833ms)
+ℹ tests 78
+ℹ suites 0
+ℹ pass 76
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1442.491875
+
+✖ failing tests:
+
+test at tests/agent-startup.test.mjs:1:1
+✖ tests/agent-startup.test.mjs (432.292875ms)
+  'test failed'
+
+test at tests/muse-startup.test.mjs:1:1
+✖ tests/muse-startup.test.mjs (412.088166ms)
+  'test failed'

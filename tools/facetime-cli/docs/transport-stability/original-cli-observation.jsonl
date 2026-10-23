@@ -1,0 +1,4 @@
+{"started_at": "2026-09-30T14:30:51.216520+00:00", "pid": 112}
+{"schema_version": 1, "command": "byor", "code": "runtime_observation", "mode": "byor", "phase": "connected", "health": "unavailable", "admission": "binding_standby", "recovery": "application_callback"}
+{"schema_version": 1, "command": "byor", "code": "runtime_stopped", "mode": "byor", "retained": 0, "action": "Keep the original journal/module/application recovery owner. No customer agent was stopped."}
+{"returncode": 6, "ended_at": "2026-09-30T14:32:27.019397+00:00", "lock_exists": false}

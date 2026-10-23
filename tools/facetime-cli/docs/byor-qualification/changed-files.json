@@ -1,0 +1,522 @@
+[
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/chert-local-transport-proof-0.0.0.tgz",
+    "sha256": "28d830f0be65f32ce17d76705d9841e51562eef8be5dd09cfd2f4078e7eb436c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/connector-relay-source.tar.gz",
+    "sha256": "1c914af674250c9eee58e50250adf3d9932d9c0b7600bec51930bbd38fbc2aa7"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/control-plane-source.tar.gz",
+    "sha256": "edb636caf7a896a6e62d25119ddec8ee99d76c9e49ff3a9dd0124d8c8d083068"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/talking-head-bridge-source.tar.gz",
+    "sha256": "2613f241c49dc1c94680a1f4a76d144ca08a6d8884d0c7828480395615950f2d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/.gitignore",
+    "sha256": "32aab7889babab433487cf165b2c692488a5c4db094daf31949622c8c6191222"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/.node-version",
+    "sha256": "08062faf0d7a2d22f5d7933c50e975dd1527034275597be7c1b3b9fd2b9d079a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/README.md",
+    "sha256": "b3a6704263c839687d9bc637bfad34a0e77872ecfa0f04eb52a169576c5e0369"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/main.mjs",
+    "sha256": "e30d8e399c2d55d5a34820926fe43daf9b0130ac8272b1f98940f656811ca752"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/package-lock.json",
+    "sha256": "892d6a970edff99273027771d83e4d19d465630aa758b27b0c83a3ad8729ab22"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/package.json",
+    "sha256": "d7f73a84ccfaa9f47eba6028b056e019fcfc53a7048d5f0f55f234e8beaff67c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/railway.json",
+    "sha256": "28aaecc8e5eb12e06942a23132b8f9657d542d19eea43ba19d3c3dbaf12df7d5"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/relay.mjs",
+    "sha256": "fe1c09cff46205bc27747e88288871fa79aa96fdf60945d48b10fb80527fefba"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/connector-relay/tests/security.test.mjs",
+    "sha256": "34dd8678a4ae241ce8f095d4a89ae5f2fd2a0648c360198f6f5913b7be68f05b"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/app/api/internal/v1/connectors/route.ts",
+    "sha256": "3be3b07abfe04ef50d895bc70fb379e2d6dead606b4e39f1f1954cdc7fae07ed"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/app/api/v1/connectors/route.ts",
+    "sha256": "f954ebad5b8f2f8cca5a4769a707d69a4c323a7927dc3018370288302df899fb"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/package-lock.json",
+    "sha256": "47af049bdc3845dd4eb02f1256317ff0c12b30772c01179358d4174526867637"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/package.json",
+    "sha256": "e4efbe2c9a21a84b0e6bd1af3f25b3729345ac4ffdbd2772b05be848e8309354"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/src/lib/facetime/connectors.ts",
+    "sha256": "b7833627b36ebcfa24a072b7cfc4dddc0255fbd95841a866cc1f0bf33eefb781"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/src/lib/facetime/data-access.ts",
+    "sha256": "b38365de921c8f7c9d3ba0c1551a6abdfe0f6074fc37f96f7f4463fc14c71d01"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/src/lib/facetime/store.ts",
+    "sha256": "e4f3bbf9857a6f0cd738e920e163452af794c6c9c09d62e9f0b8a71c166999a9"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/src/lib/facetime/webhook-core.ts",
+    "sha256": "ab5ec484b5e7ef739c2e66b510f25f16da7b8484469edd1a846efee8e60eb9fb"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/supabase/migrations/20260929222047_connector_backend.sql",
+    "sha256": "74bef593bfbde04b70ca52412b60efa59d27b83a51a40653fd07a537ad2a15a7"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/supabase/migrations/20260930033750_connector_byor_mode.sql",
+    "sha256": "a8ec9173f70e22b16b8e3b964115383c45064e6609ade1b2f052cdb82d173b4f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/tests/connector-incoming.test.ts",
+    "sha256": "4a5ca9ad8526b9bbef6218b2631631882e4a91274fdbc78e80b3608625f90f51"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/tests/connector-production-compatibility.test.ts",
+    "sha256": "17c8f652ac2a9316d7db33145e1ab42e83a741e190a68f7a374b0b0b0484d15b"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/tests/connector-service.test.ts",
+    "sha256": "1e109e89097595c6141278265b16653fb8d91eb897814dd36f7cd364adc0a448"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/tests/connectors.test.ts",
+    "sha256": "0499c11d25e2cb5bc9bdf45b8d7f83fbf32457c407a79020bb99332d148abc8b"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/tests/helpers/isolated-postgres.ts",
+    "sha256": "8bb9cd320a92791f2249e4f590b59ad24597127785a849adca5a5234f2b27e5d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/candidate/control-plane/tests/session-cleanup-ordering.test.ts",
+    "sha256": "504b1880e973904b2c7b3038bb95738d0c18fb6a64fa8e89a9d4f8263348842d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/BACKEND_PILOT_RUNBOOK.md",
+    "sha256": "e54546c0fd36263a160174ec1e14e34f4c2b8742d706dc767ad4fe98a5c522c0"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/DEPLOYMENT_READINESS.md",
+    "sha256": "bf8a16d2e575292216155f45dbd5ae18d45bb990674833ab2541e16a572d7789"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/BRIEF.md",
+    "sha256": "d54db8ffbc0b1032834bc7a4198af36fa663842c27c89ae9b921e04bba1960dd"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/RESULTS.md",
+    "sha256": "5f9e6192bf8c561ff8d79116ed5c475f8f73e41d3e104b3f5dbf336b38933144"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/RUNBOOK.md",
+    "sha256": "4cf67fb9cdbca9456a835f755f26ae6b0df8ecece5ef63ee08757f9a48e63b57"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/application-files.json",
+    "sha256": "032482264ad804a4d2bbece485c9f54e49eb7e5558453d097e2a939ae4158de4"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/application.patch",
+    "sha256": "62ce5bae728ad13f415521483d0509768ad05c0b5afcf448b5f115870a827805"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/artifacts.json",
+    "sha256": "bc765dc3e8ee11e032b169f53c8ce85ca07dfa43b34df72ef9483812a4ee9aa6"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/atomic-rehearsal.json",
+    "sha256": "36f08278e30091a0c0434d8188fe8ff1ba2db7761a5a14b8f5990589952c9991"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/backend-node22-first.txt",
+    "sha256": "2b766a7f71b637e40ede0b71174a228c231ed964cc1fa926e5a4adca6adc6b0e"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/backend-node22-second.txt",
+    "sha256": "a48df4d47f13a9b5f9fc68c4b74dd3da1a342d8a5e44eac65dcd2fc8be0f377c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/backend-node22.txt",
+    "sha256": "a48b7f1ad8b0221a58531d7f883878b858fcea50526cbca1e063a589b8143572"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/backend-node24.txt",
+    "sha256": "377e3d8a2f695b1e01a5370da31aeb3b6d1a4a9d1ff8b4d28215f5c9d0c54c43"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/baseline.json",
+    "sha256": "dbbe5238975f04d7094574a74393a2b7f0313f3c512dc34d05ce03c4dc93c231"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/build-node22.txt",
+    "sha256": "4abb4b137f659874c8cef95005ed6d9ccce2119d974bf623f7fb99be26bd5362"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/build-node24.txt",
+    "sha256": "0a3d122c93c7d629c4cb936bd6edbb56215c21f23c9947d8e9d7ce26702d6360"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/candidate-audit-final.json",
+    "sha256": "aacdcbe1cc1826f5d7313c94c32a4d5d65a4a45d3b684a51070f72d553544bbb"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/candidate-audit.json",
+    "sha256": "4323b6c3e9fa8a77b3727864eefa7921364d4d4bf2944e9497c398649997024a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/candidate-files.json",
+    "sha256": "fcd4b0a15985dbfc1bcb134169be40b91118e67dbcb637b55cf9f20c8fdc9606"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/candidate-install-npm12.txt",
+    "sha256": "22955a6efcab1200cd3c76b87a2d38f64d710ce1b384826a8ef392153b6afb11"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/candidate-install.txt",
+    "sha256": "4d0afcc6ab94fdb6f3ebabdb95041193f56437d102415ee872cab5ea10337401"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/candidate-matrix.json",
+    "sha256": "7ed2d27aeb897b77f8095ecd8caa4f42350575f52048c2aefb2fc3025ddd3204"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/candidate.patch",
+    "sha256": "e17c64063aeb762094c4158f93ad12e9a349ce1642a25630ba6a0a64fd26bbb7"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/changed-files.json",
+    "sha256": null
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/chert-byor.service",
+    "sha256": "ad36947881753ee8a5f49c6a3ae81abef04f9cab519f7b2e251de70139dbce60"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-build-first.txt",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-build-second.txt",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-build-third.txt",
+    "sha256": "365d04bfa22093f03ce757593d27ddba7141a48ecff13577af86d6a9f4998582"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-full-node22-final.txt",
+    "sha256": "f598d920c84d9a1986ffb36526f8d9da1d9ae2c999bb0d907fa2ee2d0bfdb0c2"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-full-node22.txt",
+    "sha256": "f41a201e01c652e5b68279da396b1cb6a2b7f38937ead3678e47c6dc40064f0c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-full-node24.txt",
+    "sha256": "fc298db3fe41f4173578f31d31475cfb04953aaa9bfa3b553c64016260f04053"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-lint-first.txt",
+    "sha256": "546dbf624c898b50a0ab6cb5506a84098d5706b75e3a6a59369eb58cd24e2a7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-lint-node22.txt",
+    "sha256": "546dbf624c898b50a0ab6cb5506a84098d5706b75e3a6a59369eb58cd24e2a7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-lint-node24.txt",
+    "sha256": "546dbf624c898b50a0ab6cb5506a84098d5706b75e3a6a59369eb58cd24e2a7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-matrix.json",
+    "sha256": "3942042b5be818a661aecaf0064ad38a4d54518edbaec554169bf532e34bc6f9"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-transport-node22.txt",
+    "sha256": "0cc493f406b3cb82b19b688c7bc414818ee03321c8eb6d7a066fed5e1315c0b0"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-transport-node24.txt",
+    "sha256": "6e9a77a9d849ad69a7d46703d6516d582df942448078cee5cb272a18124f2b56"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-typecheck-node22.txt",
+    "sha256": "fd028c32b6407f6da7f8d3e883239dc5f39e11ef901a1d0b6a6771eb1a1305ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/cli-typecheck-node24.txt",
+    "sha256": "fd028c32b6407f6da7f8d3e883239dc5f39e11ef901a1d0b6a6771eb1a1305ea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/dependency-refresh.txt",
+    "sha256": "e64af586ea357f57559d65d1407e250bb430d9affd6f6fb18035db10efc3efe1"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/documentation-check.txt",
+    "sha256": "c365119f0fb9d091d73917b405409232eb5a1423608b254b1f32d066efa65636"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-backend-node22.txt",
+    "sha256": "dd5a53cb6904564fccc59745253af8fa2244e4715c871f33ede6c648745aa30d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-backend-node24.txt",
+    "sha256": "6627620b8ee4f3f6c2079256160a79d9ac8a6f5378e7c6d685e193cdddfe5203"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-build-node22.txt",
+    "sha256": "548a0f4415f257a5d5e7d8b8d0f4048c321b2ff71c024bcd08f8cf6118cf4198"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-build-node24.txt",
+    "sha256": "ec3197b221f59164801d44d0e0bd114b53fd514175a16ee286c879d6c1ddf900"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-candidate-matrix.json",
+    "sha256": "66c5ff10162a8ccf3f850ae100c3db87ebae4f66abe66cc139a65912df44365e"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-lint-node22.txt",
+    "sha256": "1ae1337aeba973977246672f0e68dd60519dc12dc1a6b76aae78d9380f654869"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-lint-node24.txt",
+    "sha256": "1ae1337aeba973977246672f0e68dd60519dc12dc1a6b76aae78d9380f654869"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-relay-node22.txt",
+    "sha256": "cc718d60db7004f35e1081d2c9149d3e115e79de1f2b8183204b170e4ae7a9d8"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-relay-node24.txt",
+    "sha256": "f7c5dbfa8dc10a73b56a1464d476b30dbb43112adf2f41f7a4ea6441165193de"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-typecheck-node22.txt",
+    "sha256": "483d675d99f3e66b9850d5a4d76f130405e3ea60841ce0e46195989a547e0c37"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/final-typecheck-node24.txt",
+    "sha256": "483d675d99f3e66b9850d5a4d76f130405e3ea60841ce0e46195989a547e0c37"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/freeze.txt",
+    "sha256": "215401e56443bdb76af39e6c9ba8fc1777a4d8c45e89a4c8c29c18b7df593919"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/freeze_artifacts.py",
+    "sha256": "0e490fa721c5001b0a5fd2b55507eb205c3c17e5845e749462c38d019de22b91"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/fresh-current-call.json",
+    "sha256": "94dfa6360b5cfbf50f88d82a1b1f55f47e47d42c399178c66fcd04ad3ca2a210"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/fresh-deployment.json",
+    "sha256": "0569d6babbe8204385ad6ad8feaeb70e54f337f714c97fc634e1a5d0e30a8eb0"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/fresh-infrastructure.json",
+    "sha256": "dd7c332fb25ebc66167272a23b8d560410b6f26bb0032b81a778472a1c1b7c9f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/fresh-pilot.json",
+    "sha256": "cd5f64e9de0cab3a22e0840dd9ef10c7d7c9469bdbd624c990aace9623db1d41"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/fresh-schema-columns-history.json",
+    "sha256": "15aa0c92234c893f70bf81c5ea8372bd6837f5f994d7e1eb1bccc05b370ee004"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/installed-node22-first.txt",
+    "sha256": "5bbecbe5f6a95d87509c78694d8245c9c6f933942d36621a5628fa35c49dfffe"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/installed-node22-second.txt",
+    "sha256": "d3bff6cd72ec0b7b129308b4e881c34bd43806fbc722b2f142a1d53fa12968e8"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/installed-node22-third.txt",
+    "sha256": "2d9586ee29937d5cb667d3daf149e37e93b199334b89beff5209d954f93dd4a1"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/lint-node22.txt",
+    "sha256": "1ae1337aeba973977246672f0e68dd60519dc12dc1a6b76aae78d9380f654869"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/lint-node24.txt",
+    "sha256": "1ae1337aeba973977246672f0e68dd60519dc12dc1a6b76aae78d9380f654869"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/migration.payload.sql",
+    "sha256": "d1a1dcba5266bceb2b116d54016e5970e3f74780e55fa289f3e66ca5ef9e9e2a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/npm-pack.json",
+    "sha256": "68eaa54d50ecd86fac98df2335517eb8d7e02b0a6967f989cac959b6d19de404"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/preservation-check.txt",
+    "sha256": "aaf99af589a93975d63fd8b6256a5bdcbd99a8b67e2b35056631682153346aa4"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/preservation.json",
+    "sha256": null
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/previous-BACKEND_PILOT_RUNBOOK.md",
+    "sha256": "9947ab4c7a2ed3604cbe5766305323f2980d548939bded2dcd878b8b63411b23"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/previous-DEPLOYMENT_READINESS.md",
+    "sha256": "5156729428dd07500f85c2873b9c7871bf4e8858379b0894f4364f500d906670"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/python-final.txt",
+    "sha256": "d85753c97e247b6ffe5d20423ada8931813b703c0dd76e487dfe37e3b5e633f8"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/python-first.txt",
+    "sha256": "e0dada3e9a1d5d0446eef81f6439499d3efa5bea519456b113c3127c9b901fdd"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/python-full-final.txt",
+    "sha256": "d4e6b2d7588388c604bde8d53e33a5c5bda622aa9eb6d0049ac8257d211a5c2c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/python-full.txt",
+    "sha256": "c308735945929baa2f386f9d6661369de221818bf44858cea5ea5c293c32a041"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/python-lint-final.txt",
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/python-lint-first.txt",
+    "sha256": "d7933bf92bc0bf14689fdcc97a86955597bfcb4887641a73471fb3f5ea1912d7"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/python-second.txt",
+    "sha256": "04da4a1ef16d2966b66b717dcd535d2104616be8ba69a5d926074d78f2d8946f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/rehearsal-first.txt",
+    "sha256": "a11e36d65dbc05e697ccc65893794e48d0fbfb7e08cba1f3fe1ad11cf4ca2098"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/rehearsal-second.txt",
+    "sha256": "36f08278e30091a0c0434d8188fe8ff1ba2db7761a5a14b8f5990589952c9991"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/rehearse.py",
+    "sha256": "3cd143fc3dcc27ff69538828704fddb8f819b317f65e4c9c4c60cbc5e159bd4e"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/relay-install.txt",
+    "sha256": "b4c4bfeaac398850a4f25b71f13be4ba95b10898aa7dc8dad620b0f10fbafac1"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/relay-node22.txt",
+    "sha256": "1fb7a679ae7e55d9b88ef8d0bfdf6545186ba9e66167fb73752acae607ae9009"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/relay-node24.txt",
+    "sha256": "884c7c103d05386972eb785ee71f4a8e9233963a7b4fe08245e35de34dd54d68"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/runtime.env.names",
+    "sha256": "51cd117c8ec077b6ebd6cafee4bc41f8a7d90e5c540769cd233189d4b362cd4a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/talking-head-owner.service",
+    "sha256": "f994ce5ee410472d682c0bb0e16f000bc8fe37fac939dffaaf08c5573f05b971"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/tombstone-regression-red.txt",
+    "sha256": "121220d2a055aaa0cea4ec5896be75988296f5023708c44d718de2b5f109ea34"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/typecheck-node22.txt",
+    "sha256": "483d675d99f3e66b9850d5a4d76f130405e3ea60841ce0e46195989a547e0c37"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/typecheck-node24.txt",
+    "sha256": "483d675d99f3e66b9850d5a4d76f130405e3ea60841ce0e46195989a547e0c37"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/validate_candidate.py",
+    "sha256": "e9d7931fa3b49ed12d7856d413f4ea76b823066ca146828323367f1c8d025e8a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/validate_cli.py",
+    "sha256": "fb35266157ff44e5aa4ed4aa922ddcecd6dfd08a8d179197b86b2af513808931"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/validate_final_candidate.py",
+    "sha256": "8d8bc86a6b60ad9c3c62474a79fc37bb6cb37ede8d050826137d17c9b1c7dbf8"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/verify.py",
+    "sha256": "dbb088f500ed64480411c820751aee96d66003eb22bf79bc6b3c65111d741425"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/cli/talking-head-package.test.ts",
+    "sha256": "05809cdbb1c1ce24bc798b43f03135e9877f320b1e9b815cbaf34df1ab3daf1f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/fixtures/cli-harness.ts",
+    "sha256": "e0f0133335b276d398f47179fade47840fbb867e3b7ad197d8bb3723da3c5e68"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/README.md",
+    "sha256": "4febc1146a5ed88ca443fb24e7484202abcdc465567827e23c5bd44f95b4ff00"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/handler.ts",
+    "sha256": "6d40ff74d8a0c1734d97705dea0890e4a1443fad246cf826918cb6a5c4fb4657"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/owner.py",
+    "sha256": "f5635014c0ac1ea3a50ff6eada6480d0615cd6414105636601124bd87cb324f2"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/server.py",
+    "sha256": "85bdbaf59623978680dce0ae54f9e44abfdc41b1aef4d6a4cc615f99bb088798"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/tests/fixture_server.py",
+    "sha256": "e7269264959b9bf846cca48a370110a401d94541e3b6a7fb85b8d72b62736a7b"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/tests/substitutes.py",
+    "sha256": "3b997d30e5c27cd41074879fdccb2e8623352125ba9b7526969e63e103d009df"
+  },
+  {
+    "path": "/Users/garygao/demo-agent-0/connector/tests/test_owner.py",
+    "sha256": "031ac4730e3ee3034951d6f256dd94a409a91ef284375531eaf94c7347bac9fd"
+  }
+]

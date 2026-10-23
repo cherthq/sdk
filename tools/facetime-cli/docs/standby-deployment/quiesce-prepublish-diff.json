@@ -1,0 +1,31 @@
+{
+  "changes": [
+    {
+      "username": "garygao333",
+      "createdAt": "2026-09-30T13:59:59.464Z",
+      "action": "rules.insert",
+      "value": {
+        "action": {
+          "mitigate": {
+            "action": "deny"
+          }
+        },
+        "active": true,
+        "name": "byor-release-quiesce-20260930",
+        "conditionGroup": [
+          {
+            "conditions": [
+              {
+                "type": "path",
+                "value": "/",
+                "op": "pre"
+              }
+            ]
+          }
+        ]
+      },
+      "id": "rule_byor_release_quiesce_20260930_QbCXRv",
+      "userId": "Xu7aJkDfbjha800O6DWysDxA"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-09-30T19:43:08.414812+00:00",
+  "samples": 41,
+  "first_at": "2026-09-30T19:32:50.691249+00:00",
+  "last_at": "2026-09-30T19:42:50.691271+00:00",
+  "elapsed_seconds": 600.0,
+  "generation": 14,
+  "node_pid": 11,
+  "health_and_authority_checks_passed": true,
+  "journals_unchanged": true,
+  "owner_slots": 0,
+  "nonroot_and_credential_partition_passed": true,
+  "deployment_settings_preserved": true
+}

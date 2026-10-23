@@ -1,0 +1,18 @@
+
+==================================== ERRORS ====================================
+______ ERROR collecting demo-agent-0/connector/tests/test_ready_owner.py _______
+ImportError while importing test module '/Users/garygao/demo-agent-0/connector/tests/test_ready_owner.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../demo-agent-0/connector/tests/test_ready_owner.py:5: in <module>
+    from substitutes import make_owner
+../demo-agent-0/connector/tests/substitutes.py:11: in <module>
+    from owner import CallbackOwner
+E   ModuleNotFoundError: No module named 'owner'
+=========================== short test summary info ============================
+ERROR ../demo-agent-0/connector/tests/test_ready_owner.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.25s

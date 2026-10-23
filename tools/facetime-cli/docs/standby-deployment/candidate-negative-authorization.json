@@ -1,0 +1,12 @@
+{
+  "status": 401,
+  "project_header_present": true,
+  "credential": "deliberately-invalid",
+  "body": {
+    "error": {
+      "code": "unauthorized",
+      "message": "Authentication failed"
+    },
+    "request_id": "b16f80bb-8ec8-4060-af07-33bb4c76db8e"
+  }
+}

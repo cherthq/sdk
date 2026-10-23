@@ -1,0 +1,281 @@
+{
+  "matches": [
+    {
+      "description": null,
+      "enumValues": [],
+      "fields": [
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "canRedeploy",
+          "namedType": "Boolean",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "canRollback",
+          "namedType": "Boolean",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "createdAt",
+          "namedType": "DateTime",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "DateTime!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "creator",
+          "namedType": "DeploymentCreator",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "DeploymentCreator"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": "Check if a deployment's instances have all stopped",
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "deploymentStopped",
+          "namedType": "Boolean",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "diagnosis",
+          "namedType": "DeploymentDiagnosis",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "DeploymentDiagnosis"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "environment",
+          "namedType": "Environment",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "Environment!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "environmentId",
+          "namedType": "String",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "id",
+          "namedType": "ID",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "ID!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "instances",
+          "namedType": "DeploymentDeploymentInstance",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "[DeploymentDeploymentInstance!]!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "meta",
+          "namedType": "DeploymentMeta",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "DeploymentMeta"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "projectId",
+          "namedType": "String",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "service",
+          "namedType": "Service",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "Service!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "serviceId",
+          "namedType": "String",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "snapshotId",
+          "namedType": "String",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "sockets",
+          "namedType": "DeploymentSocket",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "[DeploymentSocket!]!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "staticUrl",
+          "namedType": "String",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "status",
+          "namedType": "DeploymentStatus",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "DeploymentStatus!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "statusUpdatedAt",
+          "namedType": "DateTime",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "DateTime"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "suggestAddServiceDomain",
+          "namedType": "Boolean",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "updatedAt",
+          "namedType": "DateTime",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "DateTime!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "url",
+          "namedType": "String",
+          "parent": "Deployment",
+          "requiredArgs": [],
+          "type": "String"
+        }
+      ],
+      "inputFields": [],
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT",
+      "name": "Deployment",
+      "possibleTypes": []
+    }
+  ]
+}

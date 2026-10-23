@@ -1,0 +1,21 @@
+........................................................................ [ 64%]
+.................................F......                                 [100%]
+=================================== FAILURES ===================================
+___________ test_production_profile_declines_without_warming_or_http ___________
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-47/test_production_profile_declin0')
+
+    @pytest.mark.asyncio
+    async def test_production_profile_declines_without_warming_or_http(tmp_path):
+        owner, provider = make_owner(tmp_path)
+        try:
+            assert await owner.health() == 'unavailable'
+            assert await owner.prepare(call()) == {'action': 'decline'}
+>           assert 'chert_reference_agent.http' not in sys.modules
+E           AssertionError: assert 'chert_reference_agent.http' not in {'__future__': <module '__future__' from '/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Version...on3.12/site-packages/pytest/__main__.py'>, '_abc': <module '_abc' (built-in)>, '_ast': <module '_ast' (built-in)>, ...}
+E            +  where {'__future__': <module '__future__' from '/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Version...on3.12/site-packages/pytest/__main__.py'>, '_abc': <module '_abc' (built-in)>, '_ast': <module '_ast' (built-in)>, ...} = sys.modules
+
+../demo-agent-0/connector/tests/test_owner.py:34: AssertionError
+=========================== short test summary info ============================
+FAILED ../demo-agent-0/receiver::test_production_profile_declines_without_warming_or_http
+1 failed, 111 passed in 9.01s

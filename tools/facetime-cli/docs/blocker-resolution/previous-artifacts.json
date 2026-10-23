@@ -1,0 +1,42 @@
+{
+  "source_base": "cbb22ee854e26219aea92d67fa401433cdb4d84c",
+  "artifacts": [
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/deployment-preparation/artifacts/chert-local-transport-proof-0.0.0.tgz",
+      "sha256": "ac18805f23ec3fc3504249e00c71405a9fbaffa23b82e718c717b6e9ec2cdcc7",
+      "bytes": 35122
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/deployment-preparation/artifacts/connector-relay-source.tar.gz",
+      "sha256": "1c914af674250c9eee58e50250adf3d9932d9c0b7600bec51930bbd38fbc2aa7",
+      "bytes": 5050
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/deployment-preparation/artifacts/control-plane-source.tar.gz",
+      "sha256": "ec9af5366d3619f52ad5f8514309d1a33a0aebf53a713bcb5a45e19231eb40c9",
+      "bytes": 1685560
+    }
+  ],
+  "configuration": [
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-preparation/migration.payload.sql",
+      "sha256": "4174c593a7b9650703e7e8910225b3a83ffb043ed943ad3e5753f9582eb8d696"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-preparation/railway-relay.json",
+      "sha256": "28aaecc8e5eb12e06942a23132b8f9657d542d19eea43ba19d3c3dbaf12df7d5"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-preparation/chert-connector.service",
+      "sha256": "e460079f3521f2ecaa94a6a0f26c03d1078cf4d536b7bed09a8036c4489954e2"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-preparation/runtime.env.names",
+      "sha256": "408a91cb15f49c86069d88864ca27581cb2614b2b998113b148806cd744e9ed7"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-preparation/vercel-project-link.json",
+      "sha256": "5fcc17fd8497a0dd8fab9cfdc0a21a8df7f9dfeac75b35a8daf69bf846a4dc9b"
+    }
+  ]
+}

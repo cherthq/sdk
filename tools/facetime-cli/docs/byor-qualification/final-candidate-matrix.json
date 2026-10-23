@@ -1,0 +1,62 @@
+[
+  {
+    "node": "22",
+    "check": "typecheck",
+    "exit_code": 0,
+    "seconds": 3.67
+  },
+  {
+    "node": "22",
+    "check": "lint",
+    "exit_code": 0,
+    "seconds": 4.56
+  },
+  {
+    "node": "22",
+    "check": "build",
+    "exit_code": 0,
+    "seconds": 7.76
+  },
+  {
+    "node": "22",
+    "check": "backend",
+    "exit_code": 0,
+    "seconds": 16.04
+  },
+  {
+    "node": "22",
+    "check": "relay",
+    "exit_code": 0,
+    "seconds": 0.22
+  },
+  {
+    "node": "24",
+    "check": "typecheck",
+    "exit_code": 0,
+    "seconds": 0.79
+  },
+  {
+    "node": "24",
+    "check": "lint",
+    "exit_code": 0,
+    "seconds": 4.48
+  },
+  {
+    "node": "24",
+    "check": "build",
+    "exit_code": 0,
+    "seconds": 3.14
+  },
+  {
+    "node": "24",
+    "check": "backend",
+    "exit_code": 0,
+    "seconds": 14.43
+  },
+  {
+    "node": "24",
+    "check": "relay",
+    "exit_code": 0,
+    "seconds": 0.2
+  }
+]

@@ -1,0 +1,33 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______ test_production_video_ready_slot_claims_once_without_cold_prepare _______
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-52/test_production_video_ready_sl0')
+
+    @pytest.mark.asyncio
+    async def test_production_video_ready_slot_claims_once_without_cold_prepare(tmp_path):
+        owner, provider = ready_owner(tmp_path)
+        try:
+            assert await owner.health() == 'unavailable'
+            assert provider.load()['creates'] == 0
+>           await owner.stage('slot-1')
+                  ^^^^^^^^^^^
+E           AttributeError: 'CallbackOwner' object has no attribute 'stage'
+
+../demo-agent-0/connector/tests/test_ready_owner.py:27: AttributeError
+______________ test_expiry_survives_reopen_and_needs_no_connector ______________
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-52/test_expiry_survives_reopen_an0')
+
+    @pytest.mark.asyncio
+    async def test_expiry_survives_reopen_and_needs_no_connector(tmp_path):
+        owner, provider = ready_owner(tmp_path)
+>       await owner.stage('slot-1')
+              ^^^^^^^^^^^
+E       AttributeError: 'CallbackOwner' object has no attribute 'stage'
+
+../demo-agent-0/connector/tests/test_ready_owner.py:43: AttributeError
+=========================== short test summary info ============================
+FAILED ../demo-agent-0/connector/tests/test_ready_owner.py::test_production_video_ready_slot_claims_once_without_cold_prepare
+FAILED ../demo-agent-0/connector/tests/test_ready_owner.py::test_expiry_survives_reopen_and_needs_no_connector
+2 failed in 0.22s

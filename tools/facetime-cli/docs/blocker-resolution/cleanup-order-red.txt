@@ -1,0 +1,72 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/session-cleanup-ordering.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/blocker-resolution/candidate/control-plane
+
+ ❯ tests/session-cleanup-ordering.test.ts (8 tests | 4 failed) 6190ms
+     × failed: records cleanup with cleanupFirst=true 780ms
+     × ended: records cleanup with cleanupFirst=true 792ms
+     × rejected: records cleanup with cleanupFirst=true 760ms
+     × ignores api cleanup that cannot establish terminal cleanup 749ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/session-cleanup-ordering.test.ts > session cleanup event ordering > failed: records cleanup with cleanupFirst=true
+ FAIL  tests/session-cleanup-ordering.test.ts > session cleanup event ordering > rejected: records cleanup with cleanupFirst=true
+AssertionError: expected 'failed:false' to be 'cleaned:true' // Object.is equality
+
+Expected: "cleaned:true"
+Received: "failed:false"
+
+ ❯ tests/session-cleanup-ordering.test.ts:26:133
+     24|           event(terminal);
+     25|           if (!cleanupFirst) event('cleanup_complete');
+     26|           expect(db.sql(`select state||':'||(cleaned_at is not null)::…
+       |                                                                                                                                     ^
+     27|         } finally { db.close(); }
+     28|       }, 30000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/session-cleanup-ordering.test.ts > session cleanup event ordering > ended: records cleanup with cleanupFirst=true
+AssertionError: expected 'ended:false' to be 'cleaned:true' // Object.is equality
+
+Expected: "cleaned:true"
+Received: "ended:false"
+
+ ❯ tests/session-cleanup-ordering.test.ts:26:133
+     24|           event(terminal);
+     25|           if (!cleanupFirst) event('cleanup_complete');
+     26|           expect(db.sql(`select state||':'||(cleaned_at is not null)::…
+       |                                                                                                                                     ^
+     27|         } finally { db.close(); }
+     28|       }, 30000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/session-cleanup-ordering.test.ts > session cleanup event ordering > ignores api cleanup that cannot establish terminal cleanup
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-Ri69oO -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  invalid input value for enum facetime_event_source: "api"
+LINE 2: ...0-0000-4000-8000-000000000001','cleanup_complete','api','inv...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/session-cleanup-ordering.test.ts:36:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 4 passed (8)
+   Start at  22:45:34
+   Duration  6.28s (transform 17ms, setup 12ms, import 13ms, tests 6.19s, environment 0ms)
+

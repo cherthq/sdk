@@ -1,0 +1,8 @@
+{
+  "name": "chert-railway-private-packaging",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {"chert-local-transport-proof": "file:cli.tgz"},
+  "devDependencies": {"typescript": "6.0.2", "@types/node": "24.13.6"}
+}

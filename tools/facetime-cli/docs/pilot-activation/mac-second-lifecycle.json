@@ -1,0 +1,99 @@
+{
+  "at": "2026-09-30T20:14:24.711701+00:00",
+  "events": {
+    "data": [
+      {
+        "sequence": 1,
+        "type": "incoming_registered",
+        "reason": "line",
+        "created_at": "2026-09-30T20:09:24Z",
+        "status": "incoming",
+        "id": "event_d843014eb88b4be4bb02f67693ba2d0f",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "media_status": "pending"
+      },
+      {
+        "sequence": 2,
+        "type": "answer_preparing",
+        "created_at": "2026-09-30T20:09:24Z",
+        "status": "answering",
+        "id": "event_fd707e0d437041a9a268690265090aeb",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "media_status": "pending"
+      },
+      {
+        "sequence": 3,
+        "type": "answer_requested",
+        "created_at": "2026-09-30T20:09:24Z",
+        "status": "connecting",
+        "id": "event_7945853813dc4bbc83114f984effb86b",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "media_status": "pending"
+      },
+      {
+        "sequence": 4,
+        "type": "active",
+        "created_at": "2026-09-30T20:09:29Z",
+        "status": "active",
+        "id": "event_6e577e9b89c843d2841bd20cc38cf840",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "media_status": "pending"
+      },
+      {
+        "sequence": 5,
+        "type": "livekit_remote_track_subscribed",
+        "created_at": "2026-09-30T20:09:30Z",
+        "status": "active",
+        "id": "event_5938b1464d294a29a50513e7758576e7",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "media_status": "pending"
+      },
+      {
+        "media_status": "pending",
+        "type": "return_audio_track_published",
+        "id": "event_8ddd1261e5e04d06863eb37528e2b9ff",
+        "sequence": 6,
+        "status": "active",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "created_at": "2026-09-30T20:09:31Z"
+      },
+      {
+        "media_status": "pending",
+        "type": "bridge_ready",
+        "id": "event_54876278b3a241fab44163269e0f7327",
+        "sequence": 7,
+        "status": "active",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "created_at": "2026-09-30T20:09:31Z"
+      },
+      {
+        "media_status": "pending",
+        "type": "agent_connected",
+        "id": "event_08e5b3f504aa4ec38b8b8b73190a415a",
+        "sequence": 8,
+        "status": "active",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "created_at": "2026-09-30T20:09:31Z"
+      },
+      {
+        "media_status": "disconnected",
+        "type": "ended",
+        "id": "event_662ffbbac15d4936ba56cacfdbacb3b7",
+        "sequence": 9,
+        "status": "ended",
+        "reason": "remote_ended",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "created_at": "2026-09-30T20:10:24Z"
+      },
+      {
+        "media_status": "disconnected",
+        "type": "cleanup_complete",
+        "id": "event_19b9f2d641b64fab999340e6985c1719",
+        "sequence": 10,
+        "status": "ended",
+        "call_id": "c8284192-2b61-4e26-8261-7f5a561a88fc",
+        "created_at": "2026-09-30T20:10:24Z"
+      }
+    ]
+  }
+}

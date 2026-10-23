@@ -1,0 +1,81 @@
+TAP version 13
+1..0
+# Subtest: dist/tests/adapter/diagnostic-run.test.js
+ok 1 - dist/tests/adapter/diagnostic-run.test.js
+  ---
+  duration_ms: 36.203625
+  type: 'test'
+  ...
+1..0
+# Subtest: dist/tests/adapter/health.test.js
+ok 2 - dist/tests/adapter/health.test.js
+  ---
+  duration_ms: 76.171375
+  type: 'test'
+  ...
+# Subtest: room delete acknowledgment followed by stale inventory and dispatch 404 verifies cleanup
+not ok 3 - room delete acknowledgment followed by stale inventory and dispatch 404 verifies cleanup
+  ---
+  duration_ms: 10.691666
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/adapter/livekit.test.js:350:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'ready' !== 'clean'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'clean'
+  actual: 'ready'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/adapter/livekit.test.js:377:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: CreateRoom explicitly configures the only intended dispatch, including deployment and no restart
+not ok 4 - CreateRoom explicitly configures the only intended dispatch, including deployment and no restart
+  ---
+  duration_ms: 5.105791
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/adapter/sdk.test.js:92:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+
+    + undefined
+    - [
+    -   {
+    -     agentName: 'intended',
+    -     deployment: 'isolated',
+    -     metadata: 'signed-spec',
+    -     restartPolicy: 'JRP_NEVER'
+    -   }
+    - ]
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0:
+      agentName: 'intended'
+      deployment: 'isolated'
+      metadata: 'signed-spec'
+      restartPolicy: 'JRP_NEVER'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/adapter/sdk.test.js:100:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 2
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 133.816333

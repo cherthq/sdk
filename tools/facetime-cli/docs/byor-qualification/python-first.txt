@@ -1,0 +1,33 @@
+...F...                                                                  [100%]
+=================================== FAILURES ===================================
+_____ test_late_completion_stays_unsettled_until_original_prepare_finishes _____
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-45/test_late_completion_stays_uns0')
+
+    @pytest.mark.asyncio
+    async def test_late_completion_stays_unsettled_until_original_prepare_finishes(tmp_path):
+        owner, provider = make_owner(tmp_path, synthetic_audio=True)
+        provider.control_path.write_text(json.dumps({'hold': True, 'late_completion': True}))
+        request = call(budget=30)
+        task = asyncio.create_task(owner.prepare(request))
+        try:
+            await asyncio.sleep(.08)
+            assert not task.done()
+            status = await owner.recover(request,dict(cancel_requested=True))
+            assert status['settled'] is False and status['cleanup'] == 'pending'
+            provider.control_path.write_text('{}')
+            assert (await task)['action'] == 'decline'
+            for _ in range(30):
+                status = await owner.recover(request,dict(cancel_requested=True))
+                if status['cleanup'] == 'clean': break
+                await asyncio.sleep(.01)
+>           assert status['settled'] and status['cleanup'] == 'clean'
+E           assert (False)
+
+../demo-agent-0/connector/tests/test_owner.py:95: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"config_revision": "unknown", "correlation": "ef0c85306462fdc9432ed4da", "event": "decision", "image_digest": "unknown", "reason": "prepare_failed", "source_sha": "unknown", "timestamp": "2026-09-30T04:10:57.385286+00:00"}
+{"config_revision": "unknown", "correlation": "ef0c85306462fdc9432ed4da", "event": "cleanup", "image_digest": "unknown", "reason": "success", "receipts": 0, "source_sha": "unknown", "timestamp": "2026-09-30T04:10:57.385895+00:00"}
+=========================== short test summary info ============================
+FAILED ../demo-agent-0/connector/tests/test_owner.py::test_late_completion_stays_unsettled_until_original_prepare_finishes
+1 failed, 6 passed in 0.83s

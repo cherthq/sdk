@@ -1,0 +1,229 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.89kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [node 1/1] FROM docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#5 resolve docker.io/library/node:22.23.2-bookworm-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9 0.0s done
+#5 DONE 0.0s
+
+#6 [build  1/11] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+#6 resolve docker.io/library/python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e 0.0s done
+#6 DONE 0.0s
+
+#7 [build  2/11] COPY --from=node /usr/local/bin/node /usr/local/bin/node
+#7 CACHED
+
+#8 [internal] load build context
+#8 transferring context: 282.56kB 0.0s done
+#8 DONE 0.0s
+
+#9 [build  3/11] COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+#9 CACHED
+
+#10 [build  7/11] RUN npm ci --ignore-scripts --no-audit --no-fund
+#10 CACHED
+
+#11 [build  4/11] RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+#11 CACHED
+
+#12 [build  6/11] COPY package.json package-lock.json cli.tgz ./
+#12 CACHED
+
+#13 [build  5/11] WORKDIR /opt/chert-pilot/railway-20260930-r1
+#13 CACHED
+
+#14 [build  8/11] COPY application/connector/handler.ts handler/handler.ts
+#14 CACHED
+
+#15 [build  9/11] RUN ./node_modules/.bin/tsc handler/handler.ts --outDir handler --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck --types node && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
+#15 2.460 
+#15 2.460 up to date in 373ms
+#15 DONE 2.5s
+
+#16 [build 10/11] COPY application/receiver/requirements.lock ./requirements.lock
+#16 DONE 0.0s
+
+#17 [build 11/11] RUN python -m pip download --only-binary=:all: --no-deps -r requirements.lock -d /wheels && sha256sum /wheels/* > python-wheels.sha256 && python -m pip install --no-index --find-links=/wheels --no-deps --target=/python -r requirements.lock
+#17 1.674 Collecting aiofiles==25.1.0 (from -r requirements.lock (line 2))
+#17 1.758   Downloading aiofiles-25.1.0-py3-none-any.whl.metadata (6.3 kB)
+#17 1.793 Collecting aiohappyeyeballs==2.7.1 (from -r requirements.lock (line 3))
+#17 1.816   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+#17 2.345 Collecting aiohttp==3.13.3 (from -r requirements.lock (line 4))
+#17 2.359   Downloading aiohttp-3.13.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+#17 2.389 Collecting aiosignal==1.4.0 (from -r requirements.lock (line 5))
+#17 2.401   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+#17 2.441 Collecting attrs==26.1.0 (from -r requirements.lock (line 6))
+#17 2.456   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+#17 2.527 Collecting frozenlist==1.8.0 (from -r requirements.lock (line 7))
+#17 2.544   Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+#17 2.575 Collecting idna==3.19 (from -r requirements.lock (line 8))
+#17 2.594   Downloading idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+#17 2.677 Collecting livekit==1.1.14 (from -r requirements.lock (line 9))
+#17 2.711   Downloading livekit-1.1.14-py3-none-manylinux_2_28_x86_64.whl.metadata (1.5 kB)
+#17 2.745 Collecting livekit-api==1.2.0 (from -r requirements.lock (line 10))
+#17 2.762   Downloading livekit_api-1.2.0-py3-none-any.whl.metadata (1.4 kB)
+#17 2.797 Collecting livekit-protocol==1.1.26 (from -r requirements.lock (line 11))
+#17 2.820   Downloading livekit_protocol-1.1.26-py3-none-any.whl.metadata (988 bytes)
+#17 3.060 Collecting multidict==6.8.0 (from -r requirements.lock (line 12))
+#17 3.073   Downloading multidict-6.8.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+#17 3.286 Collecting numpy==2.4.6 (from -r requirements.lock (line 13))
+#17 3.303   Downloading numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+#17 3.385 Collecting propcache==0.5.2 (from -r requirements.lock (line 14))
+#17 3.399   Downloading propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (16 kB)
+#17 3.727 Collecting protobuf==7.36.1 (from -r requirements.lock (line 15))
+#17 3.747   Downloading protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+#17 3.783 Collecting PyJWT==2.14.0 (from -r requirements.lock (line 16))
+#17 3.797   Downloading pyjwt-2.14.0-py3-none-any.whl.metadata (3.4 kB)
+#17 3.832 Collecting types-protobuf==7.35.1.20260906 (from -r requirements.lock (line 17))
+#17 3.845   Downloading types_protobuf-7.35.1.20260906-py3-none-any.whl.metadata (2.3 kB)
+#17 3.887 Collecting typing_extensions==4.16.0 (from -r requirements.lock (line 18))
+#17 3.908   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#17 4.172 Collecting yarl==1.24.5 (from -r requirements.lock (line 19))
+#17 4.198   Downloading yarl-1.24.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (103 kB)
+#17 4.248 Downloading aiofiles-25.1.0-py3-none-any.whl (14 kB)
+#17 4.268 Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+#17 4.285 Downloading aiohttp-3.13.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+#17 4.537    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 7.1 MB/s eta 0:00:00
+#17 4.554 Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+#17 4.568 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+#17 4.595 Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (242 kB)
+#17 4.684 Downloading idna-3.19-py3-none-any.whl (68 kB)
+#17 4.729 Downloading livekit-1.1.14-py3-none-manylinux_2_28_x86_64.whl (11.4 MB)
+#17 6.555    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.4/11.4 MB 6.2 MB/s eta 0:00:00
+#17 6.568 Downloading livekit_api-1.2.0-py3-none-any.whl (26 kB)
+#17 6.587 Downloading livekit_protocol-1.1.26-py3-none-any.whl (150 kB)
+#17 6.631 Downloading multidict-6.8.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (287 kB)
+#17 6.686 Downloading numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.6 MB)
+#17 9.873    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.6/16.6 MB 5.2 MB/s eta 0:00:00
+#17 9.889 Downloading propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (61 kB)
+#17 9.921 Downloading protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+#17 9.981 Downloading pyjwt-2.14.0-py3-none-any.whl (32 kB)
+#17 10.01 Downloading types_protobuf-7.35.1.20260906-py3-none-any.whl (86 kB)
+#17 10.03 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#17 10.05 Downloading yarl-1.24.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (109 kB)
+#17 10.15 Saved /wheels/aiofiles-25.1.0-py3-none-any.whl
+#17 10.15 Saved /wheels/aiohappyeyeballs-2.7.1-py3-none-any.whl
+#17 10.15 Saved /wheels/aiohttp-3.13.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#17 10.15 Saved /wheels/aiosignal-1.4.0-py3-none-any.whl
+#17 10.15 Saved /wheels/attrs-26.1.0-py3-none-any.whl
+#17 10.15 Saved /wheels/frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
+#17 10.15 Saved /wheels/idna-3.19-py3-none-any.whl
+#17 10.16 Saved /wheels/livekit-1.1.14-py3-none-manylinux_2_28_x86_64.whl
+#17 10.16 Saved /wheels/livekit_api-1.2.0-py3-none-any.whl
+#17 10.16 Saved /wheels/livekit_protocol-1.1.26-py3-none-any.whl
+#17 10.16 Saved /wheels/multidict-6.8.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#17 10.16 Saved /wheels/numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+#17 10.16 Saved /wheels/propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#17 10.16 Saved /wheels/protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl
+#17 10.16 Saved /wheels/pyjwt-2.14.0-py3-none-any.whl
+#17 10.16 Saved /wheels/types_protobuf-7.35.1.20260906-py3-none-any.whl
+#17 10.16 Saved /wheels/typing_extensions-4.16.0-py3-none-any.whl
+#17 10.17 Saved /wheels/yarl-1.24.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#17 10.17 Successfully downloaded aiofiles aiohappyeyeballs aiohttp aiosignal attrs frozenlist idna livekit livekit-api livekit-protocol multidict numpy propcache protobuf PyJWT types-protobuf typing_extensions yarl
+#17 10.30 
+#17 10.30 [notice] A new release of pip is available: 25.0.1 -> 26.2.1
+#17 10.30 [notice] To update, run: pip install --upgrade pip
+#17 10.86 Looking in links: /wheels
+#17 10.86 Processing /wheels/aiofiles-25.1.0-py3-none-any.whl (from -r requirements.lock (line 2))
+#17 10.87 Processing /wheels/aiohappyeyeballs-2.7.1-py3-none-any.whl (from -r requirements.lock (line 3))
+#17 10.87 Processing /wheels/aiohttp-3.13.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r requirements.lock (line 4))
+#17 10.88 Processing /wheels/aiosignal-1.4.0-py3-none-any.whl (from -r requirements.lock (line 5))
+#17 10.88 Processing /wheels/attrs-26.1.0-py3-none-any.whl (from -r requirements.lock (line 6))
+#17 10.88 Processing /wheels/frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (from -r requirements.lock (line 7))
+#17 10.89 Processing /wheels/idna-3.19-py3-none-any.whl (from -r requirements.lock (line 8))
+#17 10.89 Processing /wheels/livekit-1.1.14-py3-none-manylinux_2_28_x86_64.whl (from -r requirements.lock (line 9))
+#17 10.92 Processing /wheels/livekit_api-1.2.0-py3-none-any.whl (from -r requirements.lock (line 10))
+#17 10.92 Processing /wheels/livekit_protocol-1.1.26-py3-none-any.whl (from -r requirements.lock (line 11))
+#17 10.92 Processing /wheels/multidict-6.8.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r requirements.lock (line 12))
+#17 10.92 Processing /wheels/numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (from -r requirements.lock (line 13))
+#17 10.97 Processing /wheels/propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r requirements.lock (line 14))
+#17 10.97 Processing /wheels/protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl (from -r requirements.lock (line 15))
+#17 10.97 Processing /wheels/pyjwt-2.14.0-py3-none-any.whl (from -r requirements.lock (line 16))
+#17 10.97 Processing /wheels/types_protobuf-7.35.1.20260906-py3-none-any.whl (from -r requirements.lock (line 17))
+#17 10.97 Processing /wheels/typing_extensions-4.16.0-py3-none-any.whl (from -r requirements.lock (line 18))
+#17 10.98 Processing /wheels/yarl-1.24.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r requirements.lock (line 19))
+#17 10.99 Installing collected packages: yarl, typing_extensions, types-protobuf, PyJWT, protobuf, propcache, numpy, multidict, livekit-protocol, livekit-api, livekit, idna, frozenlist, attrs, aiosignal, aiohttp, aiohappyeyeballs, aiofiles
+#17 12.81 Successfully installed PyJWT-2.14.0 aiofiles-25.1.0 aiohappyeyeballs-2.7.1 aiohttp-3.13.3 aiosignal-1.4.0 attrs-26.1.0 frozenlist-1.8.0 idna-3.19 livekit-1.1.14 livekit-api-1.2.0 livekit-protocol-1.1.26 multidict-6.8.0 numpy-2.4.6 propcache-0.5.2 protobuf-7.36.1 types-protobuf-7.35.1.20260906 typing_extensions-4.16.0 yarl-1.24.5
+#17 12.81 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#17 DONE 13.0s
+
+#18 [production  3/10] COPY --from=build /python /usr/local/lib/python3.12/site-packages
+#18 DONE 0.2s
+
+#19 [production  4/10] COPY --from=build /opt/chert-pilot/railway-20260930-r1 /opt/chert-pilot/railway-20260930-r1
+#19 DONE 0.1s
+
+#20 [production  5/10] WORKDIR /opt/chert-pilot/railway-20260930-r1
+#20 DONE 0.0s
+
+#21 [production  6/10] COPY application/receiver/src application/receiver/src
+#21 DONE 0.0s
+
+#22 [production  7/10] COPY application/connector/*.py application/connector/
+#22 DONE 0.0s
+
+#23 [production  8/10] COPY runtime/runtime.py runtime/node.mjs runtime/state.mjs runtime/
+#23 DONE 0.0s
+
+#24 [production  9/10] COPY inputs.json ./inputs.json
+#24 DONE 0.0s
+
+#25 [production 10/10] RUN groupadd --gid 10001 chert && useradd --uid 10001 --gid 10001 --no-create-home --home-dir /nonexistent chert && chmod -R a-w /opt/chert-pilot
+#25 DONE 1.3s
+
+#26 [qualification 1/3] COPY application/connector/tests application/connector/tests
+#26 DONE 0.0s
+
+#27 [qualification 2/3] COPY runtime/tests /qualification
+#27 DONE 0.0s
+
+#28 [qualification 3/3] RUN python -m pip install --no-cache-dir pytest==9.0.2 pytest-asyncio==1.3.0
+#28 1.356 Collecting pytest==9.0.2
+#28 1.445   Downloading pytest-9.0.2-py3-none-any.whl.metadata (7.6 kB)
+#28 1.480 Collecting pytest-asyncio==1.3.0
+#28 1.500   Downloading pytest_asyncio-1.3.0-py3-none-any.whl.metadata (4.1 kB)
+#28 1.522 Collecting iniconfig>=1.0.1 (from pytest==9.0.2)
+#28 1.537   Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+#28 1.565 Collecting packaging>=22 (from pytest==9.0.2)
+#28 1.579   Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+#28 1.601 Collecting pluggy<2,>=1.5 (from pytest==9.0.2)
+#28 1.612   Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+#28 1.643 Collecting pygments>=2.7.2 (from pytest==9.0.2)
+#28 1.657   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+#28 1.670 Requirement already satisfied: typing-extensions>=4.12 in /usr/local/lib/python3.12/site-packages (from pytest-asyncio==1.3.0) (4.16.0)
+#28 1.700 Downloading pytest-9.0.2-py3-none-any.whl (374 kB)
+#28 1.795 Downloading pytest_asyncio-1.3.0-py3-none-any.whl (15 kB)
+#28 1.816 Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+#28 1.828 Downloading packaging-26.3-py3-none-any.whl (129 kB)
+#28 1.860 Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+#28 1.877 Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+#28 2.091    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 6.7 MB/s eta 0:00:00
+#28 2.136 Installing collected packages: pygments, pluggy, packaging, iniconfig, pytest, pytest-asyncio
+#28 2.783 Successfully installed iniconfig-2.3.0 packaging-26.3 pluggy-1.6.0 pygments-2.21.0 pytest-9.0.2 pytest-asyncio-1.3.0
+#28 2.783 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#28 2.906 
+#28 2.906 [notice] A new release of pip is available: 25.0.1 -> 26.2.1
+#28 2.906 [notice] To update, run: pip install --upgrade pip
+#28 DONE 3.0s
+
+#29 exporting to image
+#29 exporting layers
+#29 exporting layers 2.7s done
+#29 exporting manifest sha256:6b605e43f95b92af16ec05bc5a018c93a4c639fcfa897d3fbfaa2829f03c65ad done
+#29 exporting config sha256:8d7ceded0d6de314b50cc48dacfc588349c2c5944c479ed7acbffd3ac7c3f115 done
+#29 exporting attestation manifest sha256:ae1fef8a5e29e161c784ebd9ae4a1840736854377dab4436fb6db7ba5a3b7da8 done
+#29 exporting manifest list sha256:053cc019778730473da56f23d491335a25584662e4a2f469bdd70653250377c3 done
+#29 naming to docker.io/library/chert-railway-qualification:20260930-r1 done
+#29 DONE 2.7s

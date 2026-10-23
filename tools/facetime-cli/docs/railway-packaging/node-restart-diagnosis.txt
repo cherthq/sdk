@@ -1,0 +1,24 @@
+test_node_restart_sigkill_and_independent_expiry (test_container.Containers.test_node_restart_sigkill_and_independent_expiry) ... FAIL
+
+======================================================================
+FAIL: test_node_restart_sigkill_and_independent_expiry (test_container.Containers.test_node_restart_sigkill_and_independent_expiry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 137, in test_node_restart_sigkill_and_independent_expiry
+    first=self.pid('node')
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 88, in pid
+    return int(self.execute(source).stdout)
+               ~~~~~~~~~~~~^^^^^^^^
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 70, in execute
+    return docker('exec',self.container,'python','-c',source,check=check)
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 23, in docker
+    raise AssertionError(result.stderr + result.stdout)
+AssertionError: Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+StopIteration
+
+
+----------------------------------------------------------------------
+Ran 1 test in 5.175s
+
+FAILED (failures=1)

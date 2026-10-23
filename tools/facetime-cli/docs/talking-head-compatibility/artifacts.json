@@ -1,0 +1,29 @@
+{
+  "path": "/Users/garygao/chert-facetime-cli/.local/talking-head-compatibility/artifacts/chert-local-transport-proof-0.0.0.tgz",
+  "sha256": "ea5da6543cd9b766b076901270fb2535d5681c45a030df8456a4e198b9ed11bc",
+  "bytes": 57002,
+  "private": true,
+  "release_candidate_regenerated": false,
+  "installed_tests": [
+    {
+      "node": "22",
+      "exit_code": 0,
+      "evidence": "final-installed-green-node22.txt"
+    },
+    {
+      "node": "24",
+      "exit_code": 0,
+      "evidence": "final-installed-green-node24.txt"
+    }
+  ],
+  "initial_recheck": [
+    {
+      "node": "22",
+      "exit_code": 0
+    },
+    {
+      "node": "24",
+      "exit_code": 1
+    }
+  ]
+}

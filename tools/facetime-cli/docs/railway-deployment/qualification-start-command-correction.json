@@ -1,0 +1,3 @@
+{
+  "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /qualification/entry.py run"
+}

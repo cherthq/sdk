@@ -1,0 +1,8 @@
+{
+  "id": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5",
+  "name": "chert-facetime-control-plane",
+  "rootDirectory": "control-plane",
+  "nodeVersion": "24.x",
+  "commandForIgnoringBuildStep": "exit 0",
+  "installCommand": null
+}

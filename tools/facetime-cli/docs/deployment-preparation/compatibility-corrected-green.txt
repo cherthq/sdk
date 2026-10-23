@@ -1,0 +1,13 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connector-production-compatibility.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/deployment-preparation/candidate/control-plane
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  22:22:45
+   Duration  3.57s (transform 29ms, setup 16ms, import 20ms, tests 3.46s, environment 0ms)
+

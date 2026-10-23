@@ -1,0 +1,11 @@
+{
+  "observed_at": "2026-09-30T14:23:26.985859+00:00",
+  "connector_entries": 0,
+  "connector_receipts": 0,
+  "connector_lock_exists": false,
+  "application_resource_receipts": 0,
+  "application_operations": 0,
+  "owner_running": true,
+  "routing_activated": false,
+  "forced_restart_or_state_reset": false
+}

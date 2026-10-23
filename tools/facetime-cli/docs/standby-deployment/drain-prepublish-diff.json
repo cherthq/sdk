@@ -1,0 +1,42 @@
+{
+  "changes": [
+    {
+      "id": "rule_byor_release_drain_20260930_2DhKoO",
+      "userId": "Xu7aJkDfbjha800O6DWysDxA",
+      "createdAt": "2026-09-30T13:59:10.243Z",
+      "username": "garygao333",
+      "action": "rules.insert",
+      "value": {
+        "name": "byor-release-drain-20260930",
+        "active": true,
+        "conditionGroup": [
+          {
+            "conditions": [
+              {
+                "neg": true,
+                "value": [
+                  "GET",
+                  "HEAD",
+                  "OPTIONS"
+                ],
+                "op": "inc",
+                "type": "method"
+              },
+              {
+                "type": "path",
+                "op": "re",
+                "neg": true,
+                "value": "^/api/(internal/v1/(calls/[^/]+/(events|transcript)|sessions/[^/]+/credentials/redeem|workers/(heartbeat|commands/claim|commands/[^/]+/(complete|outbound-lease))|webhooks/dispatch|audits/(poll|report))|v1/(calls/[^/]+/(answer|reject|end)|previews/[^/]+/stop))/?$"
+              }
+            ]
+          }
+        ],
+        "action": {
+          "mitigate": {
+            "action": "deny"
+          }
+        }
+      }
+    }
+  ]
+}

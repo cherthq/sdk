@@ -1,0 +1,5 @@
+
+> @chert/facetime-control-plane@0.1.0 validate:migration
+> tsx scripts/validate-migration.ts
+
+{"ok":true,"migrations":33,"tables":35,"rls_tables":35,"deployment_ledger_reconciliation_required":true}

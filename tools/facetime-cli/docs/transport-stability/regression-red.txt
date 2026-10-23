@@ -1,0 +1,96 @@
+TAP version 13
+# Subtest: a single stalled poll recovers without another connection or lost delivery
+not ok 1 - a single stalled poll recovers without another connection or lost delivery
+  ---
+  duration_ms: 2039.04425
+  type: 'test'
+  location: '/Users/garygao/chert-facetime/connector-relay/tests/poll-recovery.test.mjs:28:1'
+  failureType: 'testCodeFailure'
+  error: 'Transient poll failure closed the authenticated connection'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    WebSocket.<anonymous> (file:///Users/garygao/chert-facetime/connector-relay/tests/poll-recovery.test.mjs:36:32)
+    Object.onceWrapper (node:events:634:26)
+    WebSocket.emit (node:events:519:28)
+    WebSocket.emitClose (/Users/garygao/chert-facetime/connector-relay/node_modules/ws/lib/websocket.js:279:10)
+    Socket.socketOnClose (/Users/garygao/chert-facetime/connector-relay/node_modules/ws/lib/websocket.js:1360:15)
+    Socket.emit (node:events:519:28)
+    TCP.<anonymous> (node:net:347:12)
+  ...
+# Subtest: authorization 401 closes immediately without retry
+ok 2 - authorization 401 closes immediately without retry
+  ---
+  duration_ms: 14.528584
+  type: 'test'
+  ...
+# Subtest: authorization 403 closes immediately without retry
+ok 3 - authorization 403 closes immediately without retry
+  ---
+  duration_ms: 9.296417
+  type: 'test'
+  ...
+# Subtest: two unavailable polls close instead of retrying indefinitely
+not ok 4 - two unavailable polls close instead of retrying indefinitely
+  ---
+  duration_ms: 4.870916
+  type: 'test'
+  location: '/Users/garygao/chert-facetime/connector-relay/tests/poll-recovery.test.mjs:50:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime/connector-relay/tests/poll-recovery.test.mjs:52:71)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid authority JSON closes without retry or raw-data diagnostics
+ok 5 - invalid authority JSON closes without retry or raw-data diagnostics
+  ---
+  duration_ms: 10.379917
+  type: 'test'
+  ...
+# Subtest: a successful retry still honors the new binding role
+not ok 6 - a successful retry still honors the new binding role
+  ---
+  duration_ms: 3.546375
+  type: 'test'
+  location: '/Users/garygao/chert-facetime/connector-relay/tests/poll-recovery.test.mjs:62:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1008 !== 1012
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1012
+  actual: 1008
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime/connector-relay/tests/poll-recovery.test.mjs:65:47)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: decision failures are never replayed as poll retries
+ok 7 - decision failures are never replayed as poll retries
+  ---
+  duration_ms: 6.780375
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 4
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2210.575792

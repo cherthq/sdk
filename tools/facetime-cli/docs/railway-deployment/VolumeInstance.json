@@ -1,0 +1,209 @@
+{
+  "matches": [
+    {
+      "description": null,
+      "enumValues": [],
+      "fields": [
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "createdAt",
+          "namedType": "DateTime",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "DateTime!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "currentSizeMB",
+          "namedType": "Float",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "Float!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "deletedAt",
+          "namedType": "DateTime",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "DateTime"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "environment",
+          "namedType": "Environment",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "Environment!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "environmentId",
+          "namedType": "String",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "externalId",
+          "namedType": "String",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "id",
+          "namedType": "ID",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "ID!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "isPendingDeletion",
+          "namedType": "Boolean",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "mountPath",
+          "namedType": "String",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "region",
+          "namedType": "String",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "service",
+          "namedType": "Service",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "Service!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "serviceId",
+          "namedType": "String",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "sizeMB",
+          "namedType": "Int",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "Int!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "state",
+          "namedType": "VolumeState",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "VolumeState"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "volume",
+          "namedType": "Volume",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "Volume!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "volumeId",
+          "namedType": "String",
+          "parent": "VolumeInstance",
+          "requiredArgs": [],
+          "type": "String!"
+        }
+      ],
+      "inputFields": [],
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT",
+      "name": "VolumeInstance",
+      "possibleTypes": []
+    }
+  ]
+}

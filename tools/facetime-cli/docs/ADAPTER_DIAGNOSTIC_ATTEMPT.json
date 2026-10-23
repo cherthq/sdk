@@ -1,0 +1,175 @@
+{
+  "node": "v22.23.2",
+  "sdk": "2.19.0",
+  "agents": "1.8.0",
+  "rtc": "0.13.35",
+  "started_at": "2026-09-25T20:38:38.677Z",
+  "run_id": "1c7e0f02-de8c-4932-963f-05c9b994327e",
+  "instance_id": "5d3c7f7b-c5b2-411a-b0cc-822d78e5c804",
+  "worker_name": "chert-connector-test-1c7e0f02-de8c-4932-963f-05c9b994327e",
+  "deployment": "chert-test-1c7e0f02-de8c-4932-963f-05c9b994327e",
+  "boot": "1c7e0f02-de8c-4932-963f-05c9b994327e",
+  "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "prior_local_probe_workers": 0,
+  "original_status": "unresolved",
+  "original_sha256": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "redispatch": false,
+  "status": "failed",
+  "provider_sessions": 0,
+  "before_room_count": 2,
+  "room_creates": 1,
+  "dispatch_creates": 1,
+  "deleted_rooms": 1,
+  "stage": "readiness",
+  "original_inventory": {
+    "at": "2026-09-25T20:38:39.841Z",
+    "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+    "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+    "rooms": 0,
+    "dispatch": {
+      "status": "unknown",
+      "error_class": "Error",
+      "error_code": "unclassified"
+    },
+    "cleanup_debt": true,
+    "create_pending": true,
+    "settlement": "unknown"
+  },
+  "worker_runtime": "v22.23.2",
+  "worker_start_ms": 439,
+  "idle_new_rooms": 0,
+  "idle_jobs": 0,
+  "deadlines": {
+    "created_at": 1790368721666,
+    "prepare_deadline_at": 1790368725666,
+    "decision_deadline_at": 1790368726666,
+    "resource_expires_at": 1790368781666
+  },
+  "room_create_ms": 292,
+  "dispatch_create_ms": 30,
+  "decision": "decline",
+  "preparation_ms": 4032,
+  "decline_reason": "deadline_exceeded",
+  "failed_at": "2026-09-25T20:38:45.699Z",
+  "failure_observation": {
+    "hook": {
+      "worker": "AW_enTiXpfirYFy",
+      "connected": true,
+      "job": "AJ_k9ReeEAnwevv",
+      "status": "ready",
+      "track": "TR_AMU559x4toJjk5"
+    },
+    "dispatches": [
+      {
+        "id": "AD_BgynxCE8aRF5",
+        "room": "72ff56d4-1fd4-4fd8-9b60-078599d276a0",
+        "name": "",
+        "jobs": []
+      },
+      {
+        "id": "AD_6AezaiqS2SMN",
+        "room": "72ff56d4-1fd4-4fd8-9b60-078599d276a0",
+        "name": "chert-connector-test-1c7e0f02-de8c-4932-963f-05c9b994327e",
+        "jobs": [
+          {
+            "id": "AJ_k9ReeEAnwevv",
+            "dispatch": "AD_6AezaiqS2SMN",
+            "worker": "AW_enTiXpfirYFy",
+            "status": 1,
+            "participant": "feb2459d-b2c3-4945-9bf4-b1be23918102"
+          }
+        ]
+      }
+    ],
+    "participants": [
+      {
+        "identity": "feb2459d-b2c3-4945-9bf4-b1be23918102",
+        "tracks": [
+          {
+            "sid": "TR_AMU559x4toJjk5",
+            "type": 0,
+            "muted": false
+          }
+        ]
+      }
+    ]
+  },
+  "error": "transport_failure",
+  "failure": {
+    "error_class": "Error",
+    "error_code": "unclassified"
+  },
+  "stage_before_cleanup": "readiness",
+  "cleanup_debt": 1,
+  "adapter_phase": "dispatch_ack",
+  "operation": {
+    "logical": "98084e96-5778-4721-8110-6601358270a8",
+    "room": "72ff56d4-1fd4-4fd8-9b60-078599d276a0",
+    "room_sid": "RM_uciFtuAa76x9",
+    "dispatch": "AD_6AezaiqS2SMN"
+  },
+  "final_hook": {
+    "connected": true,
+    "worker": "AW_enTiXpfirYFy",
+    "draining": false,
+    "session": {
+      "job": "AJ_k9ReeEAnwevv",
+      "worker": "AW_enTiXpfirYFy",
+      "status": "ended",
+      "cancelled": true
+    }
+  },
+  "operation_audit": [
+    {
+      "operation": "room",
+      "phase": "pending",
+      "at": 1790368721733,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3932.928958,
+      "effective_timeout_ms": 3000
+    },
+    {
+      "operation": "room",
+      "phase": "acknowledged",
+      "at": 1790368722035,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3932.928958,
+      "effective_timeout_ms": 3000
+    },
+    {
+      "operation": "dispatch",
+      "phase": "pending",
+      "at": 1790368722045,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3621,
+      "effective_timeout_ms": 3000
+    },
+    {
+      "operation": "dispatch",
+      "phase": "acknowledged",
+      "at": 1790368722086,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3621,
+      "effective_timeout_ms": 3000
+    }
+  ],
+  "worker_stopped": true,
+  "worker_exit": {
+    "code": 0,
+    "signal": null
+  },
+  "final_owned_rooms": 1,
+  "unrelated_rooms_unchanged": true,
+  "baseline_unrelated_rooms": 2,
+  "original_sha256_after": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "original_evidence_unchanged": true,
+  "finished_at": "2026-09-25T20:38:49.269Z"
+}

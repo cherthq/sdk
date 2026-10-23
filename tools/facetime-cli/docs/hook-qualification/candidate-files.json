@@ -1,0 +1,17 @@
+{
+  "base": "52b43a4be253bc815e32b205a8f1118870b85955",
+  "files": [
+    {
+      "path": "src/byor.mjs",
+      "sha256": "6d990d9b1370ac5cd28feee476b006773067df343873add15cbc30a2b0f7ab6e"
+    },
+    {
+      "path": "tests/agent-startup.test.mjs",
+      "sha256": "d207ff3b611ea955bd5907aa8a89f97823042d70ad3f69decc980b0c5379069e"
+    },
+    {
+      "path": "tests/muse-startup.test.mjs",
+      "sha256": "bbcfc65a9bb10df299644390afa40fe823d5d23271bce9b9734298b27cbc084a"
+    }
+  ]
+}

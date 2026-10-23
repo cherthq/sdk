@@ -1,0 +1,117 @@
+
+> demo-agent-0@1.0.0 check
+> node --check src/agent.mjs && node --check src/byor.mjs && node --check src/remote-video.mjs && node --check src/caller-vision.mjs && node --check scripts/receive-video.mjs && node --experimental-test-module-mocks --test tests/*.test.mjs
+
+✔ unset and explicit classic select the existing implementation (0.647917ms)
+✔ demo is explicitly unimplemented and resolves to the exact classic implementation (0.063334ms)
+✔ unknown, blank and inherited names fail with a sanitized configuration error (0.232167ms)
+✔ muse selects its own implementation without demo fallback (0.058792ms)
+✔ continuous classic dispatch cannot start Muse (0.095917ms)
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+{"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+(node:47341) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ standalone unset preserves audio, greeting, camera tool and avatar (7.546084ms)
+✔ BYOR unset preserves warmup, readiness, delayed greeting and audio binding (1.443792ms)
+✔ standalone classic preserves audio, greeting, camera tool and avatar (1.680917ms)
+✔ BYOR classic preserves warmup, readiness, delayed greeting and audio binding (0.708416ms)
+✔ standalone demo preserves audio, greeting, camera tool and avatar (2.542416ms)
+✔ BYOR demo preserves warmup, readiness, delayed greeting and audio binding (0.958375ms)
+✔ invalid configuration fails before worker registration, acceptance or session work (2.136875ms)
+✔ profile selection stays fixed across environment changes and delayed BYOR arrival (0.633959ms)
+✔ job acceptance preserves dispatch name, identities and malformed BYOR rejection (1.667ms)
+✔ profile requirement rejects before acceptance and session initialization (0.933375ms)
+✔ outbound audio stays silent until matching administrative activation (1.670584ms)
+✔ outbound video stays silent until matching administrative activation (0.737334ms)
+✔ avatar publishes valid native frames and animates the mouth while speaking (68.570917ms)
+✔ describe sends only a fresh received image, then invalidates on mute (3.690208ms)
+✔ stale frame, cancellation and closed call do not send an image (0.102875ms)
+✔ one in-flight request; mute aborts and suppresses a late provider result (1.375833ms)
+✔ cancellation during encoding prevents transmission; API failures are sanitized (0.372541ms)
+✔ native JPEG encoding maps SDK rotation enums without stretching (12.64175ms)
+✔ readiness speech completes without being sent to the avatar or audio output (0.745417ms)
+✔ live speech waits for provider playback and emits actual media start once (192.643542ms)
+✔ interruption mutes immediately, drains old speech and fences a late completion (411.228292ms)
+✔ large model frames are split into bounded chunks and closing releases playback (0.202542ms)
+✔ scene requests only become confirmed after renderer completion; repeats are idempotent (0.389417ms)
+✔ conflicting requests retain only latest destination and reject stale completion (0.100416ms)
+✔ failed transition preserves settled state; late callbacks cannot revive a closed scene (0.177541ms)
+✔ portrait composite preserves alpha, background, and subject proportions (22.568958ms)
+✔ compositor bounds work, rejects parallel renders, and releases busy state after errors (34.00375ms)
+✔ explicit chroma key removes green, preserves skin-colored pixels, and does not mutate input (0.218792ms)
+✔ render tokens are confined to a new private room and never grant administration (1.584042ms)
+✔ provider start failure removes only its own room and sanitizes the response (1.023333ms)
+✔ audio uses exact PCM subarray, scoped destination, turn end and clear RPC (0.347167ms)
+✔ configuration is validated without echoing sensitive values (0.116791ms)
+✔ confirmed submission blocks duplicate paid generation (185.320542ms)
+✔ finite route submits once with a 15-second budget and no matching last frame (103.213916ms)
+✔ explicit client rejection permits retry after account activation (116.572625ms)
+✔ ambiguous transport failure preserves receipt and blocks resubmission (65.137375ms)
+✔ transition waits for loop seam and confirms only after destination publication (0.687792ms)
+✔ rapid reversal completes the current transition then starts the latest request (0.241667ms)
+✔ scene failures preserve settled state and manifests reject escape paths and unbounded loops (0.483709ms)
+✔ finite route slows immediately, confirms on presentation, holds exact position and resumes (0.284833ms)
+✔ route endpoint holds instead of rewinding, and rejects exhausted resume (0.121667ms)
+✔ route ignores duplicate requests and serializes rapid reversal without position reset (0.150458ms)
+✔ resume queued during endpoint stop fails instead of confirming impossible travel (0.105166ms)
+✔ manual control signs exact operation and session (0.619084ms)
+✔ preflight stops immediately after ready without accepting a call (0.380917ms)
+✔ Ctrl-C stops the exact session and never restarts (0.084709ms)
+✔ ambiguous network failure still requests cleanup without retrying start (0.148458ms)
+✔ failed preparation and unverified cleanup cannot pass preflight (0.234667ms)
+✔ local summary shows safe settings and presence without secret values (0.240334ms)
+✔ hosted profile is confirmed separately from local env with mismatch notice (0.13125ms)
+✔ readiness speech completes without being sent to the avatar or audio output (0.761416ms)
+✔ live speech waits for provider playback and emits actual media start once (194.124958ms)
+✔ interruption mutes immediately, drains old speech and fences a late completion (407.5ms)
+✔ large model frames are split into bounded chunks and closing releases playback (0.260834ms)
+✔ render tokens are confined to a new private room and never grant administration (2.2505ms)
+✔ provider start failure removes only its own room and sanitizes the response (0.827417ms)
+✔ audio uses exact PCM subarray, scoped destination, turn end and clear RPC (0.608917ms)
+✔ configuration is validated without echoing sensitive values (0.108708ms)
+✔ hosted internal LiveKit address is kept separate from the public renderer URL (0.070625ms)
+(node:47352) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Muse BYOR binds caller, hides warmup and publishes returned media (1.772209ms)
+✔ Muse Console binds caller, hides warmup and publishes returned media (0.74125ms)
+✔ Muse startup failure cleans renderer without advertising ready (0.646375ms)
+✔ Muse outbound video publishes silent audio before renderer readiness and gates speech by call (0.978875ms)
+✔ expired call preparation starts no Muse renderer (0.097083ms)
+✔ inbound requires no outbound configuration; explicit outbound metadata fails closed (0.667833ms)
+✔ only matching activation greets once; active locks the call ID (0.159917ms)
+✔ terminal before activation and expired control lease suppress late activation (0.350375ms)
+✔ outbound media accepts legacy audio and explicit video, rejects malformed choices (0.097916ms)
+✔ expired inbound dispatch is rejected before any provider work (0.605083ms)
+✔ cold preparation has a fixed deadline; old and outbound jobs keep their bound (23.156541ms)
+✔ existing subscribed camera: metadata, dimensions, sanitized diagnostics and idempotence (2.574416ms)
+✔ no video is nonblocking; delayed participant and later publication subscribe once; audio untouched (0.21ms)
+✔ existing unpublished subscription is requested on initial scan (0.081625ms)
+✔ selection is camera-only, same participant, deterministic and sticky through mute (5.665333ms)
+✔ explicit participant/name filters do not fall back; disabled receiver has no listeners (0.265916ms)
+✔ unpublish, participant departure and reconnect cancel and rebuild exactly one reader (0.400458ms)
+✔ unsubscribe and replacement track cancel old stream; failure retries with bounded cadence (0.240375ms)
+✔ bounded slow consumer: newest pending only, sampling and stale/input resolution drops (2.330333ms)
+✔ consumer errors and decode EOF are isolated and recover; shutdown aborts in-flight work (0.3185ms)
+✔ mute aborts a pending consumer and drops buffered work (0.183834ms)
+✔ resize caps dimensions, preserves aspect and emits RGB24 without native conversion (0.060792ms)
+✔ configuration rejects unbounded values; setup failure never rejects audio startup (2.668542ms)
+✔ receive-first probe gates only return publication and fails closed when frames are absent (0.452917ms)
+✔ consumer timeout aborts work, permits later frames only after settlement, and clears shutdown (0.434291ms)
+✔ stream setup/read failures are sanitized and retry; disconnect removes all listeners (0.220417ms)
+✔ uncooperative timed-out consumer cannot create duplicate work or hold up shutdown (0.247291ms)
+✔ receiver invalidates cached vision on mute, camera removal and shutdown (0.123042ms)
+✔ decoded camera reaches the voice tool provider request and mute removes access (303.385375ms)
+ℹ tests 93
+ℹ suites 0
+ℹ pass 93
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1495.755417

@@ -1,0 +1,262 @@
+{
+  "node": "v22.23.2",
+  "sdk": "2.19.0",
+  "agents": "1.8.0",
+  "rtc": "0.13.35",
+  "started_at": "2026-09-29T20:56:16.954Z",
+  "run_id": "16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+  "instance_id": "7603706b-6bd9-476b-97db-eb9a7b201c44",
+  "worker_name": "chert-connector-test-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+  "deployment": "chert-test-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+  "boot": "16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+  "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "prior_local_probe_workers": 0,
+  "original_status": "unresolved",
+  "original_sha256": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "redispatch": false,
+  "status": "failed",
+  "provider_sessions": 0,
+  "before_room_count": 0,
+  "room_creates": 1,
+  "dispatch_creates": 0,
+  "deleted_rooms": 1,
+  "stage": "readiness",
+  "original_inventory": {
+    "at": "2026-09-29T20:56:18.157Z",
+    "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+    "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+    "rooms": 0,
+    "dispatch": {
+      "status": "unknown",
+      "error_class": "Error",
+      "error_code": "not_found"
+    },
+    "cleanup_debt": true,
+    "create_pending": true,
+    "settlement": "unknown"
+  },
+  "worker_runtime": "v22.23.2",
+  "worker_start_ms": 437,
+  "idle_new_rooms": 0,
+  "idle_jobs": 0,
+  "deadlines": {
+    "created_at": 1790715379942,
+    "prepare_deadline_at": 1790715383942,
+    "decision_deadline_at": 1790715384942,
+    "resource_expires_at": 1790715439942
+  },
+  "room_create_ms": 348,
+  "room_triggered_dispatches": 1,
+  "decision": "decline",
+  "preparation_ms": 4041,
+  "decline_reason": "deadline_exceeded",
+  "failed_at": "2026-09-29T20:56:23.985Z",
+  "readiness_checks": {
+    "hook_connected": true,
+    "not_draining": true,
+    "session_matches": true,
+    "not_cancelled": true,
+    "session_ready": true,
+    "hook_worker_matches": true,
+    "one_job": true,
+    "job_matches": true,
+    "dispatch_matches": true,
+    "job_running": true,
+    "job_room_matches": false,
+    "job_participant_matches": true,
+    "job_worker_matches": true,
+    "no_foreign_participants": true,
+    "participant_present": true,
+    "nonce_matches": true,
+    "participant_job_matches": true,
+    "sole_unmuted_audio": true,
+    "track_matches": true
+  },
+  "failure_observation": {
+    "hook": {
+      "worker": "AW_8BaJ5JTyu5dL",
+      "connected": true,
+      "job": "AJ_P9c5h2E2PMVT",
+      "status": "ready",
+      "track": "TR_AM8bc5ejgVS5hv"
+    },
+    "dispatches": [
+      {
+        "id": "AD_fQALXjPM4JFR",
+        "room": "998fb937-5f5d-4082-bf13-cd42d135d20f",
+        "name": "chert-connector-test-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+        "jobs": [
+          {
+            "id": "AJ_P9c5h2E2PMVT",
+            "dispatch": "AD_fQALXjPM4JFR",
+            "worker": "AW_8BaJ5JTyu5dL",
+            "status": 1,
+            "participant": "33326b6b-a10c-4006-b957-7f87ec4aa3a3"
+          }
+        ]
+      }
+    ],
+    "participants": [
+      {
+        "identity": "33326b6b-a10c-4006-b957-7f87ec4aa3a3",
+        "tracks": [
+          {
+            "sid": "TR_AM8bc5ejgVS5hv",
+            "type": 0,
+            "muted": false
+          }
+        ]
+      }
+    ]
+  },
+  "error": "transport_failure",
+  "failure": {
+    "error_class": "Error",
+    "error_code": "unclassified"
+  },
+  "stage_before_cleanup": "readiness",
+  "cleanup_debt": 0,
+  "adapter_phase": "clean",
+  "operation": {
+    "logical": "9bc1d097-ec66-4b06-9a24-af3803ac2851",
+    "room": "998fb937-5f5d-4082-bf13-cd42d135d20f",
+    "room_sid": "RM_vAT5DHxbKQ33",
+    "dispatch": "AD_fQALXjPM4JFR",
+    "actual_job": "AJ_P9c5h2E2PMVT"
+  },
+  "final_hook": {
+    "connected": true,
+    "worker": "AW_8BaJ5JTyu5dL",
+    "draining": false,
+    "session": {
+      "job": "AJ_P9c5h2E2PMVT",
+      "worker": "AW_8BaJ5JTyu5dL",
+      "status": "ended",
+      "cancelled": true
+    }
+  },
+  "operation_audit": [
+    {
+      "operation": "room",
+      "phase": "pending",
+      "at": 1790715380000,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3941.2810419999996,
+      "effective_timeout_ms": 3000
+    },
+    {
+      "operation": "room",
+      "phase": "acknowledged",
+      "at": 1790715380358,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3941.2810419999996,
+      "effective_timeout_ms": 3000
+    }
+  ],
+  "cleanup_evidence": [
+    {
+      "kind": "cancelled",
+      "at": 1790715384005,
+      "roomSid": "RM_vAT5DHxbKQ33",
+      "dispatchId": "AD_fQALXjPM4JFR",
+      "observation": {
+        "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+        "name": "chert-connector-test-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+        "deployment": "chert-test-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+        "boot": "16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+        "worker": "AW_8BaJ5JTyu5dL",
+        "sequence": 62,
+        "observed_at": 1790715383985,
+        "challenge": "6606b486-e108-41de-9d87-e6b2e3707553",
+        "connected": true,
+        "draining": false,
+        "capacity": 0,
+        "session": {
+          "operation": "9bc1d097-ec66-4b06-9a24-af3803ac2851",
+          "room": "998fb937-5f5d-4082-bf13-cd42d135d20f",
+          "marker": "ea8eacfb-67bd-4613-948c-01f2225df235",
+          "nonce": "e68a2ea1-e482-4496-9be5-10a5d614bb60",
+          "participant": "33326b6b-a10c-4006-b957-7f87ec4aa3a3",
+          "job": "AJ_P9c5h2E2PMVT",
+          "dispatch": "AD_fQALXjPM4JFR",
+          "worker": "AW_8BaJ5JTyu5dL",
+          "status": "ready",
+          "cancelled": true,
+          "track": "TR_AM8bc5ejgVS5hv"
+        },
+        "cancelled_operation": "9bc1d097-ec66-4b06-9a24-af3803ac2851"
+      }
+    },
+    {
+      "kind": "dispatch_deleted",
+      "at": 1790715384147,
+      "roomSid": "RM_vAT5DHxbKQ33",
+      "dispatchId": "AD_fQALXjPM4JFR"
+    },
+    {
+      "kind": "ended",
+      "at": 1790715384163,
+      "roomSid": "RM_vAT5DHxbKQ33",
+      "dispatchId": "AD_fQALXjPM4JFR",
+      "observation": {
+        "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+        "name": "chert-connector-test-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+        "deployment": "chert-test-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+        "boot": "16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+        "worker": "AW_8BaJ5JTyu5dL",
+        "sequence": 65,
+        "observed_at": 1790715384163,
+        "challenge": "87d2009d-4b20-4b16-bc7d-2c3737abd59e",
+        "connected": true,
+        "draining": false,
+        "capacity": 0,
+        "session": {
+          "operation": "9bc1d097-ec66-4b06-9a24-af3803ac2851",
+          "room": "998fb937-5f5d-4082-bf13-cd42d135d20f",
+          "marker": "ea8eacfb-67bd-4613-948c-01f2225df235",
+          "nonce": "e68a2ea1-e482-4496-9be5-10a5d614bb60",
+          "participant": "33326b6b-a10c-4006-b957-7f87ec4aa3a3",
+          "job": "AJ_P9c5h2E2PMVT",
+          "dispatch": "AD_fQALXjPM4JFR",
+          "worker": "AW_8BaJ5JTyu5dL",
+          "status": "ended",
+          "cancelled": true,
+          "track": "TR_AM8bc5ejgVS5hv"
+        },
+        "cancelled_operation": "9bc1d097-ec66-4b06-9a24-af3803ac2851"
+      }
+    },
+    {
+      "kind": "room_deleted",
+      "at": 1790715384405,
+      "roomSid": "RM_vAT5DHxbKQ33",
+      "dispatchId": "AD_fQALXjPM4JFR"
+    },
+    {
+      "kind": "absent",
+      "at": 1790715385558,
+      "roomSid": "RM_vAT5DHxbKQ33",
+      "dispatchId": "AD_fQALXjPM4JFR"
+    }
+  ],
+  "topology": "room_agent",
+  "worker_stopped": true,
+  "worker_exit": {
+    "code": 0,
+    "signal": null
+  },
+  "final_owned_rooms": 1,
+  "unrelated_rooms_unchanged": true,
+  "baseline_unrelated_rooms": 0,
+  "original_sha256_after": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "original_evidence_unchanged": true,
+  "finished_at": "2026-09-29T20:56:27.778Z"
+}

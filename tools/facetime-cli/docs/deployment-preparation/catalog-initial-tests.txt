@@ -1,0 +1,265 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connectors.test.ts tests/connector-service.test.ts tests/connector-incoming.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/deployment-preparation/candidate/control-plane
+
+ ❯ tests/connectors.test.ts (10 tests | 10 failed) 7347ms
+     × enrolls standby without changing the legacy route and rejects foreign membership 1325ms
+     × requires exact line selection and an explicit activation compare-and-swap 866ms
+     × pins ownership, rejects stale/foreign decisions and deduplicates a committed decision 641ms
+     × revokes admission but preserves recovery and immutable pins through replacement 649ms
+     × serializes concurrent activations and refuses ambiguous line cardinality 674ms
+     × rejects zero-line projects and development activation without changing routing 625ms
+     × keeps the connection credential revoked after drain while owned recovery survives restart 631ms
+     × allows scoped drain and revoke after a second line without relaxing enrollment or activation 634ms
+   × keeps revocation terminal with revoke holding the management lock 658ms
+   × keeps revocation terminal with drain holding the management lock 643ms
+ ❯ tests/connector-service.test.ts (3 tests | 3 failed) 1904ms
+     × commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections 650ms
+     × settles an expired uncommitted request through recovery without a relay and rejects foreign owners 636ms
+     × enrolls over TLS without activation, activates explicitly and declines unavailable health through the real relay 618ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-service.test.ts > integrated connector service and relay > commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-atWKDP -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connector-service.test.ts:60:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  tests/connector-service.test.ts > integrated connector service and relay > settles an expired uncommitted request through recovery without a relay and rejects foreign owners
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-lLT7wP -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connector-service.test.ts:90:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  tests/connector-service.test.ts > installed CLI hosted construction > enrolls over TLS without activation, activates explicitly and declines unavailable health through the real relay
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-pN5566 -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connector-service.test.ts:105:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector authoritative database boundary > enrolls standby without changing the legacy route and rejects foreign membership
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-VcuA9i -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:19:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector authoritative database boundary > requires exact line selection and an explicit activation compare-and-swap
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-bspH7V -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:33:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector call fencing and durable recovery > pins ownership, rejects stale/foreign decisions and deduplicates a committed decision
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-Pmumsx -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:66:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector call fencing and durable recovery > revokes admission but preserves recovery and immutable pins through replacement
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-N0vq5a -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:85:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector call fencing and durable recovery > serializes concurrent activations and refuses ambiguous line cardinality
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-TTALc7 -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:99:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector enrollment boundary cases > rejects zero-line projects and development activation without changing routing
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-lgevWn -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:118:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector revocation review regressions > keeps the connection credential revoked after drain while owned recovery survives restart
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-Zz3hc1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:134:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  tests/connectors.test.ts > connector revocation review regressions > allows scoped drain and revoke after a second line without relaxing enrollment or activation
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-XDyArm -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:162:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  tests/connectors.test.ts > keeps revocation terminal with revoke holding the management lock
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-uogXTa -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:186:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+ FAIL  tests/connectors.test.ts > keeps revocation terminal with drain holding the management lock
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-aLKN2Z -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql
+psql:/Users/garygao/chert-facetime-cli/docs/deployment-preparation/production-public-baseline.sql:3138: ERROR:  syntax error at or near "TRIGGER"
+LINE 1: ...constraint "facetime_call_events_enqueue_webhook" TRIGGER DE...
+                                                             ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:21:7
+ ❯ tests/connectors.test.ts:186:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/13]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  13 failed | 2 passed (15)
+   Start at  22:14:32
+   Duration  9.67s (transform 58ms, setup 13ms, import 128ms, tests 9.35s, environment 0ms)
+

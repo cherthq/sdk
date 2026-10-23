@@ -1,0 +1,15 @@
+{
+  "observed_at": "2026-09-30T13:51:37.418101+00:00",
+  "service": "talking-head-webhook",
+  "room_reference": "interview-697d9bb7a1cc4eb09501b83ba82597d2",
+  "call_id": "01256872-9ba3-44c7-b320-a2f686f6f558",
+  "configured_livekit_host": "chert-byor-staging-wi1rapq6.livekit.cloud",
+  "namespace": "demo-byor",
+  "run_mode": "continuous",
+  "journal_schema": 2,
+  "historical_room_found_in_journal": false,
+  "historical_call_found_in_journal": false,
+  "receipt_count": 1,
+  "target_room_count_in_this_livekit_project": 0,
+  "provider_read_succeeded": true
+}

@@ -1,0 +1,164 @@
+{
+  "migrations": [
+    {
+      "version": "20260819205731",
+      "name": "0006_development_audio_authorization"
+    },
+    {
+      "version": "20260820145658",
+      "name": "0007_secure_call_transcripts"
+    },
+    {
+      "version": "20260826044026",
+      "name": "0008_b1_call_event_contract"
+    },
+    {
+      "version": "20260826050138",
+      "name": "0009_b1_event_ingestion_metadata"
+    },
+    {
+      "version": "20260826115036",
+      "name": "b2_session_lifecycle"
+    },
+    {
+      "version": "20260826124951",
+      "name": "b3_webhook_core"
+    },
+    {
+      "version": "20260826125312",
+      "name": "b3_webhook_core_append_only_fix"
+    },
+    {
+      "version": "20260826125628",
+      "name": "b3_webhook_core_registration_context"
+    },
+    {
+      "version": "20260826125721",
+      "name": "b3_webhook_core_registration_ownership"
+    },
+    {
+      "version": "20260826130029",
+      "name": "b3_webhook_core_wall_clock_created_at"
+    },
+    {
+      "version": "20260826130246",
+      "name": "b3_webhook_core_bounded_ingestion_time"
+    },
+    {
+      "version": "20260826130922",
+      "name": "b3_webhook_core_foreign_key_indexes"
+    },
+    {
+      "version": "20260826130934",
+      "name": "b3_webhook_core_endpoint_index"
+    },
+    {
+      "version": "20260827024119",
+      "name": "b4_sealed_credentials"
+    },
+    {
+      "version": "20260827142611",
+      "name": "additional_project_creation"
+    },
+    {
+      "version": "20260827142730",
+      "name": "project_livekit_allowed_hosts"
+    },
+    {
+      "version": "20260827183854",
+      "name": "0014_bw_session_lifecycle_amendment"
+    },
+    {
+      "version": "20260827185247",
+      "name": "heartbeat_rejection_evidence"
+    },
+    {
+      "version": "20260904024011",
+      "name": "incoming_webhook_decline_cleanup"
+    },
+    {
+      "version": "20260904230436",
+      "name": "start_bridge_failure_reconciliation"
+    },
+    {
+      "version": "20260905000847",
+      "name": "call_webhook_logical_idempotency"
+    },
+    {
+      "version": "20260906023207",
+      "name": "reconcile_expired_start_bridge_commands"
+    },
+    {
+      "version": "20260911131327",
+      "name": "line_integrations"
+    },
+    {
+      "version": "20260911140856",
+      "name": "line_integration_service_grants"
+    },
+    {
+      "version": "20260911151650",
+      "name": "line_integrations_release_transport"
+    },
+    {
+      "version": "20260911213624",
+      "name": "automatic_worker_readiness"
+    },
+    {
+      "version": "20260911233536",
+      "name": "dashboard_console"
+    },
+    {
+      "version": "20260912002808",
+      "name": "automatic_worker_readiness_release_transport"
+    },
+    {
+      "version": "20260912013442",
+      "name": "dashboard_console_release_transport"
+    },
+    {
+      "version": "20260912131914",
+      "name": "dashboard_media_observations"
+    },
+    {
+      "version": "20260912142000",
+      "name": "dashboard_recovery_qualification"
+    },
+    {
+      "version": "20260912144429",
+      "name": "readiness_dashboard_release_transport"
+    },
+    {
+      "version": "20260913044930",
+      "name": "guarded_worker_onboarding"
+    },
+    {
+      "version": "20260913124823",
+      "name": "guarded_worker_onboarding_release_transport"
+    },
+    {
+      "version": "20260915191852",
+      "name": "optional_webhook_signing"
+    },
+    {
+      "version": "20260916002957",
+      "name": "line_video_framing"
+    },
+    {
+      "version": "20260920010713",
+      "name": "project_user_management"
+    },
+    {
+      "version": "20260921142141",
+      "name": "device_agent_audits"
+    },
+    {
+      "version": "20260923192701",
+      "name": "outbound_byor_audio_compatible_release"
+    },
+    {
+      "version": "20260924200520",
+      "name": "outbound_byor_video"
+    }
+  ]
+}

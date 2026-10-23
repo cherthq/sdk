@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_late_prepare_after_unknown_recovery_is_tombstoned ____________
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-50/test_late_prepare_after_unknow0')
+
+    @pytest.mark.asyncio
+    async def test_late_prepare_after_unknown_recovery_is_tombstoned(tmp_path):
+        owner, provider = make_owner(tmp_path, synthetic_audio=True)
+        request = call()
+        try:
+            assert (await owner.recover(request,dict(cancel_requested=True)))['cleanup'] == 'clean'
+>           assert (await owner.prepare(request))['action'] == 'decline'
+E           AssertionError: assert 'accept' == 'decline'
+E             
+E             - decline
+E             + accept
+
+../demo-agent-0/connector/tests/test_owner.py:148: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"config_revision": "unknown", "correlation": "ef0c85306462fdc9432ed4da", "elapsed_ms": 0.9725420386530459, "event": "preparation", "image_digest": "unknown", "reason": "ready", "source_sha": "unknown", "timestamp": "2026-09-30T04:19:27.172738+00:00"}
+=========================== short test summary info ============================
+FAILED ../demo-agent-0/connector/tests/test_owner.py::test_late_prepare_after_unknown_recovery_is_tombstoned
+1 failed in 0.18s

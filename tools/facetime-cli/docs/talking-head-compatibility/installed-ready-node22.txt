@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: installed package claims actual production-policy ready video session, preserves one room and supports reuse after cleanup
+ok 1 - installed package claims actual production-policy ready video session, preserves one room and supports reuse after cleanup
+  ---
+  duration_ms: 4633.956
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4772.688666

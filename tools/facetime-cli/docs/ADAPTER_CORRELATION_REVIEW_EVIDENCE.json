@@ -1,0 +1,12 @@
+{
+  "at": "2026-09-29T21:11:12.044Z",
+  "directory": "/Users/garygao/chert-facetime-cli/.local/adapter-correlation-review-5826fc94-7077-4ce2-8baa-d10719a9e28d",
+  "sha256": {
+    "journal.json": "ccf6020fab6a72b430cbe250ddb43c5179e2b5e2a738f08001b7baa76a47122c",
+    "adapter.json": "570e430170d44f13d9dec17871c6a415e012d459199b46bc831427d410a70953",
+    "result.json": "1f336e3d73fc0ea83a98416233dd2e9abb6f30b46d8dc3b1c9e43f1c89c86677",
+    "acceptance.json": "c78bae35158d4b9d442433f9f218277b4c6f6f4854849d30332161059e80f05e"
+  },
+  "application_room_dispatches": 1,
+  "extra_sessions": 0
+}

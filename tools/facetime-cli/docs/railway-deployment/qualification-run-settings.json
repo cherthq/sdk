@@ -1,0 +1,10 @@
+{
+  "numReplicas": 1,
+  "sleepApplication": false,
+  "drainingSeconds": 65,
+  "overlapSeconds": 0,
+  "restartPolicyType": "NEVER",
+  "healthcheckPath": "/healthz",
+  "healthcheckTimeout": 90,
+  "startCommand": "python /qualification/entry.py run"
+}

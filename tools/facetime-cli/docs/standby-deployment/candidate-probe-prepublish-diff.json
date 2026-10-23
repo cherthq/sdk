@@ -1,0 +1,89 @@
+{
+  "changes": [
+    {
+      "createdAt": "2026-09-30T14:05:58.239Z",
+      "value": {
+        "conditionGroup": [
+          {
+            "conditions": [
+              {
+                "value": [
+                  "facetime.trychert.com",
+                  "chert-facetime-control-plane.vercel.app",
+                  "chert-facetime-control-plane-chert-technologies.vercel.app",
+                  "chert-facetime-control-plane-ktlll30lu-chert-technologies.vercel.app",
+                  "chert-facetime-control-plane-gj13u9tm6-chert-technologies.vercel.app"
+                ],
+                "type": "host",
+                "neg": true,
+                "op": "inc"
+              }
+            ]
+          }
+        ],
+        "action": {
+          "mitigate": {
+            "action": "deny"
+          }
+        },
+        "active": true,
+        "name": "line-release-retired-deployments"
+      },
+      "action": "rules.update",
+      "id": "rule_line_release_quiesce_Zr6KPK",
+      "username": "garygao333",
+      "userId": "Xu7aJkDfbjha800O6DWysDxA"
+    },
+    {
+      "action": "rules.update",
+      "username": "garygao333",
+      "id": "rule_byor_release_quiesce_20260930_QbCXRv",
+      "createdAt": "2026-09-30T14:05:59.588Z",
+      "value": {
+        "active": true,
+        "conditionGroup": [
+          {
+            "conditions": [
+              {
+                "op": "eq",
+                "neg": true,
+                "value": "chert-facetime-control-plane-gj13u9tm6-chert-technologies.vercel.app",
+                "type": "host"
+              }
+            ]
+          },
+          {
+            "conditions": [
+              {
+                "neg": true,
+                "op": "inc",
+                "type": "method",
+                "value": [
+                  "GET",
+                  "HEAD"
+                ]
+              }
+            ]
+          },
+          {
+            "conditions": [
+              {
+                "value": "^/api/(health|v1/(projects|lines|connectors))/?$",
+                "neg": true,
+                "type": "path",
+                "op": "re"
+              }
+            ]
+          }
+        ],
+        "name": "byor-release-quiesce-20260930",
+        "action": {
+          "mitigate": {
+            "action": "deny"
+          }
+        }
+      },
+      "userId": "Xu7aJkDfbjha800O6DWysDxA"
+    }
+  ]
+}

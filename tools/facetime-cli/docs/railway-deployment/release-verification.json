@@ -1,0 +1,24 @@
+{
+  "passed": [
+    "packaging/railway/.gitignore",
+    "packaging/railway/Dockerfile",
+    "packaging/railway/node.mjs",
+    "packaging/railway/package-lock.json",
+    "packaging/railway/package.json",
+    "packaging/railway/prepare.py",
+    "packaging/railway/requirements-amd64.lock",
+    "packaging/railway/runtime.py",
+    "packaging/railway/state.mjs",
+    "packaging/railway/tests/entry.py",
+    "packaging/railway/tests/owner.py",
+    "packaging/railway/tests/relay.mjs",
+    "packaging/railway/tests/test_container.py",
+    "packaging/railway/tests/test_runtime.py",
+    "context_archive",
+    "inputs_manifest",
+    "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/chert-local-transport-proof-0.0.0.tgz",
+    "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/connector-relay-source.tar.gz",
+    "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/control-plane-source.tar.gz",
+    "/Users/garygao/chert-facetime-cli/.local/deployment-release/artifacts/talking-head-bridge-source.tar.gz"
+  ]
+}

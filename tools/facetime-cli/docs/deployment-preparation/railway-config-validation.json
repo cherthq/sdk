@@ -1,0 +1,5 @@
+{
+  "valid": true,
+  "validator": "jsonschema 4.26.0",
+  "draft": "2020-12"
+}

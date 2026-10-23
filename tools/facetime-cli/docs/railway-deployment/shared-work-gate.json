@@ -1,0 +1,24 @@
+[
+  {
+    "observed_at": "2026-09-30 13:02:03.030452+00",
+    "nonterminal_calls": 31,
+    "uncleaned_sessions": 4,
+    "executable_commands": 0,
+    "retained_seals": 199,
+    "pending_delivery_attempts": 0,
+    "open_development_windows": 0,
+    "historical_session": {
+      "state": "failed",
+      "cleaned_at": null,
+      "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7"
+    },
+    "pilot_line": {
+      "id": "59b3e3d0-945b-45da-b907-027103941a65",
+      "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+      "inbound_policy": "customer_decides",
+      "current_call_id": null,
+      "default_assistant_id": null,
+      "assignment_generation": 3
+    }
+  }
+]

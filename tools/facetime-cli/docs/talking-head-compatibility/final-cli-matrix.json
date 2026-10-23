@@ -1,0 +1,42 @@
+[
+  {
+    "node": "22",
+    "check": "typecheck",
+    "exit_code": 0
+  },
+  {
+    "node": "22",
+    "check": "lint",
+    "exit_code": 0
+  },
+  {
+    "node": "22",
+    "check": "build",
+    "exit_code": 0
+  },
+  {
+    "node": "22",
+    "check": "full",
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "check": "typecheck",
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "check": "lint",
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "check": "build",
+    "exit_code": 0
+  },
+  {
+    "node": "24",
+    "check": "full",
+    "exit_code": 0
+  }
+]

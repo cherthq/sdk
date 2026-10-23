@@ -1,0 +1,100 @@
+[
+  {
+    "evidence": {
+      "events": [
+        {
+          "type": "incoming_registered",
+          "reason": null,
+          "status": null,
+          "created_at": "2026-09-30T20:09:24.519+00:00"
+        },
+        {
+          "type": "answered",
+          "reason": null,
+          "status": null,
+          "created_at": "2026-09-30T20:09:25.482+00:00"
+        },
+        {
+          "type": "active",
+          "reason": null,
+          "status": null,
+          "created_at": "2026-09-30T20:09:32.322+00:00"
+        },
+        {
+          "type": "bridge_ready",
+          "reason": null,
+          "status": null,
+          "created_at": "2026-09-30T20:09:32.636+00:00"
+        },
+        {
+          "type": "agent_connected",
+          "reason": null,
+          "status": null,
+          "created_at": "2026-09-30T20:09:32.924+00:00"
+        },
+        {
+          "type": "end_requested",
+          "reason": null,
+          "status": null,
+          "created_at": "2026-09-30T20:09:53.735068+00:00"
+        },
+        {
+          "type": "ended",
+          "reason": "remote_ended",
+          "status": null,
+          "created_at": "2026-09-30T20:10:25.761+00:00"
+        },
+        {
+          "type": "cleanup_complete",
+          "reason": "worker_ended",
+          "status": null,
+          "created_at": "2026-09-30T20:10:27.271+00:00"
+        }
+      ],
+      "commands": [
+        {
+          "id": "c0383186-2e4f-454d-84d0-405111e39b44",
+          "type": "start_bridge",
+          "status": "completed",
+          "created_at": "2026-09-30T20:09:24.887865+00:00",
+          "error_code": null,
+          "completed_at": "2026-09-30T20:09:32.055995+00:00",
+          "attempt_count": 1
+        },
+        {
+          "id": "01a2b437-9164-47eb-b756-665aa5bb6c1d",
+          "type": "end_call",
+          "status": "failed",
+          "created_at": "2026-09-30T20:09:53.735068+00:00",
+          "error_code": "command_failed",
+          "completed_at": "2026-09-30T20:10:04.081729+00:00",
+          "attempt_count": 1
+        },
+        {
+          "id": "20ec533d-8bad-4f56-8dae-d70a4905acde",
+          "type": "stop_bridge",
+          "status": "completed",
+          "created_at": "2026-09-30T20:10:25.78119+00:00",
+          "error_code": null,
+          "completed_at": "2026-09-30T20:10:28.128011+00:00",
+          "attempt_count": 1
+        }
+      ],
+      "deliveries": [
+        {
+          "kind": "started",
+          "acknowledged_at": "2026-09-30T20:09:32.833716+00:00"
+        },
+        {
+          "kind": "receipt",
+          "acknowledged_at": "2026-09-30T20:09:32.833873+00:00"
+        },
+        {
+          "kind": "ended",
+          "acknowledged_at": "2026-09-30T20:10:26.294402+00:00"
+        }
+      ],
+      "observed_at": "2026-09-30T20:11:19.958032+00:00"
+    }
+  }
+]

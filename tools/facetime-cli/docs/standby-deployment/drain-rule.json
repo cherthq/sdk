@@ -1,0 +1,31 @@
+{
+  "name": "byor-release-drain-20260930",
+  "conditionGroup": [
+    {
+      "conditions": [
+        {
+          "type": "method",
+          "op": "inc",
+          "value": [
+            "GET",
+            "HEAD",
+            "OPTIONS"
+          ],
+          "neg": true
+        },
+        {
+          "type": "path",
+          "op": "re",
+          "value": "^/api/(internal/v1/(calls/[^/]+/(events|transcript)|sessions/[^/]+/credentials/redeem|workers/(heartbeat|commands/claim|commands/[^/]+/(complete|outbound-lease))|webhooks/dispatch|audits/(poll|report))|v1/(calls/[^/]+/(answer|reject|end)|previews/[^/]+/stop))/?$",
+          "neg": true
+        }
+      ]
+    }
+  ],
+  "action": {
+    "mitigate": {
+      "action": "deny"
+    }
+  },
+  "active": true
+}

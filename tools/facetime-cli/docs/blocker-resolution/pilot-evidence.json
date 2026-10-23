@@ -1,0 +1,133 @@
+[
+  {
+    "evidence": {
+      "audit": [
+        {
+          "checks": [
+            {
+              "id": "readiness",
+              "codes": [
+                "worker_readiness_observed"
+              ],
+              "status": "pass",
+              "observed_at": "2026-09-29T12:00:01Z"
+            },
+            {
+              "id": "process",
+              "codes": [
+                "worker_observed"
+              ],
+              "status": "pass",
+              "observed_at": "2026-09-29T12:00:01Z"
+            },
+            {
+              "id": "release",
+              "codes": [
+                "approved_package_matches"
+              ],
+              "status": "pass",
+              "observed_at": "2026-09-29T12:00:02Z"
+            },
+            {
+              "id": "repository",
+              "codes": [
+                "checkout_drift"
+              ],
+              "status": "warn",
+              "observed_at": "2026-09-29T12:00:05Z"
+            },
+            {
+              "id": "environment",
+              "codes": [
+                "passive_environment_observed"
+              ],
+              "status": "pass",
+              "observed_at": "2026-09-29T12:00:05Z"
+            },
+            {
+              "id": "recent_failures",
+              "codes": [
+                "recent_failures_require_interpretation"
+              ],
+              "status": "warn",
+              "observed_at": "2026-09-29T12:00:05Z"
+            },
+            {
+              "id": "model",
+              "codes": [
+                "interpretation_validated"
+              ],
+              "status": "pass",
+              "observed_at": "2026-09-29T12:00:14Z"
+            }
+          ],
+          "verdict": "warn",
+          "source_head": "647b9f66ce39a5e37634b50f28f0a11dc7583558",
+          "completed_at": "2026-09-29T12:00:14+00:00",
+          "installed_build": "1ee0d259cfb71fca55a8c11c3bcd8eeb2c2ecc3824bfb409473195d1882affae",
+          "manifest_sha256": "f42173e77fcb64732fa87a8dcc07e4c64b6ce8debde213c16eb40c97aa1bbb7f",
+          "approved_release": "647b9f66ce39a5e37634b50f28f0a11dc7583558"
+        }
+      ],
+      "events": [
+        {
+          "type": "incoming_registered",
+          "source": "worker",
+          "created_at": "2026-09-28T16:12:26.455+00:00",
+          "occurred_at": "2026-09-28T16:12:26.164+00:00",
+          "reason_detail": null
+        },
+        {
+          "type": "answered",
+          "source": "worker",
+          "created_at": "2026-09-28T16:12:29.766+00:00",
+          "occurred_at": "2026-09-28T16:12:26+00:00",
+          "reason_detail": null
+        },
+        {
+          "type": "cleanup_complete",
+          "source": "worker",
+          "created_at": "2026-09-28T16:13:33.505+00:00",
+          "occurred_at": "2026-09-28T16:12:35+00:00",
+          "reason_detail": null
+        },
+        {
+          "type": "failed",
+          "source": "worker",
+          "created_at": "2026-09-28T16:13:33.778+00:00",
+          "occurred_at": "2026-09-28T16:12:35+00:00",
+          "reason_detail": "byor_answer_accessibility_failed"
+        }
+      ],
+      "session": {
+        "id": "53945278-4dcf-4a4d-817a-73702d67799d",
+        "kind": "customer_room",
+        "state": "failed",
+        "detail": "byor_answer_accessibility_failed",
+        "call_id": "01256872-9ba3-44c7-b320-a2f686f6f558",
+        "failed_at": "2026-09-28T16:12:35+00:00",
+        "cleaned_at": null,
+        "expires_at": "2026-09-28T17:12:26+00:00",
+        "room_reference": "interview-697d9bb7a1cc4eb09501b83ba82597d2"
+      },
+      "integration": {
+        "host": "mock-interview-agent-1.apps.thalesops.com",
+        "livekit_allowed_hosts": []
+      },
+      "observed_current_webhook": {
+        "host": "mock-interview-agent-1.apps.thalesops.com",
+        "generation": 10,
+        "livekit_allowed_hosts": []
+      },
+      "unrelated_demo_agent": {
+        "project": "chert-byor-staging-wi1rapq6",
+        "agent_id": "CA_aWAg6UGjgzeG",
+        "agent_name": "demo-agent-0",
+        "version": "NhdecWJZ5V7Z",
+        "region": "us-east",
+        "status": "Running",
+        "selection": "not the pilot current webhook; do not substitute"
+      }
+    }
+  }
+]

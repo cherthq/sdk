@@ -1,0 +1,14 @@
+{
+  "scope": {
+    "line_id": "59b3e3d0-945b-45da-b907-027103941a65",
+    "binding_id": "0b758533-1c9a-4cc0-b5a5-cfcd2464b281",
+    "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+    "instance_id": "44850d10-2625-4abc-9811-512348dea018",
+    "session_mode": "byor",
+    "binding_epoch": 1,
+    "connection_generation": 16
+  },
+  "state": "active",
+  "connected": true,
+  "recovery_only": false
+}

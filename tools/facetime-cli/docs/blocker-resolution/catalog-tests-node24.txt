@@ -1,0 +1,13 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connector-production-compatibility.test.ts tests/connectors.test.ts tests/connector-service.test.ts tests/connector-incoming.test.ts tests/optional-signing.test.ts tests/automatic-readiness-migration.test.ts tests/line-integrations.test.ts tests/webhook-core.test.ts tests/line-webhook-authorization.test.ts tests/outbound-admission-wire.test.ts -t ^(?!.*(preserves legacy ciphertext|holds activation preflight)).*$
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/blocker-resolution/candidate/control-plane
+
+
+ Test Files  10 passed (10)
+      Tests  95 passed | 5 skipped (100)
+   Start at  22:44:38
+   Duration  51.03s (transform 185ms, setup 27ms, import 294ms, tests 50.12s, environment 0ms)
+

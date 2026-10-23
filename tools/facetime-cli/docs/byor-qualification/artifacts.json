@@ -1,0 +1,48 @@
+{
+  "source_base": "cbb22ee854e26219aea92d67fa401433cdb4d84c",
+  "artifacts": [
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/chert-local-transport-proof-0.0.0.tgz",
+      "sha256": "28d830f0be65f32ce17d76705d9841e51562eef8be5dd09cfd2f4078e7eb436c",
+      "bytes": 56924
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/connector-relay-source.tar.gz",
+      "sha256": "1c914af674250c9eee58e50250adf3d9932d9c0b7600bec51930bbd38fbc2aa7",
+      "bytes": 5050
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/control-plane-source.tar.gz",
+      "sha256": "edb636caf7a896a6e62d25119ddec8ee99d76c9e49ff3a9dd0124d8c8d083068",
+      "bytes": 1687185
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/.local/byor-qualification/artifacts/talking-head-bridge-source.tar.gz",
+      "sha256": "2613f241c49dc1c94680a1f4a76d144ca08a6d8884d0c7828480395615950f2d",
+      "bytes": 16206212
+    }
+  ],
+  "configuration": [
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/migration.payload.sql",
+      "sha256": "d1a1dcba5266bceb2b116d54016e5970e3f74780e55fa289f3e66ca5ef9e9e2a"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/chert-byor.service",
+      "sha256": "ad36947881753ee8a5f49c6a3ae81abef04f9cab519f7b2e251de70139dbce60"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/talking-head-owner.service",
+      "sha256": "f994ce5ee410472d682c0bb0e16f000bc8fe37fac939dffaaf08c5573f05b971"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/byor-qualification/runtime.env.names",
+      "sha256": "51cd117c8ec077b6ebd6cafee4bc41f8a7d90e5c540769cd233189d4b362cd4a"
+    },
+    {
+      "file": "/Users/garygao/chert-facetime-cli/docs/deployment-preparation/railway-relay.json",
+      "sha256": "28aaecc8e5eb12e06942a23132b8f9657d542d19eea43ba19d3c3dbaf12df7d5"
+    }
+  ],
+  "application_base": "52b43a4be253bc815e32b205a8f1118870b85955"
+}

@@ -1,0 +1,5 @@
+{
+  "first_installed_cli_probe": "transport exit 6, empty journal, lock released",
+  "second_cli_probe": "SSH session ended without final diagnostic; no close reason claimed. Exact owned diagnostic PID inspected and gracefully retired before rollout.",
+  "authority_probe": "180 read-only requests; two two-second TimeoutErrors; 138 ms median, 225 ms p95"
+}

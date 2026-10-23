@@ -1,0 +1,1760 @@
+--- /dev/null
++++ b/connector/README.md
+@@ -0,0 +1,108 @@
++# Talking-head ready-session callback owner — local implementation
++
++Production construction now uses `ReadySessionOwner` and `ReadyAvatarAdapter`.
++It preserves the classic **audio AND video** profile. `handler.ts` connects the
++npm BYOR callback to the owner's private Unix socket; no HTTP receiver or Chert
++protocol implementation is required in application code. The deployed receiver
++and remote worker are unchanged; this directory has not been deployed.
++
++## Preparation and admission
++
++Start/check/health never warm, create, dispatch, refill, or start an agent. Incoming
++callbacks ONLY claim an already-ready session; they never invoke provider
++preparation. The application/operator explicitly stages a slot through the
++separate admin socket (`control.py ... stage SLOT_ID`). This is a potentially paid
++application operation and must not be wired into connector startup or health.
++No staging command was run against real services during implementation.
++
++Staging uses the existing 45-second preparation budget, exact existing demo dispatch
++format and classic profile. The existing AvatarAdapter verifies the intended
++participant's audio and video publications and heartbeat. Incoming claims retain
++the original four-second callback deadline. Audio-only requests decline explicitly;
++video is never silently disabled. The CLI and central BYOR mode must include the
++new mode-aware video change before deployment. Signaling compatibility does not
++prove decoded or end-to-end FaceTime video.
++
++The owner holds one slot. An atomic fsynced record binds a ready slot to one exact
++operation/call digest before releasing credentials. Duplicates return the same
++in-memory decision; conflicts and a second call cannot steal the session. Claims
++never extend agent/token expiry or silently truncate the configured conversation.
++The 600-second call policy is retained. Unclaimed slots expire using the same
++bounded idle-window calculation as ContinuousDemo. After verified cleanup, the
++application may explicitly stage another slot. Automatic continuous refill is
++not enabled: the old HTTP warm watcher is not imported or run.
++
++## Durable ownership and cleanup
++
++Use fresh journals and drain the old receiver before changing owners. An existing
++process-local Railway warm slot cannot be imported or stolen. There is one owner
++for preparation, claims, expiry and cleanup; Node owns no LiveKit effects.
++`ready_owner.py` uses a distinct journal fingerprint and rejects the old callback
++journal. Never copy, overwrite or remove historical resource receipts to migrate.
++
++Room intent and an ownership marker are saved before create. The returned room
++SID is persisted before dispatch. Cleanup checks the exact SID and marker, then
++uses existing AvatarAdapter cleanup/absence and owned rendering-room checks.
++A foreign replacement, unavailable API or failed verification retains debt.
++A completed preparation is settled. Timeout, SDK cancellation or process death
++while staging stays uncertain even when inventory is empty; there is no blind
++redispatch or guessed settlement. Admin `status` exposes that state; no force-clean
++or reset command exists. External authoritative settlement evidence remains an
++operator gate for those rare interrupted operations.
++
++Lifecycle acknowledgments persist separately from cleanup. The owner runs its
++own maintenance loop, independent of Node: terminal cancellation and bounded call
++expiry drive cleanup and retry. Accepted calls survive process restart until their
++saved terminal/expiry; shutdown does not delete them. Ready slots reopen unavailable
++until the original room's ownership/media are refreshed without allocation. No
++bearer tokens are stored in either application journal.
++
++## Process and storage arrangement
++
++`server.py --initialize-state` creates fresh journals only and refuses existing
++state. Run this explicit local setup once, after selecting a durable mount. Normal
++server startup requires both journals to exist; a missing mount cannot silently
++become a new empty owner. Never use initialization as a recovery operation.
++
++`server.py` runs only the application owner and IPC/maintenance. The existing remote
++agent continues under its own supervisor. Python needs application provider
++credentials; Node needs only Chert credentials and `TALKING_HEAD_CALLBACK_SOCKET`.
++Use separate environment files and explicit immutable release paths.
++
++Required absolute paths:
++
++- `CHERT_JOURNAL_PATH`: existing application resource receipts, in a fresh directory.
++- `TALKING_HEAD_OPERATION_JOURNAL`: durable ready-slot/claim journal.
++- `TALKING_HEAD_CALLBACK_SOCKET`: private callback-only endpoint.
++- `TALKING_HEAD_ADMIN_SOCKET`: separate explicit staging/cancel/status endpoint.
++
++Existing Config environment names still apply, including unused webhook route
++configuration (no HTTP server is started), namespace and token/resource TTLs. The
++classic continuous profile requires token TTL greater than resource TTL plus 60s.
++Use a private POSIX local persistent filesystem, 0700 directories/0600 files,
++single writer, and the receiver's pinned Python dependencies. Do not use ephemeral
++container state or a shared multi-host filesystem. There is no mandatory Docker.
++
++The journals use kernel writer locks; socket leases permit safe stale-socket
++recovery after process death and refuse symlinks/foreign files. Never remove a
++live writer's locks. The Node journal deliberately still requires reviewed
++recovery after SIGKILL leaves its crash lock; a normal stop/restart releases it.
++Application expiry continues even while Node is blocked on that recovery.
++
++Local subprocess tests qualify owner SIGKILL/reopen, writer exclusion, private
++storage, terminal cleanup and independent expiry. They do **not** qualify Railway
++volume mounting or a Linux systemd installation. Reviewed example units are in `connector/host/`; the CLI results record
++the remaining host gate.
++No remote host was accessed or changed. Before activation, verify the selected
++host's mount persistence, process supervision and restart recovery with fresh
++state and explicit old-owner drain.
++
++## Tests and historical prototype
++
++`tests/test_ready_owner.py`, `test_host.py`, and the installed npm package test use
++production construction/media policy with only provider transports substituted.
++Both publications are required, with no synthetic audio policy. Acceptance,
++claims, restart and cleanup are exercised without a real agent/provider session.
++The earlier `owner.py` cold-preparation prototype and its audio-policy fixture
++remain for regression/history only; production `server.py` no longer constructs it.
++See `chert-facetime-cli/docs/talking-head-compatibility/RESULTS.md` for evidence.
+--- /dev/null
++++ b/connector/control.py
+@@ -0,0 +1,24 @@
++"""Explicit application staging/cancellation. Not called by the npm connector."""
++import argparse
++import json
++import socket
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--socket', required=True)
++    parser.add_argument('method', choices=['stage', 'cancel_slot', 'status'])
++    parser.add_argument('slot_id', nargs='?')
++    args = parser.parse_args()
++    with socket.socket(socket.AF_UNIX) as client:
++        client.settimeout(50)
++        client.connect(args.socket)
++        client.sendall((json.dumps({'method': args.method, 'args': {} if args.method == 'status' else {'slot_id': args.slot_id}})+'\n').encode())
++        result = json.loads(client.makefile().readline(32769))
++        if not result.get('ok'):
++            raise SystemExit('application_control_failed')
++        print(json.dumps(result['result']))
++
++
++if __name__ == '__main__':
++    main()
+--- /dev/null
++++ b/connector/handler.ts
+@@ -0,0 +1,47 @@
++import { connect } from 'node:net';
++import type { ByorHandler, ApplicationCall } from 'chert-local-transport-proof/byor';
++
++// Private Unix socket owned by the separately supervised Python session owner.
++// Importing this module or checking health never launches it or starts an agent.
++function rpc<T>(method: string, args: unknown, timeout = 1500): Promise<T> {
++  const path = process.env.TALKING_HEAD_CALLBACK_SOCKET;
++  if (!path?.startsWith('/')) return Promise.reject(new Error('application_socket_required'));
++  return new Promise((resolve, reject) => {
++    const socket = connect(path); let buffer = ''; let done = false;
++    const finish = (error?: Error, result?: T) => {
++      if (done) return; done = true; clearTimeout(timer); socket.destroy();
++      if (error) reject(error); else resolve(result as T);
++    };
++    const timer = setTimeout(() => finish(new Error('application_rpc_timeout')), timeout);
++    socket.on('error', () => finish(new Error('application_rpc_unavailable')));
++    socket.on('end', () => finish(new Error('application_rpc_closed')));
++    socket.on('connect', () => socket.write(JSON.stringify({ method, args }) + '\n'));
++    socket.on('data', data => {
++      buffer += data.toString('utf8');
++      if (Buffer.byteLength(buffer) > 32768) return finish(new Error('application_rpc_oversize'));
++      if (!buffer.includes('\n')) return;
++      try {
++        const response = JSON.parse(buffer.slice(0, buffer.indexOf('\n')));
++        if (response.ok !== true) return finish(new Error('application_rpc_failed'));
++        finish(undefined, response.result as T);
++      } catch { finish(new Error('application_rpc_invalid')); }
++    });
++  });
++}
++const cancel = (call: ApplicationCall) => rpc('recover', { call, context: {
++  authoritative_terminal: false, acceptance: 'unknown', cancel_requested: true,
++} }).catch(() => undefined); // Failure leaves durable uncertainty in both owners.
++const handler: ByorHandler = {
++  version: 1,
++  async health() { try { return await rpc('health', {}); } catch { return 'unavailable'; } },
++  async prepare(call, context) {
++    if (context.signal.aborted) { await cancel(call); return { action: 'decline' }; }
++    const abort = () => { void cancel(call); };
++    context.signal.addEventListener('abort', abort, { once: true });
++    try { return await rpc('prepare', { call }, Math.max(1, context.remaining_ms)); }
++    finally { context.signal.removeEventListener('abort', abort); }
++  },
++  lifecycle(call, event, context) { return rpc('lifecycle', { call, event, context }); },
++  recover(call, context) { return rpc('recover', { call, context }); },
++};
++export default handler;
+--- /dev/null
++++ b/connector/host/chert-byor.service
+@@ -0,0 +1,30 @@
++# REVIEW TEMPLATE ONLY. Do not install until application qualification is complete.
++[Unit]
++Description=Chert FaceTime Test BYOR connector
++After=network-online.target
++Wants=network-online.target
++StartLimitIntervalSec=300
++StartLimitBurst=3
++
++[Service]
++Type=simple
++User=chert-pilot
++Group=chert-pilot
++WorkingDirectory=/opt/chert-pilot/byor-av-pilot-20260930-r1
++EnvironmentFile=/etc/chert-pilot/connector.env
++ExecStart=/opt/node-v22.23.2/bin/node /opt/chert-pilot/byor-av-pilot-20260930-r1/node_modules/chert-local-transport-proof/dist/src/cli/main.js byor --config /var/lib/chert-pilot/byor-v1/config.json --json
++Restart=on-failure
++RestartPreventExitStatus=2 3 4 5
++RestartSec=5
++TimeoutStopSec=45
++KillSignal=SIGTERM
++UMask=0077
++NoNewPrivileges=true
++PrivateTmp=true
++ProtectSystem=strict
++ProtectHome=true
++ReadWritePaths=/var/lib/chert-pilot/byor-v1
++# No agent or warming unit dependency. Application owner is separately supervised.
++
++[Install]
++WantedBy=multi-user.target
+--- /dev/null
++++ b/connector/host/talking-head-owner.service
+@@ -0,0 +1,34 @@
++# Review template; no unit was installed or started by implementation.
++[Unit]
++Description=Talking-head durable ready-session owner
++After=network-online.target
++Wants=network-online.target
++RequiresMountsFor=/var/lib/chert-pilot/application-ready-v1
++StartLimitIntervalSec=300
++StartLimitBurst=3
++
++[Service]
++Type=simple
++User=chert-pilot
++Group=chert-pilot
++WorkingDirectory=/opt/talking-head/byor-av-pilot-20260930-r1
++EnvironmentFile=/etc/chert-pilot/application.env
++Environment=PYTHONPATH=/opt/talking-head/byor-av-pilot-20260930-r1/receiver/src
++ExecStart=/opt/talking-head/byor-av-pilot-20260930-r1/venv/bin/python /opt/talking-head/byor-av-pilot-20260930-r1/connector/server.py
++Restart=on-failure
++RestartSec=5
++TimeoutStopSec=50
++KillSignal=SIGTERM
++UMask=0077
++NoNewPrivileges=true
++PrivateTmp=true
++ProtectSystem=strict
++ProtectHome=true
++RuntimeDirectory=chert-ready-owner
++RuntimeDirectoryMode=0700
++RuntimeDirectoryPreserve=restart
++ReadWritePaths=/var/lib/chert-pilot/application-ready-v1 /run/chert-ready-owner
++# No agent/warming dependency. Init journals separately before first start.
++
++[Install]
++WantedBy=multi-user.target
+--- /dev/null
++++ b/connector/owner.py
+@@ -0,0 +1,180 @@
++"""Application-specific callback boundary; never imports or starts the HTTP app.
++
++Default capability matches the deployed audio+video profile, which cannot admit
++an audio-only connector call. Tests may inject a synthetic capability explicitly.
++Existing Service/AvatarAdapter remain the only room, dispatch and cleanup owners.
++"""
++import asyncio
++import hashlib
++import json
++import time
++import uuid
++
++from chert_reference_agent.avatar_service import AvatarService
++from chert_reference_agent.journal import Journal
++from chert_reference_agent.service import Resource
++
++
++class CallbackService(AvatarService):
++    def preparation_spec(self, resource):
++        return resource.callback_spec
++
++
++class CallbackOwner:
++    def __init__(self, config, adapter, operation_path, *, required_video=True):
++        self.service = CallbackService(config, adapter)
++        adapter.service = self.service
++        self.operations = Journal(operation_path, config.project_fingerprint + ':callback-v1')
++        self.required_video = required_video
++        self.tasks = {}
++        self.responses = {}
++        self.resources = {}
++        self.failed = False
++        self.opened = False
++
++    def open(self):
++        # Deliberately NOT Service.start(): that retires rooms on restart.
++        # No warm pool, lifespan, provider call, watcher, or cleanup here.
++        self.operations.open()
++        try:
++            self.service.journal.open()
++        except Exception:
++            self.operations.close()
++            raise
++        self.opened = True
++
++    def _save(self, operation, record):
++        try:
++            self.operations.save_decision(operation, record)
++        except Exception:
++            self.failed = True
++            raise RuntimeError('application_storage_unavailable') from None
++
++    def _record(self, call):
++        operation = call['operation_id']
++        digest = hashlib.sha256(json.dumps(call, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
++        record = self.operations.decisions.get(operation)
++        if record is not None and record['digest'] != digest:
++            raise ValueError('operation_conflict')
++        return operation, digest, record
++
++    async def health(self):
++        # No ManualDemo.available/status/tick(): those can schedule cleanup.
++        if (not self.opened or self.failed or self.required_video or
++                self.service.config.run_mode != 'on_demand' or self.service.journal.receipts or
++                any(r['state'] not in ('clean', 'declined') for r in self.operations.decisions.values())):
++            return 'unavailable'
++        # Cold preparation is possible, not already media-ready.
++        return 'unknown'
++
++    async def prepare(self, call):
++        operation, digest, record = self._record(call)
++        if record:
++            if operation in self.tasks:
++                return await asyncio.shield(self.tasks[operation])
++            # Never regenerate credentials or repeat uncertain preparation after restart.
++            if record['state'] == 'prepared' and not record['cancel'] and call['prepare_deadline_at'] > time.time()*1000:
++                return self.responses.get(operation, {'action': 'decline'})
++            return {'action': 'decline'}
++        base = dict(digest=digest, state='declined', events={}, cancel=False)
++        if (self.failed or not self.opened or self.required_video or call['media'] != {'audio': True, 'video': False}
++                or self.service.config.run_mode != 'on_demand'
++                or call['prepare_deadline_at'] <= time.time() * 1000
++                or self.service.journal.receipts
++                or any(r['state'] not in ('declined', 'clean') for r in self.operations.decisions.values())):
++            self._save(operation, base)
++            return {'action': 'decline'}
++        # Use the existing session owner's room/spec conventions. Persist mapping
++        # before its _prepare writes the resource receipt and performs any effects.
++        room = self.service.config.namespace + '-' + uuid.uuid4().hex
++        resource = Resource(call['call_id'], room, call['prepare_deadline_at'] / 1000, time.monotonic())
++        spec = AvatarService.preparation_spec(self.service, resource)
++        expires = min(int(time.time() * 1000 + self.service.config.resource_ttl_seconds * 1000),
++                      call['maximum_session_expires_at'], spec['expires_at'] * 1000)
++        resource.callback_spec = spec
++        record = dict(base, state='preparing', room=room, spec=spec, expires_at=expires)
++        self._save(operation, record)
++        self.resources[operation] = resource
++        self.service.resources[('callback', operation)] = resource
++        task = asyncio.create_task(self._prepare(operation, resource))
++        self.tasks[operation] = task
++        return await asyncio.shield(task)
++
++    async def _prepare(self, operation, resource):
++        resource.task = asyncio.create_task(self.service._prepare(resource))
++        await asyncio.shield(resource.task)
++        record = self.operations.decisions[operation]
++        # A returned handle proves the awaited prepare completed. Cancellation or
++        # network failure without a handle does NOT establish provider settlement.
++        state = 'prepared' if resource.handle is not None else 'uncertain'
++        self._save(operation, dict(record, state=state))
++        result = {'action': 'decline'}
++        if resource.response.get('action') == 'accept' and not record['cancel']:
++            result = dict(resource.response, ready=True, session_ref=resource.room,
++                          session_expires_at=record['expires_at'])
++        self.responses[operation] = result
++        return result
++
++    async def lifecycle(self, call, event, context):
++        operation, digest, record = self._record(call)
++        if record is None:
++            # Terminal-before-prepare tombstone forbids later allocation.
++            if event['transition'] == 'started':
++                return {'acknowledged': False}
++            record = dict(digest=digest, state='declined', events={}, cancel=True)
++        previous = record['events'].get(event['event_id'])
++        if previous is not None and previous != event['transition']:
++            raise ValueError('event_conflict')
++        terminal = event['transition'] != 'started'
++        self._save(operation, dict(record, events={**record['events'], event['event_id']: event['transition']},
++                                  cancel=record['cancel'] or terminal))
++        # Durable application processing is distinct from verified cleanup.
++        # recover executes the saved cancellation and returns its evidence.
++        return {'acknowledged': True}
++
++    async def recover(self, call, context):
++        operation, digest, record = self._record(call)
++        if record is None:
++            # Socket request may never have reached the owner. Tombstone first so
++            # a delayed request cannot subsequently allocate under this operation.
++            self._save(operation, dict(digest=digest, state='declined', events={}, cancel=True))
++            return {'settled': True, 'cleanup': 'clean'}
++        room = record.get('room')
++        if context.get('session_ref') is not None and context['session_ref'] != room:
++            raise ValueError('session_ref_conflict')
++        result = dict(session_ref=room) if room else {}
++        if record['state'] in ('declined', 'clean'):
++            return dict(result, settled=True, cleanup='clean')
++        cancel = (record['cancel'] or context.get('cancel_requested') or context.get('authoritative_terminal')
++                  or context.get('acceptance') == 'decline' or record['expires_at'] <= time.time() * 1000)
++        if cancel and not record['cancel']:
++            record = dict(record, cancel=True)
++            self._save(operation, record)
++        task = self.tasks.get(operation)
++        resource = self.resources.get(operation)
++        if task is not None and not task.done():
++            if cancel and resource and resource.task:
++                resource.terminal = True
++                resource.task.cancel()
++            return dict(result, settled=False, cleanup='pending')
++        # Process death / cancelled SDK effect may complete remotely later. Keep
++        # the durable receipt; absence now is insufficient proof of settlement.
++        if record['state'] in ('preparing', 'uncertain'):
++            return dict(result, settled=False, cleanup='unknown')
++        if not cancel:
++            return dict(result, settled=True, cleanup='pending')
++        if resource is None:
++            resource = Resource(call['call_id'], room, 0, time.monotonic())
++            self.resources[operation] = resource
++        await asyncio.shield(self.service._schedule_cleanup(resource, 'callback_terminal'))
++        if resource.cleaned and room not in self.service.journal.receipts:
++            self._save(operation, dict(record, state='clean', cancel=True))
++            return dict(result, settled=True, cleanup='clean')
++        return dict(result, settled=True, cleanup='pending')
++
++    def close_journals(self):
++        # Process supervision must retain these journals; never run the receiver's
++        # shutdown here, which deletes accepted calls without central settlement.
++        self.service.journal.close()
++        self.operations.close()
++        self.opened = False
+--- /dev/null
++++ b/connector/ready_adapter.py
+@@ -0,0 +1,50 @@
++"""Existing avatar readiness/token/cleanup with a durable exact-room fence."""
++import asyncio
++import json
++
++from livekit import api
++from chert_reference_agent.avatar_adapter import AvatarAdapter, AvatarHandle, EMPTY_ROOM_TIMEOUT_SECONDS
++
++
++class ReadyAvatarAdapter(AvatarAdapter):
++    def bind_owner(self, lookup, record_created):
++        self.lookup = lookup
++        self.record_created = record_created
++
++    async def prepare(self, spec):
++        handle = AvatarHandle(spec)
++        self._handles[spec['room']] = handle
++        room = await self._api.room.create_room(api.CreateRoomRequest(
++            name=spec['room'], empty_timeout=EMPTY_ROOM_TIMEOUT_SECONDS, max_participants=3,
++            metadata=json.dumps({'callback_owner': spec['ownership_marker']})))
++        if not room.sid:
++            raise RuntimeError('room_sid_missing')
++        # Persist the creation acknowledgment before dispatch. A crash before this
++        # write leaves staging uncertain, not proof that creation never happened.
++        self.record_created(spec['room'], room.sid)
++        await self._api.agent_dispatch.create_dispatch(api.CreateAgentDispatchRequest(
++            room=spec['room'], agent_name='demo-agent-0', metadata=json.dumps({**spec, 'mode': 'chert-byor'})))
++        while not await self._refresh(handle):
++            await asyncio.sleep(.2)
++        handle.task = asyncio.create_task(self._monitor(handle))
++        return handle
++
++    async def verify_room(self, room):
++        slot = self.lookup(room)
++        result = await self._api.room.list_rooms(api.ListRoomsRequest(names=[room]))
++        matches = [r for r in result.rooms if r.name == room]
++        if not matches:
++            return False
++        if len(matches) != 1 or not slot.get('room_sid') or matches[0].sid != slot['room_sid']:
++            raise RuntimeError('room_owner_mismatch')
++        try:
++            marker = json.loads(matches[0].metadata).get('callback_owner')
++        except (ValueError, AttributeError):
++            marker = None
++        if marker != slot['spec']['ownership_marker']:
++            raise RuntimeError('room_owner_mismatch')
++        return True
++
++    async def close_room(self, room):
++        await self.verify_room(room)  # absent is allowed only for settled slots
++        await super().close_room(room)
+--- /dev/null
++++ b/connector/ready_owner.py
+@@ -0,0 +1,332 @@
++"""Durable application-owned ready sessions. Admission never prepares a provider.
++
++Staging is an explicit application/operator operation, separate from the Chert
++callback. One owner process holds both journal locks for its entire lifetime.
++"""
++import asyncio
++import hashlib
++import json
++import os
++from pathlib import Path
++import stat
++import re
++import time
++import uuid
++
++from chert_reference_agent.avatar_adapter import AvatarHandle
++from chert_reference_agent.avatar_service import AvatarService
++from chert_reference_agent.journal import Journal
++from chert_reference_agent.manual import PREPARE_SECONDS
++from chert_reference_agent.service import Resource
++from owner import CallbackService
++
++
++class ReadySessionOwner:
++    required_video = True
++
++    def __init__(self, config, adapter, operation_path):
++        self.service = CallbackService(config, adapter)
++        adapter.service = self.service
++        # Deliberately incompatible with the old cold-prepare journal.
++        self.operations = Journal(operation_path, config.project_fingerprint + ':ready-owner-v1')
++        self.opened = False
++        self.failed = False
++        self.tasks = {}
++        self.resources = {}
++        self.responses = {}
++        self.tick_lock = asyncio.Lock()
++        self.expiries = {}
++        adapter.bind_owner(self._lookup_room, self._created)
++
++    def open(self):
++        for path in (self.operations.path, self.service.journal.path):
++            if not path.is_absolute():
++                raise RuntimeError('absolute_state_path_required')
++            parent = Path(path).parent
++            parent.mkdir(parents=True, exist_ok=True, mode=0o700)
++            info = parent.lstat()
++            if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
++                raise RuntimeError('private_state_directory_required')
++        self.operations.open()
++        try:
++            self.service.journal.open()
++            for key, record in self.operations.decisions.items():
++                if record['kind'] == 'slot':
++                    if key != 'slot:' + record['slot_id'] or not re.fullmatch(
++                            re.escape(self.service.config.namespace) + r'-[0-9a-f]{32}', record['room']):
++                        raise ValueError('invalid_slot')
++                    self._deadline(key, record['expires_at'])
++                elif record['kind'] != 'claim' or key != 'call:' + record['call']['operation_id']:
++                    raise ValueError('invalid_claim')
++        except Exception:
++            self.service.journal.close()
++            self.operations.close()
++            raise
++        self.opened = True
++        interrupted = {k: dict(s, state='uncertain', cancel=True) for k, s in self._slots() if s['state'] == 'preparing'}
++        if interrupted:
++            self._save(interrupted)
++
++    def _deadline(self, key, expires):
++        bound = time.monotonic() + max(0, expires / 1000 - time.time())
++        self.expiries[key] = min(self.expiries.get(key, bound), bound)
++
++    def _save(self, updates):
++        if not self.opened or self.failed:
++            raise RuntimeError('application_storage_unavailable')
++        try:
++            # Slot and call claim are one fsynced atomic file replacement, not
++            # separate journal writes with a double-claim crash window.
++            self.operations.decisions = {**self.operations.decisions, **updates}
++            self.operations._save()
++        except Exception:
++            self.failed = True
++            raise RuntimeError('application_storage_unavailable') from None
++
++    def _lookup_room(self, room):
++        slots = [s for _, s in self._slots() if s['room'] == room]
++        if len(slots) != 1:
++            raise ValueError('unknown_owned_room')
++        return slots[0]
++
++    def _created(self, room, sid):
++        key, slot = next((k, s) for k, s in self._slots() if s['room'] == room)
++        self._save({key: dict(slot, room_sid=sid)})
++
++    def _slots(self):
++        return [(key, value) for key, value in self.operations.decisions.items() if value['kind'] == 'slot']
++
++    def _call(self, call):
++        key = 'call:' + call['operation_id']
++        digest = hashlib.sha256(json.dumps(call, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
++        record = self.operations.decisions.get(key)
++        if record and record['digest'] != digest:
++            raise ValueError('operation_conflict')
++        return key, digest, record
++
++    def _expired(self, key, slot, now_ms=None):
++        return ((time.time()*1000 if now_ms is None else now_ms) >= slot['expires_at'] or
++                time.monotonic() >= self.expiries.get(key, float('inf')))
++
++    def _ready(self, key, slot):
++        resource = self.resources.get(key)
++        handle = resource.handle if resource else None
++        snapshot = handle.snapshot() if handle else {}
++        return (slot['state'] == 'ready' and not slot['cancel'] and not self._expired(key, slot) and
++                handle is not None and not handle.failed.is_set() and
++                time.monotonic() - handle.seen_at < 3 and
++                snapshot.get('published_audio') and snapshot.get('published_video') and
++                snapshot.get('profile') == 'classic')
++
++    async def health(self):
++        # Read-only: no provider operation, cleanup, staging, refill or refreshing.
++        if not self.opened or self.failed or any(s['state'] in ('preparing', 'uncertain', 'claimed') or
++                s['cancel'] and s['state'] != 'clean' for _, s in self._slots()):
++            return 'unavailable'
++        return 'available' if any(self._ready(k, s) for k, s in self._slots()) else 'unavailable'
++
++    async def stage(self, slot_id):
++        """Explicit application preparation, NEVER called by prepare/health/startup."""
++        if not isinstance(slot_id, str) or not re.fullmatch('[A-Za-z0-9_-]{1,100}', slot_id):
++            raise ValueError('invalid_slot_id')
++        key = 'slot:' + slot_id
++        previous = self.operations.decisions.get(key)
++        if previous:
++            task = self.tasks.get(key)
++            if task and not task.done():
++                await asyncio.shield(task)
++            return {'state': self.operations.decisions[key]['state']}
++        if (not self.opened or self.failed or self.service.journal.receipts or
++                any(s['state'] != 'clean' for _, s in self._slots())):
++            raise RuntimeError('owner_busy_or_cleanup_pending')
++        config = self.service.config
++        room = config.namespace + '-' + uuid.uuid4().hex
++        resource = Resource(slot_id, room, time.time()+PREPARE_SECONDS, time.monotonic())
++        spec = {**AvatarService.preparation_spec(self.service, resource), 'required_profile': 'classic', 'ownership_marker': uuid.uuid4().hex}
++        # As in the deployed continuous profile: retain the full call duration,
++        # capped below empty-room timeout; never renew the original agent expiry.
++        idle = min(480, config.token_ttl_seconds - config.resource_ttl_seconds - 30)
++        if idle <= 0:
++            raise ValueError('token_ttl_has_no_ready_window')
++        slot = dict(kind='slot', slot_id=slot_id, room=room, spec=spec, state='preparing',
++                    cancel=False, claimed_by=None, expires_at=int((time.time()+idle)*1000))
++        self._save({key: slot})
++        self._deadline(key, slot['expires_at'])
++        self.resources[key] = resource
++        task = asyncio.create_task(self._stage(key, resource, spec))
++        self.tasks[key] = task
++        await asyncio.shield(task)
++        return {'state': self.operations.decisions[key]['state']}
++
++    async def _stage(self, key, resource, spec):
++        try:
++            self.service.journal.add(resource.room)
++            async with asyncio.timeout(max(0, resource.deadline-time.time())):
++                resource.handle = await self.service.adapter.prepare(spec)
++            slot = self.operations.decisions[key]
++            self._save({key: dict(slot, state='ready')})
++        except (Exception, asyncio.CancelledError):
++            # Local timeout/SDK cancellation is not remote-operation settlement.
++            # A late create cannot be ruled out by an absent room or dead process.
++            slot = self.operations.decisions[key]
++            self._save({key: dict(slot, state='uncertain', cancel=True)})
++            return
++        # Cancellation during a non-cancellable provider call is durable; once
++        # that original call returns, no more creation effects can occur.
++        if self.operations.decisions[key]['cancel'] or self._expired(key, self.operations.decisions[key]):
++            await self._cleanup(key)
++
++    async def prepare(self, call):
++        key, digest, record = self._call(call)
++        if record:
++            if record['slot']:
++                slot = self.operations.decisions[record['slot']]
++                if slot['cancel'] or self._expired(record['slot'], slot):
++                    return {'action': 'decline'}
++            return self.responses.get(key, {'action': 'decline'}) if not record['cancel'] and call['prepare_deadline_at'] > time.time()*1000 else {'action': 'decline'}
++        base = dict(kind='claim', call=call, digest=digest, events={}, cancel=False, slot=None)
++        if (call['media'] != {'audio': True, 'video': True} or
++                call['prepare_deadline_at'] <= time.time()*1000 or await self.health() != 'available'):
++            self._save({key: base})
++            return {'action': 'decline'}
++        slot_key, slot = next((k, s) for k, s in self._slots() if self._ready(k, s))
++        # Require a whole configured conversation; decline rather than silently
++        # shortening it to the remaining warm session or authority window.
++        expires = int(time.time()*1000 + self.service.config.resource_ttl_seconds*1000)
++        if expires > min(call['maximum_session_expires_at'], slot['spec']['expires_at']*1000):
++            self._save({key: base})
++            return {'action': 'decline'}
++        self._save({slot_key: dict(slot, state='claimed', claimed_by=key, expires_at=expires),
++                    key: dict(base, slot=slot_key)})
++        # A claim legitimately changes idle expiry into its bounded call lease.
++        self.expiries.pop(slot_key, None)
++        self._deadline(slot_key, expires)
++        try:
++            token = self.service.adapter.mint_worker_token(slot['spec'])
++            if call['prepare_deadline_at'] <= time.time()*1000:
++                raise TimeoutError()
++            response = dict(action='accept', ready=True, session_ref=slot['room'], session_expires_at=expires,
++                            livekit_url=self.service.config.livekit_url, participant_token=token,
++                            remote_participant_identity=slot['spec']['agent_identity'])
++            self.responses[key] = response
++            return response
++        except Exception:
++            self._cancel(key)
++            return {'action': 'decline'}
++
++    def _cancel(self, key):
++        record = self.operations.decisions[key]
++        updates = {key: dict(record, cancel=True)}
++        if record['slot']:
++            slot = self.operations.decisions[record['slot']]
++            updates[record['slot']] = dict(slot, cancel=True)
++        self._save(updates)
++        self.responses.pop(key, None)
++
++    async def lifecycle(self, call, event, context):
++        key, digest, record = self._call(call)
++        if record is None:
++            if event['transition'] == 'started':
++                return {'acknowledged': False}
++            record = dict(kind='claim', call=call, digest=digest, events={}, cancel=True, slot=None)
++        if event['event_id'] in record['events'] and record['events'][event['event_id']] != event['transition']:
++            raise ValueError('event_conflict')
++        self._save({key: dict(record, events={**record['events'], event['event_id']: event['transition']})})
++        if event['transition'] != 'started':
++            self._cancel(key)
++        return {'acknowledged': True}
++
++    async def recover(self, call, context):
++        key, digest, record = self._call(call)
++        if record is None:
++            self._save({key: dict(kind='claim', call=call, digest=digest, events={}, cancel=True, slot=None)})
++            return dict(settled=True, cleanup='clean')
++        if not record['slot']:
++            return dict(settled=True, cleanup='clean')
++        slot_key = record['slot']
++        slot = self.operations.decisions[slot_key]
++        if context.get('session_ref') is not None and context['session_ref'] != slot['room']:
++            raise ValueError('session_ref_conflict')
++        if context.get('cancel_requested') or context.get('authoritative_terminal') or context.get('acceptance') == 'decline':
++            self._cancel(key)
++        await self.tick()
++        slot = self.operations.decisions[slot_key]
++        return dict(session_ref=slot['room'], settled=True, cleanup='clean' if slot['state'] == 'clean' else 'pending')
++
++    async def status(self):
++        return {'health': await self.health(), 'slots': [
++            {'slot_id': s['slot_id'], 'state': s['state'], 'claimed': s['claimed_by'] is not None,
++             'settled': s['state'] not in ('preparing', 'uncertain'),
++             'cleanup': 'clean' if s['state'] == 'clean' else 'unknown' if s['state'] == 'uncertain' else 'pending',
++             'expires_at': s['expires_at']} for _, s in self._slots()]}
++
++    async def cancel_slot(self, slot_id):
++        key = 'slot:' + slot_id
++        slot = self.operations.decisions.get(key)
++        if slot is None:
++            raise ValueError('unknown_slot')
++        self._save({key: dict(slot, cancel=True)})
++        await self.tick()
++        return {'state': self.operations.decisions[key]['state']}
++
++    async def _cleanup(self, key):
++        slot = self.operations.decisions[key]
++        if slot['state'] in ('preparing', 'uncertain', 'clean'):
++            return  # No guessed settlement, no deletion followed by late creation.
++        self._save({key: dict(slot, cancel=True)})
++        resource = self.resources.get(key)
++        if resource is None:
++            resource = Resource(slot['slot_id'], slot['room'], 0, time.monotonic())
++            self.resources[key] = resource
++        await asyncio.shield(self.service._schedule_cleanup(resource, 'application_terminal'))
++        if resource.cleaned and slot['room'] not in self.service.journal.receipts:
++            # Reread after await: lifecycle events may have changed the record.
++            self._save({key: dict(self.operations.decisions[key], state='clean', cancel=True)})
++            self.responses.pop(slot.get('claimed_by'), None)
++
++    async def tick(self, now_ms=None):
++        """Independent maintenance. Never stages, refills, or repeats preparation."""
++        async with self.tick_lock:
++            for key, _ in self._slots():
++                slot = self.operations.decisions[key]
++                if slot['state'] == 'clean':
++                    continue
++                if slot['cancel'] or self._expired(key, slot, now_ms):
++                    if not slot['cancel']:
++                        self._save({key: dict(slot, cancel=True)})
++                    await self._cleanup(key)
++                    continue
++                if slot['state'] in ('ready', 'claimed'):
++                    resource = self.resources.get(key)
++                    if resource is None:
++                        resource = Resource(slot['slot_id'], slot['room'], 0, time.monotonic())
++                        resource.handle = AvatarHandle(slot['spec'])
++                        self.resources[key] = resource
++                        self.service.adapter._handles[slot['room']] = resource.handle
++                    # Restoring readiness inspects the original room; no create or
++                    # redispatch and no token replay. API failure disables admission.
++                    try:
++                        async with asyncio.timeout(2):
++                            if not await self.service.adapter.verify_room(slot['room']):
++                                resource.handle.seen_at = 0
++                                continue
++                            if not await self.service.adapter._refresh(resource.handle):
++                                resource.handle.seen_at = 0
++                    except Exception:
++                        resource.handle.seen_at = 0
++
++    async def watch(self, stop):
++        while not stop.is_set():
++            try:
++                await self.tick()
++            except Exception:
++                self.failed = True
++            try:
++                await asyncio.wait_for(stop.wait(), .25)
++            except TimeoutError:
++                pass
++
++    def close_journals(self):
++        self.opened = False
++        self.operations.close()
++        self.service.journal.close()
+--- /dev/null
++++ b/connector/server.py
+@@ -0,0 +1,159 @@
++"""Private application IPC. Starts maintenance, never staging or an agent."""
++import argparse
++import asyncio
++import fcntl
++import json
++import os
++from pathlib import Path
++import signal
++import stat
++
++from ready_owner import ReadySessionOwner
++from ready_adapter import ReadyAvatarAdapter
++from chert_reference_agent.config import Config
++
++
++class SocketLease:
++    """Kernel lock proves exclusive socket ownership, including after SIGKILL."""
++    def __init__(self, path):
++        self.path = Path(path)
++        self.fd = None
++        self.inode = None
++
++    def acquire(self):
++        path = self.path
++        if not path.is_absolute():
++            raise RuntimeError('absolute_socket_path_required')
++        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
++        info = path.parent.lstat()
++        if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
++            raise RuntimeError('private_socket_directory_required')
++        self.fd = os.open(str(path)+'.lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
++        try:
++            info = os.fstat(self.fd)
++            if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
++                raise RuntimeError('private_socket_lock_required')
++            fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
++            if path.exists() or path.is_symlink():
++                info = path.lstat()
++                if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid():
++                    raise RuntimeError('foreign_socket_path')
++                # Prior process must have held this same lease; journal locks
++                # additionally exclude an old owner using another socket path.
++                path.unlink()
++        except Exception:
++            self.close()
++            raise
++
++    def bound(self):
++        self.inode = self.path.lstat().st_ino
++
++    def close(self):
++        if self.inode is not None:
++            try:
++                if self.path.lstat().st_ino == self.inode:
++                    self.path.unlink()
++            except FileNotFoundError:
++                pass
++        if self.fd is not None:
++            os.close(self.fd)
++            self.fd = None
++
++
++async def serve(owner, path, stop, admin_path=None):
++    tasks = set()
++    servers = []
++    leases = []
++    watcher = None
++    async def client(reader, writer, allowed):
++        try:
++            raw = await asyncio.wait_for(reader.readline(), 1)
++            if len(raw) > 32768:
++                raise ValueError('size')
++            request = json.loads(raw)
++            if request['method'] not in allowed:
++                raise ValueError('method')
++            # Socket disconnection cannot cancel a durable operation.
++            task = asyncio.create_task(getattr(owner, request['method'])(**request['args']))
++            tasks.add(task)
++            task.add_done_callback(tasks.discard)
++            result = await asyncio.shield(task)
++            response = {'ok': True, 'result': result}
++        except Exception:
++            response = {'ok': False}
++        try:
++            writer.write((json.dumps(response) + '\n').encode())
++            await writer.drain()
++        except (ConnectionError, BrokenPipeError):
++            pass
++        finally:
++            writer.close()
++            try:
++                await writer.wait_closed()
++            except ConnectionError:
++                pass
++    endpoints = [(path, ('health', 'prepare', 'lifecycle', 'recover'))]
++    if admin_path:
++        endpoints.append((admin_path, ('stage', 'cancel_slot', 'status')))
++    try:
++        for endpoint, allowed in endpoints:
++            lease = SocketLease(endpoint)
++            lease.acquire()
++            leases.append(lease)
++            server = await asyncio.start_unix_server(
++                lambda r, w, allowed=allowed: client(r, w, allowed), str(endpoint), limit=32768)
++            servers.append(server)
++            os.chmod(endpoint, 0o600)
++            lease.bound()
++        if isinstance(owner, ReadySessionOwner):
++            watcher = asyncio.create_task(owner.watch(stop))
++        await stop.wait()
++    finally:
++        for server in servers:
++            server.close()
++            await server.wait_closed()
++        if watcher:
++            await watcher
++        # Keep writer locks until effects and cleanup stop. A supervisor may
++        # SIGKILL a hung shutdown; preparing then reopens as uncertainty.
++        if tasks:
++            await asyncio.gather(*tasks, return_exceptions=True)
++        if hasattr(owner, 'tasks'):
++            await asyncio.gather(*owner.tasks.values(), return_exceptions=True)
++        for handle in owner.service.adapter._handles.values():
++            if handle.task:
++                handle.task.cancel()
++                await asyncio.gather(handle.task, return_exceptions=True)
++        owner.close_journals()
++        for lease in leases:
++            lease.close()
++        await owner.service.adapter._api.aclose()
++
++
++async def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--initialize-state', action='store_true')
++    args = parser.parse_args()
++    os.umask(0o077)
++    config = Config.from_env()
++    owner = ReadySessionOwner(config, ReadyAvatarAdapter(config), os.environ['TALKING_HEAD_OPERATION_JOURNAL'])
++    paths = [owner.operations.path, owner.service.journal.path]
++    if args.initialize_state:
++        if any(p.exists() for p in paths):
++            raise RuntimeError('initialization_requires_fresh_state')
++    elif not all(p.is_file() for p in paths):
++        raise RuntimeError('persistent_state_missing')
++    owner.open()
++    if args.initialize_state:
++        owner.close_journals()
++        await owner.service.adapter._api.aclose()
++        return
++    stop = asyncio.Event()
++    for sig in (signal.SIGINT, signal.SIGTERM):
++        asyncio.get_running_loop().add_signal_handler(sig, stop.set)
++    await serve(owner, os.environ['TALKING_HEAD_CALLBACK_SOCKET'], stop,
++                os.environ['TALKING_HEAD_ADMIN_SOCKET'])
++
++
++if __name__ == '__main__':
++    asyncio.run(main())
+--- /dev/null
++++ b/connector/tests/fixture_server.py
+@@ -0,0 +1,40 @@
++"""Never load environment credentials; only synthetic provider transports."""
++import asyncio
++import json
++import os
++from pathlib import Path
++import signal
++import socket
++import sys
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++from server import serve
++from substitutes import make_owner, make_ready_owner
++
++# Any accidental Internet/provider connection fails before leaving this process.
++original_connect = socket.socket.connect
++def local_only(self, address):
++    if self.family in (socket.AF_INET, socket.AF_INET6):
++        raise RuntimeError('network_forbidden_in_qualification')
++    return original_connect(self, address)
++socket.socket.connect = local_only
++
++async def main():
++    directory = Path(sys.argv[1])
++    owner, _ = make_owner(directory, synthetic_audio='--synthetic-audio-policy' in sys.argv,
++                          run_mode='continuous' if '--continuous' in sys.argv else 'on_demand')
++    if '--ready-owner' in sys.argv:
++        owner.close_journals()
++        owner, _ = make_ready_owner(directory, short_ttl='--short-ttl' in sys.argv)
++    assert 'chert_reference_agent.http' not in sys.modules
++    assert owner.service._watcher is None and owner.service.manual.watcher is None
++    (directory/'startup.json').write_text(json.dumps({'http_imported': False, 'watchers_started': False,
++        'required_video': owner.required_video, 'run_mode': owner.service.config.run_mode}))
++    stop = asyncio.Event()
++    for sig in (signal.SIGTERM, signal.SIGINT):
++        asyncio.get_running_loop().add_signal_handler(sig, stop.set)
++    await serve(owner, directory/'owner.sock', stop, directory/'admin.sock' if '--ready-owner' in sys.argv else None)
++
++if __name__ == '__main__':
++    os.umask(0o077)
++    asyncio.run(main())
+--- /dev/null
++++ b/connector/tests/substitutes.py
+@@ -0,0 +1,115 @@
++"""Isolated provider transports only. Real AvatarAdapter/Service code runs above."""
++import asyncio
++import json
++from pathlib import Path
++import time
++from types import SimpleNamespace as NS
++from unittest.mock import patch
++
++from chert_reference_agent.avatar_adapter import AvatarAdapter
++from chert_reference_agent.config import Config
++from owner import CallbackOwner
++
++
++class Provider:
++    def __init__(self, directory):
++        self.directory = Path(directory)
++        self.path = self.directory / 'provider.json'
++        self.control_path = self.directory / 'control.json'
++        if not self.path.exists():
++            self.save(dict(rooms={}, creates=0, dispatches=0, deletes=0, reads=0, late=0))
++        self.room = self
++        self.agent_dispatch = self
++
++    def load(self):
++        return json.loads(self.path.read_text())
++
++    def save(self, value):
++        temporary = self.path.with_suffix('.tmp')
++        temporary.write_text(json.dumps(value))
++        temporary.replace(self.path)
++
++    def control(self):
++        return json.loads(self.control_path.read_text()) if self.control_path.exists() else {}
++
++    async def create_room(self, request):
++        state = self.load()
++        state['creates'] += 1
++        state['rooms'][request.name] = {'spec': None, 'sid': 'RM_'+str(state['creates']), 'metadata': request.metadata}
++        self.save(state)
++        return NS(sid=state['rooms'][request.name]['sid'])
++
++    async def create_dispatch(self, request):
++        state = self.load()
++        state['dispatches'] += 1
++        state['rooms'][request.room]['spec'] = json.loads(request.metadata)
++        assert state['rooms'][request.room]['spec']['mode'] == 'chert-byor'
++        assert request.agent_name == 'demo-agent-0'
++        self.save(state)
++
++    async def list_participants(self, request):
++        late_completion = self.control().get('late_completion')
++        while self.control().get('hold'):
++            try:
++                await asyncio.sleep(.01)
++            except asyncio.CancelledError:
++                if not late_completion:
++                    raise
++                state = self.load()
++                state['late'] += 1
++                self.save(state)
++        state = self.load()
++        state['reads'] += 1
++        self.save(state)
++        spec = state['rooms'][request.room]['spec']
++        attrs = {'byor.ready': '1', 'byor.heartbeat': str(int(time.time()*1000)),
++                 'byor.audio': '10', 'byor.video': '10', 'byor.profile': 'classic'}
++        if self.control().get('unready'):
++            attrs['byor.ready'] = '0'
++        return NS(participants=[NS(identity=spec['agent_identity'], attributes=attrs,
++                                  tracks=[NS(type=0, muted=False)]+([] if self.control().get('missing_video') else [NS(type=1, muted=False)]))])
++
++    async def delete_room(self, request):
++        state = self.load()
++        state['deletes'] += 1
++        if not self.control().get('block_cleanup'):
++            state['rooms'].pop(request.room, None)
++        self.save(state)
++
++    async def list_rooms(self, request):
++        state = self.load()
++        return NS(rooms=[NS(name=name, metadata=state['rooms'][name]['metadata'], sid=state['rooms'][name]['sid']) for name in state['rooms']
++                         if not request.names or name in request.names])
++
++    async def aclose(self):
++        pass
++
++
++def make_owner(directory, *, synthetic_audio=False, run_mode='on_demand'):
++    directory = Path(directory)
++    provider = Provider(directory)
++    config = Config(webhook_routes={'/unused': {}}, signing_enabled=False,
++                    livekit_url='wss://isolated.invalid', livekit_api_key='synthetic-key',
++                    livekit_api_secret='synthetic-secret-for-local-qualification-only',
++                    namespace='demo-byor', journal_path=str(directory/'resources.json'),
++                    agent_run_mode=run_mode, token_ttl_seconds=900, resource_ttl_seconds=600,
++                    cleanup_attempts=1, cleanup_timeout_seconds=.1)
++    with patch('chert_reference_agent.livekit_adapter.api.LiveKitAPI', return_value=provider):
++        adapter = AvatarAdapter(config)
++    owner = CallbackOwner(config, adapter, directory/'operations.json', required_video=not synthetic_audio)
++    owner.open()
++    return owner, provider
++
++
++def make_ready_owner(directory, *, short_ttl=False):
++    from dataclasses import replace
++    from ready_owner import ReadySessionOwner
++    old, provider = make_owner(directory, run_mode='continuous')
++    old.close_journals()
++    config = replace(old.service.config, resource_ttl_seconds=.5) if short_ttl else old.service.config
++    from ready_adapter import ReadyAvatarAdapter
++    with patch('chert_reference_agent.livekit_adapter.api.LiveKitAPI', return_value=provider):
++        adapter = ReadyAvatarAdapter(config)
++    owner = ReadySessionOwner(config, adapter, Path(directory)/'ready-operations.json')
++    owner.open()
++    return owner, provider
+--- /dev/null
++++ b/connector/tests/test_host.py
+@@ -0,0 +1,154 @@
++"""Actual local processes/sockets/storage; provider transports alone substituted."""
++import asyncio
++import json
++import os
++from pathlib import Path
++import signal
++import sys
++from tempfile import TemporaryDirectory
++
++import pytest
++from test_owner import call
++
++
++@pytest.fixture
++def tmp_path():
++    with TemporaryDirectory(prefix='th-host-', dir='/tmp') as directory:
++        yield Path(directory)
++
++
++async def rpc(path, method, **args):
++    reader, writer = await asyncio.open_unix_connection(str(path))
++    writer.write((json.dumps(dict(method=method, args=args))+'\n').encode())
++    await writer.drain()
++    result = json.loads(await asyncio.wait_for(reader.readline(), 3))
++    writer.close()
++    await writer.wait_closed()
++    return result
++
++
++async def start(directory, *options):
++    root = Path(__file__).resolve().parents[2]
++    process = await asyncio.create_subprocess_exec(sys.executable, str(root/'connector/tests/fixture_server.py'),
++        str(directory), '--ready-owner', *options, env={**os.environ, 'PYTHONPATH': str(root/'receiver/src')},
++        stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE)
++    for _ in range(100):
++        if process.returncode is not None:
++            raise RuntimeError((await process.stderr.read()).decode())
++        try:
++            if (await rpc(directory/'owner.sock', 'health'))['ok']:
++                return process
++        except (FileNotFoundError, ConnectionRefusedError):
++            pass
++        await asyncio.sleep(.02)
++    process.kill()
++    await process.wait()
++    raise AssertionError('owner_start_timeout')
++
++
++async def stop(process, sig=signal.SIGTERM):
++    if process.returncode is None:
++        process.send_signal(sig)
++    await asyncio.wait_for(process.wait(), 5)
++
++
++@pytest.mark.asyncio
++async def test_sigkill_reopen_retains_claim_and_expires_independently(tmp_path):
++    os.chmod(tmp_path, 0o700)
++    process = await start(tmp_path)
++    request = dict(call(), media={'audio': True, 'video': True})
++    try:
++        assert (await rpc(tmp_path/'admin.sock','stage',slot_id='slot'))['result']['state'] == 'ready'
++        assert (await rpc(tmp_path/'owner.sock','stage',slot_id='wrong'))['ok'] is False
++        accepted = (await rpc(tmp_path/'owner.sock','prepare',call=request))['result']
++        assert accepted['action'] == 'accept'
++        await stop(process, signal.SIGKILL)
++        # Reopen proves stale socket recovery; no resource deletion at restart.
++        process = await start(tmp_path)
++        state = (await rpc(tmp_path/'owner.sock','recover',call=request,context={}))['result']
++        assert state['session_ref'] == accepted['session_ref'] and state['cleanup'] == 'pending'
++        def provider():
++            return json.loads((tmp_path/'provider.json').read_text())
++        assert provider()['creates'] == 1 and provider()['deletes'] == 0
++        assert (await rpc(tmp_path/'owner.sock','prepare',call=request))['result']['action'] == 'decline'
++        # Persisted terminal is enough; no connector recover/cleanup call follows.
++        await rpc(tmp_path/'owner.sock','lifecycle',call=request,event={'event_id':'end','transition':'ended'},context={})
++        for _ in range(100):
++            if not provider()['rooms']:
++                break
++            await asyncio.sleep(.02)
++        assert not provider()['rooms']
++        assert provider()['creates'] == 1
++    finally:
++        await stop(process)
++
++
++@pytest.mark.asyncio
++async def test_owner_watch_expires_short_test_lease_without_any_callback(tmp_path):
++    os.chmod(tmp_path, 0o700)
++    process = await start(tmp_path, '--short-ttl')
++    try:
++        await rpc(tmp_path/'admin.sock','stage',slot_id='slot')
++        result = (await rpc(tmp_path/'owner.sock','prepare',call=dict(call(),media={'audio':True,'video':True})))['result']
++        assert result['action'] == 'accept'
++        for _ in range(100):
++            if not json.loads((tmp_path/'provider.json').read_text())['rooms']:
++                break
++            await asyncio.sleep(.02)
++        assert not json.loads((tmp_path/'provider.json').read_text())['rooms']
++        assert all(p.stat().st_mode & 0o077 == 0 for p in [tmp_path/'ready-operations.json',tmp_path/'resources.json',tmp_path/'owner.sock'])
++    finally:
++        await stop(process)
++
++
++@pytest.mark.asyncio
++async def test_second_writer_cannot_unlink_live_socket_or_mutate_claims(tmp_path):
++    os.chmod(tmp_path, 0o700)
++    process = await start(tmp_path)
++    root = Path(__file__).resolve().parents[2]
++    try:
++        inode = (tmp_path/'owner.sock').stat().st_ino
++        second = await asyncio.create_subprocess_exec(sys.executable,str(root/'connector/tests/fixture_server.py'),str(tmp_path),'--ready-owner',
++            env={**os.environ,'PYTHONPATH':str(root/'receiver/src')},stdout=asyncio.subprocess.DEVNULL,stderr=asyncio.subprocess.DEVNULL)
++        assert await second.wait() != 0
++        assert (tmp_path/'owner.sock').stat().st_ino == inode
++        assert (await rpc(tmp_path/'owner.sock','health'))['ok']
++    finally:
++        await stop(process)
++
++
++@pytest.mark.asyncio
++async def test_production_entry_requires_explicit_fresh_state_initialization(tmp_path, monkeypatch):
++    import server
++    from dataclasses import replace
++    from substitutes import make_ready_owner
++    from test_owner import dispose
++    old, provider = make_ready_owner(tmp_path)
++    await dispose(old)
++    config = replace(old.service.config, journal_path=str(tmp_path/'new-resources.json'))
++    monkeypatch.setattr(server.Config,'from_env',lambda: config)
++    monkeypatch.setattr(server,'ReadyAvatarAdapter',lambda config: old.service.adapter)
++    monkeypatch.setenv('TALKING_HEAD_OPERATION_JOURNAL',str(tmp_path/'new-operations.json'))
++    monkeypatch.setattr(sys,'argv',['server.py'])
++    with pytest.raises(RuntimeError,match='persistent_state_missing'):
++        await server.main()
++    monkeypatch.setattr(sys,'argv',['server.py','--initialize-state'])
++    await server.main()
++    assert (tmp_path/'new-resources.json').is_file() and (tmp_path/'new-operations.json').is_file()
++    with pytest.raises(RuntimeError,match='initialization_requires_fresh_state'):
++        await server.main()
++    assert provider.load()['creates'] == provider.load()['deletes'] == 0
++
++
++def test_socket_lease_refuses_foreign_file_and_symlink(tmp_path):
++    from server import SocketLease
++    path=tmp_path/'owner.sock'
++    path.write_text('preserve')
++    with pytest.raises(RuntimeError,match='foreign_socket_path'):
++        SocketLease(path).acquire()
++    assert path.read_text() == 'preserve'
++    path.unlink()
++    path.symlink_to(tmp_path/'foreign')
++    with pytest.raises(RuntimeError,match='foreign_socket_path'):
++        SocketLease(path).acquire()
++    assert path.is_symlink()
+--- /dev/null
++++ b/connector/tests/test_owner.py
+@@ -0,0 +1,172 @@
++import asyncio
++import json
++from pathlib import Path
++import sys
++import time
++
++import pytest
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++from substitutes import make_owner
++
++
++def call(operation='op', budget=4000):
++    now = int(time.time()*1000)
++    return dict(operation_id=operation, project_id='project', line_id='line', call_id='call',
++                request_id='request', deadline_at=now+5000, prepare_deadline_at=now+budget,
++                maximum_session_expires_at=now+7200000, media={'audio': True, 'video': False})
++
++
++async def dispose(owner):
++    # Tests cancel only local monitor tasks. No production shutdown path is called.
++    for handle in owner.service.adapter._handles.values():
++        if handle.task:
++            handle.task.cancel()
++            await asyncio.gather(handle.task, return_exceptions=True)
++    owner.close_journals()
++
++
++@pytest.mark.asyncio
++async def test_production_profile_declines_without_warming_or_http(tmp_path):
++    http_before = 'chert_reference_agent.http' in sys.modules
++    owner, provider = make_owner(tmp_path)
++    try:
++        assert await owner.health() == 'unavailable'
++        assert await owner.prepare(call()) == {'action': 'decline'}
++        assert ('chert_reference_agent.http' in sys.modules) == http_before
++        assert owner.service._watcher is None and owner.service.manual.watcher is None
++        assert provider.load()['creates'] == provider.load()['deletes'] == 0
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_continuous_owner_does_not_steal_or_refill_slot(tmp_path):
++    owner, provider = make_owner(tmp_path, synthetic_audio=True, run_mode='continuous')
++    try:
++        assert await owner.health() == 'unavailable'
++        assert await owner.prepare(call()) == {'action': 'decline'}
++        assert provider.load()['creates'] == 0
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_real_preparation_duplicate_lifecycle_cleanup_verification(tmp_path):
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    request = call()
++    try:
++        assert await owner.health() == 'unknown'
++        first, duplicate = await asyncio.gather(owner.prepare(request), owner.prepare(request))
++        assert first == duplicate and first['action'] == 'accept'
++        assert first['session_expires_at'] > time.time()*1000 + 590000
++        assert provider.load()['creates'] == provider.load()['dispatches'] == 1
++        assert provider.load()['reads'] >= 1
++        context = dict(session_ref=first['session_ref'], authoritative_terminal=True, acceptance='accept')
++        event = dict(event_id='end', transition='ended')
++        assert (await owner.lifecycle(request,event,context))['acknowledged']
++        assert (await owner.lifecycle(request,event,context))['acknowledged']
++        assert len(owner.operations.decisions['op']['events']) == 1
++        provider.control_path.write_text(json.dumps({'block_cleanup': True}))
++        assert (await owner.recover(request,context))['cleanup'] == 'pending'
++        assert owner.service.journal.receipts
++        provider.control_path.write_text('{}')
++        assert (await owner.recover(request,context))['cleanup'] == 'clean'
++        assert not provider.load()['rooms'] and not owner.service.journal.receipts
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_late_completion_stays_unsettled_until_original_prepare_finishes(tmp_path):
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    provider.control_path.write_text(json.dumps({'hold': True, 'late_completion': True}))
++    request = call(budget=30)
++    task = asyncio.create_task(owner.prepare(request))
++    try:
++        await asyncio.sleep(.08)
++        assert not task.done()
++        status = await owner.recover(request,dict(cancel_requested=True))
++        assert status['settled'] is False and status['cleanup'] == 'pending'
++        provider.control_path.write_text('{}')
++        assert (await task)['action'] == 'decline'
++        for _ in range(30):
++            status = await owner.recover(request,dict(cancel_requested=True))
++            if status['cleanup'] == 'clean':
++                break
++            await asyncio.sleep(.01)
++        assert status['settled'] and status['cleanup'] == 'clean'
++        assert provider.load()['creates'] == provider.load()['dispatches'] == 1
++    finally:
++        provider.control_path.write_text('{}')
++        await asyncio.gather(task, return_exceptions=True)
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_prepared_restart_keeps_owner_and_never_reprepares(tmp_path):
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    request = call()
++    accepted = await owner.prepare(request)
++    await dispose(owner)
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    try:
++        assert provider.load()['deletes'] == 0  # opening is non-destructive
++        status = await owner.recover(request,dict(acceptance='unknown'))
++        assert status['cleanup'] == 'pending' and status['session_ref'] == accepted['session_ref']
++        assert (await owner.prepare(request))['action'] == 'decline'  # no token replay
++        assert provider.load()['creates'] == provider.load()['dispatches'] == 1
++        status = await owner.recover(request,dict(authoritative_terminal=True))
++        assert status['cleanup'] == 'clean'
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_interrupted_effect_stays_unknown_after_restart(tmp_path):
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    provider.control_path.write_text(json.dumps({'hold': True}))
++    request = call(budget=10)
++    assert (await owner.prepare(request))['action'] == 'decline'
++    await asyncio.sleep(.03)
++    await dispose(owner)
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    try:
++        status = await owner.recover(request,dict(authoritative_terminal=True))
++        assert status['settled'] is False and status['cleanup'] == 'unknown'
++        assert (await owner.prepare(request))['action'] == 'decline'
++        assert provider.load()['creates'] == 1
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_late_prepare_after_unknown_recovery_is_tombstoned(tmp_path):
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    request = call()
++    try:
++        assert (await owner.recover(request,dict(cancel_requested=True)))['cleanup'] == 'clean'
++        assert (await owner.prepare(request))['action'] == 'decline'
++        assert provider.load()['creates'] == 0
++        with pytest.raises(ValueError, match='operation_conflict'):
++            await owner.prepare(dict(request,call_id='foreign'))
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_event_ack_survives_restart_before_cleanup(tmp_path):
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    request = call()
++    await owner.prepare(request)
++    event = dict(event_id='durable-end', transition='ended')
++    assert (await owner.lifecycle(request, event, {}))['acknowledged']
++    await dispose(owner)
++    owner, provider = make_owner(tmp_path, synthetic_audio=True)
++    try:
++        assert (await owner.lifecycle(request, event, {}))['acknowledged']
++        assert owner.operations.decisions['op']['events'] == {'durable-end': 'ended'}
++        assert (await owner.prepare(request))['action'] == 'decline'
++        assert (await owner.recover(request, {}))['cleanup'] == 'clean'
++        assert provider.load()['creates'] == 1
++    finally:
++        await dispose(owner)
+--- /dev/null
++++ b/connector/tests/test_ready_owner.py
+@@ -0,0 +1,247 @@
++import asyncio
++import time
++
++import pytest
++from substitutes import make_ready_owner
++from test_owner import call, dispose
++
++
++def ready_owner(tmp_path):
++    return make_ready_owner(tmp_path)
++
++
++@pytest.mark.asyncio
++async def test_production_video_ready_slot_claims_once_without_cold_prepare(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    try:
++        assert await owner.health() == 'unavailable'
++        assert provider.load()['creates'] == 0
++        await owner.stage('slot-1')
++        assert await owner.health() == 'available'
++        request = dict(call(), media={'audio': True, 'video': True})
++        a, b = await asyncio.gather(owner.prepare(request), owner.prepare(request))
++        assert a == b and a['action'] == 'accept'
++        assert a['session_expires_at'] > time.time()*1000+590000
++        assert provider.load()['creates'] == provider.load()['dispatches'] == 1
++        assert (await owner.prepare(dict(request, operation_id='foreign', call_id='foreign')))['action'] == 'decline'
++        assert provider.load()['creates'] == 1
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_expiry_survives_reopen_and_needs_no_connector(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    await owner.stage('slot-1')
++    request = dict(call(), media={'audio': True, 'video': True})
++    accepted = await owner.prepare(request)
++    await dispose(owner)
++    owner, provider = ready_owner(tmp_path)
++    try:
++        assert (await owner.recover(request, {}))['session_ref'] == accepted['session_ref']
++        await owner.tick(now_ms=accepted['session_expires_at']+1)
++        assert not provider.load()['rooms']
++        assert (await owner.recover(request, {})) == dict(session_ref=accepted['session_ref'], settled=True, cleanup='clean')
++        assert provider.load()['creates'] == 1
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_ready_slot_reopen_refreshes_original_room_then_claims_video(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    await owner.stage('slot-1')
++    await dispose(owner)
++    owner, provider = ready_owner(tmp_path)
++    try:
++        assert await owner.health() == 'unavailable'  # no stale cached readiness
++        assert provider.load()['reads'] == 1
++        await owner.tick()
++        assert await owner.health() == 'available'
++        assert (await owner.prepare(dict(call(), media={'audio': True, 'video': True})))['action'] == 'accept'
++        assert provider.load()['creates'] == provider.load()['dispatches'] == 1
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_no_slot_wrong_media_or_stale_readiness_never_prepares(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    try:
++        assert (await owner.prepare(dict(call('empty'), media={'audio': True, 'video': True})))['action'] == 'decline'
++        assert provider.load()['creates'] == 0
++        await owner.stage('slot-1')
++        assert (await owner.prepare(call('audio-only')))['action'] == 'decline'
++        provider.control_path.write_text('{"unready":true}')
++        await owner.tick()
++        assert await owner.health() == 'unavailable'
++        assert (await owner.prepare(dict(call('stale'), media={'audio': True, 'video': True})))['action'] == 'decline'
++        assert provider.load()['creates'] == 1
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_terminal_is_durable_and_owner_retries_cleanup_without_connector(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    await owner.stage('slot-1')
++    request = dict(call(), media={'audio': True, 'video': True})
++    await owner.prepare(request)
++    event = dict(event_id='end', transition='ended')
++    assert (await owner.lifecycle(request, event, {}))['acknowledged']
++    await dispose(owner)
++    owner, provider = ready_owner(tmp_path)
++    try:
++        provider.control_path.write_text('{"block_cleanup":true}')
++        await owner.tick()
++        assert provider.load()['rooms'] and await owner.health() == 'unavailable'
++        provider.control_path.write_text('{}')
++        await owner.tick()
++        assert not provider.load()['rooms']
++        assert (await owner.recover(request, {}))['cleanup'] == 'clean'
++        assert (await owner.lifecycle(request, event, {}))['acknowledged']
++        with pytest.raises(ValueError, match='operation_conflict'):
++            await owner.prepare(dict(request, call_id='different'))
++        await owner.stage('slot-2')
++        assert provider.load()['creates'] == 2
++        assert (await owner.prepare(dict(request, operation_id='new', call_id='next')))['action'] == 'accept'
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_cancel_during_staging_waits_for_original_settlement_and_late_cleanup(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    entered, release = asyncio.Event(), asyncio.Event()
++    prepare = owner.service.adapter.prepare
++    async def held(spec):
++        entered.set()
++        await release.wait()
++        return await prepare(spec)
++    owner.service.adapter.prepare = held
++    task = asyncio.create_task(owner.stage('slot-1'))
++    try:
++        await entered.wait()
++        assert (await owner.cancel_slot('slot-1'))['state'] == 'preparing'
++        await owner.tick(now_ms=time.time()*1000+999999)
++        assert provider.load()['deletes'] == 0
++        with pytest.raises(RuntimeError, match='busy'):
++            await owner.stage('slot-2')
++        release.set()
++        await task
++        assert owner.operations.decisions['slot:slot-1']['state'] == 'clean'
++        assert not provider.load()['rooms']
++        assert provider.load()['creates'] == provider.load()['dispatches'] == 1
++    finally:
++        release.set()
++        await task
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_interrupted_staging_reopen_retains_debt_even_when_absent(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    entered = asyncio.Event()
++    async def interrupted(spec):
++        entered.set()
++        await asyncio.Future()
++    owner.service.adapter.prepare = interrupted
++    task = asyncio.create_task(owner.stage('slot-1'))
++    await entered.wait()
++    owner.tasks['slot:slot-1'].cancel()
++    await task
++    await dispose(owner)
++    owner, provider = ready_owner(tmp_path)
++    try:
++        await owner.tick(now_ms=time.time()*1000+9999999)
++        assert owner.operations.decisions['slot:slot-1']['state'] == 'uncertain'
++        assert not provider.load()['rooms']
++        assert owner.service.journal.receipts
++        assert await owner.health() == 'unavailable'
++        assert (await owner.stage('slot-1'))['state'] == 'uncertain'
++        with pytest.raises(RuntimeError, match='busy'):
++            await owner.stage('slot-2')
++        assert provider.load()['creates'] == provider.load()['deletes'] == 0
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_recovery_tombstone_and_storage_failure_prevent_claim(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    request = dict(call(), media={'audio': True, 'video': True})
++    try:
++        assert (await owner.recover(request, {}))['cleanup'] == 'clean'
++        await owner.stage('slot-1')
++        assert (await owner.prepare(request))['action'] == 'decline'
++        def broken():
++            raise OSError('fsync')
++        owner.operations._save = broken
++        with pytest.raises(RuntimeError, match='storage'):
++            await owner.prepare(dict(request, operation_id='other'))
++        assert await owner.health() == 'unavailable'
++        assert not owner.responses
++        assert provider.load()['creates'] == 1
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_cleanup_refuses_foreign_replacement_and_preserves_receipt(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    try:
++        await owner.stage('slot-1')
++        request = dict(call(), media={'audio':True,'video':True})
++        accepted = await owner.prepare(request)
++        state = provider.load()
++        original = dict(state['rooms'][accepted['session_ref']])
++        state['rooms'][accepted['session_ref']]['sid'] = 'FOREIGN'
++        provider.save(state)
++        await owner.lifecycle(request, dict(event_id='end',transition='ended'), {})
++        await owner.tick()
++        assert provider.load()['deletes'] == 0 and owner.service.journal.receipts
++        assert (await owner.recover(request, {}))['cleanup'] == 'pending'
++        state['rooms'][accepted['session_ref']] = original
++        provider.save(state)
++        await owner.tick()
++        assert not provider.load()['rooms']
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_missing_video_and_insufficient_lifetime_decline_without_downgrade(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    try:
++        await owner.stage('slot-1')
++        request = dict(call(), media={'audio':True,'video':True}, maximum_session_expires_at=int(time.time()*1000)+70000)
++        assert (await owner.prepare(request))['action'] == 'decline'
++        assert owner.operations.decisions['slot:slot-1']['state'] == 'ready'
++        provider.control_path.write_text('{"missing_video":true}')
++        await owner.tick()
++        assert await owner.health() == 'unavailable'
++        assert (await owner.prepare(dict(call('no-video'), media={'audio':True,'video':True})))['action'] == 'decline'
++        assert provider.load()['creates'] == 1
++    finally:
++        await dispose(owner)
++
++
++@pytest.mark.asyncio
++async def test_management_failure_preserves_cleanup_debt_until_verified(tmp_path):
++    owner, provider = ready_owner(tmp_path)
++    try:
++        await owner.stage('slot-1')
++        request = dict(call(), media={'audio':True,'video':True})
++        await owner.prepare(request)
++        original = provider.list_rooms
++        async def unavailable(request):
++            raise TimeoutError('synthetic_management_timeout')
++        provider.list_rooms = unavailable
++        result = await owner.recover(request, dict(authoritative_terminal=True))
++        assert result['cleanup'] == 'pending' and owner.service.journal.receipts
++        assert provider.load()['deletes'] == 0
++        provider.list_rooms = original
++        await owner.tick()
++        assert (await owner.recover(request, {}))['cleanup'] == 'clean'
++    finally:
++        await dispose(owner)
+--- a/tests/agent-startup.test.mjs
++++ b/tests/agent-startup.test.mjs
+@@ -29,7 +29,9 @@
+   voice: { AudioOutput, AgentSession: Session, Agent: class { constructor(options) { Object.assign(this, options); } }, AgentSessionEventTypes: events },
+ } });
+ mock.module('@livekit/agents-plugin-openai', { namedExports: { realtime: { RealtimeModel: Model } } });
+-mock.module('@livekit/rtc-node', { namedExports: { ...rtc, AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
++// Node 24 adds a CJS namespace marker that is not a valid mock named binding.
++const rtcNamed = Object.fromEntries(Object.entries(rtc).filter(([name]) => name !== 'module.exports'));
++mock.module('@livekit/rtc-node', { namedExports: { ...rtcNamed, AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
+ const profiles = await import('../src/agent-profiles.mjs');
+ mock.module('../src/agent-profiles.mjs', { namedExports: {
+   ...profiles,
+--- a/tests/muse-startup.test.mjs
++++ b/tests/muse-startup.test.mjs
+@@ -37,7 +37,9 @@
+ mock.module('@livekit/agents', { namedExports: { llm, AutoSubscribe: { AUDIO_ONLY: 'audio-only' }, initializeLogger() {},
+   voice: { ...realVoice, AgentSession: Session, Agent: class { constructor(options) { Object.assign(this, options); } } } } });
+ mock.module('@livekit/agents-plugin-openai', { namedExports: { realtime: { RealtimeModel: class { async close() {} } } } });
+-mock.module('@livekit/rtc-node', { namedExports: { ...rtc, AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
++// Node 24 adds a CJS namespace marker that is not a valid mock named binding.
++const rtcNamed = Object.fromEntries(Object.entries(rtc).filter(([name]) => name !== 'module.exports'));
++mock.module('@livekit/rtc-node', { namedExports: { ...rtcNamed, AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
+ mock.module('../src/muse/render-room.mjs', { namedExports: { MuseRenderRoom: Render, renderConfig: () => ({}), bounded: promise => promise } });
+ const { runMuse } = await import('../src/muse/index.mjs');
+ const spec = { agent_identity: 'demo-byor-agent-' + 'a'.repeat(32), worker_identity: 'demo-byor-worker-' + 'b'.repeat(32) };

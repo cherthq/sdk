@@ -1,0 +1,33 @@
+{
+  "exit_code": 0,
+  "body": {
+    "schema_version": 1,
+    "command": "lines",
+    "code": "lines",
+    "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+    "lines": {
+      "items": [
+        {
+          "id": "59b3e3d0-945b-45da-b907-027103941a65",
+          "line_key": "line_mac_002",
+          "display_name": "Mac 2 FaceTime Line",
+          "masked_identity": "wo***02",
+          "status": "available",
+          "worker_id": "dedea298-97e0-4321-8c85-1deca994b2a0",
+          "current_call_id": null,
+          "default_assistant_id": null,
+          "inbound_policy": "customer_decides",
+          "integration_id": "946445e1-2c0f-478d-a049-72c8dd9762f2",
+          "assignment_generation": 3,
+          "video_framing": "fill",
+          "supports_audio": true,
+          "supports_video": true,
+          "updated_at": "2026-09-30T20:10:25.78119+00:00"
+        }
+      ],
+      "total": 1,
+      "limit": 100,
+      "offset": 0
+    }
+  }
+}

@@ -1,0 +1,130 @@
+[
+  {
+    "node": "22",
+    "check": "cli-typecheck",
+    "exit_code": 0,
+    "seconds": 1.32
+  },
+  {
+    "node": "22",
+    "check": "cli-lint",
+    "exit_code": 0,
+    "seconds": 1.0
+  },
+  {
+    "node": "22",
+    "check": "cli-build",
+    "exit_code": 0,
+    "seconds": 1.26
+  },
+  {
+    "node": "22",
+    "check": "cli-full",
+    "exit_code": 0,
+    "seconds": 99.95
+  },
+  {
+    "node": "22",
+    "check": "cli-proof",
+    "exit_code": 0,
+    "seconds": 1.9
+  },
+  {
+    "node": "22",
+    "check": "backend-typecheck",
+    "exit_code": 0,
+    "seconds": 1.46
+  },
+  {
+    "node": "22",
+    "check": "backend-lint",
+    "exit_code": 0,
+    "seconds": 3.46
+  },
+  {
+    "node": "22",
+    "check": "backend-tests",
+    "exit_code": 0,
+    "seconds": 23.03
+  },
+  {
+    "node": "22",
+    "check": "backend-build",
+    "exit_code": 0,
+    "seconds": 2.86
+  },
+  {
+    "node": "22",
+    "check": "demo-node",
+    "exit_code": 1,
+    "seconds": 0.08
+  },
+  {
+    "node": "24",
+    "check": "cli-typecheck",
+    "exit_code": 0,
+    "seconds": 1.09
+  },
+  {
+    "node": "24",
+    "check": "cli-lint",
+    "exit_code": 0,
+    "seconds": 0.89
+  },
+  {
+    "node": "24",
+    "check": "cli-build",
+    "exit_code": 0,
+    "seconds": 1.03
+  },
+  {
+    "node": "24",
+    "check": "cli-full",
+    "exit_code": 0,
+    "seconds": 98.73
+  },
+  {
+    "node": "24",
+    "check": "cli-proof",
+    "exit_code": 0,
+    "seconds": 1.87
+  },
+  {
+    "node": "24",
+    "check": "backend-typecheck",
+    "exit_code": 0,
+    "seconds": 0.84
+  },
+  {
+    "node": "24",
+    "check": "backend-lint",
+    "exit_code": 0,
+    "seconds": 2.62
+  },
+  {
+    "node": "24",
+    "check": "backend-tests",
+    "exit_code": 0,
+    "seconds": 24.31
+  },
+  {
+    "node": "24",
+    "check": "backend-build",
+    "exit_code": 0,
+    "seconds": 2.31
+  },
+  {
+    "node": "24",
+    "check": "demo-node",
+    "exit_code": 1,
+    "seconds": 0.08
+  },
+  {
+    "check": "python-full",
+    "exit_code": 0
+  },
+  {
+    "check": "python-lint",
+    "exit_code": 0
+  }
+]

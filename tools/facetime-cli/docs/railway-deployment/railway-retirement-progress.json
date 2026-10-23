@@ -1,0 +1,84 @@
+{
+  "observed_at": "2026-09-30T13:10:48.001975+00:00",
+  "data": {
+    "project": {
+      "id": "56930118-77fc-479a-a12f-4c453e7e987c",
+      "name": "demo-agent-0-byor",
+      "services": {
+        "edges": [
+          {
+            "node": {
+              "id": "679aad53-1b81-4198-a4ae-1bd0cd357b19",
+              "name": "talking-head-webhook",
+              "serviceInstances": {
+                "edges": [
+                  {
+                    "node": {
+                      "builder": "RAILPACK",
+                      "drainingSeconds": null,
+                      "environmentId": "7815a140-42c1-4238-b72d-fb2935923123",
+                      "healthcheckPath": null,
+                      "latestDeployment": {
+                        "id": "93fd35f6-42dc-4dd0-bb25-f34deb478092",
+                        "status": "SUCCESS"
+                      },
+                      "numReplicas": null,
+                      "overlapSeconds": null,
+                      "sleepApplication": false,
+                      "startCommand": null
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "volumes": {
+        "edges": [
+          {
+            "node": {
+              "id": "22f39489-ca8e-4c04-8d42-d6d3e194b379",
+              "name": "talking-head-webhook-volume",
+              "volumeInstances": {
+                "edges": [
+                  {
+                    "node": {
+                      "environmentId": "7815a140-42c1-4238-b72d-fb2935923123",
+                      "mountPath": "/state",
+                      "serviceId": "679aad53-1b81-4198-a4ae-1bd0cd357b19"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "4e26cff0-5b63-44fe-a605-a18b245c6a38",
+              "name": "byor-qualification-20260930-volume",
+              "volumeInstances": {
+                "edges": [
+                  {
+                    "node": {
+                      "environmentId": "7815a140-42c1-4238-b72d-fb2935923123",
+                      "mountPath": "/state",
+                      "serviceId": null
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "relay": {
+      "id": "1e6ab885-d595-4bfd-aac3-90ca1fc90d4f",
+      "name": "chert-facetime-connectors",
+      "services": {
+        "edges": []
+      }
+    }
+  }
+}

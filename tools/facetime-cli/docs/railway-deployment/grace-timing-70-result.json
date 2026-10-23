@@ -1,0 +1,27 @@
+{
+  "signals": [
+    {
+      "event": "SIGTERM",
+      "epoch": 1790773631.0992465,
+      "pid": 2
+    },
+    {
+      "event": "SIGTERM",
+      "epoch": 1790773653.0847468,
+      "pid": 2
+    }
+  ],
+  "first": {
+    "event": "started",
+    "epoch": 1790773530.815758,
+    "pid": 2
+  },
+  "last": {
+    "event": "heartbeat",
+    "epoch": 1790773701.0260417,
+    "pid": 2
+  },
+  "observed_survival_seconds_after_first_SIGTERM": 69.92679524421692,
+  "configured_draining_seconds": 70,
+  "at_least_65_seconds_proven": true
+}

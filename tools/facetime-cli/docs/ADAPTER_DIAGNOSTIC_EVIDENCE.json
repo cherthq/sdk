@@ -1,0 +1,13 @@
+{
+  "archived_at": "2026-09-25T20:40:35.419Z",
+  "directory": "/Users/garygao/chert-facetime-cli/.local/adapter-diagnostic-1c7e0f02-de8c-4932-963f-05c9b994327e",
+  "sha256": {
+    "journal.json": "7b0b4708811c1359a9160b4bbfaff01ffdeac59e3d8a9a79b48fdd447cfb6d37",
+    "adapter.json": "c1fb013ce565095f73e93f9e87584f1c153665fd375dc8f12de560e9b6687c57",
+    "result.json": "92f6d8d793ecbc45e4bb7abab70f0a3699891bc9c85dd6a8a0f8f1a4c3de6197"
+  },
+  "acceptance_receipt_present": false,
+  "local_test_process_count": 0,
+  "application_dispatch_attempts": 1,
+  "extra_live_allocations_after_attempt": 0
+}

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli
+
+
+ Test Files  3 skipped (3)
+      Tests  10 skipped (10)
+   Start at  00:30:44
+   Duration  189ms (transform 210ms, setup 0ms, import 341ms, tests 0ms, environment 0ms)
+

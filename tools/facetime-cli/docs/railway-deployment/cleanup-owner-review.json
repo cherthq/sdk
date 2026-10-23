@@ -1,0 +1,104 @@
+{
+  "query": "select clock_timestamp() observed_at, s.id session_id,s.project_id,s.call_id,s.kind,s.state,s.created_at,s.failed_at,s.cleaned_at,c.status call_status,\n(select jsonb_agg(jsonb_build_object('type',e.event_type,'source',e.source,'occurred_at',e.occurred_at,'created_at',e.created_at) order by e.created_at) from facetime_call_events e where e.call_id=s.call_id and e.event_type in ('cleanup_complete','failed','ended','rejected')) terminal_cleanup_events\nfrom facetime_sessions s join facetime_calls c on c.id=s.call_id where s.cleaned_at is null order by s.created_at;",
+  "result": [
+    {
+      "observed_at": "2026-09-30 13:43:31.221241+00",
+      "session_id": "ea9cb44c-135c-4af3-acc9-5c35dedd024c",
+      "project_id": "8924525c-d634-44b7-9f69-9ceab1aa088e",
+      "call_id": "4039f7da-e5a0-469f-a714-590cdf8e38f8",
+      "kind": "customer_room",
+      "state": "failed",
+      "created_at": "2026-09-20 01:43:30.134133+00",
+      "failed_at": "2026-09-20 01:45:28+00",
+      "cleaned_at": null,
+      "call_status": "failed",
+      "terminal_cleanup_events": [
+        {
+          "type": "failed",
+          "source": "worker",
+          "created_at": "2026-09-20T01:45:29.96+00:00",
+          "occurred_at": "2026-09-20T01:45:28+00:00"
+        }
+      ]
+    },
+    {
+      "observed_at": "2026-09-30 13:43:31.221466+00",
+      "session_id": "f2ba240f-bac4-45b2-807e-2879fcf57768",
+      "project_id": "8924525c-d634-44b7-9f69-9ceab1aa088e",
+      "call_id": "8ca707f7-4f65-4b3f-b9aa-eadbc0aa8296",
+      "kind": "customer_room",
+      "state": "failed",
+      "created_at": "2026-09-20 02:14:40.192641+00",
+      "failed_at": "2026-09-20 02:15:53+00",
+      "cleaned_at": null,
+      "call_status": "failed",
+      "terminal_cleanup_events": [
+        {
+          "type": "failed",
+          "source": "worker",
+          "created_at": "2026-09-20T02:15:55.146+00:00",
+          "occurred_at": "2026-09-20T02:15:53+00:00"
+        }
+      ]
+    },
+    {
+      "observed_at": "2026-09-30 13:43:31.221579+00",
+      "session_id": "53945278-4dcf-4a4d-817a-73702d67799d",
+      "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+      "call_id": "01256872-9ba3-44c7-b320-a2f686f6f558",
+      "kind": "customer_room",
+      "state": "failed",
+      "created_at": "2026-09-28 16:12:26.954449+00",
+      "failed_at": "2026-09-28 16:12:35+00",
+      "cleaned_at": null,
+      "call_status": "failed",
+      "terminal_cleanup_events": [
+        {
+          "type": "cleanup_complete",
+          "source": "worker",
+          "created_at": "2026-09-28T16:13:33.505+00:00",
+          "occurred_at": "2026-09-28T16:12:35+00:00"
+        },
+        {
+          "type": "failed",
+          "source": "worker",
+          "created_at": "2026-09-28T16:13:33.778+00:00",
+          "occurred_at": "2026-09-28T16:12:35+00:00"
+        }
+      ]
+    },
+    {
+      "observed_at": "2026-09-30 13:43:31.221624+00",
+      "session_id": "a3efe86a-d124-4abb-b0a7-869d305ebd13",
+      "project_id": "8924525c-d634-44b7-9f69-9ceab1aa088e",
+      "call_id": "ef5a2b09-fa5c-4846-a990-cb6e05334c70",
+      "kind": "customer_room",
+      "state": "failed",
+      "created_at": "2026-09-30 04:16:25.769779+00",
+      "failed_at": "2026-09-30 04:16:50+00",
+      "cleaned_at": null,
+      "call_status": "failed",
+      "terminal_cleanup_events": [
+        {
+          "type": "failed",
+          "source": "worker",
+          "created_at": "2026-09-30T04:16:50.847+00:00",
+          "occurred_at": "2026-09-30T04:16:50+00:00"
+        }
+      ]
+    },
+    {
+      "observed_at": "2026-09-30 13:43:31.221668+00",
+      "session_id": "946a5ef2-f3a3-43d8-b5cc-cf67aa728360",
+      "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+      "call_id": "6f4866b6-534a-40e0-8a18-74582f496369",
+      "kind": "customer_room",
+      "state": "created",
+      "created_at": "2026-09-30 13:43:30.342025+00",
+      "failed_at": null,
+      "cleaned_at": null,
+      "call_status": "allocating",
+      "terminal_cleanup_events": null
+    }
+  ]
+}

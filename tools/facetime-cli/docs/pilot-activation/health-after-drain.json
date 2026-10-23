@@ -1,0 +1,1 @@
+{"healthy": false, "mode": "degraded", "session_readiness": "unavailable", "acceptance_authority": "per_call_validation_required", "processes": {"owner": "running", "node": "restart_budget_exhausted_or_fatal"}, "ipc": false, "connector_connected": false}

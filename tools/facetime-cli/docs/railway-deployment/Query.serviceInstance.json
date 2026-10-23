@@ -1,0 +1,36 @@
+{
+  "matches": [
+    {
+      "args": [
+        {
+          "defaultValue": null,
+          "description": null,
+          "name": "environmentId",
+          "namedType": "String",
+          "required": true,
+          "type": "String!"
+        },
+        {
+          "defaultValue": null,
+          "description": null,
+          "name": "serviceId",
+          "namedType": "String",
+          "required": true,
+          "type": "String!"
+        }
+      ],
+      "deprecationReason": null,
+      "description": "Get a service instance belonging to a service and environment",
+      "isDeprecated": false,
+      "kind": "field",
+      "name": "serviceInstance",
+      "namedType": "ServiceInstance",
+      "parent": "Query",
+      "requiredArgs": [
+        "environmentId",
+        "serviceId"
+      ],
+      "type": "ServiceInstance!"
+    }
+  ]
+}

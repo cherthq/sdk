@@ -1,0 +1,13 @@
+{
+  "at": "2026-09-29T20:57:00.730Z",
+  "directory": "/Users/garygao/chert-facetime-cli/.local/adapter-readiness-review-16cdc9cb-cdc4-4eaa-86c0-79fa5af92fec",
+  "sha256": {
+    "journal.json": "bbf6ddb6d3e8d69d6282558ed154414fb87b7b0dc476803ee33f2d0ca7f51914",
+    "adapter.json": "3d4876e8c5415f839da5e0957ca305cceacb42fcbc4bcb82888d99e9688a24bc",
+    "result.json": "d6faa51accd4a4b7b360eaf8c139127c2cce11362464f70c252b719055d3db4a"
+  },
+  "failed_checks": [
+    "job_room_matches"
+  ],
+  "further_allocations": 0
+}

@@ -1,0 +1,46 @@
+{
+  "project": {
+    "volumes": {
+      "edges": [
+        {
+          "node": {
+            "id": "22f39489-ca8e-4c04-8d42-d6d3e194b379",
+            "name": "talking-head-webhook-volume",
+            "volumeInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "deletedAt": null,
+                    "id": "4aead252-6b7f-43e2-b0ba-3f3a3364da92",
+                    "isPendingDeletion": false,
+                    "serviceId": "679aad53-1b81-4198-a4ae-1bd0cd357b19",
+                    "state": "READY"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "4e26cff0-5b63-44fe-a605-a18b245c6a38",
+            "name": "byor-qualification-20260930-volume",
+            "volumeInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "deletedAt": "2026-10-02T13:10:48.405Z",
+                    "id": "fac3b141-97c9-4d8a-a8f2-3da5f127f087",
+                    "isPendingDeletion": true,
+                    "serviceId": null,
+                    "state": "READY"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

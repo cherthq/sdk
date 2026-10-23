@@ -1,0 +1,118 @@
+TAP version 13
+# Subtest: reconciliation started before terminal cleanup cannot reopen completed debt when its read returns
+not ok 1 - reconciliation started before terminal cleanup cannot reopen completed debt when its read returns
+  ---
+  duration_ms: 9.60175
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:176:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        cursor: 1,
+        entries: {
+          'project_1:binding_1:1:5525334b-9c69-4ca7-932f-037db2109b58:req_5525334b-9c69-4ca7-932f-037db2109b58': {
+            bridge_seen: false,
+    +       cleanup_debt: true,
+    -       cleanup_debt: false,
+            create_pending: false,
+            digest: '92a9530182008f79ee896687a6f3521dfc324e6c0095f0717ecb5ecf1fc24b4a',
+            job: '09975497-6a2b-4aa6-a768-f81d3e1d458b',
+            marker: '6f685147-6e93-4a7e-9679-41de2aea3e51',
+            nonce: 'ee2e5573-29a2-4861-abf1-f875920e4276',
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:5525334b-9c69-4ca7-932f-037db2109b58:req_5525334b-9c69-4ca7-932f-037db2109b58:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '5525334b-9c69-4ca7-932f-037db2109b58'
+          request_id: 'req_5525334b-9c69-4ca7-932f-037db2109b58'
+        digest: '92a9530182008f79ee896687a6f3521dfc324e6c0095f0717ecb5ecf1fc24b4a'
+        room: 'b69cff94-1867-4367-8acf-31ea4ff7d538'
+        job: '09975497-6a2b-4aa6-a768-f81d3e1d458b'
+        marker: '6f685147-6e93-4a7e-9679-41de2aea3e51'
+        nonce: 'ee2e5573-29a2-4861-abf1-f875920e4276'
+        participant: 'e3bf8c8b-4032-4737-a117-b267c8e6bce0'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: false
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'cbf66eeb-6823-4d18-a096-5a8bbb8d60c4'
+  actual:
+    schema_version: 1
+    scope:
+      project_id: 'project_1'
+      line_id: 'line_1'
+      binding_id: 'binding_1'
+      binding_epoch: 1
+      instance_id: 'instance_1'
+      connection_generation: 1
+    entries:
+      project_1:binding_1:1:5525334b-9c69-4ca7-932f-037db2109b58:req_5525334b-9c69-4ca7-932f-037db2109b58:
+        owner:
+          project_id: 'project_1'
+          line_id: 'line_1'
+          binding_id: 'binding_1'
+          binding_epoch: 1
+          instance_id: 'instance_1'
+          connection_generation: 1
+          call_id: '5525334b-9c69-4ca7-932f-037db2109b58'
+          request_id: 'req_5525334b-9c69-4ca7-932f-037db2109b58'
+        digest: '92a9530182008f79ee896687a6f3521dfc324e6c0095f0717ecb5ecf1fc24b4a'
+        room: 'b69cff94-1867-4367-8acf-31ea4ff7d538'
+        job: '09975497-6a2b-4aa6-a768-f81d3e1d458b'
+        marker: '6f685147-6e93-4a7e-9679-41de2aea3e51'
+        nonce: 'ee2e5573-29a2-4861-abf1-f875920e4276'
+        participant: 'e3bf8c8b-4032-4737-a117-b267c8e6bce0'
+        resource_expires_at: 160000
+        state: 'terminal'
+        version: 2
+        terminal: true
+        cleanup_debt: true
+        reconcile_debt: false
+        create_pending: false
+        bridge_seen: false
+    tombstones:
+    cursor: 1
+    receipts:
+      1: 'cbf66eeb-6823-4d18-a096-5a8bbb8d60c4'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/expiry.test.js:189:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 75.822541

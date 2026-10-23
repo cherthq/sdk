@@ -1,0 +1,91 @@
+{
+  "active": {
+    "changes": [],
+    "crs": {
+      "gen": {
+        "action": "log",
+        "active": true
+      },
+      "sd": {
+        "action": "log",
+        "active": false
+      },
+      "java": {
+        "active": false,
+        "action": "log"
+      },
+      "sf": {
+        "action": "log",
+        "active": false
+      },
+      "ma": {
+        "active": false,
+        "action": "log"
+      },
+      "rfi": {
+        "action": "log",
+        "active": false
+      },
+      "rce": {
+        "action": "log",
+        "active": true
+      },
+      "php": {
+        "active": false,
+        "action": "log"
+      },
+      "xss": {
+        "action": "log",
+        "active": true
+      },
+      "sqli": {
+        "action": "log",
+        "active": true
+      },
+      "lfi": {
+        "action": "log",
+        "active": false
+      }
+    },
+    "ownerId": "team_Z3LEzgyI0Ki1wEurc5kaLy01",
+    "ips": [],
+    "updatedAt": "2026-09-25T03:28:12.295Z",
+    "id": "waf_tusFsaJGLfVT",
+    "version": 57,
+    "firewallEnabled": true,
+    "projectKey": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5#active",
+    "rules": [
+      {
+        "name": "line-release-retired-deployments",
+        "active": true,
+        "action": {
+          "mitigate": {
+            "action": "deny"
+          }
+        },
+        "id": "rule_line_release_quiesce_Zr6KPK",
+        "conditionGroup": [
+          {
+            "conditions": [
+              {
+                "op": "inc",
+                "neg": true,
+                "type": "host",
+                "value": [
+                  "facetime.trychert.com",
+                  "chert-facetime-control-plane.vercel.app",
+                  "chert-facetime-control-plane-chert-technologies.vercel.app",
+                  "chert-facetime-control-plane-ktlll30lu-chert-technologies.vercel.app"
+                ]
+              }
+            ]
+          }
+        ],
+        "valid": true,
+        "validationErrors": null
+      }
+    ]
+  },
+  "draft": null,
+  "versions": []
+}

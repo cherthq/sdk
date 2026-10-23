@@ -1,0 +1,17 @@
+[
+  {
+    "observed_at": "2026-09-30 04:59:11.337689+00",
+    "pilot": {
+      "id": "59b3e3d0-945b-45da-b907-027103941a65",
+      "call_status": null,
+      "inbound_policy": "customer_decides",
+      "current_call_id": null,
+      "default_assistant_id": null,
+      "assignment_generation": 3
+    },
+    "historical_session": {
+      "state": "failed",
+      "cleaned_at": null
+    }
+  }
+]

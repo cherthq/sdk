@@ -1,0 +1,18 @@
+{
+  "settings": {
+    "builder": "RAILPACK",
+    "dockerfilePath": "Dockerfile",
+    "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /opt/chert-pilot/railway-20260930-r1/runtime/runtime.py run",
+    "healthcheckPath": "/healthz",
+    "healthcheckTimeout": 120,
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "NEVER",
+    "drainingSeconds": 70,
+    "overlapSeconds": 0,
+    "preDeployCommand": []
+  },
+  "result": {
+    "serviceInstanceUpdate": true
+  }
+}

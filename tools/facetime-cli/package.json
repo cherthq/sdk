@@ -1,0 +1,68 @@
+{
+  "name": "@trychert/facetime",
+  "version": "0.1.0-beta.10",
+  "description": "Chert FaceTime CLI: put a LiveKit agent on a FaceTime line",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cherthq/sdk.git",
+    "directory": "tools/facetime-cli"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src tests",
+    "test": "npm run build && node --test dist/tests/transport/*.test.js dist/tests/adapter/*.test.js dist/tests/cli/*.test.js dist/tests/dev/*.test.js",
+    "proof:transport": "node dist/tests/proof.js",
+    "test:state": "npm run build && node --test dist/tests/transport/deadline.test.js dist/tests/transport/state.test.js dist/tests/transport/recovery.test.js dist/tests/transport/journal.test.js",
+    "test:network": "npm run build && node --test dist/tests/transport/network.test.js",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "livekit-server-sdk": "2.19.0",
+    "ws": "8.21.3",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "@types/ws": "8.18.1",
+    "eslint": "10.11.0",
+    "typescript": "6.0.2",
+    "typescript-eslint": "8.70.1"
+  },
+  "bin": {
+    "chert": "dist/src/cli/main.js"
+  },
+  "files": [
+    "dist/src/**/*.js",
+    "LICENSE",
+    "CLI_GUIDE.md",
+    "CLI_USER_GUIDE.md",
+    "dist/src/**/*.d.ts",
+    "examples/byor/*",
+    "examples/student-agent",
+    "examples/video-agent",
+    "!examples/*/node_modules",
+    "!examples/*/package-lock.json",
+    "!examples/*/.env.local",
+    "docs/BYOR_OWNERSHIP.md",
+    "docs/CLI_ONBOARDING.md",
+    "QUICKSTART.md",
+    "DEVELOPER_GUIDE.md",
+    "COMMANDS.md"
+  ],
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || ^26.0.0"
+  },
+  "exports": {
+    "./byor": {
+      "types": "./dist/src/byor/contract.d.ts",
+      "import": "./dist/src/byor/contract.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "beta"
+  }
+}

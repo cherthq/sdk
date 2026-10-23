@@ -1,0 +1,12 @@
+{
+  "at": "2026-09-29T20:49:48.511Z",
+  "mode": "read-only recovery verification using a reopened receipt copied into memory",
+  "room": "50fe326c-2be7-4a11-9384-3a3342ca91ec",
+  "settled": true,
+  "inspection": "absent",
+  "hook_calls": 0,
+  "connector_cleanup_debt": false,
+  "phase": "clean",
+  "historical_files_modified": false,
+  "new_run_files_modified": false
+}

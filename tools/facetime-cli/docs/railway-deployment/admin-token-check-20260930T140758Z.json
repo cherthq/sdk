@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-09-30T14:07:57.907925+00:00",
+  "credential_source": "/Users/garygao/chert-facetime/.env.local",
+  "source_variable": "CHERT_ADMIN_LOGIN_TOKEN",
+  "cli_variable": "CHERT_USER_ACCESS_TOKEN",
+  "credential_file_mode": "0600",
+  "file_permissions_tightened": false,
+  "projects_http_status": 200,
+  "project_id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+  "owner_admin_verified": true,
+  "role": "owner",
+  "lines_http_status": 200,
+  "lines": [
+    {
+      "id": "59b3e3d0-945b-45da-b907-027103941a65",
+      "status": "available",
+      "current_call_id": null,
+      "assignment_generation": 3,
+      "inbound_policy": "customer_decides",
+      "default_assistant_id": null
+    }
+  ]
+}

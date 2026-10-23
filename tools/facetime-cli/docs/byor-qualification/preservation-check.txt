@@ -1,0 +1,15 @@
+{
+  "baseline_files": 42570,
+  "changed_existing_files": [
+    "/Users/garygao/chert-facetime-cli/tests/fixtures/cli-harness.ts",
+    "/Users/garygao/chert-facetime-cli/docs/DEPLOYMENT_READINESS.md",
+    "/Users/garygao/chert-facetime-cli/docs/BACKEND_PILOT_RUNBOOK.md"
+  ],
+  "unrelated_files_unchanged": true,
+  "historical_candidates_artifacts_and_debts_unchanged": true,
+  "original_python_source_unchanged": true,
+  "original_chert_working_tree_unchanged": true,
+  "prior_document_bytes_preserved": true,
+  "manifest_hashes_verified": true,
+  "unallowlisted_backend_source_unchanged": true
+}

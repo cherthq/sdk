@@ -1,0 +1,98 @@
+{
+  "serviceInstance": {
+    "activeDeployments": [
+      {
+        "id": "8b19eaef-e01d-412f-ad5a-3af08f0d89e0",
+        "instances": [
+          {
+            "id": "0bcf3724-2acf-4cfe-acb2-2404203f66c7",
+            "status": "CREATED"
+          }
+        ],
+        "status": "DEPLOYING"
+      },
+      {
+        "id": "2c9855eb-a307-4bfc-80c3-8bc54b8cd36f",
+        "instances": [
+          {
+            "id": "65f5b1c8-ab40-4d76-aa35-967cc5057cfc",
+            "status": "STOPPED"
+          }
+        ],
+        "status": "DEPLOYING"
+      },
+      {
+        "id": "1707de5b-fc2b-4378-ae1f-648025d20fdd",
+        "instances": [
+          {
+            "id": "03499b64-af08-40d1-a1cd-e6c977db5438",
+            "status": "STOPPED"
+          }
+        ],
+        "status": "SUCCESS"
+      }
+    ],
+    "latestDeployment": {
+      "id": "8b19eaef-e01d-412f-ad5a-3af08f0d89e0",
+      "instances": [
+        {
+          "id": "0bcf3724-2acf-4cfe-acb2-2404203f66c7",
+          "status": "CREATED"
+        }
+      ],
+      "meta": {
+        "buildOnly": false,
+        "cliAgentSessionId": "01a0f013-3591-7a50-a8ab-6ac3fa0aaddb",
+        "cliCaller": "codex",
+        "fileServiceManifest": {},
+        "logsV2": true,
+        "nixpacksProviders": [],
+        "propertyFileMapping": {},
+        "reason": "deploy",
+        "rootDirectory": "/",
+        "runtime": "V2",
+        "serviceManifest": {
+          "build": {
+            "buildCommand": "",
+            "buildEnvironment": "V3",
+            "builder": "DOCKERFILE",
+            "dockerfilePath": "Dockerfile",
+            "nixpacksConfigPath": null,
+            "nixpacksPlan": null,
+            "watchPatterns": []
+          },
+          "deploy": {
+            "cronSchedule": null,
+            "drainingSeconds": 70,
+            "healthcheckPath": null,
+            "healthcheckTimeout": null,
+            "ipv6EgressEnabled": false,
+            "limitOverride": null,
+            "multiRegionConfig": {
+              "us-west2": {
+                "numReplicas": 1
+              }
+            },
+            "numReplicas": 1,
+            "overlapSeconds": 0,
+            "preDeployCommand": [],
+            "preDeployTimeoutSeconds": null,
+            "region": null,
+            "registryCredentials": null,
+            "requiredMountPath": null,
+            "restartPolicyMaxRetries": null,
+            "restartPolicyType": "NEVER",
+            "runtime": "V2",
+            "sleepApplication": false,
+            "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+            "useLegacyStacker": false
+          }
+        },
+        "volumeMounts": [
+          "/state"
+        ]
+      },
+      "status": "DEPLOYING"
+    }
+  }
+}

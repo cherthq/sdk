@@ -1,0 +1,17 @@
+{
+  "at": "2026-09-30T03:12:51.752757+00:00",
+  "method": "GET with curl default TLS verification; no redirects followed",
+  "healthz": {
+    "status": 200,
+    "body": {
+      "ok": true
+    }
+  },
+  "readyz": {
+    "status": 200,
+    "body": {
+      "ready": true,
+      "signing_configured": true
+    }
+  }
+}

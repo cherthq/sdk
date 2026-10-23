@@ -1,0 +1,104 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connector-production-compatibility.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/deployment-preparation/candidate/control-plane
+
+ ❯ tests/connector-production-compatibility.test.ts (4 tests | 4 failed) 3447ms
+     × retains unsigned incoming pin, context and acceptance without signing keys 871ms
+     × rejects stale automatic readiness at legacy acceptance commit 846ms
+     × retains outbound call.started at bridge_ready rather than active 786ms
+     × rejects connector acceptance when automatic worker readiness has gone stale 943ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > retains unsigned incoming pin, context and acceptance without signing keys
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-XRaQ5r -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  integration_unavailable
+CONTEXT:  PL/pgSQL function facetime_pin_call_integration() line 47 at RAISE
+SQL statement "insert into public.facetime_calls (
+    id, project_id, direction, mode, media, assistant_id, assistant_version_id,
+    worker_id, line_id, masked_identity, status, detected_at, incoming_request_data, incoming_decision_deadline_at
+  ) values (
+    p_call_id, v_line.project_id, 'inbound', v_mode, p_media,
+    case when v_mode = 'managed' then v_assistant.id else null end, v_version_id,
+    p_worker_id, p_line_id, p_masked_identity, 'incoming', now(),
+    jsonb_build_object('from_handle_hash',p_payload->'from_handle_hash','occurred_at',coalesce(p_payload->'__b1_occurred_at',to_jsonb(now()))),
+    clock_timestamp() + make_interval(secs => coalesce((p_payload->>'__li_deadline_ms')::double precision,5000)/1000)
+  )"
+PL/pgSQL function facetime_register_inbound_call(uuid,uuid,uuid,text,text,jsonb,jsonb) line 85 at SQL statement
+PL/pgSQL function facetime_register_inbound_call_b3(uuid,uuid,uuid,text,text,jsonb,jsonb) line 4 at assignment
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/connector-production-compatibility.test.ts:12:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > rejects stale automatic readiness at legacy acceptance commit
+AssertionError: expected [Function] to throw an error
+ ❯ tests/connector-production-compatibility.test.ts:22:113
+     20|   try{
+     21|    db.sql(fixture());db.sql(`update facetime_workers set automatic_rea…
+     22|    expect(()=>db.sql(`select facetime_guard_incoming_accept('${project…
+       |                                                                                                                 ^
+     23|   }finally{db.close();}
+     24|  },30000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > retains outbound call.started at bridge_ready rather than active
+AssertionError: expected '1' to be '0' // Object.is equality
+
+Expected: "0"
+Received: "1"
+
+ ❯ tests/connector-production-compatibility.test.ts:31:128
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > rejects connector acceptance when automatic worker readiness has gone stale
+AssertionError: expected [Function] to throw error matching /incoming_accept_unavailable/ but got 'Command failed: /var/folders/6w/_5rp3…'
+
+- Expected:
+/incoming_accept_unavailable/
+
++ Received:
+"Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-AcKKwB -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  new row for relation \"facetime_session_credential_seals\" violates check constraint \"facetime_session_credential_seals_check\"
+DETAIL:  Failing row contains (5853a21b-a867-4f14-b3b4-b74facfdaade, 11000000-0000-4000-8000-000000000001, 61000000-0000-4000-8000-000000000001, 21000000-0000-4000-8000-000000000001, fake, fake, sha256:ffffffffffffffff, 1, 2026-09-29 22:22:56.777-04, 2026-09-29 22:22:56.778-04, sealed, null, null, 2026-09-29 22:21:56.781802-04).
+CONTEXT:  SQL statement \"insert into public.facetime_session_credential_seals (
+    project_id, session_id, worker_id, livekit_url_ciphertext,
+    participant_token_ciphertext, token_fingerprint, encryption_key_version,
+    token_expires_at, lease_expires_at
+  ) values (
+    p_project_id, p_session_id, p_worker_id, p_livekit_url_ciphertext,
+    p_participant_token_ciphertext, p_token_fingerprint, p_encryption_key_version,
+    p_token_expires_at, p_lease_expires_at
+  )\"
+PL/pgSQL function facetime_insert_sealed_session(uuid,uuid,uuid,uuid,text,text,timestamp with time zone,timestamp with time zone,text,text,text,integer) line 14 at SQL statement
+SQL statement \"SELECT public.facetime_insert_sealed_session(c.project_id,c.id,(p_input->>'session_id')::uuid,c.worker_id,
+    p_input->>'room',p_input->>'identity',(p_input->>'token_expires_at')::timestamptz,(p_input->>'lease_expires_at')::timestamptz,
+    p_input->>'url_ciphertext',p_input->>'token_ciphertext',p_input->>'fingerprint',(p_input->>'key_version')::integer)\"
+PL/pgSQL function facetime_connector_runtime(text,text,jsonb) line 79 at PERFORM
+"
+
+ ❯ tests/connector-production-compatibility.test.ts:52:114
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  22:21:53
+   Duration  3.54s (transform 19ms, setup 11ms, import 15ms, tests 3.45s, environment 0ms)
+

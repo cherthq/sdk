@@ -1,0 +1,17 @@
+{
+  "name": "chert-video-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "^22.23.2 || ^24.0.0 || ^26.0.0" },
+  "scripts": {
+    "start": "node --env-file=.env.local agent.mjs start",
+    "check": "node --check agent.mjs && node --check face.mjs && node --check greet.mjs",
+    "help": "node agent.mjs --help"
+  },
+  "dependencies": {
+    "@livekit/agents": "1.8.0",
+    "@livekit/agents-plugin-openai": "1.8.0",
+    "@livekit/rtc-node": "0.13.35"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "at": "2026-09-29T21:11:10.645Z",
+  "node": "v22.23.2",
+  "mode": "read-only verification with reopened receipt copied into memory",
+  "settled": true,
+  "inspection": "absent",
+  "hook_calls": 0,
+  "cleanup_debt": false,
+  "phase": "clean"
+}

@@ -1,0 +1,66 @@
+E702 Multiple statements on one line (semicolon)
+  --> /Users/garygao/demo-agent-0/connector/tests/substitutes.py:55:36
+   |
+53 |                 if not late_completion:
+54 |                     raise
+55 |                 state = self.load(); state['late'] += 1; self.save(state)
+   |                                    ^
+56 |         state = self.load(); state['reads'] += 1; self.save(state)
+57 |         spec = state['rooms'][request.room]['spec']
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> /Users/garygao/demo-agent-0/connector/tests/substitutes.py:55:56
+   |
+53 |                 if not late_completion:
+54 |                     raise
+55 |                 state = self.load(); state['late'] += 1; self.save(state)
+   |                                                        ^
+56 |         state = self.load(); state['reads'] += 1; self.save(state)
+57 |         spec = state['rooms'][request.room]['spec']
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> /Users/garygao/demo-agent-0/connector/tests/substitutes.py:56:28
+   |
+54 |                     raise
+55 |                 state = self.load(); state['late'] += 1; self.save(state)
+56 |         state = self.load(); state['reads'] += 1; self.save(state)
+   |                            ^
+57 |         spec = state['rooms'][request.room]['spec']
+58 |         attrs = {'byor.ready': '1', 'byor.heartbeat': str(int(time.time()*1000)),
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> /Users/garygao/demo-agent-0/connector/tests/substitutes.py:56:49
+   |
+54 |                     raise
+55 |                 state = self.load(); state['late'] += 1; self.save(state)
+56 |         state = self.load(); state['reads'] += 1; self.save(state)
+   |                                                 ^
+57 |         spec = state['rooms'][request.room]['spec']
+58 |         attrs = {'byor.ready': '1', 'byor.heartbeat': str(int(time.time()*1000)),
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> /Users/garygao/demo-agent-0/connector/tests/substitutes.py:66:28
+   |
+65 |     async def delete_room(self, request):
+66 |         state = self.load(); state['deletes'] += 1
+   |                            ^
+67 |         if not self.control().get('block_cleanup'):
+68 |             state['rooms'].pop(request.room, None)
+   |
+
+E701 Multiple statements on one line (colon)
+  --> /Users/garygao/demo-agent-0/connector/tests/test_owner.py:94:44
+   |
+92 |         for _ in range(30):
+93 |             status = await owner.recover(request,dict(cancel_requested=True))
+94 |             if status['cleanup'] == 'clean': break
+   |                                            ^
+95 |             await asyncio.sleep(.01)
+96 |         assert status['settled'] and status['cleanup'] == 'clean'
+   |
+
+Found 6 errors.

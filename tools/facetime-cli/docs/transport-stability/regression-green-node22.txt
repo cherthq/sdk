@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: a single stalled poll recovers without another connection or lost delivery
+ok 1 - a single stalled poll recovers without another connection or lost delivery
+  ---
+  duration_ms: 2135.019416
+  type: 'test'
+  ...
+# Subtest: authorization 401 closes immediately without retry
+ok 2 - authorization 401 closes immediately without retry
+  ---
+  duration_ms: 8.68525
+  type: 'test'
+  ...
+# Subtest: authorization 403 closes immediately without retry
+ok 3 - authorization 403 closes immediately without retry
+  ---
+  duration_ms: 5.486459
+  type: 'test'
+  ...
+# Subtest: two unavailable polls close instead of retrying indefinitely
+ok 4 - two unavailable polls close instead of retrying indefinitely
+  ---
+  duration_ms: 111.08775
+  type: 'test'
+  ...
+# Subtest: invalid authority JSON closes without retry or raw-data diagnostics
+ok 5 - invalid authority JSON closes without retry or raw-data diagnostics
+  ---
+  duration_ms: 4.698333
+  type: 'test'
+  ...
+# Subtest: a successful retry still honors the new binding role
+ok 6 - a successful retry still honors the new binding role
+  ---
+  duration_ms: 108.346542
+  type: 'test'
+  ...
+# Subtest: decision failures are never replayed as poll retries
+ok 7 - decision failures are never replayed as poll retries
+  ---
+  duration_ms: 6.210375
+  type: 'test'
+  ...
+# Subtest: network reset on a poll is retried without changing generation
+ok 8 - network reset on a poll is retried without changing generation
+  ---
+  duration_ms: 108.538584
+  type: 'test'
+  ...
+# Subtest: retry is bounded by the last confirmed lease, not a fresh five seconds
+ok 9 - retry is bounded by the last confirmed lease, not a fresh five seconds
+  ---
+  duration_ms: 5007.554417
+  type: 'test'
+  ...
+# Subtest: deployment requires encrypted origins and isolated mode only permits literal loopback
+ok 10 - deployment requires encrypted origins and isolated mode only permits literal loopback
+  ---
+  duration_ms: 0.757
+  type: 'test'
+  ...
+# Subtest: malformed credentials never reach the control-plane network
+ok 11 - malformed credentials never reach the control-plane network
+  ---
+  duration_ms: 22.547209
+  type: 'test'
+  ...
+# Subtest: an unavailable authority is distinct from rejected authorization
+ok 12 - an unavailable authority is distinct from rejected authorization
+  ---
+  duration_ms: 4.773417
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7579.237083

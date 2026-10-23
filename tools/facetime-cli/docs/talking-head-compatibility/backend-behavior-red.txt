@@ -1,0 +1,26 @@
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime/control-plane
+
+ ❯ tests/connector-service.test.ts (5 tests | 1 failed | 4 skipped) 5219ms
+     × commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor-video) 5218ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-service.test.ts > integrated connector service and relay > commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor-video)
+Error: missing decision.committed
+ ❯ Timeout._onTimeout tests/connector-service.test.ts:51:75
+     49|  return (type:string):Promise<Record<string,unknown>>=>{
+     50|   const index=queue.findIndex(x=>x.type===type);if(index>=0) return Pr…
+     51|   return new Promise((resolve,reject)=>{const timer=setTimeout(()=>rej…
+       |                                                                           ^
+     52|  };
+     53| }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  00:30:47
+   Duration  5.36s (transform 46ms, setup 0ms, import 84ms, tests 5.22s, environment 0ms)
+

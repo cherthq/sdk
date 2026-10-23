@@ -1,0 +1,27 @@
+{
+  "database": [
+    {
+      "observed_at": "2026-09-30 04:07:47.748677+00",
+      "postgres_version": "17.6",
+      "connectors": null,
+      "migration_count": 40,
+      "latest_migration": "20260924200520",
+      "function_preimages": {
+        "facetime_enqueue_call_webhook": "75402284c3b1dd25b1fbf2accc25821e",
+        "facetime_pin_call_integration": "043fab84fc9167ebf1cefc4d671fbf2f",
+        "facetime_guard_incoming_accept": "8ca81b9b9422eff9bb9145a01a7833f9",
+        "facetime_pinned_incoming_context": "156b49fd3b9443726d21e9ff5c653241",
+        "facetime_apply_call_event_to_session": "8b3183b1613bcf9159011ba7c85194f9"
+      }
+    }
+  ],
+  "alias": {
+    "alias": "facetime.trychert.com",
+    "deployment": {
+      "id": "dpl_CaaB7JWXnBi7w6dYzZPz4METHBks",
+      "url": "chert-facetime-control-plane-ktlll30lu-chert-technologies.vercel.app"
+    },
+    "projectId": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5"
+  },
+  "schema_scope": "Fresh five shared function preimages, connector absence, ledger count/latest; full catalog remains recorded evidence."
+}

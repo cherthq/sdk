@@ -15,6 +15,12 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22.23.1
+      - run: npm ci
+        working-directory: tools/facetime-cli
+      - run: npm test
+        working-directory: tools/facetime-cli
+      - run: npm run lint
+        working-directory: tools/facetime-cli
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
           deno-version: 2.9.4

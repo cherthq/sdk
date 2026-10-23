@@ -1,0 +1,356 @@
+{
+  "matches": [
+    {
+      "description": null,
+      "enumValues": [],
+      "fields": [
+        {
+          "args": [],
+          "deprecationReason": "Set per service instance: read ServiceInstance.autoInstrumentationEnabled. Reports the production environment's instance.",
+          "description": null,
+          "isDeprecated": true,
+          "kind": "field",
+          "name": "autoInstrumentationEnabled",
+          "namedType": "Boolean",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "createdAt",
+          "namedType": "DateTime",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "DateTime!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "deletedAt",
+          "namedType": "DateTime",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "DateTime"
+        },
+        {
+          "args": [
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "after",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "before",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "first",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "last",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            }
+          ],
+          "deprecationReason": "Use environment.deployments for properly scoped access control",
+          "description": null,
+          "isDeprecated": true,
+          "kind": "field",
+          "name": "deployments",
+          "namedType": "ServiceDeploymentsConnection",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "ServiceDeploymentsConnection!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "featureFlags",
+          "namedType": "ActiveServiceFeatureFlag",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "[ActiveServiceFeatureFlag!]!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "groupId",
+          "namedType": "String",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": "Whether this service has hidden registry credentials from a template. When true, the credentials are stored in the template and used during deployment.",
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "hasHiddenRegistryCredentialsFromTemplate",
+          "namedType": "Boolean",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "icon",
+          "namedType": "String",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "id",
+          "namedType": "ID",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "ID!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": "Whether this service has an active restriction that limits its capabilities.",
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "isRestricted",
+          "namedType": "Boolean",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "Boolean!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "name",
+          "namedType": "String",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "project",
+          "namedType": "Project",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "Project!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "projectId",
+          "namedType": "String",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "after",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "before",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "first",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "last",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            }
+          ],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "repoTriggers",
+          "namedType": "ServiceRepoTriggersConnection",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "ServiceRepoTriggersConnection!"
+        },
+        {
+          "args": [
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "after",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "before",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "first",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "last",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            }
+          ],
+          "deprecationReason": "Use environment.serviceInstances for properly scoped access control",
+          "description": null,
+          "isDeprecated": true,
+          "kind": "field",
+          "name": "serviceInstances",
+          "namedType": "ServiceServiceInstancesConnection",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "ServiceServiceInstancesConnection!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "templateId",
+          "namedType": "String",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "templateServiceId",
+          "namedType": "String",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "templateThreadSlug",
+          "namedType": "String",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "String"
+        },
+        {
+          "args": [],
+          "deprecationReason": "Tracing is set per service instance: read ServiceInstance.tracingEnabled. Reports the production environment's instance.",
+          "description": null,
+          "isDeprecated": true,
+          "kind": "field",
+          "name": "tracingEnabled",
+          "namedType": "Boolean",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "Boolean"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "updatedAt",
+          "namedType": "DateTime",
+          "parent": "Service",
+          "requiredArgs": [],
+          "type": "DateTime!"
+        }
+      ],
+      "inputFields": [],
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT",
+      "name": "Service",
+      "possibleTypes": []
+    }
+  ]
+}

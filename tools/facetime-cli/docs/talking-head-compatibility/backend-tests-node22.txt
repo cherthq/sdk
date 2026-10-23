@@ -1,0 +1,81 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/Users/garygao/chert-facetime/control-plane[39m
+
+ [32m✓[39m tests/tenant-isolation-imports.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m tests/control-plane.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/public-docs.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/documentation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m tests/webhook-core.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m tests/unrestricted-livekit-hosts.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 95[2mms[22m[39m
+ [32m✓[39m tests/connector-incoming.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 105[2mms[22m[39m
+ [32m✓[39m tests/schemas.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/line-webhook-authorization.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/security.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/dashboard-hardening.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/production-worker-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/assistant-form.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/transcripts.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/readiness-evidence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/incoming-webhook-cleanup-migration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/line-integrations-migration.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/destination.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/dashboard-tabs.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/section-preferences.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/start-bridge-failure-reconciliation-migration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/browser-client.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/dashboard-worker-status.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/webhook-logical-idempotency-migration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/line-webhook-editor.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/dashboard-auth.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32m✓[39m tests/dashboard-projects.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 790[2mms[22m[39m
+ [32m✓[39m tests/connector-service.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 10321[2mms[22m[39m
+     [33m[2m✓[22m[39m commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (create-room) [33m 1816[2mms[22m[39m
+     [33m[2m✓[22m[39m commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor) [33m 1647[2mms[22m[39m
+     [33m[2m✓[22m[39m commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor-video) [33m 1674[2mms[22m[39m
+     [33m[2m✓[22m[39m settles an expired uncommitted request through recovery without a relay and rejects foreign owners [33m 1194[2mms[22m[39m
+     [33m[2m✓[22m[39m enrolls over TLS without activation, activates explicitly and declines unavailable health through the real relay [33m 3988[2mms[22m[39m
+ [32m✓[39m tests/connectors.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 14637[2mms[22m[39m
+     [33m[2m✓[22m[39m enrolls standby without changing the legacy route and rejects foreign membership [33m 1368[2mms[22m[39m
+     [33m[2m✓[22m[39m requires exact line selection and an explicit activation compare-and-swap [33m 1048[2mms[22m[39m
+     [33m[2m✓[22m[39m pins ownership, rejects stale/foreign decisions and deduplicates a committed decision [33m 1402[2mms[22m[39m
+     [33m[2m✓[22m[39m revokes admission but preserves recovery and immutable pins through replacement [33m 1177[2mms[22m[39m
+     [33m[2m✓[22m[39m serializes concurrent activations and refuses ambiguous line cardinality [33m 1226[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects zero-line projects and development activation without changing routing [33m 1139[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the connection credential revoked after drain while owned recovery survives restart [33m 1545[2mms[22m[39m
+     [33m[2m✓[22m[39m allows scoped drain and revoke after a second line without relaxing enrollment or activation [33m 1263[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps revocation terminal with revoke holding the management lock [33m 1046[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps revocation terminal with drain holding the management lock [33m 1040[2mms[22m[39m
+     [33m[2m✓[22m[39m pins BYOR enrollment and gives it a two-hour credential-bounded ceiling without changing legacy mode [33m 1082[2mms[22m[39m
+     [33m[2m✓[22m[39m retains the create-room audio-only commit restriction and private delegate permissions [33m 1298[2mms[22m[39m
+ [32m✓[39m tests/line-integrations.test.ts [2m([22m[2m24 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[33m 22550[2mms[22m[39m
+     [33m[2m✓[22m[39m retains the registered destination for a delayed lifecycle event after endpoint edit [33m 1307[2mms[22m[39m
+     [33m[2m✓[22m[39m protects a call pin and rejects tenant substitution [33m 1016[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps revision history immutable and unavailable to browser database roles [33m 1008[2mms[22m[39m
+     [33m[2m✓[22m[39m pins A while L1 changes to B and L2 remains A; retries survive a new database connection [33m 1326[2mms[22m[39m
+     [33m[2m✓[22m[39m rotation preserves old key pins, retirement allows delivery, revocation blocks later authorization visibly [33m 1147[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects duplicate ownership substitution, disabled integration and historical pointer rollback [33m 1205[2mms[22m[39m
+     [33m[2m✓[22m[39m preserves legacy ciphertext and event bytes, blocks unresolved late events, and requires drain [33m 1066[2mms[22m[39m
+     [33m[2m✓[22m[39m serializes registration behind an in-flight assignment transaction [33m 1128[2mms[22m[39m
+     [33m[2m✓[22m[39m serializes registration behind an in-flight publication transaction [33m 1209[2mms[22m[39m
+     [33m[2m✓[22m[39m serializes registration behind an in-flight rotation transaction [33m 981[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps managed integrations notification-only and rejects conflicting decision authority [33m 1022[2mms[22m[39m
+     [33m[2m✓[22m[39m orders revocation before pending acceptance and commits no credentials [33m 1011[2mms[22m[39m
+     [33m[2m✓[22m[39m does not revoke a Session accepted before signing-key revocation and accepts only once [33m 1224[2mms[22m[39m
+     [33m[2m✓[22m[39m honors a custom deadline and stable sanitized request across registration retries [33m 1049[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects foreign IDs through the service-role API and denies browser/private-helper access [33m 990[2mms[22m[39m
+     [33m[2m✓[22m[39m ignores legacy host metadata races and preserves duplicate allocation pins [33m 1090[2mms[22m[39m
+     [33m[2m✓[22m[39m holds activation preflight behind concurrent registration [33m 897[2mms[22m[39m
+     [33m[2m✓[22m[39m holds activation preflight behind concurrent host-removal [33m 882[2mms[22m[39m
+     [33m[2m✓[22m[39m holds activation preflight behind concurrent host-row-removal [33m 907[2mms[22m[39m
+     [33m[2m✓[22m[39m allows caller-decided outbound BYOR with unavailable notification integration: false [33m 1076[2mms[22m[39m
+     [33m[2m✓[22m[39m allows caller-decided outbound BYOR with unavailable notification integration: true [33m 961[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m30 passed[39m[22m[90m (30)[39m
+[2m      Tests [22m [1m[32m259 passed[39m[22m[2m | [22m[33m1 skipped[39m[90m (260)[39m
+[2m   Start at [22m 00:38:46
+[2m   Duration [22m 22.73s[2m (transform 1.45s, setup 0ms, import 2.52s, tests 48.99s, environment 1.33s)[22m
+

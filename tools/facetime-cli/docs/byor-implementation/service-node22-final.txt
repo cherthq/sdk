@@ -1,0 +1,13 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --run tests/connector-service.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime/control-plane
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 1 skipped (4)
+   Start at  23:48:46
+   Duration  4.29s (transform 46ms, setup 0ms, import 79ms, tests 4.15s, environment 0ms)
+

@@ -1,8 +1,9 @@
 # Chert SDK
 
 Chert HTTP clients for JavaScript/TypeScript, Python, Rust, C++, Go and C#/.NET, plus explicit
-iMessage compatibility adapters. This repository is under development: packages
-remain private/unpublished and provider coverage is incomplete.
+iMessage compatibility adapters. The Node-based FaceTime CLI is also maintained
+here in `tools/facetime-cli` as a separate npm package. SDK libraries remain
+private/unpublished and provider coverage is incomplete.
 
 | Package | Boundary |
 | --- | --- |
@@ -19,8 +20,10 @@ remain private/unpublished and provider coverage is incomplete.
 | `@cherthq/jared-adapter` | Open-source Jared local `POST /message` text subset |
 | `@cherthq/adopt` | `chert-adopt` migration report and drop-in import rewrites; see [its README](packages/adopt/README.md) |
 
-Every package is iMessage messaging; there is no FaceTime client here yet, so
-there is no `@cherthq/facetime` package (see [FaceTime integration](docs/FACETIME.md)).
+The packages above are the iMessage SDKs and adapters. This repository also
+houses the Node FaceTime CLI at [tools/facetime-cli](tools/facetime-cli/README.md),
+published separately as `@trychert/facetime`. It remains a standalone npm project,
+not a `@cherthq/facetime` SDK library; see [FaceTime integration](docs/FACETIME.md).
 
 ### Package names by language
 
@@ -61,6 +64,16 @@ discovers the integration fixtures too and requires their backend prerequisites.
 Distribution checks exercise the built packages in Node, Bun and Deno; all three
 runtimes must be installed explicitly. Nothing is published by these commands.
 
+The CLI keeps its own npm lockfile and test suite:
+
+```sh
+npm ci --prefix tools/facetime-cli
+npm test --prefix tools/facetime-cli
+npm run lint --prefix tools/facetime-cli
+```
+
+The repository CI runs the tests and lint on Node 22.
+
 Backend HTTP/database/device fixtures are retained separately. Follow
 [the integration guide](INTEGRATION.md); an explicit matching Chert platform
 checkout is required, and missing prerequisites fail rather than silently proving
@@ -88,8 +101,10 @@ The Mac worker, injected helpers and hosted control plane remain in
 Historical controlled-device checks and their limits are summarized in
 [device acceptance](docs/DEVICE_ACCEPTANCE.md). Current Photon/Spectrum and other
 provider research is recorded in [provider research](docs/PROVIDER_RESEARCH.md).
-The separate FaceTime CLI/BYOR contract is described in
-[FaceTime integration](docs/FACETIME.md).
+The Node CLI source and BYOR contract are in
+[tools/facetime-cli](tools/facetime-cli/README.md) and
+[FaceTime integration](docs/FACETIME.md); the CLI remains outside the SDK's
+`packages/*` workspace and build.
 
 Chert code is MIT licensed. Vendor SDKs remain external dependencies with their
 own licenses; they are not copied into this repository. No registry publication,

@@ -1,0 +1,35 @@
+--- deployed/connector-wire.js
++++ repaired/connector-wire.js
+@@ -18,8 +18,23 @@
+         this.socket = socket;
+         await new Promise((resolve, reject) => {
+             let welcomed = false;
++            let freshness;
++            const renewFreshness = () => {
++                clearTimeout(freshness);
++                freshness = setTimeout(() => {
++                    this.diagnostics.push('transport_failure');
++                    socket.terminate();
++                }, 5000);
++                freshness.unref();
++            };
+             const timer = setTimeout(() => { socket.terminate(); reject(new Fault('transport_failure')); }, 2000);
+-            socket.once('close', () => clearTimeout(timer));
++            socket.once('close', () => { clearTimeout(timer); clearTimeout(freshness); });
++            // Only an authenticated authority-poll heartbeat proves relay freshness.
++            // TCP liveness, unrelated pings and business frames cannot extend it.
++            socket.on('ping', bytes => {
++                if (welcomed && this.socket === socket && bytes.toString() === 'chert-authority-v1')
++                    renewFreshness();
++            });
+             socket.on('error', () => { this.diagnostics.push('transport_failure'); reject(new Fault('transport_failure')); });
+             socket.on('close', () => { if (this.socket === socket)
+                 this.connector.disconnect(); this.events.emit('closed'); reject(new Fault('transport_failure')); });
+@@ -38,6 +53,7 @@
+                         this.connector.reconnect(frame, frame.role);
+                         welcomed = true;
+                         clearTimeout(timer);
++                        renewFreshness();
+                         resolve();
+                     }
+                     else if (frame.type === 'call.incoming') {

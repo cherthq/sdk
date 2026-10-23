@@ -1,0 +1,17 @@
+{
+  "node": "v22.23.2",
+  "at": "2026-09-25T20:22:14.157Z",
+  "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+  "scope": "exact_test_room_only",
+  "rooms": 0,
+  "dispatches": "unknown",
+  "cleanup_debt": 1,
+  "create_pending": true,
+  "settlement": "unknown",
+  "new_allocations": 0,
+  "dispatch_error": {
+    "code": "not_found",
+    "status": 404
+  },
+  "original_files_unchanged": true
+}

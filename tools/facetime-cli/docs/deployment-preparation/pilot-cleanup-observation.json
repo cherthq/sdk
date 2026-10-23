@@ -1,0 +1,18 @@
+[
+  {
+    "observed_at": "2026-09-30 02:21:38.482081+00",
+    "nonterminal_calls": 0,
+    "retained_session_status": [
+      {
+        "state": "failed",
+        "failed_at": "2026-09-28T16:12:35+00:00",
+        "cleaned_at": null,
+        "seal_state": "tombstoned",
+        "call_status": "failed",
+        "retained_ciphertext": false
+      }
+    ],
+    "queued_or_leased_commands": 0,
+    "audit_approved_release": "647b9f66ce39a5e37634b50f28f0a11dc7583558"
+  }
+]

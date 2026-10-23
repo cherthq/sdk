@@ -1,0 +1,66 @@
+{
+  "deployment": {
+    "id": "2e97fa66-57e5-4845-a6cb-78552ef9d244",
+    "instances": [
+      {
+        "id": "0c2a6f1b-b3da-4b29-8969-d59a4dd196df",
+        "status": "RUNNING"
+      }
+    ],
+    "meta": {
+      "buildOnly": false,
+      "cliAgentSessionId": "01a0f013-3591-7a50-a8ab-6ac3fa0aaddb",
+      "cliCaller": "codex",
+      "cliMessage": "Qualification only: prove minimum 65 seconds using 70-second drain",
+      "fileServiceManifest": {},
+      "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+      "logsV2": true,
+      "nixpacksProviders": [],
+      "propertyFileMapping": {},
+      "reason": "deploy",
+      "rootDirectory": null,
+      "runtime": "V2",
+      "serviceManifest": {
+        "build": {
+          "buildCommand": null,
+          "buildEnvironment": "V3",
+          "builder": "DOCKERFILE",
+          "dockerfilePath": "/Dockerfile",
+          "nixpacksConfigPath": null,
+          "nixpacksPlan": null,
+          "watchPatterns": []
+        },
+        "deploy": {
+          "cronSchedule": null,
+          "drainingSeconds": 70,
+          "healthcheckPath": null,
+          "healthcheckTimeout": null,
+          "ipv6EgressEnabled": false,
+          "limitOverride": null,
+          "multiRegionConfig": {
+            "us-west2": {
+              "numReplicas": 1
+            }
+          },
+          "numReplicas": 1,
+          "overlapSeconds": 0,
+          "preDeployCommand": null,
+          "preDeployTimeoutSeconds": null,
+          "region": null,
+          "registryCredentials": null,
+          "requiredMountPath": null,
+          "restartPolicyMaxRetries": null,
+          "restartPolicyType": "NEVER",
+          "runtime": "V2",
+          "sleepApplication": false,
+          "startCommand": "/usr/local/bin/python /state/grace-timer-70.py",
+          "useLegacyStacker": false
+        }
+      },
+      "volumeMounts": [
+        "/state"
+      ]
+    },
+    "status": "SUCCESS"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "postgres": "17.6",
+  "apply": true,
+  "rollback": true,
+  "repeat_rejected": true,
+  "five_shared_functions_unchanged": true,
+  "delegate_only_media_guard_changed": true,
+  "permissions_preserved": true,
+  "source": "preserved byor-qualification candidate + recorded schema catalog; no fresh production access"
+}

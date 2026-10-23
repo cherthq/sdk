@@ -1,0 +1,22 @@
+test_child_restart_refuses_missing_journal_without_stopping_owner (test_container.Containers.test_child_restart_refuses_missing_journal_without_stopping_owner) ... FAIL
+
+======================================================================
+FAIL: test_child_restart_refuses_missing_journal_without_stopping_owner (test_container.Containers.test_child_restart_refuses_missing_journal_without_stopping_owner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 206, in test_child_restart_refuses_missing_journal_without_stopping_owner
+    self.execute(f"from pathlib import Path; assert not Path('{BASE}/connector/journal.json').exists()")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 70, in execute
+    return docker('exec',self.container,'python','-c',source,check=check)
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 23, in docker
+    raise AssertionError(result.stderr + result.stdout)
+AssertionError: Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AssertionError
+
+
+----------------------------------------------------------------------
+Ran 1 test in 10.807s
+
+FAILED (failures=1)

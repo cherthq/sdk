@@ -1,0 +1,66 @@
+{
+  "deployment": {
+    "id": "c3659060-4d11-45c0-b6ea-2c4f08297dbd",
+    "instances": [
+      {
+        "id": "06429f69-2c6b-458d-9a8a-21e05355e514",
+        "status": "RUNNING"
+      }
+    ],
+    "meta": {
+      "buildOnly": false,
+      "cliAgentSessionId": "01a0f013-3591-7a50-a8ab-6ac3fa0aaddb",
+      "cliCaller": "codex",
+      "cliMessage": "Qualification only: capture 70-second SIGTERM drain and archive",
+      "fileServiceManifest": {},
+      "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+      "logsV2": true,
+      "nixpacksProviders": [],
+      "propertyFileMapping": {},
+      "reason": "deploy",
+      "rootDirectory": null,
+      "runtime": "V2",
+      "serviceManifest": {
+        "build": {
+          "buildCommand": null,
+          "buildEnvironment": "V3",
+          "builder": "DOCKERFILE",
+          "dockerfilePath": "/Dockerfile",
+          "nixpacksConfigPath": null,
+          "nixpacksPlan": null,
+          "watchPatterns": []
+        },
+        "deploy": {
+          "cronSchedule": null,
+          "drainingSeconds": 70,
+          "healthcheckPath": null,
+          "healthcheckTimeout": null,
+          "ipv6EgressEnabled": false,
+          "limitOverride": null,
+          "multiRegionConfig": {
+            "us-west2": {
+              "numReplicas": 1
+            }
+          },
+          "numReplicas": 1,
+          "overlapSeconds": 0,
+          "preDeployCommand": null,
+          "preDeployTimeoutSeconds": null,
+          "region": null,
+          "registryCredentials": null,
+          "requiredMountPath": null,
+          "restartPolicyMaxRetries": null,
+          "restartPolicyType": "NEVER",
+          "runtime": "V2",
+          "sleepApplication": false,
+          "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+          "useLegacyStacker": false
+        }
+      },
+      "volumeMounts": [
+        "/state"
+      ]
+    },
+    "status": "SUCCESS"
+  }
+}

@@ -1,0 +1,9 @@
+✔ installed package claims actual production-policy ready video session, preserves one room and supports reuse after cleanup (3997.720291ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4101.593417

@@ -1,0 +1,18 @@
+[
+  {
+    "observed_at": "2026-09-30 04:18:53.88916+00",
+    "pilot_line": {
+      "id": "59b3e3d0-945b-45da-b907-027103941a65",
+      "inbound_policy": "customer_decides",
+      "integration_id": "946445e1-2c0f-478d-a049-72c8dd9762f2",
+      "current_call_id": "1de6e428-4322-4da7-ab99-f1ef9c2e4888",
+      "default_assistant_id": null,
+      "assignment_generation": 3
+    },
+    "historical_session": {
+      "id": "53945278-4dcf-4a4d-817a-73702d67799d",
+      "state": "failed",
+      "cleaned_at": null
+    }
+  }
+]

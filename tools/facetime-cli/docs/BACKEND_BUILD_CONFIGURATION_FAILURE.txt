@@ -1,0 +1,34 @@
+
+> @chert/facetime-control-plane@0.1.0 build
+> next build
+
+▲ Next.js 16.3.1 (Turbopack)
+⚠ Warning: Next.js ignored package-lock.json in /Users/garygao because it is outside the current Git repository (/Users/garygao/chert-facetime).
+ To use this directory, set `turbopack.root` in your Next.js config.
+
+✓ Running next.config.mjs took 14ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1397ms
+  Running TypeScript ...
+  Finished TypeScript in 3.0s ...
+  Collecting page data using 13 workers ...
+  Generating static pages using 13 workers (0/34) ...
+  Generating static pages using 13 workers (8/34)
+  Generating static pages using 13 workers (16/34)
+  Generating static pages using 13 workers (25/34)
+Error occurred prerendering page "/reset-password". Read more: https://nextjs.org/docs/messages/prerender-error
+Error: supabaseUrl is required.
+    at <unknown> (src/lib/facetime/browser-client.ts:8:45)
+    at <unknown> (src/components/password-reset.tsx:16:18)
+   6 | // configured browser application, without sharing sessions across server requests.
+   7 | export function getDashboardBrowserClient(url: string, key: string): SupabaseClient {
+>  8 |   if (typeof window === 'undefined') return createClient(url, key);
+     |                                             ^
+   9 |   if (!browserClient || browserClient.url !== url || browserClient.key !== key) {
+  10 |     browserClient = { url, key, client: createClient(url, key) };
+  11 |   } {
+  digest: '185656930'
+}
+Export encountered an error on /reset-password/page: /reset-password, exiting the build.
+⨯ Next.js build worker exited with code: 1 and signal: null

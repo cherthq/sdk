@@ -1,0 +1,207 @@
+v24.14.0
+10.8.2
+
+> chert-local-transport-proof@0.0.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+
+> chert-local-transport-proof@0.0.0 lint
+> eslint src tests
+
+
+> chert-local-transport-proof@0.0.0 test
+> npm run build && node --test dist/tests/transport/*.test.js dist/tests/adapter/*.test.js
+
+
+> chert-local-transport-proof@0.0.0 build
+> tsc -p tsconfig.json
+
+✔ default refuses retained state; explicit exception preserves it and is single use (15.61075ms)
+✔ exception requires original evidence and cannot create an unlinked run (0.256667ms)
+✔ one application dispatch budget is consumed even when the first rejects (0.14025ms)
+✔ qualification slots preserve both old runs, consume failures and gate the second on complete cleanup (19.214208ms)
+✔ authenticated hook rejects none and invalidates prior health (29.334416ms)
+✔ authenticated hook rejects signature and invalidates prior health (7.097583ms)
+✔ authenticated hook rejects challenge and invalidates prior health (2.602375ms)
+✔ authenticated hook rejects boot and invalidates prior health (2.525209ms)
+✔ authenticated hook rejects project and invalidates prior health (2.192291ms)
+✔ authenticated hook rejects name and invalidates prior health (1.934375ms)
+✔ authenticated hook rejects deployment and invalidates prior health (1.584792ms)
+✔ authenticated hook rejects stale and invalidates prior health (1.297959ms)
+✔ authenticated hook rejects replay and invalidates prior health (1.528333ms)
+✔ missing health creates zero real-adapter effects (3.34375ms)
+✔ stale health creates zero real-adapter effects (0.20575ms)
+✔ disconnected health creates zero real-adapter effects (0.188083ms)
+✔ full health creates zero real-adapter effects (0.161084ms)
+✔ draining health creates zero real-adapter effects (0.160084ms)
+✔ one correlated real-adapter dispatch, duplicate replay and uncertain reconnect preserve room (8.27175ms)
+✔ wrong readiness job cannot accept (0.857208ms)
+✔ wrong readiness nonce cannot accept (0.606125ms)
+✔ wrong readiness participant cannot accept (0.500542ms)
+✔ wrong readiness track cannot accept (0.581542ms)
+✔ wrong readiness muted cannot accept (0.467792ms)
+✔ wrong readiness extra_audio cannot accept (0.452625ms)
+✔ wrong readiness room cannot accept (0.871917ms)
+✔ wrong readiness worker cannot accept (0.523708ms)
+✔ wrong readiness dispatch cannot accept (1.403167ms)
+✔ wrong readiness ended cannot accept (0.706833ms)
+✔ wrong readiness disconnected cannot accept (0.566084ms)
+✔ rejected room create remains debt through receipt reopen and initially absent inspection (88.576834ms)
+✔ uncertain dispatch rejection and absent room never settle the operation (0.555292ms)
+✔ cancel while combined room/dispatch creation is in flight cleans the late acknowledged job (4.307292ms)
+✔ foreign room replacement is never deleted (0.587334ms)
+✔ delete failure and vanished room with running job retain cleanup debt (0.679042ms)
+✔ unverifiable connected state disables admission without effects (0.081417ms)
+✔ receipt from another deployment or instance never authorizes cleanup (0.475833ms)
+✔ proven pre-send room validation settles both unsent effects after reopen (61.778083ms)
+✔ proven unsent room clears debt without invoking fetch or inventing an acknowledgment (0.866084ms)
+✔ lookalike RangeError after fetch retains debt and sanitized uncertain diagnostics (1.653584ms)
+✔ not-sent phase requires evidence; historical ambiguous receipts cannot be reclassified (0.423834ms)
+✔ failed evidence persistence cannot advance the in-memory receipt (152.705583ms)
+✔ extra unnamed service dispatch blocks readiness even with a fully matching isolated publication (1.327459ms)
+✔ room delete acknowledgment followed by stale inventory and dispatch 404 verifies cleanup (1.599833ms)
+✔ combined creation journals dispatch intent before sending and never explicitly redispatches (2.582875ms)
+✔ configured topology rejects unexpected extra_job (0.980333ms)
+✔ configured topology rejects unexpected video_publisher (154.651459ms)
+✔ configured topology rejects unexpected deployment (1.14525ms)
+✔ configured topology rejects unexpected restart (0.571541ms)
+✔ late assignment after cancellation is correlated, stopped and never accepted (1.571ms)
+✔ durable terminal receipts survive reopen and worker shutdown after stale_inventory (286.01875ms)
+✔ durable terminal receipts survive reopen and worker shutdown after delete_unavailable (384.820334ms)
+✔ acknowledged deletion does not clear debt on plain404 (4.504333ms)
+✔ acknowledged deletion does not clear debt on auth (3.260459ms)
+✔ acknowledged deletion does not clear debt on timeout (2.87675ms)
+✔ acknowledged deletion does not clear debt on management_unavailable (2.074625ms)
+✔ acknowledged deletion does not clear debt on replacement (1.366667ms)
+✔ terminal observation is durable before a management failure and needs no retired hook on retry (2.039792ms)
+✔ cancellation of a not-yet-assigned dispatch persists tombstone and verified deletion (1.491333ms)
+✔ pinned SDK accepts fractional remaining budget without a pre-network timeout error (3.300334ms)
+✔ subsecond budget fails before any SDK request rather than extending deadline (0.256125ms)
+✔ original fractional timeout throws before fetch; integer budget reaches fetch (0.821833ms)
+✔ same rounded elapsed time can leave integer or fractional original Budget values (0.109625ms)
+✔ integer original timeout can be followed by service rejection or lost response (0.625541ms)
+✔ runtime/config validation and timeout conversion precede SDK effects (0.338625ms)
+✔ pre-send proof binds operation, room and exact input; error codes alone confer nothing (0.261625ms)
+✔ CreateRoom explicitly configures the only intended dispatch, including deployment and no restart (0.549959ms)
+✔ connector forwards only adapter-provided call-scoped bridge credentials (6.06275ms)
+✔ clock rollback cannot renew final or preparation budgets (0.376542ms)
+✔ signed smaller remaining budget and queue delay are charged (0.062041ms)
+✔ invalid ordering and excessive future skew fail closed (0.183708ms)
+✔ 4s preparation and 5s final boundaries are exclusive (0.054458ms)
+✔ resource expiry retains its monotonic cap across rollback before allocation (0.056542ms)
+✔ exclusive writer and live-lock recovery fail closed without touching data (24.640959ms)
+✔ atomic journal before_rename leaves a complete old or new snapshot (28.191792ms)
+✔ atomic journal after_rename leaves a complete old or new snapshot (64.118042ms)
+✔ corrupt, wrong-scope and extra secret-bearing journal fields fail closed (48.829584ms)
+✔ SIGKILL after intent: reopen without retry or delete-all (203.973875ms)
+✔ SIGKILL after prepared: reopen without retry or delete-all (137.911458ms)
+✔ SIGKILL after decision_sent: reopen without retry or delete-all (182.901125ms)
+✔ lifecycle is durable before ack; failed write cannot acknowledge or delete (163.756875ms)
+✔ pre-incoming terminal tombstone survives file close and reopen (111.493542ms)
+✔ rejected local preparation retains remote create debt (135.760416ms)
+✔ rejected local preparation retains remote create debt after journal reopen (139.097583ms)
+✔ real HTTP → WS → HTTP plus separate committed receipt and lifecycle ack (184.895959ms)
+✔ loopback destination policy rejects external addresses, credentials and schemes (0.28025ms)
+✔ HTTP verifies exact signed bytes, not parsed/reserialized JSON (104.496708ms)
+✔ handshake requires mapped credentials and denies query-token authorization (48.662209ms)
+✔ bounded HTTP and WebSocket rejection: malformed (38.908417ms)
+✔ bounded HTTP and WebSocket rejection: version (17.463042ms)
+✔ bounded HTTP and WebSocket rejection: oversized (17.12575ms)
+✔ HTTP cancellation records authoritative terminality and cleans late readiness (117.530667ms)
+✔ dropped commit receipt preserves resources, socket closure and reconnect reconcile without dispatch (223.781209ms)
+✔ socket closure during preparation stops new work, reconnect declines interrupted request (206.345625ms)
+✔ lost lifecycle delivery and lost ack converge through reconcile and replay (304.374291ms)
+✔ tenant routing never forwards a call to another authenticated tenant (64.785ms)
+✔ transient bridge secret is absent from durable files and diagnostics (63.764959ms)
+✔ signed HTTP tenant/request substitution and revoked owner fail before allocation (21.002916ms)
+✔ concurrent identical incoming HTTP requests keep the connector usable after both decisions (94.452875ms)
+✔ conflicting duplicate decision action is rejected without another commit (107.120417ms)
+✔ conflicting duplicate decision participant_token is rejected without another commit (111.551167ms)
+✔ conflicting duplicate decision remote_participant_identity is rejected without another commit (111.058291ms)
+✔ conflicting incoming duplicate does not alter the legitimate pending request (80.715625ms)
+✔ late HTTP retry reconciles instead of resending an acceptance or disconnecting (99.306833ms)
+✔ foreign duplicate decision project_id cannot use a completed request (43.431875ms)
+✔ foreign duplicate decision line_id cannot use a completed request (45.65125ms)
+✔ foreign duplicate decision instance_id cannot use a completed request (44.116708ms)
+✔ foreign duplicate decision request_id cannot use a completed request (44.0245ms)
+✖ stale duplicate decision cannot cross a connection generation (64.164459ms)
+✔ revoked credential cannot bypass authentication with a matching duplicate decision (44.787334ms)
+✔ matching duplicate decision never renews the original deadline under rollback (62.197042ms)
+✔ health stale/replay/mismatch and unauthenticated signals never refresh admission (6.979ms)
+✔ availability recovery respects activation and local standby cannot replace production (0.276166ms)
+✔ deadline transit and retry cannot prepare past the original boundary (3.139541ms)
+✔ reconnect rejects old generation without dispatching or resending acceptance (1.422084ms)
+✔ accepted calls survive relay loss, stale health and revocation, recovery scope is read-only (1.022625ms)
+✔ ambiguous create never retries and unknown management retains debt (0.494333ms)
+✔ cleanup debt survives deletion failure and exact marker protects unrelated objects (1.990708ms)
+✔ lifecycle duplicates, cursor gaps and delayed starts cannot resurrect terminal work (0.551625ms)
+✔ initial bridge absence is harmless, verified departure after presence cleans exact resources (0.523791ms)
+✔ independent hard expiry and connector expiry preserve debt during authority outage (0.775375ms)
+✔ periodic reconciliation recovers a missing terminal event (0.419542ms)
+✔ drain holds old ownership until both active calls and cleanup debt reach zero (0.439917ms)
+✔ decline response is not held hostage by slow deletion (0.223042ms)
+✔ reopened connector never treats in-flight external create absence as settled deletion (0.3265ms)
+✔ failed intent persistence allocates nothing; failed fake commit cannot report acceptance (0.23075ms)
+✔ create collision never adopts or overwrites a foreign resource (0.511916ms)
+✔ terminal cancellation delivered before incoming persists a no-allocation tombstone (0.359166ms)
+✔ terminal lifecycle before incoming is acknowledged durably and prevents late preparation (0.116458ms)
+✔ idle unknown health allocates nothing (4.038541ms)
+✔ idle unavailable health allocates nothing (0.211625ms)
+✔ idle full health allocates nothing (0.158708ms)
+✔ idle draining health allocates nothing (0.141792ms)
+✔ fast available agent prepares once and only receipt settles acceptance (2.431ms)
+✔ duplicates share preparation and semantic conflicts cannot allocate (1.237667ms)
+✔ uncancellable late allocation after preparation timeout is deleted exactly (0.675542ms)
+✔ commit rechecks clock and revocation after waiting on serialized lock (0.553791ms)
+✔ concurrent identical replies commit one decision (1.228209ms)
+✔ fence project_id before disclosure or commit (0.385333ms)
+✔ fence line_id before disclosure or commit (0.2555ms)
+✔ fence binding_id before disclosure or commit (0.24675ms)
+✔ fence binding_epoch before disclosure or commit (0.231708ms)
+✔ fence instance_id before disclosure or commit (0.202666ms)
+✔ fence connection_generation before disclosure or commit (0.202708ms)
+✔ fence call_id before disclosure or commit (0.154ms)
+✔ fence request_id before disclosure or commit (0.141834ms)
+✔ readiness rejects mismatched participant (0.218583ms)
+✔ readiness rejects mismatched job (0.34875ms)
+✔ readiness rejects mismatched nonce (0.274333ms)
+✔ readiness rejects mismatched room (0.221833ms)
+✔ readiness rejects mismatched publishers (0.209375ms)
+✔ lost receipt and unavailable reconciliation preserve uncertain media (0.559916ms)
+✔ terminal cancellation aborts readiness, late completion cannot resurrect (0.406041ms)
+✔ incoming project_id injection has zero allocation effects (0.095625ms)
+✔ incoming line_id injection has zero allocation effects (0.070417ms)
+✔ incoming binding_id injection has zero allocation effects (0.066333ms)
+✔ incoming binding_epoch injection has zero allocation effects (0.126334ms)
+✔ incoming instance_id injection has zero allocation effects (0.056167ms)
+✔ incoming connection_generation injection has zero allocation effects (0.048708ms)
+✔ immutable deadlines remain conflicting even with fresh transport metadata (0.18975ms)
+ℹ tests 160
+ℹ suites 0
+ℹ pass 159
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2473.51175
+
+✖ failing tests:
+
+test at dist/tests/transport/network.test.js:373:1
+✖ stale duplicate decision cannot cross a connection generation (64.164459ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - 'forbidden'
+
+      at TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/network.test.js:383:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'forbidden',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

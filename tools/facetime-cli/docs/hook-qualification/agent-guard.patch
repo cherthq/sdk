@@ -1,0 +1,77 @@
+--- a/src/byor.mjs
++++ b/src/byor.mjs
+@@ -10,6 +10,13 @@
+ export function byorSpec(metadata) {
+   let spec;
+   try { spec = JSON.parse(metadata || '{}'); } catch { return null; }
++  // The CLI's signed connector envelope is a different protocol. Until a
++  // compatible entrypoint exists, it must never fall through to Console mode,
++  // which has neither this protocol's identities nor its 60-second bound.
++  if (spec && typeof spec === 'object' && (spec.mode === 'chert-connector-probe' ||
++      Object.hasOwn(spec, 'spec') || Object.hasOwn(spec, 'signature'))) {
++    throw new Error('Connector dispatch is unsupported by this agent.');
++  }
+   if (spec.mode !== 'chert-byor') return null;
+   for (const name of ['agent_identity', 'worker_identity']) {
+     if (!/^demo-byor-(agent|worker)-[a-f0-9]{32}$/.test(spec[name] ?? '')) throw new Error('Invalid BYOR identity');
+--- a/tests/agent-startup.test.mjs
++++ b/tests/agent-startup.test.mjs
+@@ -29,7 +29,7 @@
+   voice: { AudioOutput, AgentSession: Session, Agent: class { constructor(options) { Object.assign(this, options); } }, AgentSessionEventTypes: events },
+ } });
+ mock.module('@livekit/agents-plugin-openai', { namedExports: { realtime: { RealtimeModel: Model } } });
+-mock.module('@livekit/rtc-node', { namedExports: { ...rtc, AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
++mock.module('@livekit/rtc-node', { namedExports: { ...Object.fromEntries(Object.entries(rtc).filter(([key]) => key !== 'module.exports')), AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
+ const profiles = await import('../src/agent-profiles.mjs');
+ mock.module('../src/agent-profiles.mjs', { namedExports: {
+   ...profiles,
+@@ -240,3 +240,38 @@
+     assert.equal(session.replies.length, 2);
+   } finally { await ctx.close(); }
+ });
++
++const connectorSpec = JSON.stringify({ mode: 'chert-connector-probe', operation: 'qualification',
++  room: 'qualification-room', marker: 'qualification-marker', nonce: 'qualification-nonce',
++  participant: 'qualification-agent', prepare_deadline: Date.now() / 1000 + 4,
++  expires_at: Date.now() + 60_000, boot: 'qualification-boot', project: 'qualification-project',
++  name: 'demo-agent-0', deployment: 'qualification-deployment' });
++for (const [label, metadata] of [
++  ['signed connector envelope', JSON.stringify({ spec: connectorSpec, signature: 'a'.repeat(64) })],
++  ['connector mode', JSON.stringify({ mode: 'chert-connector-probe' })],
++  ['partial spec envelope', JSON.stringify({ spec: connectorSpec })],
++  ['partial signature envelope', JSON.stringify({ signature: 'synthetic-private-sentinel' })],
++]) {
++  test(`${label} rejects before dispatch acceptance`, async () => {
++    await loadAgent('classic');
++    let accepted = 0, rejected = 0;
++    await servers.at(-1).requestFunc({ job: { metadata },
++      async accept() { accepted++; }, async reject() { rejected++; } });
++    assert.deepEqual({ accepted, rejected }, { accepted: 0, rejected: 1 });
++  });
++  test(`${label} rejects before entry effects`, async () => {
++    const entry = await loadAgent('classic');
++    const ctx = context(); ctx.job.metadata = metadata;
++    const counts = () => ({ sessions: sessions.length, models: models.length,
++      connects: connects.length, publications: publications.length });
++    const before = counts(), oldKey = process.env.OPENAI_API_KEY;
++    process.env.OPENAI_API_KEY = 'offline-mocked';
++    try {
++      await assert.rejects(entry(ctx), { message: 'Connector dispatch is unsupported by this agent.' });
++      assert.deepEqual(counts(), before);
++    } finally {
++      await ctx.close();
++      if (oldKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = oldKey;
++    }
++  });
++}
+--- a/tests/muse-startup.test.mjs
++++ b/tests/muse-startup.test.mjs
+@@ -37,7 +37,7 @@
+ mock.module('@livekit/agents', { namedExports: { llm, AutoSubscribe: { AUDIO_ONLY: 'audio-only' }, initializeLogger() {},
+   voice: { ...realVoice, AgentSession: Session, Agent: class { constructor(options) { Object.assign(this, options); } } } } });
+ mock.module('@livekit/agents-plugin-openai', { namedExports: { realtime: { RealtimeModel: class { async close() {} } } } });
+-mock.module('@livekit/rtc-node', { namedExports: { ...rtc, AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
++mock.module('@livekit/rtc-node', { namedExports: { ...Object.fromEntries(Object.entries(rtc).filter(([key]) => key !== 'module.exports')), AudioSource: Source, VideoSource: Source, LocalVideoTrack: Track, LocalAudioTrack: Track } });
+ mock.module('../src/muse/render-room.mjs', { namedExports: { MuseRenderRoom: Render, renderConfig: () => ({}), bounded: promise => promise } });
+ const { runMuse } = await import('../src/muse/index.mjs');
+ const spec = { agent_identity: 'demo-byor-agent-' + 'a'.repeat(32), worker_identity: 'demo-byor-worker-' + 'b'.repeat(32) };

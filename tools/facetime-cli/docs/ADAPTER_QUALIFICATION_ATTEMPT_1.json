@@ -1,0 +1,241 @@
+{
+  "node": "v22.23.2",
+  "sdk": "2.19.0",
+  "agents": "1.8.0",
+  "rtc": "0.13.35",
+  "started_at": "2026-09-29T20:48:01.280Z",
+  "run_id": "134ef9a4-1e92-4046-a815-93a7f799d982",
+  "instance_id": "b9a344f6-26f3-4f3d-9902-3dc2a3fed627",
+  "worker_name": "chert-connector-test-134ef9a4-1e92-4046-a815-93a7f799d982",
+  "deployment": "chert-test-134ef9a4-1e92-4046-a815-93a7f799d982",
+  "boot": "134ef9a4-1e92-4046-a815-93a7f799d982",
+  "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "prior_local_probe_workers": 0,
+  "original_status": "unresolved",
+  "original_sha256": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "redispatch": false,
+  "status": "failed",
+  "provider_sessions": 0,
+  "before_room_count": 0,
+  "room_creates": 1,
+  "dispatch_creates": 0,
+  "deleted_rooms": 1,
+  "stage": "readiness",
+  "original_inventory": {
+    "at": "2026-09-29T20:48:02.458Z",
+    "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+    "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+    "rooms": 0,
+    "dispatch": {
+      "status": "unknown",
+      "error_class": "Error",
+      "error_code": "not_found"
+    },
+    "cleanup_debt": true,
+    "create_pending": true,
+    "settlement": "unknown"
+  },
+  "worker_runtime": "v22.23.2",
+  "worker_start_ms": 439,
+  "idle_new_rooms": 0,
+  "idle_jobs": 0,
+  "deadlines": {
+    "created_at": 1790714884348,
+    "prepare_deadline_at": 1790714888348,
+    "decision_deadline_at": 1790714889348,
+    "resource_expires_at": 1790714944348
+  },
+  "room_create_ms": 330,
+  "room_triggered_dispatches": 1,
+  "decision": "decline",
+  "preparation_ms": 4030,
+  "decline_reason": "deadline_exceeded",
+  "failed_at": "2026-09-29T20:48:08.379Z",
+  "failure_observation": {
+    "hook": {
+      "worker": "AW_BqQK8Q9JeJxX",
+      "connected": true,
+      "job": "AJ_upmiJjUP7DFP",
+      "status": "ready",
+      "track": "TR_AMpunCYJpiTF7X"
+    },
+    "dispatches": [
+      {
+        "id": "AD_VLjz9YA7CzBq",
+        "room": "50fe326c-2be7-4a11-9384-3a3342ca91ec",
+        "name": "chert-connector-test-134ef9a4-1e92-4046-a815-93a7f799d982",
+        "jobs": [
+          {
+            "id": "AJ_upmiJjUP7DFP",
+            "dispatch": "AD_VLjz9YA7CzBq",
+            "worker": "AW_BqQK8Q9JeJxX",
+            "status": 1,
+            "participant": "538e8412-267b-49e1-88cb-d241b96089dc"
+          }
+        ]
+      }
+    ],
+    "participants": [
+      {
+        "identity": "538e8412-267b-49e1-88cb-d241b96089dc",
+        "tracks": [
+          {
+            "sid": "TR_AMpunCYJpiTF7X",
+            "type": 0,
+            "muted": false
+          }
+        ]
+      }
+    ]
+  },
+  "error": "transport_failure",
+  "failure": {
+    "error_class": "Error",
+    "error_code": "unclassified"
+  },
+  "stage_before_cleanup": "readiness",
+  "cleanup_debt": 0,
+  "adapter_phase": "clean",
+  "operation": {
+    "logical": "9eb53515-ef44-4f86-9a69-1aac0103c1e7",
+    "room": "50fe326c-2be7-4a11-9384-3a3342ca91ec",
+    "room_sid": "RM_zdHQ2njHAvmh",
+    "dispatch": "AD_VLjz9YA7CzBq",
+    "actual_job": "AJ_upmiJjUP7DFP"
+  },
+  "final_hook": {
+    "connected": true,
+    "worker": "AW_BqQK8Q9JeJxX",
+    "draining": false,
+    "session": {
+      "job": "AJ_upmiJjUP7DFP",
+      "worker": "AW_BqQK8Q9JeJxX",
+      "status": "ended",
+      "cancelled": true
+    }
+  },
+  "operation_audit": [
+    {
+      "operation": "room",
+      "phase": "pending",
+      "at": 1790714884407,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3940.263708,
+      "effective_timeout_ms": 3000
+    },
+    {
+      "operation": "room",
+      "phase": "acknowledged",
+      "at": 1790714884748,
+      "runtime": "v22.23.2",
+      "input_timeout_ms": 3940.263708,
+      "effective_timeout_ms": 3000
+    }
+  ],
+  "cleanup_evidence": [
+    {
+      "kind": "cancelled",
+      "at": 1790714888476,
+      "roomSid": "RM_zdHQ2njHAvmh",
+      "dispatchId": "AD_VLjz9YA7CzBq",
+      "observation": {
+        "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+        "name": "chert-connector-test-134ef9a4-1e92-4046-a815-93a7f799d982",
+        "deployment": "chert-test-134ef9a4-1e92-4046-a815-93a7f799d982",
+        "boot": "134ef9a4-1e92-4046-a815-93a7f799d982",
+        "worker": "AW_BqQK8Q9JeJxX",
+        "sequence": 64,
+        "observed_at": 1790714888476,
+        "challenge": "2a5be7f6-0a48-44e4-a89c-a8eaf9376e13",
+        "connected": true,
+        "draining": false,
+        "capacity": 0,
+        "session": {
+          "operation": "9eb53515-ef44-4f86-9a69-1aac0103c1e7",
+          "room": "50fe326c-2be7-4a11-9384-3a3342ca91ec",
+          "marker": "ae7c4eff-ce33-4eb6-94ee-60c7cb0d7d53",
+          "nonce": "83854366-706c-4c09-9ef2-e3ac0582226f",
+          "participant": "538e8412-267b-49e1-88cb-d241b96089dc",
+          "job": "AJ_upmiJjUP7DFP",
+          "dispatch": "AD_VLjz9YA7CzBq",
+          "worker": "AW_BqQK8Q9JeJxX",
+          "status": "ready",
+          "cancelled": true,
+          "track": "TR_AMpunCYJpiTF7X"
+        },
+        "cancelled_operation": "9eb53515-ef44-4f86-9a69-1aac0103c1e7"
+      }
+    },
+    {
+      "kind": "dispatch_deleted",
+      "at": 1790714888590,
+      "roomSid": "RM_zdHQ2njHAvmh",
+      "dispatchId": "AD_VLjz9YA7CzBq"
+    },
+    {
+      "kind": "ended",
+      "at": 1790714888604,
+      "roomSid": "RM_zdHQ2njHAvmh",
+      "dispatchId": "AD_VLjz9YA7CzBq",
+      "observation": {
+        "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+        "name": "chert-connector-test-134ef9a4-1e92-4046-a815-93a7f799d982",
+        "deployment": "chert-test-134ef9a4-1e92-4046-a815-93a7f799d982",
+        "boot": "134ef9a4-1e92-4046-a815-93a7f799d982",
+        "worker": "AW_BqQK8Q9JeJxX",
+        "sequence": 67,
+        "observed_at": 1790714888603,
+        "challenge": "be1454a8-8b51-486b-900b-85794411418e",
+        "connected": true,
+        "draining": false,
+        "capacity": 0,
+        "session": {
+          "operation": "9eb53515-ef44-4f86-9a69-1aac0103c1e7",
+          "room": "50fe326c-2be7-4a11-9384-3a3342ca91ec",
+          "marker": "ae7c4eff-ce33-4eb6-94ee-60c7cb0d7d53",
+          "nonce": "83854366-706c-4c09-9ef2-e3ac0582226f",
+          "participant": "538e8412-267b-49e1-88cb-d241b96089dc",
+          "job": "AJ_upmiJjUP7DFP",
+          "dispatch": "AD_VLjz9YA7CzBq",
+          "worker": "AW_BqQK8Q9JeJxX",
+          "status": "ended",
+          "cancelled": true,
+          "track": "TR_AMpunCYJpiTF7X"
+        },
+        "cancelled_operation": "9eb53515-ef44-4f86-9a69-1aac0103c1e7"
+      }
+    },
+    {
+      "kind": "room_deleted",
+      "at": 1790714888794,
+      "roomSid": "RM_zdHQ2njHAvmh",
+      "dispatchId": "AD_VLjz9YA7CzBq"
+    },
+    {
+      "kind": "absent",
+      "at": 1790714889930,
+      "roomSid": "RM_zdHQ2njHAvmh",
+      "dispatchId": "AD_VLjz9YA7CzBq"
+    }
+  ],
+  "topology": "room_agent",
+  "worker_stopped": true,
+  "worker_exit": {
+    "code": 0,
+    "signal": null
+  },
+  "final_owned_rooms": 1,
+  "unrelated_rooms_unchanged": true,
+  "baseline_unrelated_rooms": 0,
+  "original_sha256_after": {
+    "journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    "adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    "result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be"
+  },
+  "original_evidence_unchanged": true,
+  "finished_at": "2026-09-29T20:48:12.283Z"
+}

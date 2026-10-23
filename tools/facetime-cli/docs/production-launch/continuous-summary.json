@@ -1,0 +1,16 @@
+{
+  "samples": 20,
+  "from": "2026-09-30T20:30:15.030159+00:00",
+  "to": "2026-09-30T20:35:00.484623+00:00",
+  "all_process_health_checks_passed": true,
+  "all_authority_checks_active_connected": true,
+  "generations": [
+    2
+  ],
+  "first_room": "demo-byor-a7190b190ab84a0988ac7bb570ac6589",
+  "replacement_room": "demo-byor-e8d6097bf2d9488ca2382836451222e7",
+  "first_slot_clean": true,
+  "replacement_ready": true,
+  "new_calls": 0,
+  "provider_confirms_only_replacement_room": true
+}

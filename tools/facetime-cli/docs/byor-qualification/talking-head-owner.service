@@ -1,0 +1,27 @@
+# REVIEW TEMPLATE ONLY. Prototype is deliberately unavailable for production audio-only admission.
+[Unit]
+Description=Talking-head callback session owner
+After=network-online.target
+
+[Service]
+Type=simple
+User=chert-pilot
+Group=chert-pilot
+WorkingDirectory=/opt/talking-head/REVIEWED_IMMUTABLE_RELEASE
+EnvironmentFile=/etc/chert-pilot/application.env
+Environment=PYTHONPATH=/opt/talking-head/REVIEWED_IMMUTABLE_RELEASE/receiver/src
+ExecStart=/opt/talking-head/venv/bin/python /opt/talking-head/REVIEWED_IMMUTABLE_RELEASE/connector/server.py
+# A stale socket or interrupted preparation needs ownership review, not auto-retry.
+Restart=no
+TimeoutStopSec=45
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/chert-pilot/application-v1
+# No receiver/agent process is started by this unit.
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,53 @@
+{
+  "at": "2026-09-25T20:39:27.859Z",
+  "runtime": "v22.23.2",
+  "project": "3821e040db92eea68ca58213fc3c441c61873f3046defb4a8e961edc220b9031",
+  "read_only": true,
+  "inventories": [
+    {
+      "label": "original",
+      "operation": "19263778-3dd9-4f3a-b025-2cd682c7baa8",
+      "room": "45726c6f-633d-4912-b0b6-450db9b6a47b",
+      "acknowledged_sid": "RM_mrfsEGe5SAUK",
+      "observed_rooms": [],
+      "dispatches": {
+        "state": "unknown",
+        "error_class": "Error",
+        "error_code": "not_found",
+        "status": 404
+      },
+      "phase": "dispatch_pending",
+      "cleanup_debt": true,
+      "create_pending": true
+    },
+    {
+      "label": "diagnostic",
+      "operation": "98084e96-5778-4721-8110-6601358270a8",
+      "room": "72ff56d4-1fd4-4fd8-9b60-078599d276a0",
+      "acknowledged_sid": "RM_uciFtuAa76x9",
+      "observed_rooms": [],
+      "dispatches": {
+        "state": "unknown",
+        "error_class": "Error",
+        "error_code": "not_found",
+        "status": 404
+      },
+      "phase": "dispatch_ack",
+      "cleanup_debt": true,
+      "create_pending": false
+    }
+  ],
+  "prior_evidence_unchanged": true,
+  "original_sha256": {
+    ".local/adapter-livekit/journal.json": "277d88baa5176fc9cb474a1399359556cdd429bfcef4f7361a48a14035e3bc40",
+    ".local/adapter-livekit/adapter.json": "bab82981f060e4389c96d5ff51a2861aa9f58bc8e85ef1dbc1cc06b2b7acf088",
+    ".local/adapter-livekit/result.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be",
+    "docs/ADAPTER_LIVEKIT_ATTEMPT.json": "f966944f022246f14b7df9dfe0d2eaa2ba0d4f1d106f1f4fe4bd0e8781d723be",
+    "docs/ADAPTER_FINAL_INVENTORY.json": "d57237e73d96036a99ea69333bc56815505553e5a6109a5b050d057a534cdb5d",
+    "docs/ADAPTER_INVESTIGATION_EVIDENCE.json": "e2c3c014af4fccc13d71ce38db982f3617062cbebc438d2f3684acca50d3b777",
+    "docs/ADAPTER_INVESTIGATION_INVENTORY.json": "8bcf18eb4d92e909cd66c64d559ced27bc62df1320940e783520b676075085d0",
+    "docs/ADAPTER_INVESTIGATION_FINAL_INVENTORY.json": "d5db0d11daa9b61300da9d7c3be45a639c7cf190a93f073d4640e17e7968ea2c"
+  },
+  "local_probe_workers": 0,
+  "unrelated_demo_files_unchanged": true
+}

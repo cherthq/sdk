@@ -1,0 +1,22 @@
+✖ installed package claims actual production-policy ready video session, preserves one room and supports reuse after cleanup (2579.830375ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2663.027583
+
+✖ failing tests:
+
+test at dist/tests/cli/talking-head-package.test.js:182:1
+✖ installed package claims actual production-policy ready video session, preserves one room and supports reuse after cleanup (2579.830375ms)
+  SyntaxError: Unexpected end of JSON input
+      at JSON.parse (<anonymous>)
+      at Object.provider (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:54:33)
+      at file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:203:45
+      at until (file:///Users/garygao/chert-facetime-cli/dist/tests/fixtures/cli-harness.js:20:13)
+      at async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:203:13)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)

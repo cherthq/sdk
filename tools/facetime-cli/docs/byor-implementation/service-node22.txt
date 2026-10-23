@@ -1,0 +1,55 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --run tests/connector-service.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime/control-plane
+
+ ❯ tests/connector-service.test.ts (4 tests | 2 failed | 1 skipped) 7630ms
+     × commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (create-room) 1259ms
+     × commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor) 4515ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-service.test.ts > integrated connector service and relay > commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (create-room)
+Error: Command failed: /opt/homebrew/opt/postgresql@15/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-4wB83r -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  column "lease_expires_at" does not exist
+LINE 1: select extract(epoch from lease_expires_at) from facetime_se...
+                                  ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/connector-service.test.ts:74:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/connector-service.test.ts > integrated connector service and relay > commits once over WebSocket, recovers a lost receipt, replays terminal lifecycle after restart and fences stale connections (byor)
+Error: Command failed: /opt/homebrew/opt/postgresql@15/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-IYaSBy -U postgres -d postgres -v ON_ERROR_STOP=1 -At
+ERROR:  column "lease_expires_at" does not exist
+LINE 1: select extract(epoch from lease_expires_at) from facetime_se...
+                                  ^
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ Object.sql tests/helpers/isolated-postgres.ts:14:34
+ ❯ tests/connector-service.test.ts:74:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed | 1 skipped (4)
+   Start at  23:46:47
+   Duration  7.77s (transform 43ms, setup 0ms, import 78ms, tests 7.63s, environment 0ms)
+

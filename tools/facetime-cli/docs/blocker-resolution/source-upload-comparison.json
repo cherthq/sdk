@@ -1,0 +1,1694 @@
+[
+  {
+    "path": "control-plane/.env.example",
+    "upload_sha1": "e04570d80cccd4640c0d896ef18126773227fc6f",
+    "base_sha1": "e04570d80cccd4640c0d896ef18126773227fc6f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/AGENTS.md",
+    "upload_sha1": "8a38a9be445fb29e9ce77bb23d1086eb2dc3d656",
+    "base_sha1": "8a38a9be445fb29e9ce77bb23d1086eb2dc3d656",
+    "matches": true
+  },
+  {
+    "path": "control-plane/CLAUDE.md",
+    "upload_sha1": "c140473a3a5fbe89301c99d9d0d1b76c5971f2c3",
+    "base_sha1": "c140473a3a5fbe89301c99d9d0d1b76c5971f2c3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/README.md",
+    "upload_sha1": "8c7f79feb06bb62b91502580410a0eec5e40b9e8",
+    "base_sha1": "8c7f79feb06bb62b91502580410a0eec5e40b9e8",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/(dashboard)/[tab]/page.tsx",
+    "upload_sha1": "d8dc7dbfae13028de266f9a548f72180381d23b3",
+    "base_sha1": "d8dc7dbfae13028de266f9a548f72180381d23b3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/(dashboard)/account/page.tsx",
+    "upload_sha1": "ca1fba7863c42e4846e5421ed7f4b3ad5ae2b643",
+    "base_sha1": "ca1fba7863c42e4846e5421ed7f4b3ad5ae2b643",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/(dashboard)/admin/page.tsx",
+    "upload_sha1": "ab04c918d80730de69ca65183ee7de58359b4ca0",
+    "base_sha1": "ab04c918d80730de69ca65183ee7de58359b4ca0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/(dashboard)/admin/users/page.tsx",
+    "upload_sha1": "58a52a9163cd25b5097925d4f442c34dc547ff80",
+    "base_sha1": "58a52a9163cd25b5097925d4f442c34dc547ff80",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/(dashboard)/layout.tsx",
+    "upload_sha1": "9a15fa17795b56259af1e82923b4558f98477370",
+    "base_sha1": "9a15fa17795b56259af1e82923b4558f98477370",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/(dashboard)/page.tsx",
+    "upload_sha1": "1d48816e7e5c0efbfc828c135b9ee8d0f521fc5c",
+    "base_sha1": "1d48816e7e5c0efbfc828c135b9ee8d0f521fc5c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/admin/projects/route.ts",
+    "upload_sha1": "6b5b3752a035c9fc69e1667a5079ceb9f2490539",
+    "base_sha1": "6b5b3752a035c9fc69e1667a5079ceb9f2490539",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/admin/users/route.ts",
+    "upload_sha1": "dbbf3681ef71a0c749030b7c7f0b24307df19c50",
+    "base_sha1": "dbbf3681ef71a0c749030b7c7f0b24307df19c50",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/health/route.ts",
+    "upload_sha1": "09768c5ad7fcbd8ebfd09fe445cd50b7412bd88c",
+    "base_sha1": "09768c5ad7fcbd8ebfd09fe445cd50b7412bd88c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/audits/dispatch/route.ts",
+    "upload_sha1": "b58bfaf9305980dcf2a432876c493e337f2996f5",
+    "base_sha1": "b58bfaf9305980dcf2a432876c493e337f2996f5",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/audits/poll/route.ts",
+    "upload_sha1": "8ff490479574de57122695a94fcb04dbcb71dac0",
+    "base_sha1": "8ff490479574de57122695a94fcb04dbcb71dac0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/audits/report/route.ts",
+    "upload_sha1": "898383d4c1586b9635ba1673eb51e33240cff8db",
+    "base_sha1": "898383d4c1586b9635ba1673eb51e33240cff8db",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/calls/[callId]/events/route.ts",
+    "upload_sha1": "d97f4a06834cf5809c28a968b9d2ccec81272ec7",
+    "base_sha1": "d97f4a06834cf5809c28a968b9d2ccec81272ec7",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/calls/[callId]/transcript/route.ts",
+    "upload_sha1": "88dcc390a1c40a660c7a66a7c9d14e8c5e01d5f5",
+    "base_sha1": "88dcc390a1c40a660c7a66a7c9d14e8c5e01d5f5",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/sessions/[sessionId]/credentials/redeem/route.ts",
+    "upload_sha1": "2cec2ae88bc491e4f4625f1d2cd5b490ab172531",
+    "base_sha1": "2cec2ae88bc491e4f4625f1d2cd5b490ab172531",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/webhooks/dispatch/route.ts",
+    "upload_sha1": "f169c334ee326c53aa4b624a25c89953385cd392",
+    "base_sha1": "f169c334ee326c53aa4b624a25c89953385cd392",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/workers/commands/[commandId]/complete/route.ts",
+    "upload_sha1": "c7c64f0d48492b450e134d09238867cd20a2e716",
+    "base_sha1": "c7c64f0d48492b450e134d09238867cd20a2e716",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/workers/commands/[commandId]/outbound-lease/route.ts",
+    "upload_sha1": "6c5137f9d0915252dabbbbedb9da920b801ea26e",
+    "base_sha1": "6c5137f9d0915252dabbbbedb9da920b801ea26e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/workers/commands/claim/route.ts",
+    "upload_sha1": "afc324dc3cc7ef27e1b930ef679c959dc129f6b4",
+    "base_sha1": "afc324dc3cc7ef27e1b930ef679c959dc129f6b4",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/workers/enroll/route.ts",
+    "upload_sha1": "a15e5f491a6e25a0b07e119761bea494a36f5e2f",
+    "base_sha1": "a15e5f491a6e25a0b07e119761bea494a36f5e2f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/internal/v1/workers/heartbeat/route.ts",
+    "upload_sha1": "2fceefdd17076d6d2120590045b80519f17192bd",
+    "base_sha1": "2fceefdd17076d6d2120590045b80519f17192bd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/account/route.ts",
+    "upload_sha1": "6c13f3aba6a50b636f9a122c42d87c7eecb5ab27",
+    "base_sha1": "6c13f3aba6a50b636f9a122c42d87c7eecb5ab27",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/api-keys/[keyId]/revoke/route.ts",
+    "upload_sha1": "17c2786846d1776d86a98278549628d9d0b27f28",
+    "base_sha1": "17c2786846d1776d86a98278549628d9d0b27f28",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/api-keys/route.ts",
+    "upload_sha1": "354e3986b4f33a6cc61d0701ee73f1d75a70d001",
+    "base_sha1": "354e3986b4f33a6cc61d0701ee73f1d75a70d001",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/assistants/[assistantId]/preview/route.ts",
+    "upload_sha1": "0a558e9e6b1383c5c91dd52bb9745d4040d127e5",
+    "base_sha1": "0a558e9e6b1383c5c91dd52bb9745d4040d127e5",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/assistants/[assistantId]/publish/route.ts",
+    "upload_sha1": "a9caa9955d43e9daa88e85648b78455c9804d3e3",
+    "base_sha1": "a9caa9955d43e9daa88e85648b78455c9804d3e3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/assistants/[assistantId]/route.ts",
+    "upload_sha1": "42f1a33673d61a7c9168bf4420a0d4c871382187",
+    "base_sha1": "42f1a33673d61a7c9168bf4420a0d4c871382187",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/assistants/route.ts",
+    "upload_sha1": "3ceea8b41fa3e52bc34dc49b107b7df67ee498e9",
+    "base_sha1": "3ceea8b41fa3e52bc34dc49b107b7df67ee498e9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/bootstrap/route.ts",
+    "upload_sha1": "54b9ec1da43abef56b0169bda0666901ee2615ac",
+    "base_sha1": "54b9ec1da43abef56b0169bda0666901ee2615ac",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/calls/[callId]/answer/route.ts",
+    "upload_sha1": "9c0df0c7f3ea9b370135b2a6c7ddbd61722d31f0",
+    "base_sha1": "9c0df0c7f3ea9b370135b2a6c7ddbd61722d31f0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/calls/[callId]/end/route.ts",
+    "upload_sha1": "ea367431977cb1d8900bdb0d08ed4ef029d17223",
+    "base_sha1": "ea367431977cb1d8900bdb0d08ed4ef029d17223",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/calls/[callId]/events/route.ts",
+    "upload_sha1": "a6bf5dbe77b3503e6957db47050f8501148f9f72",
+    "base_sha1": "a6bf5dbe77b3503e6957db47050f8501148f9f72",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/calls/[callId]/reject/route.ts",
+    "upload_sha1": "73b906f2caa5ba7c5c5e6c996a497db1a0540ecd",
+    "base_sha1": "73b906f2caa5ba7c5c5e6c996a497db1a0540ecd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/calls/[callId]/route.ts",
+    "upload_sha1": "2106a49b2dfa47ffebb58b13ca656a5c4678f5ff",
+    "base_sha1": "2106a49b2dfa47ffebb58b13ca656a5c4678f5ff",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/calls/[callId]/transcript/route.ts",
+    "upload_sha1": "fd0a647be818c71c71becdabcee5ede96f2a084c",
+    "base_sha1": "fd0a647be818c71c71becdabcee5ede96f2a084c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/calls/route.ts",
+    "upload_sha1": "1a3e561f4da3f5be06193c005afd12316a6bb9a3",
+    "base_sha1": "1a3e561f4da3f5be06193c005afd12316a6bb9a3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/development/test-window/route.ts",
+    "upload_sha1": "baa789aba3e8ea1290c2c65877ab7c7805363990",
+    "base_sha1": "baa789aba3e8ea1290c2c65877ab7c7805363990",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/integrations/[integrationId]/rotate-secret/route.ts",
+    "upload_sha1": "022125cef04892634104f978c65172210d9c4e7f",
+    "base_sha1": "022125cef04892634104f978c65172210d9c4e7f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/integrations/[integrationId]/route.ts",
+    "upload_sha1": "87c4d7b1cab43241b42dfc62f851ee2e269119be",
+    "base_sha1": "87c4d7b1cab43241b42dfc62f851ee2e269119be",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/integrations/[integrationId]/secret-versions/[versionId]/revoke/route.ts",
+    "upload_sha1": "6f63ef6c0ceba4c692fec2de1747005a242ef608",
+    "base_sha1": "6f63ef6c0ceba4c692fec2de1747005a242ef608",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/integrations/route.ts",
+    "upload_sha1": "726dfc5807a6747c324b8b5dd46c184ab018e48f",
+    "base_sha1": "726dfc5807a6747c324b8b5dd46c184ab018e48f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/lines/[lineId]/route.ts",
+    "upload_sha1": "5f063da9cd49f4696e9cd8341c45b36a307a8918",
+    "base_sha1": "5f063da9cd49f4696e9cd8341c45b36a307a8918",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/lines/route.ts",
+    "upload_sha1": "e3e274d8f15f7242d3501defe0245190ca8b0b14",
+    "base_sha1": "e3e274d8f15f7242d3501defe0245190ca8b0b14",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/previews/[sessionId]/route.ts",
+    "upload_sha1": "ed6e2a144595f76676440a32342d629322c2f637",
+    "base_sha1": "ed6e2a144595f76676440a32342d629322c2f637",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/previews/[sessionId]/stop/route.ts",
+    "upload_sha1": "622d1595d01471b1740cf981ab42e66fdc0a5f33",
+    "base_sha1": "622d1595d01471b1740cf981ab42e66fdc0a5f33",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/projects/[projectId]/identity/route.ts",
+    "upload_sha1": "5973684b5f9297c4afb4a4bed4e0a92dc4364522",
+    "base_sha1": "5973684b5f9297c4afb4a4bed4e0a92dc4364522",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/projects/route.ts",
+    "upload_sha1": "66f8ce90f014b5c4fd113a37d19fafecfe6ec508",
+    "base_sha1": "66f8ce90f014b5c4fd113a37d19fafecfe6ec508",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/settings/route.ts",
+    "upload_sha1": "d5e988bf0ba889cce2e5aacb837f41f6c22e3a39",
+    "base_sha1": "d5e988bf0ba889cce2e5aacb837f41f6c22e3a39",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/webhooks/events/[eventId]/attempts/route.ts",
+    "upload_sha1": "dfc4e0d559676e7146eef13820154f7987c7ae53",
+    "base_sha1": "dfc4e0d559676e7146eef13820154f7987c7ae53",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/webhooks/events/[eventId]/route.ts",
+    "upload_sha1": "d20433b57549f86913b7968c550098bebc7cb0c0",
+    "base_sha1": "d20433b57549f86913b7968c550098bebc7cb0c0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/webhooks/rotate-secret/route.ts",
+    "upload_sha1": "0278d1fdf2185fe481dc0297e029976f29fdf1f1",
+    "base_sha1": "0278d1fdf2185fe481dc0297e029976f29fdf1f1",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/webhooks/route.ts",
+    "upload_sha1": "99787edc0fa30c907d029a8bf316ec4c480b969d",
+    "base_sha1": "99787edc0fa30c907d029a8bf316ec4c480b969d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/webhooks/secret-versions/[versionId]/revoke/route.ts",
+    "upload_sha1": "0645716c876d68f070fdb46df52f2da96254e6e2",
+    "base_sha1": "0645716c876d68f070fdb46df52f2da96254e6e2",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/webhooks/secret-versions/[versionId]/route.ts",
+    "upload_sha1": "794c7f43de0e6d79896a35644eabffb964f3432f",
+    "base_sha1": "794c7f43de0e6d79896a35644eabffb964f3432f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/workers/[workerId]/audits/route.ts",
+    "upload_sha1": "cf47c5c77cb6c032bb1d0c23a2c7c0f4ae0f720a",
+    "base_sha1": "cf47c5c77cb6c032bb1d0c23a2c7c0f4ae0f720a",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/workers/[workerId]/diagnostics/route.ts",
+    "upload_sha1": "5afb7ab8b1f8028751acb72b7da86c5d67e1af77",
+    "base_sha1": "5afb7ab8b1f8028751acb72b7da86c5d67e1af77",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/workers/[workerId]/media-observations/route.ts",
+    "upload_sha1": "dfab22f2974dc83370e3fea5dca3165bdf6a5e7d",
+    "base_sha1": "dfab22f2974dc83370e3fea5dca3165bdf6a5e7d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/workers/development/local-enroll/route.ts",
+    "upload_sha1": "6c4cbddac7546c1d75325df89ac72433e4aacbb4",
+    "base_sha1": "6c4cbddac7546c1d75325df89ac72433e4aacbb4",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/workers/development/route.ts",
+    "upload_sha1": "83d61c0c46ebe54555bbcadeaf8a2720572f740d",
+    "base_sha1": "83d61c0c46ebe54555bbcadeaf8a2720572f740d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/api/v1/workers/route.ts",
+    "upload_sha1": "09dd38e89cb2ac1c8a5cfea21e9e5bd05c4241ad",
+    "base_sha1": "09dd38e89cb2ac1c8a5cfea21e9e5bd05c4241ad",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/apple-icon.png",
+    "upload_sha1": "c2658fde0398d444e3c72f64a529e618d973db9b",
+    "base_sha1": "c2658fde0398d444e3c72f64a529e618d973db9b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/console.css",
+    "upload_sha1": "bf14ecbe5e5c45d228ac08de1b3cfc782aef4a01",
+    "base_sha1": "bf14ecbe5e5c45d228ac08de1b3cfc782aef4a01",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/globals.css",
+    "upload_sha1": "c1fee5ea0f3368e5d2690acc87a479a0fd614faa",
+    "base_sha1": "c1fee5ea0f3368e5d2690acc87a479a0fd614faa",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/icon.png",
+    "upload_sha1": "6024c664bd8c3adbd7f51ae5f6cfee61f88d1bc3",
+    "base_sha1": "6024c664bd8c3adbd7f51ae5f6cfee61f88d1bc3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/layout.tsx",
+    "upload_sha1": "1e5d8495c0b1b3a9d4438a9c8d53108217c59785",
+    "base_sha1": "1e5d8495c0b1b3a9d4438a9c8d53108217c59785",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/public/docs/page.tsx",
+    "upload_sha1": "bd32150d2bcf701333adf42c5f454ea853f1720e",
+    "base_sha1": "bd32150d2bcf701333adf42c5f454ea853f1720e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/reset-password/page.tsx",
+    "upload_sha1": "5ebe080ecec9fd1bef1e30a725d1dddfea39c4dd",
+    "base_sha1": "5ebe080ecec9fd1bef1e30a725d1dddfea39c4dd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/transcripts.css",
+    "upload_sha1": "2e8c2b64323b75178d3f07a19984682185ee26aa",
+    "base_sha1": "2e8c2b64323b75178d3f07a19984682185ee26aa",
+    "matches": true
+  },
+  {
+    "path": "control-plane/app/worker-actions.css",
+    "upload_sha1": "bae164e12d3427655b2292cbd444cd925620acf7",
+    "base_sha1": "bae164e12d3427655b2292cbd444cd925620acf7",
+    "matches": true
+  },
+  {
+    "path": "control-plane/chert-logo.png",
+    "upload_sha1": "2fee63f00ed7cc3e6d7b12098d15808025b97079",
+    "base_sha1": "2fee63f00ed7cc3e6d7b12098d15808025b97079",
+    "matches": true
+  },
+  {
+    "path": "control-plane/docs/API_CONTRACT.md",
+    "upload_sha1": "a9e3d3e9ded1be6cf7fcfbaede3840a6077a2805",
+    "base_sha1": "a9e3d3e9ded1be6cf7fcfbaede3840a6077a2805",
+    "matches": true
+  },
+  {
+    "path": "control-plane/docs/DEVELOPMENT_OPERATIONS.md",
+    "upload_sha1": "cbc67d8a3542fb334484f43e404ee134237d0b72",
+    "base_sha1": "cbc67d8a3542fb334484f43e404ee134237d0b72",
+    "matches": true
+  },
+  {
+    "path": "control-plane/docs/dashboard-cache/VERIFICATION.md",
+    "upload_sha1": "79762eb5506e634f1985bb22cbf92783ed59a830",
+    "base_sha1": "79762eb5506e634f1985bb22cbf92783ed59a830",
+    "matches": true
+  },
+  {
+    "path": "control-plane/docs/dashboard-cache/independent-loading.png",
+    "upload_sha1": "588d609d5a612e0826115a6ad29853242befc9b0",
+    "base_sha1": "588d609d5a612e0826115a6ad29853242befc9b0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/docs/dashboard-cache/refresh-error.png",
+    "upload_sha1": "bebc004427e5457c95e61e39d337f46d863cff68",
+    "base_sha1": "bebc004427e5457c95e61e39d337f46d863cff68",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/README.txt",
+    "upload_sha1": "7d59ce61f0592455565ab40c30e2b3be8e820303",
+    "base_sha1": "7d59ce61f0592455565ab40c30e2b3be8e820303",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/baseline/recovery.html",
+    "upload_sha1": "4d3d99e3c3b6adadd2c1d035d42cefafcbe64aff",
+    "base_sha1": "4d3d99e3c3b6adadd2c1d035d42cefafcbe64aff",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/baseline/subject.txt",
+    "upload_sha1": "2d8175e02be9a9f45841705acd9d8ddccda3ce68",
+    "base_sha1": "2d8175e02be9a9f45841705acd9d8ddccda3ce68",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/preview.html",
+    "upload_sha1": "c321cd1f21ef75cc1780417df2c534bc6d1f5b62",
+    "base_sha1": "c321cd1f21ef75cc1780417df2c534bc6d1f5b62",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/recovery-v1.html",
+    "upload_sha1": "26f224ae71f906e3b936bbe55713da55109d82ed",
+    "base_sha1": "26f224ae71f906e3b936bbe55713da55109d82ed",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/subject-v1.txt",
+    "upload_sha1": "0b9cf8a11a7e301be4a376642b5e0757036cb086",
+    "base_sha1": "0b9cf8a11a7e301be4a376642b5e0757036cb086",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/verification/preview.png",
+    "upload_sha1": "9318fe596c8c6413e5c8f82eaf75ce6fd63e1d4a",
+    "base_sha1": "9318fe596c8c6413e5c8f82eaf75ce6fd63e1d4a",
+    "matches": true
+  },
+  {
+    "path": "control-plane/emails/password-reset/verify.py",
+    "upload_sha1": "d2dc782fa09037c46614202e02b7ae03444b082d",
+    "base_sha1": "d2dc782fa09037c46614202e02b7ae03444b082d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/eslint.config.mjs",
+    "upload_sha1": "9495f12599041a0c123d07a38e63104eadebb7fa",
+    "base_sha1": "9495f12599041a0c123d07a38e63104eadebb7fa",
+    "matches": true
+  },
+  {
+    "path": "control-plane/next-env.d.ts",
+    "upload_sha1": "915946e261450f4fb6aab2ca862c8b440b748240",
+    "base_sha1": "915946e261450f4fb6aab2ca862c8b440b748240",
+    "matches": true
+  },
+  {
+    "path": "control-plane/next.config.mjs",
+    "upload_sha1": "cff1c4e3b3e9537771b2d1ee75cb4905ad87c22c",
+    "base_sha1": "cff1c4e3b3e9537771b2d1ee75cb4905ad87c22c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/package-lock.json",
+    "upload_sha1": "d4cdb2b1806afcc4acb1de2257ed3a4fc2b7a794",
+    "base_sha1": "d4cdb2b1806afcc4acb1de2257ed3a4fc2b7a794",
+    "matches": true
+  },
+  {
+    "path": "control-plane/package.json",
+    "upload_sha1": "e92f4dac1556dce25cec5a8a08b9a06a3f6c91df",
+    "base_sha1": "e92f4dac1556dce25cec5a8a08b9a06a3f6c91df",
+    "matches": true
+  },
+  {
+    "path": "control-plane/public/chert-mark.png",
+    "upload_sha1": "cde4bde3bc51f8004503843bd60f6f10449b4a71",
+    "base_sha1": "cde4bde3bc51f8004503843bd60f6f10449b4a71",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/prepare-line-activation.py",
+    "upload_sha1": "3405f3e88c03fdb64e4fb7c6aba2537fb4708847",
+    "base_sha1": "3405f3e88c03fdb64e4fb7c6aba2537fb4708847",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/provision-platform-admin.sql",
+    "upload_sha1": "84b6550e60adc8ab8745b3b96354b56c2767d09a",
+    "base_sha1": "84b6550e60adc8ab8745b3b96354b56c2767d09a",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration-a2-negative.ts",
+    "upload_sha1": "098541bc33afb149396feb8bccefa56a739cab39",
+    "base_sha1": "098541bc33afb149396feb8bccefa56a739cab39",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration-b1-handler.ts",
+    "upload_sha1": "1a42bba404377daf03b719aee025b41c6eccb2a0",
+    "base_sha1": "1a42bba404377daf03b719aee025b41c6eccb2a0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration-b2-session-handler.ts",
+    "upload_sha1": "1e5e895280245f2e3b58c1baea9cbaa11a5924dd",
+    "base_sha1": "1e5e895280245f2e3b58c1baea9cbaa11a5924dd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration-b3-webhook-handler.ts",
+    "upload_sha1": "a55379c17ad4b18ae5df3551833082ae918c2404",
+    "base_sha1": "a55379c17ad4b18ae5df3551833082ae918c2404",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration-b4-credential-handler.ts",
+    "upload_sha1": "259ee8e9994b577df12c1e71aac2c460655f5b9e",
+    "base_sha1": "259ee8e9994b577df12c1e71aac2c460655f5b9e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration-create-project-handler.ts",
+    "upload_sha1": "de6ad0485e8ea6aed28594dd1847c859d9d00cac",
+    "base_sha1": "de6ad0485e8ea6aed28594dd1847c859d9d00cac",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration-p1-allowed-hosts-handler.ts",
+    "upload_sha1": "3b21c19e4513bcb6ff32ee6273c72b173f8bd70c",
+    "base_sha1": "3b21c19e4513bcb6ff32ee6273c72b173f8bd70c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/real-integration.ts",
+    "upload_sha1": "eccedc11cc27e0846ccbaaf0640ef4c07013a60c",
+    "base_sha1": "eccedc11cc27e0846ccbaaf0640ef4c07013a60c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/rehearse-line-activation.ts",
+    "upload_sha1": "f0cb8995a5171d9d088ec9a268a98e44ac17ace9",
+    "base_sha1": "f0cb8995a5171d9d088ec9a268a98e44ac17ace9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/rehearse-line-release.ts",
+    "upload_sha1": "04b984b008f5c273fd4c2c304785a5a9dab8737a",
+    "base_sha1": "04b984b008f5c273fd4c2c304785a5a9dab8737a",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/rehearse-mcp-transport.ts",
+    "upload_sha1": "9b05bf2cbb129183b3e3f668b340485db23a873c",
+    "base_sha1": "9b05bf2cbb129183b3e3f668b340485db23a873c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/rehearse-retained-calls.ts",
+    "upload_sha1": "12814046ef8e4956512e3ef7f588c86e60701750",
+    "base_sha1": "12814046ef8e4956512e3ef7f588c86e60701750",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/scan-repository.ts",
+    "upload_sha1": "95729604c4666937ffc0ea5f4749ab3d0fae23c6",
+    "base_sha1": "95729604c4666937ffc0ea5f4749ab3d0fae23c6",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/simulated-worker.ts",
+    "upload_sha1": "34183fd3ee80b4c6f582e2244d2d468f89561144",
+    "base_sha1": "34183fd3ee80b4c6f582e2244d2d468f89561144",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/test-helpers/jwt-minter.ts",
+    "upload_sha1": "15271d8544d08035fbc8ce84d68db2d93746bdc8",
+    "base_sha1": "15271d8544d08035fbc8ce84d68db2d93746bdc8",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/validate-migration.ts",
+    "upload_sha1": "436367ae8542477c27181a0b06f3d0b934b98b6c",
+    "base_sha1": "436367ae8542477c27181a0b06f3d0b934b98b6c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/scripts/verify-release-fence.py",
+    "upload_sha1": "a50fa85828114b32a265d52494c5559a5bbe9190",
+    "base_sha1": "a50fa85828114b32a265d52494c5559a5bbe9190",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/account.tsx",
+    "upload_sha1": "998fe774ec43ad853652cd5c26bb3cfe9c8d47e9",
+    "base_sha1": "998fe774ec43ad853652cd5c26bb3cfe9c8d47e9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/admin.tsx",
+    "upload_sha1": "e0ac42f41b5985e10bfa7e23c0f59f45f7413050",
+    "base_sha1": "e0ac42f41b5985e10bfa7e23c0f59f45f7413050",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/agent-audit.tsx",
+    "upload_sha1": "9637b63898e7093cd939ea029ae8595af824026e",
+    "base_sha1": "9637b63898e7093cd939ea029ae8595af824026e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/assistant-editor.tsx",
+    "upload_sha1": "e26eef51ac5979b54e4373c5fff0c8cf7d2c9c09",
+    "base_sha1": "e26eef51ac5979b54e4373c5fff0c8cf7d2c9c09",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/local-diagnostics.tsx",
+    "upload_sha1": "86970ccd67b4a6327a8bdb192c469d29f7c7f4a7",
+    "base_sha1": "86970ccd67b4a6327a8bdb192c469d29f7c7f4a7",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/primitives.tsx",
+    "upload_sha1": "15a9a938e7608a8deeb03a886a72f3813af3fb2b",
+    "base_sha1": "15a9a938e7608a8deeb03a886a72f3813af3fb2b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/project-editor.tsx",
+    "upload_sha1": "a57788b34c57e22ce3d9b8e6d6f5a0e88932d7e5",
+    "base_sha1": "a57788b34c57e22ce3d9b8e6d6f5a0e88932d7e5",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/shell.tsx",
+    "upload_sha1": "bf2882b54ba39c27ca179e1333df939b6a593cfe",
+    "base_sha1": "bf2882b54ba39c27ca179e1333df939b6a593cfe",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/users.tsx",
+    "upload_sha1": "0328337edb8c464ebfb98d7f339eeaa9fbd21064",
+    "base_sha1": "0328337edb8c464ebfb98d7f339eeaa9fbd21064",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/console/worker-readiness.tsx",
+    "upload_sha1": "a5d0ce381d79b081821ddb2d71661c0b8d377c7f",
+    "base_sha1": "a5d0ce381d79b081821ddb2d71661c0b8d377c7f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/dashboard-provider.tsx",
+    "upload_sha1": "9e1d70b2fbf028f1a2490cc68795ccc5334e7875",
+    "base_sha1": "9e1d70b2fbf028f1a2490cc68795ccc5334e7875",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/dashboard.tsx",
+    "upload_sha1": "341701b92ccc5c69e55ee2f82790feb907dc3cf8",
+    "base_sha1": "341701b92ccc5c69e55ee2f82790feb907dc3cf8",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/documentation.tsx",
+    "upload_sha1": "0d79446e2af5ee646c7264d180d3eef4b13b8183",
+    "base_sha1": "0d79446e2af5ee646c7264d180d3eef4b13b8183",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/line-video-framing.tsx",
+    "upload_sha1": "b791ba4531f0a91dfc980dd43ace502e849214d7",
+    "base_sha1": "b791ba4531f0a91dfc980dd43ace502e849214d7",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/line-webhook-editor.tsx",
+    "upload_sha1": "e9fae1b28d1cc08bd0f45373a5a1423e47db5454",
+    "base_sha1": "e9fae1b28d1cc08bd0f45373a5a1423e47db5454",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/components/password-reset.tsx",
+    "upload_sha1": "988a0218aa989194dd1aa7b7a334148594e5a66f",
+    "base_sha1": "988a0218aa989194dd1aa7b7a334148594e5a66f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/agent-audit-contract.ts",
+    "upload_sha1": "cea3b0b9ea5a3c8d8fe6d341c9aa66f920e4eb7b",
+    "base_sha1": "cea3b0b9ea5a3c8d8fe6d341c9aa66f920e4eb7b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/agent-audit-notifications.ts",
+    "upload_sha1": "bb1c2e6ca726193b7d38917b70d00c20b9983a5f",
+    "base_sha1": "bb1c2e6ca726193b7d38917b70d00c20b9983a5f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/agent-audits.ts",
+    "upload_sha1": "3e023ebccd2e760e9172599a3a72f8ef33d1f4f0",
+    "base_sha1": "3e023ebccd2e760e9172599a3a72f8ef33d1f4f0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/api-key-usage.ts",
+    "upload_sha1": "3d9589c0f9b93594ccf6d48678a3c6990d287c45",
+    "base_sha1": "3d9589c0f9b93594ccf6d48678a3c6990d287c45",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/assistant-form.ts",
+    "upload_sha1": "ee8f1014fbbceca00abe661d160026468501d75a",
+    "base_sha1": "ee8f1014fbbceca00abe661d160026468501d75a",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/auth-urls.ts",
+    "upload_sha1": "a3538347763a89aba05cdeee9f20a3e4ee58f812",
+    "base_sha1": "a3538347763a89aba05cdeee9f20a3e4ee58f812",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/auth.ts",
+    "upload_sha1": "92c59b283a3a85b6b04df49539b665ba1dec9ca5",
+    "base_sha1": "92c59b283a3a85b6b04df49539b665ba1dec9ca5",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/browser-client.ts",
+    "upload_sha1": "fd238c528063fc5475a83d00e9e64b57bddd4f4d",
+    "base_sha1": "fd238c528063fc5475a83d00e9e64b57bddd4f4d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/byor-credentials.ts",
+    "upload_sha1": "e17756ce25672c1f21f83a93f403e01a3a85a0eb",
+    "base_sha1": "e17756ce25672c1f21f83a93f403e01a3a85a0eb",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/call-action.ts",
+    "upload_sha1": "d199358c02713bd6db409cf143ab029de0f2553b",
+    "base_sha1": "d199358c02713bd6db409cf143ab029de0f2553b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/client-security.ts",
+    "upload_sha1": "e58a45e8d2e42b46ffa874ee57a126161c492127",
+    "base_sha1": "e58a45e8d2e42b46ffa874ee57a126161c492127",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/credential-seal.ts",
+    "upload_sha1": "b1b04f8f08a880fbc4343ad8ae37e95aeb0db539",
+    "base_sha1": "b1b04f8f08a880fbc4343ad8ae37e95aeb0db539",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/crypto.ts",
+    "upload_sha1": "77d2b9a43a4c96403bd249c580d395eabeed0b80",
+    "base_sha1": "77d2b9a43a4c96403bd249c580d395eabeed0b80",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/dashboard-cache.ts",
+    "upload_sha1": "03c75d4bd750ae39aed99ef7cd534720593a5972",
+    "base_sha1": "03c75d4bd750ae39aed99ef7cd534720593a5972",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/dashboard-media-evidence.ts",
+    "upload_sha1": "62e134fa13e4548c5ccaa56b9faba7962edd86c5",
+    "base_sha1": "62e134fa13e4548c5ccaa56b9faba7962edd86c5",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/dashboard-tabs.ts",
+    "upload_sha1": "2023e3ea2050836c251282aefd0584a4c49a0a77",
+    "base_sha1": "2023e3ea2050836c251282aefd0584a4c49a0a77",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/dashboard-worker-status.ts",
+    "upload_sha1": "81c04536c263f58106e6dc5f762c3ab36ed30e2f",
+    "base_sha1": "81c04536c263f58106e6dc5f762c3ab36ed30e2f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/data-access.ts",
+    "upload_sha1": "173918cf1554bd411196cebf6e22c445c2be7c83",
+    "base_sha1": "173918cf1554bd411196cebf6e22c445c2be7c83",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/destination-crypto.ts",
+    "upload_sha1": "e4f3d82d6e8df4232887ac9189bee39ac6ada805",
+    "base_sha1": "e4f3d82d6e8df4232887ac9189bee39ac6ada805",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/destination.ts",
+    "upload_sha1": "eecd30e9a4aa29e07eee65bee7e7e35a31136d77",
+    "base_sha1": "eecd30e9a4aa29e07eee65bee7e7e35a31136d77",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/documentation.ts",
+    "upload_sha1": "38b1187208d5e95c2dcfe03e05c3ec44d4e5b4cb",
+    "base_sha1": "38b1187208d5e95c2dcfe03e05c3ec44d4e5b4cb",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/env.ts",
+    "upload_sha1": "d67d10fbf2af8742d8794c18242598ea8798b8e3",
+    "base_sha1": "d67d10fbf2af8742d8794c18242598ea8798b8e3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/errors.ts",
+    "upload_sha1": "f6f50cca471645fdff33ff4b9663b95be7ee42bc",
+    "base_sha1": "f6f50cca471645fdff33ff4b9663b95be7ee42bc",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/http.ts",
+    "upload_sha1": "6adedc6d786252d8b2e5ab5960dca8623d82596b",
+    "base_sha1": "6adedc6d786252d8b2e5ab5960dca8623d82596b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/media-observation-schema.ts",
+    "upload_sha1": "c4d00fedf120b16d324caa28d13587d33069a2f2",
+    "base_sha1": "c4d00fedf120b16d324caa28d13587d33069a2f2",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/normalization.ts",
+    "upload_sha1": "c3da433dae61c0e6ea4d94ddc284f77197e501dd",
+    "base_sha1": "c3da433dae61c0e6ea4d94ddc284f77197e501dd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/observation-time.ts",
+    "upload_sha1": "435136ea47bd98a552b593d3876b47afda84b0c9",
+    "base_sha1": "435136ea47bd98a552b593d3876b47afda84b0c9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/platform-admin.ts",
+    "upload_sha1": "97193ba3de65b476150f8b00d0f2265e715e5ab1",
+    "base_sha1": "97193ba3de65b476150f8b00d0f2265e715e5ab1",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/platform-policy.ts",
+    "upload_sha1": "d5b7ac1beb1293b5f4edc825ab9f6c62a34edd30",
+    "base_sha1": "d5b7ac1beb1293b5f4edc825ab9f6c62a34edd30",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/preview.ts",
+    "upload_sha1": "6e761534bd87eec4beffd1bdab4af30ad840dbac",
+    "base_sha1": "6e761534bd87eec4beffd1bdab4af30ad840dbac",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/project-identity.ts",
+    "upload_sha1": "13f1aa579986094e8b51d5cd0a393d12e1c75e46",
+    "base_sha1": "13f1aa579986094e8b51d5cd0a393d12e1c75e46",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/project-logo-server.ts",
+    "upload_sha1": "36bc83528a84e7f7a15355e606a8eeaa5a5f1631",
+    "base_sha1": "36bc83528a84e7f7a15355e606a8eeaa5a5f1631",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/readiness-evidence.ts",
+    "upload_sha1": "c91f58e2596b44b8557a99649d81921121591e8f",
+    "base_sha1": "c91f58e2596b44b8557a99649d81921121591e8f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/redaction.ts",
+    "upload_sha1": "ee71bd661adcdcde486bc491272d77bfae3dcd2d",
+    "base_sha1": "ee71bd661adcdcde486bc491272d77bfae3dcd2d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/schemas.ts",
+    "upload_sha1": "49ea2232609543134d0c2edb34570a6e5aeb54b0",
+    "base_sha1": "49ea2232609543134d0c2edb34570a6e5aeb54b0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/section-preferences.ts",
+    "upload_sha1": "9e49fbcaaf29a94c713026482abe1bf9b29d5319",
+    "base_sha1": "9e49fbcaaf29a94c713026482abe1bf9b29d5319",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/session-state.ts",
+    "upload_sha1": "0fed66332e0392bde8abe18124467399ce654a03",
+    "base_sha1": "0fed66332e0392bde8abe18124467399ce654a03",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/store.ts",
+    "upload_sha1": "01745eec429a87730aa1880efc2782fc114ffb4e",
+    "base_sha1": "01745eec429a87730aa1880efc2782fc114ffb4e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/supabase.ts",
+    "upload_sha1": "18f228f554c51ad5368935014d7012742ccbb99f",
+    "base_sha1": "18f228f554c51ad5368935014d7012742ccbb99f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/testing/in-memory.ts",
+    "upload_sha1": "0b99b7731b8d619388654f88637256b183790d51",
+    "base_sha1": "0b99b7731b8d619388654f88637256b183790d51",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/types.ts",
+    "upload_sha1": "a3be2bbc662ca950ee9076f7d7e839c06c755c55",
+    "base_sha1": "a3be2bbc662ca950ee9076f7d7e839c06c755c55",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/use-browser-session.ts",
+    "upload_sha1": "eaaf437d638c6861792f8500141d110c0dce11b3",
+    "base_sha1": "eaaf437d638c6861792f8500141d110c0dce11b3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/user-management.ts",
+    "upload_sha1": "1b9ce1932628f12a465bc3159e8b183286a875b9",
+    "base_sha1": "1b9ce1932628f12a465bc3159e8b183286a875b9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/webhook-core.ts",
+    "upload_sha1": "12a213163a7e85540297e1cb99464c53ddbc279e",
+    "base_sha1": "12a213163a7e85540297e1cb99464c53ddbc279e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/webhook-endpoint.ts",
+    "upload_sha1": "8afd1ac764036cbd1a1ad0a92ab058f46120ab4b",
+    "base_sha1": "8afd1ac764036cbd1a1ad0a92ab058f46120ab4b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/src/lib/facetime/worker-runtime-configuration.ts",
+    "upload_sha1": "1fb0bb0db1b1fe18c3cdc847413f7fa8efc78150",
+    "base_sha1": "1fb0bb0db1b1fe18c3cdc847413f7fa8efc78150",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/ROLLBACK.md",
+    "upload_sha1": "9131c6e3956ebd45a21315dead5631099ab62ec6",
+    "base_sha1": "9131c6e3956ebd45a21315dead5631099ab62ec6",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0001_facetime_control_plane.sql",
+    "upload_sha1": "f4138179a78d3884b0a49b8995b4945234a8900c",
+    "base_sha1": "f4138179a78d3884b0a49b8995b4945234a8900c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0002_fix_test_fixture_cleanup.sql",
+    "upload_sha1": "d2667026c57e7ccff988d9ac89e3fd8da94d90eb",
+    "base_sha1": "d2667026c57e7ccff988d9ac89e3fd8da94d90eb",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0003_api_key_usage_hardening.sql",
+    "upload_sha1": "9e7e840934f5c675cbe3779bcd06a0aeaa818da0",
+    "base_sha1": "9e7e840934f5c675cbe3779bcd06a0aeaa818da0",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0004_development_inbound_auto_answer.sql",
+    "upload_sha1": "758d92dd016c668baeda26e1cc4c682d51fafa1c",
+    "base_sha1": "758d92dd016c668baeda26e1cc4c682d51fafa1c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0005_atomic_development_window_guard.sql",
+    "upload_sha1": "cea1ad7fead26479c9fb799b04923c2f3f0bc4a4",
+    "base_sha1": "cea1ad7fead26479c9fb799b04923c2f3f0bc4a4",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0006_development_audio_authorization.sql",
+    "upload_sha1": "ebeb4fad62eea3ef0968a830ddb035bb5c3305cd",
+    "base_sha1": "ebeb4fad62eea3ef0968a830ddb035bb5c3305cd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0007_secure_call_transcripts.sql",
+    "upload_sha1": "f3e57e6c81fd8540cad5aac2c4d69c09e764612f",
+    "base_sha1": "f3e57e6c81fd8540cad5aac2c4d69c09e764612f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0008_b1_call_event_contract.sql",
+    "upload_sha1": "f6e2bbff154fd22cf262f1c08dfff3ece7138b4e",
+    "base_sha1": "f6e2bbff154fd22cf262f1c08dfff3ece7138b4e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0009_b1_event_ingestion_metadata.sql",
+    "upload_sha1": "7d471c521aab04bbb994510e4c09eec0562db3dc",
+    "base_sha1": "7d471c521aab04bbb994510e4c09eec0562db3dc",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0010_b2_session_lifecycle.sql",
+    "upload_sha1": "b68dcfb629b99ead74d269e5f4b2a77391436809",
+    "base_sha1": "b68dcfb629b99ead74d269e5f4b2a77391436809",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0011_b3_webhook_core.sql",
+    "upload_sha1": "1774720ebe5bcbe563d4aea958245c6f0b5bf976",
+    "base_sha1": "1774720ebe5bcbe563d4aea958245c6f0b5bf976",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0012_b4_sealed_credentials.sql",
+    "upload_sha1": "72838a8636dcaa44af192d4595eb643daea65067",
+    "base_sha1": "72838a8636dcaa44af192d4595eb643daea65067",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0013_additional_project_creation.sql",
+    "upload_sha1": "6f214b47b209652514749de886091d63c3ffaf37",
+    "base_sha1": "6f214b47b209652514749de886091d63c3ffaf37",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0013_project_livekit_allowed_hosts.sql",
+    "upload_sha1": "2f200ae231d58975926df370658a09cc8589a21c",
+    "base_sha1": "2f200ae231d58975926df370658a09cc8589a21c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0014_bw_session_lifecycle_amendment.sql",
+    "upload_sha1": "524f56ed4cf17b5b0feef49bebd14f2a7bb2bba3",
+    "base_sha1": "524f56ed4cf17b5b0feef49bebd14f2a7bb2bba3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0015_heartbeat_rejection_evidence.sql",
+    "upload_sha1": "2a32af2f05688da8474fa7b7d65c0c4bc4b510a7",
+    "base_sha1": "2a32af2f05688da8474fa7b7d65c0c4bc4b510a7",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0016_incoming_webhook_decline_cleanup.sql",
+    "upload_sha1": "3a6476e0705c7f9d62514503e82255846d73ae18",
+    "base_sha1": "3a6476e0705c7f9d62514503e82255846d73ae18",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0017_start_bridge_failure_reconciliation.sql",
+    "upload_sha1": "2f66b82f1c237d9c915b433550798d4f127f37ab",
+    "base_sha1": "2f66b82f1c237d9c915b433550798d4f127f37ab",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/0018_call_webhook_logical_idempotency.sql",
+    "upload_sha1": "27d9f7ddb1b15c4003c80bbe417595592661c2df",
+    "base_sha1": "27d9f7ddb1b15c4003c80bbe417595592661c2df",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260906023207_reconcile_expired_start_bridge_commands.sql",
+    "upload_sha1": "1ccb602382d9dde3246de626931e31a6a1ece28a",
+    "base_sha1": "1ccb602382d9dde3246de626931e31a6a1ece28a",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260911131327_line_integrations.sql",
+    "upload_sha1": "4d03a3a8834dba705251bffd2043ba2989b7ac09",
+    "base_sha1": "4d03a3a8834dba705251bffd2043ba2989b7ac09",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260911213624_automatic_worker_readiness.sql",
+    "upload_sha1": "3061c7914570eb4b988b3a6888e12c759a00a3da",
+    "base_sha1": "3061c7914570eb4b988b3a6888e12c759a00a3da",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260911233536_dashboard_console.sql",
+    "upload_sha1": "35d97d40dc8e99d6e563a93d96436022a899e64b",
+    "base_sha1": "35d97d40dc8e99d6e563a93d96436022a899e64b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260912131914_dashboard_media_observations.sql",
+    "upload_sha1": "295f02c34cd764fa417ef653abc4de852b4ea675",
+    "base_sha1": "295f02c34cd764fa417ef653abc4de852b4ea675",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260912142000_dashboard_recovery_qualification.sql",
+    "upload_sha1": "3f28c3b68a61acad1810976e0f25bea8158660fc",
+    "base_sha1": "3f28c3b68a61acad1810976e0f25bea8158660fc",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260913044930_guarded_worker_onboarding.sql",
+    "upload_sha1": "80120f299c1b340335cae9c9ce1da6048e27805d",
+    "base_sha1": "80120f299c1b340335cae9c9ce1da6048e27805d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260915191435_optional_webhook_signing.sql",
+    "upload_sha1": "7c2d34ab2fe08a6f95a6fd1801324157a796dcf7",
+    "base_sha1": "7c2d34ab2fe08a6f95a6fd1801324157a796dcf7",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260916002957_line_video_framing.sql",
+    "upload_sha1": "5f20b5b3e9378ae46a62770de47683f2530480f4",
+    "base_sha1": "5f20b5b3e9378ae46a62770de47683f2530480f4",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260920010713_project_user_management.sql",
+    "upload_sha1": "4b145e3d345543336191e8836a715e90476440b2",
+    "base_sha1": "4b145e3d345543336191e8836a715e90476440b2",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260921044014_device_agent_audits.sql",
+    "upload_sha1": "a644d5d7afc1fd2a541d04d64c9994a91a08f374",
+    "base_sha1": "a644d5d7afc1fd2a541d04d64c9994a91a08f374",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260923192701_outbound_byor_audio_compatible_release.sql",
+    "upload_sha1": "629020f82ee70b4f710016c1d9a3f922b3b9f6b3",
+    "base_sha1": "629020f82ee70b4f710016c1d9a3f922b3b9f6b3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/migrations/20260924194048_outbound_byor_video.sql",
+    "upload_sha1": "37c858e7a801594f877504d24f3b160c1a3e43e6",
+    "base_sha1": "37c858e7a801594f877504d24f3b160c1a3e43e6",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/tests/0017_start_bridge_failure_reconciliation.test.sql",
+    "upload_sha1": "8d9a32a05fe6ba40d585846fa52425da4e9a93dc",
+    "base_sha1": "8d9a32a05fe6ba40d585846fa52425da4e9a93dc",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/tests/0018_call_webhook_logical_idempotency.test.sql",
+    "upload_sha1": "16e3f0ed27a80db9cacbd47a5176658c760f39fc",
+    "base_sha1": "16e3f0ed27a80db9cacbd47a5176658c760f39fc",
+    "matches": true
+  },
+  {
+    "path": "control-plane/supabase/tests/line_integrations.test.sql",
+    "upload_sha1": "39d1c2faae32fb40dc0e5890373e557d3b342b37",
+    "base_sha1": "39d1c2faae32fb40dc0e5890373e557d3b342b37",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/admin-client.test.ts",
+    "upload_sha1": "4a74868fbf5bb5350e57b279cab0ad6726e0187d",
+    "base_sha1": "4a74868fbf5bb5350e57b279cab0ad6726e0187d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/agent-audit-auth.test.ts",
+    "upload_sha1": "c3b8afb88e23df598576629d80e203866edc3c41",
+    "base_sha1": "c3b8afb88e23df598576629d80e203866edc3c41",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/agent-audit-database.test.ts",
+    "upload_sha1": "53a22b78afd5e203eb2bf928ddbb3a1f55f1ea7f",
+    "base_sha1": "53a22b78afd5e203eb2bf928ddbb3a1f55f1ea7f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/agent-audit-notifications.test.ts",
+    "upload_sha1": "0ee0a9741b89723c2182926bde34b2f156e15d82",
+    "base_sha1": "0ee0a9741b89723c2182926bde34b2f156e15d82",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/agent-audit-widget.test.ts",
+    "upload_sha1": "b54835a5c8621e4c8aa35ee903a2aa623063d60d",
+    "base_sha1": "b54835a5c8621e4c8aa35ee903a2aa623063d60d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/agent-audits.test.ts",
+    "upload_sha1": "9571b609089eb189aed643f204249796e81a72b9",
+    "base_sha1": "9571b609089eb189aed643f204249796e81a72b9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/assistant-form.test.ts",
+    "upload_sha1": "1c9833ab10b03bc61b1b31602873c0276846e1c2",
+    "base_sha1": "1c9833ab10b03bc61b1b31602873c0276846e1c2",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/automatic-readiness-migration.test.ts",
+    "upload_sha1": "9541dc2c3afb1daee213b850fe5bfcbebdb46fed",
+    "base_sha1": "9541dc2c3afb1daee213b850fe5bfcbebdb46fed",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/automatic-readiness.test.ts",
+    "upload_sha1": "9f71727a8741846176a5b37ff8bf8986e2dd3eb3",
+    "base_sha1": "9f71727a8741846176a5b37ff8bf8986e2dd3eb3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser-client.test.ts",
+    "upload_sha1": "c4104bae9bd6e6127aa979ec427e4a53e07bb4d6",
+    "base_sha1": "c4104bae9bd6e6127aa979ec427e4a53e07bb4d6",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser/agent-audit-fixture.js",
+    "upload_sha1": "373f8204ce3057aeac1284a00ed579cc31486a39",
+    "base_sha1": "373f8204ce3057aeac1284a00ed579cc31486a39",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser/auth-fixture.js",
+    "upload_sha1": "4e66a770e7365f725249f5dee9877faa0aa7666d",
+    "base_sha1": "4e66a770e7365f725249f5dee9877faa0aa7666d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser/caching-fixture.js",
+    "upload_sha1": "d966a9584de678a310dbdcb5a96482a562700c87",
+    "base_sha1": "d966a9584de678a310dbdcb5a96482a562700c87",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser/console-fixture.js",
+    "upload_sha1": "e1f3b5e0f34883c30a9b73fa63c8ebb2fdde98cd",
+    "base_sha1": "e1f3b5e0f34883c30a9b73fa63c8ebb2fdde98cd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser/dashboard-fixture.js",
+    "upload_sha1": "da8eece5f6b432ed37ef5bc823ea7356c0ad244e",
+    "base_sha1": "da8eece5f6b432ed37ef5bc823ea7356c0ad244e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser/readiness-fixture.js",
+    "upload_sha1": "dd85f0f00895f644b0597d88e77f9d4ff470cb39",
+    "base_sha1": "dd85f0f00895f644b0597d88e77f9d4ff470cb39",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/browser/webhook-editor-fixture.js",
+    "upload_sha1": "563c98bc68613e704b443ab4e13abbe28fc5cb33",
+    "base_sha1": "563c98bc68613e704b443ab4e13abbe28fc5cb33",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/console-database.test.ts",
+    "upload_sha1": "21512f3e8200af38b5b7be21fc88ad49c26c69ab",
+    "base_sha1": "21512f3e8200af38b5b7be21fc88ad49c26c69ab",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/control-plane.test.ts",
+    "upload_sha1": "aab82a214302be7eecd99a80bd557c555a4314f4",
+    "base_sha1": "aab82a214302be7eecd99a80bd557c555a4314f4",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-auth.test.ts",
+    "upload_sha1": "a3123771e7bcf991af963eb953e7a47541f733bd",
+    "base_sha1": "a3123771e7bcf991af963eb953e7a47541f733bd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-cache.test.ts",
+    "upload_sha1": "280a64e13758ec04b52af8299264190fab2d1d64",
+    "base_sha1": "280a64e13758ec04b52af8299264190fab2d1d64",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-hardening.test.ts",
+    "upload_sha1": "0500b5f05d2c125e4eb2a1bdfd18cfa94d1f5691",
+    "base_sha1": "0500b5f05d2c125e4eb2a1bdfd18cfa94d1f5691",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-loading.test.ts",
+    "upload_sha1": "80d88c3fca01c304ae898c7a0b77955820524ac8",
+    "base_sha1": "80d88c3fca01c304ae898c7a0b77955820524ac8",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-media-evidence.test.ts",
+    "upload_sha1": "784e862feb3393ad2b223db406c224e2aca1373f",
+    "base_sha1": "784e862feb3393ad2b223db406c224e2aca1373f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-projects.test.ts",
+    "upload_sha1": "dce7b1d3e8cb4d083e5b1588a69a7848d42902b9",
+    "base_sha1": "dce7b1d3e8cb4d083e5b1588a69a7848d42902b9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-tabs.test.ts",
+    "upload_sha1": "7e7fdd4785f49a8f8b678c68a1ef67017e5e8baf",
+    "base_sha1": "7e7fdd4785f49a8f8b678c68a1ef67017e5e8baf",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/dashboard-worker-status.test.ts",
+    "upload_sha1": "3fecdbd72905a4b4e1695fff03797143b26f819c",
+    "base_sha1": "3fecdbd72905a4b4e1695fff03797143b26f819c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/destination.test.ts",
+    "upload_sha1": "c64f70da8225e375371bad05beccc475ccb546b7",
+    "base_sha1": "c64f70da8225e375371bad05beccc475ccb546b7",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/documentation.test.ts",
+    "upload_sha1": "37eda87b4011932a9684dfbb2cc54b710ea366c9",
+    "base_sha1": "37eda87b4011932a9684dfbb2cc54b710ea366c9",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/heartbeat-readiness.test.ts",
+    "upload_sha1": "97e7359e3268f697113c8a1f43733eb5cd0292a6",
+    "base_sha1": "97e7359e3268f697113c8a1f43733eb5cd0292a6",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/helpers/dialog-setup.ts",
+    "upload_sha1": "e17fbfa5d183be7ebc008894e8fc388c2c96b800",
+    "base_sha1": "e17fbfa5d183be7ebc008894e8fc388c2c96b800",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/helpers/isolated-postgres.ts",
+    "upload_sha1": "00591b89574475d004c78f82248c2153deed1129",
+    "base_sha1": "00591b89574475d004c78f82248c2153deed1129",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/helpers/retained-call-fixture.ts",
+    "upload_sha1": "f64a5237102e05a669da1cc63a850771c0cbc97e",
+    "base_sha1": "f64a5237102e05a669da1cc63a850771c0cbc97e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/helpers/sql-store-client.ts",
+    "upload_sha1": "232a5601b86d84a5d2017c6705fb26776c5e4b7f",
+    "base_sha1": "232a5601b86d84a5d2017c6705fb26776c5e4b7f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/incoming-webhook-cleanup-migration.test.ts",
+    "upload_sha1": "9a703adb23b5ebd0555f477d5555ba5066d3a04e",
+    "base_sha1": "9a703adb23b5ebd0555f477d5555ba5066d3a04e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/line-integrations-migration.test.ts",
+    "upload_sha1": "e3315a1c67516d24cc77c9943204d48696b781e3",
+    "base_sha1": "e3315a1c67516d24cc77c9943204d48696b781e3",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/line-integrations.test.ts",
+    "upload_sha1": "c8fb3bedb07ae85fe367c805b04db7ba4281286a",
+    "base_sha1": "c8fb3bedb07ae85fe367c805b04db7ba4281286a",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/line-video-framing.test.ts",
+    "upload_sha1": "486a7ab9b90364d6ce17803b708d576f0f504dbb",
+    "base_sha1": "486a7ab9b90364d6ce17803b708d576f0f504dbb",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/line-webhook-authorization.test.ts",
+    "upload_sha1": "a54bfc2f7441c2be7c610fbcaeb91fa4cf5b1431",
+    "base_sha1": "a54bfc2f7441c2be7c610fbcaeb91fa4cf5b1431",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/line-webhook-editor.test.ts",
+    "upload_sha1": "db708337af76da1020db9e9d64909026c6ddfc1e",
+    "base_sha1": "db708337af76da1020db9e9d64909026c6ddfc1e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/media-observation-api.test.ts",
+    "upload_sha1": "e9d5cfd9ec3fe5ec6cf6dc4b293ca82dc4633817",
+    "base_sha1": "e9d5cfd9ec3fe5ec6cf6dc4b293ca82dc4633817",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/media-observation-migration.test.ts",
+    "upload_sha1": "37be9fe841beb63b40f765db701dc044113fb982",
+    "base_sha1": "37be9fe841beb63b40f765db701dc044113fb982",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/onboarding.test.ts",
+    "upload_sha1": "49dcf64e06e80419d3d53574889a1ddcd5382b64",
+    "base_sha1": "49dcf64e06e80419d3d53574889a1ddcd5382b64",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/optional-signing.test.ts",
+    "upload_sha1": "34d486a3c472ab771fdfce1c18a8c83479b4541d",
+    "base_sha1": "34d486a3c472ab771fdfce1c18a8c83479b4541d",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/outbound-admission-wire.test.ts",
+    "upload_sha1": "84f726fd47269a521200ddd2bab4bae1002f1528",
+    "base_sha1": "84f726fd47269a521200ddd2bab4bae1002f1528",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/outbox-readiness-contract.test.ts",
+    "upload_sha1": "f56c57e114d1318ba6df05a96e705e496b376d33",
+    "base_sha1": "f56c57e114d1318ba6df05a96e705e496b376d33",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/platform-auth.test.ts",
+    "upload_sha1": "ce1a2788847076b5cb3b1d4c0c2cac070de8c6b4",
+    "base_sha1": "ce1a2788847076b5cb3b1d4c0c2cac070de8c6b4",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/production-worker-contract.test.ts",
+    "upload_sha1": "506ae489d432475244b757646dc0be344105f7bd",
+    "base_sha1": "506ae489d432475244b757646dc0be344105f7bd",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/project-identity.test.ts",
+    "upload_sha1": "9c444f8f2683040bf6d8bc25727c211d953c41ac",
+    "base_sha1": "9c444f8f2683040bf6d8bc25727c211d953c41ac",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/public-docs.test.ts",
+    "upload_sha1": "f26d8284a40902d9d0f0580e9e41fa44a05f7737",
+    "base_sha1": "f26d8284a40902d9d0f0580e9e41fa44a05f7737",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/readiness-evidence.test.ts",
+    "upload_sha1": "10a32fbbc1f05ec1630669b1567169f7584a4b64",
+    "base_sha1": "10a32fbbc1f05ec1630669b1567169f7584a4b64",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/readiness-review-regressions.test.ts",
+    "upload_sha1": "12f268181e6a38aad497f6433e13eeffbb260ece",
+    "base_sha1": "12f268181e6a38aad497f6433e13eeffbb260ece",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/schemas.test.ts",
+    "upload_sha1": "af7740ce341057cc56a4d55197de85d18de6ba3b",
+    "base_sha1": "af7740ce341057cc56a4d55197de85d18de6ba3b",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/section-preferences.test.ts",
+    "upload_sha1": "5f935c342b36eb08cf750f37df46bf9aa1ccdf8c",
+    "base_sha1": "5f935c342b36eb08cf750f37df46bf9aa1ccdf8c",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/security.test.ts",
+    "upload_sha1": "6de3c3b45e89671add66dd6e2f6ef8481d0524c6",
+    "base_sha1": "6de3c3b45e89671add66dd6e2f6ef8481d0524c6",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/start-bridge-failure-reconciliation-migration.test.ts",
+    "upload_sha1": "4bd058cb9d826cc1f4954bf5ade11a08e6141132",
+    "base_sha1": "4bd058cb9d826cc1f4954bf5ade11a08e6141132",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/tenant-isolation-imports.test.ts",
+    "upload_sha1": "bf1b39c6cea1a64bfd7beea44bb1ca3a0c612218",
+    "base_sha1": "bf1b39c6cea1a64bfd7beea44bb1ca3a0c612218",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/transcripts.test.ts",
+    "upload_sha1": "9b3f53f83151302b8243da966a964f30f0dd8848",
+    "base_sha1": "9b3f53f83151302b8243da966a964f30f0dd8848",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/unrestricted-livekit-hosts.test.ts",
+    "upload_sha1": "f874262ebb4d779d2f68bd9c32b3e64d89285f1f",
+    "base_sha1": "f874262ebb4d779d2f68bd9c32b3e64d89285f1f",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/user-management-client.test.ts",
+    "upload_sha1": "41801df1fe141431e88038c02b550a861610ada1",
+    "base_sha1": "41801df1fe141431e88038c02b550a861610ada1",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/user-management-database.test.ts",
+    "upload_sha1": "906298ef93068ed56e724bc7653539264c5c238e",
+    "base_sha1": "906298ef93068ed56e724bc7653539264c5c238e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/user-management-routes.test.ts",
+    "upload_sha1": "a806b3be4597a5d192e5693087673ce657559a73",
+    "base_sha1": "a806b3be4597a5d192e5693087673ce657559a73",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/user-management-service.test.ts",
+    "upload_sha1": "dbcbecec5f84ca0ce73420e5fb78bbe280c772e8",
+    "base_sha1": "dbcbecec5f84ca0ce73420e5fb78bbe280c772e8",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/video-framing.test.ts",
+    "upload_sha1": "f3261a5d346c6aeb3c213ad96346ab89af582b12",
+    "base_sha1": "f3261a5d346c6aeb3c213ad96346ab89af582b12",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/webhook-core.test.ts",
+    "upload_sha1": "aa2830589e70dbb6481959f07f2e902eb190fcf5",
+    "base_sha1": "aa2830589e70dbb6481959f07f2e902eb190fcf5",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/webhook-logical-idempotency-migration.test.ts",
+    "upload_sha1": "17e60f74fa3cceef5644dbe7c5d3ad2cecb92701",
+    "base_sha1": "17e60f74fa3cceef5644dbe7c5d3ad2cecb92701",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/worker-evidence-list.test.ts",
+    "upload_sha1": "aa7325628683829cbfc4cfeb9021ad91072e0ab8",
+    "base_sha1": "aa7325628683829cbfc4cfeb9021ad91072e0ab8",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/worker-operational-status.test.ts",
+    "upload_sha1": "982fd1f8a4c3d6f0bf3a54d705d5500e8b34e4b1",
+    "base_sha1": "982fd1f8a4c3d6f0bf3a54d705d5500e8b34e4b1",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tests/worker-readiness-summary.test.ts",
+    "upload_sha1": "e059f3fa3cc44d2d564bf89925343a911b37a4ce",
+    "base_sha1": "e059f3fa3cc44d2d564bf89925343a911b37a4ce",
+    "matches": true
+  },
+  {
+    "path": "control-plane/tsconfig.json",
+    "upload_sha1": "d133d3d67845941b7e37a79880d747c402fbbc35",
+    "base_sha1": "d133d3d67845941b7e37a79880d747c402fbbc35",
+    "matches": true
+  },
+  {
+    "path": "control-plane/vercel.json",
+    "upload_sha1": "b8f2085c160f95a07cd63ea7f9c57f17d312b13e",
+    "base_sha1": "b8f2085c160f95a07cd63ea7f9c57f17d312b13e",
+    "matches": true
+  },
+  {
+    "path": "control-plane/vitest.config.ts",
+    "upload_sha1": "a11905d7ccfb12f89017d55a691f6177c02da33f",
+    "base_sha1": "a11905d7ccfb12f89017d55a691f6177c02da33f",
+    "matches": true
+  }
+]

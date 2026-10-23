@@ -1,0 +1,6 @@
+{
+  "user_instruction": "its fine, ignore those issues, they're just outbound tests. thank you!",
+  "scope": "The three named Brodie historical outbound-test Sessions are excluded from this release drain blocker only. They remain failed/uncleaned and unchanged.",
+  "pilot_evidence": "../railway-deployment/demo-agent-historical-room-check.json",
+  "activation_authorized": false
+}

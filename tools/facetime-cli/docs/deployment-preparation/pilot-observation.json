@@ -1,0 +1,25 @@
+[
+  {
+    "id": "5ee3afd6-f248-45a5-9fe8-bf30c4c961e7",
+    "name": "Chert FaceTime Test",
+    "slug": "chert-facetime-test",
+    "status": "enabled",
+    "line_id": "59b3e3d0-945b-45da-b907-027103941a65",
+    "display_name": "Mac 2 FaceTime Line",
+    "worker_id": "dedea298-97e0-4321-8c85-1deca994b2a0",
+    "line_status": "available",
+    "current_call_id": null,
+    "inbound_policy": "customer_decides",
+    "default_assistant_id": null,
+    "assignment_generation": 3,
+    "integration_id": "946445e1-2c0f-478d-a049-72c8dd9762f2",
+    "integration_enabled": true,
+    "integration_name": "Line webhook",
+    "software_version": "0.1.0",
+    "worker_status": "accepting",
+    "worker_enabled": true,
+    "last_heartbeat_at": "2026-09-30 02:11:13.085253+00",
+    "worker_call_id": null,
+    "readiness_ready": null
+  }
+]

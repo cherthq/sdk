@@ -1,0 +1,21 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connector-production-compatibility.test.ts tests/connectors.test.ts tests/connector-service.test.ts tests/connector-incoming.test.ts tests/optional-signing.test.ts tests/automatic-readiness-migration.test.ts tests/line-integrations.test.ts tests/webhook-core.test.ts tests/line-webhook-authorization.test.ts tests/outbound-admission-wire.test.ts -t ^(?!.*(preserves legacy ciphertext|holds activation preflight)).*$
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/blocker-resolution/candidate/control-plane
+
+ ❯ tests/connector-service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-service.test.ts [ tests/connector-service.test.ts ]
+Error: Cannot find module '/Users/garygao/chert-facetime-cli/.local/blocker-resolution/candidate/control-plane/node_modules/connector-relay/node_modules/ws/index.js' imported from /Users/garygao/chert-facetime-cli/.local/blocker-resolution/candidate/control-plane/node_modules/vitest/dist/module-evaluator.js
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 9 passed (10)
+      Tests  92 passed | 5 skipped (97)
+   Start at  22:43:27
+   Duration  45.19s (transform 158ms, setup 27ms, import 304ms, tests 44.24s, environment 0ms)
+

@@ -1,0 +1,66 @@
+[
+  {
+    "file": "connector/README.md",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/control.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/handler.ts",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/host/chert-byor.service",
+    "source_matches_reviewed": false
+  },
+  {
+    "file": "connector/host/talking-head-owner.service",
+    "source_matches_reviewed": false
+  },
+  {
+    "file": "connector/owner.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/ready_adapter.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/ready_owner.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/server.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/tests/fixture_server.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/tests/substitutes.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/tests/test_host.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/tests/test_owner.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "connector/tests/test_ready_owner.py",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "tests/agent-startup.test.mjs",
+    "source_matches_reviewed": true
+  },
+  {
+    "file": "tests/muse-startup.test.mjs",
+    "source_matches_reviewed": true
+  }
+]

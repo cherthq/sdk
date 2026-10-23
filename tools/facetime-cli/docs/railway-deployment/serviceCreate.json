@@ -1,0 +1,27 @@
+{
+  "matches": [
+    {
+      "args": [
+        {
+          "defaultValue": null,
+          "description": null,
+          "name": "input",
+          "namedType": "ServiceCreateInput",
+          "required": true,
+          "type": "ServiceCreateInput!"
+        }
+      ],
+      "deprecationReason": null,
+      "description": "Creates a new service.",
+      "isDeprecated": false,
+      "kind": "mutation",
+      "name": "serviceCreate",
+      "namedType": "Service",
+      "parent": "Mutation",
+      "requiredArgs": [
+        "input"
+      ],
+      "type": "Service!"
+    }
+  ]
+}

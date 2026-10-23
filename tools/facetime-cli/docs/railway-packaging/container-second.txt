@@ -1,0 +1,47 @@
+test_missing_mount_journal_and_foreign_marker_refuse (test_container.Containers.test_missing_mount_journal_and_foreign_marker_refuse) ... ok
+test_node_restart_sigkill_and_independent_expiry (test_container.Containers.test_node_restart_sigkill_and_independent_expiry) ... FAIL
+test_python_crash_reopens_claim_and_preserves_interrupted_staging (test_container.Containers.test_python_crash_reopens_claim_and_preserves_interrupted_staging) ... ok
+test_shutdown_preserves_uncertainty_and_bounds_restart_storm (test_container.Containers.test_shutdown_preserves_uncertainty_and_bounds_restart_storm) ... ok
+test_standby_permissions_credentials_and_zero_allocations (test_container.Containers.test_standby_permissions_credentials_and_zero_allocations) ... FAIL
+test_writer_exclusion_restart_and_container_replacement (test_container.Containers.test_writer_exclusion_restart_and_container_replacement) ... ok
+
+======================================================================
+FAIL: test_node_restart_sigkill_and_independent_expiry (test_container.Containers.test_node_restart_sigkill_and_independent_expiry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 137, in test_node_restart_sigkill_and_independent_expiry
+    first=self.pid('node')
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 88, in pid
+    return int(self.execute(source).stdout)
+               ~~~~~~~~~~~~^^^^^^^^
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 70, in execute
+    return docker('exec',self.container,'python','-c',source,check=check)
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 23, in docker
+    raise AssertionError(result.stderr + result.stdout)
+AssertionError: Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+StopIteration
+
+
+======================================================================
+FAIL: test_standby_permissions_credentials_and_zero_allocations (test_container.Containers.test_standby_permissions_credentials_and_zero_allocations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 108, in test_standby_permissions_credentials_and_zero_allocations
+    pid=self.pid(role)
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 88, in pid
+    return int(self.execute(source).stdout)
+               ~~~~~~~~~~~~^^^^^^^^
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 70, in execute
+    return docker('exec',self.container,'python','-c',source,check=check)
+  File "/Users/garygao/chert-facetime-cli/packaging/railway/tests/test_container.py", line 23, in docker
+    raise AssertionError(result.stderr + result.stdout)
+AssertionError: Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+StopIteration
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 73.330s
+
+FAILED (failures=2)

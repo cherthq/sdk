@@ -1,0 +1,216 @@
+TAP version 13
+# (node:91395) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: signed connector envelope rejects before dispatch acceptance
+not ok 1 - signed connector envelope rejects before dispatch acceptance
+  ---
+  duration_ms: 3.045959
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:255:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   accepted: 1,
+    +   rejected: 0
+    -   accepted: 0,
+    -   rejected: 1
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    accepted: 0
+    rejected: 1
+  actual:
+    accepted: 1
+    rejected: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:260:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: signed connector envelope rejects before entry effects
+not ok 2 - signed connector envelope rejects before entry effects
+  ---
+  duration_ms: 4.532416
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:262:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    message: 'Connector dispatch is unsupported by this agent.'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:270:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: connector mode rejects before dispatch acceptance
+not ok 3 - connector mode rejects before dispatch acceptance
+  ---
+  duration_ms: 3.314333
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:255:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   accepted: 1,
+    +   rejected: 0
+    -   accepted: 0,
+    -   rejected: 1
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    accepted: 0
+    rejected: 1
+  actual:
+    accepted: 1
+    rejected: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:260:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: connector mode rejects before entry effects
+not ok 4 - connector mode rejects before entry effects
+  ---
+  duration_ms: 3.464667
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:262:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    message: 'Connector dispatch is unsupported by this agent.'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:270:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: partial spec envelope rejects before dispatch acceptance
+not ok 5 - partial spec envelope rejects before dispatch acceptance
+  ---
+  duration_ms: 1.342083
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:255:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   accepted: 1,
+    +   rejected: 0
+    -   accepted: 0,
+    -   rejected: 1
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    accepted: 0
+    rejected: 1
+  actual:
+    accepted: 1
+    rejected: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:260:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: partial spec envelope rejects before entry effects
+not ok 6 - partial spec envelope rejects before entry effects
+  ---
+  duration_ms: 1.467541
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:262:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    message: 'Connector dispatch is unsupported by this agent.'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:270:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: partial signature envelope rejects before dispatch acceptance
+not ok 7 - partial signature envelope rejects before dispatch acceptance
+  ---
+  duration_ms: 1.401125
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:255:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   accepted: 1,
+    +   rejected: 0
+    -   accepted: 0,
+    -   rejected: 1
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    accepted: 0
+    rejected: 1
+  actual:
+    accepted: 1
+    rejected: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:260:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# {"component":"remote_video","event":"closed","subscriptions":0,"decoded":0,"consumed":0,"dropped":0,"failures":0,"width":0,"height":0,"consumedWidth":0,"consumedHeight":0,"frameAgeMs":0}
+# Subtest: partial signature envelope rejects before entry effects
+not ok 8 - partial signature envelope rejects before entry effects
+  ---
+  duration_ms: 1.834542
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:262:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    message: 'Connector dispatch is unsupported by this agent.'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/.local/hook-qualification/agent/tests/agent-startup.test.mjs:270:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 0
+# fail 8
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 924.526583

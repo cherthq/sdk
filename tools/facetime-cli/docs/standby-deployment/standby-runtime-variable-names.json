@@ -1,0 +1,10 @@
+{
+  "added": [
+    "CHERT_CONNECTION_TOKEN",
+    "CHERT_RECOVERY_TOKEN",
+    "PILOT_VOLUME_ID",
+    "PORT"
+  ],
+  "user_management_token_deployed": false,
+  "bootstrap_config_secret_free": true
+}

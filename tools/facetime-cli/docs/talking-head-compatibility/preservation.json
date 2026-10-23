@@ -1,0 +1,10 @@
+{
+  "baseline_files": 11629,
+  "historical_protected_files": 3931,
+  "historical_unchanged": true,
+  "missing_files": [],
+  "changed_files": 106,
+  "whitespace": "pass (compiler tsbuildinfo excluded)",
+  "tracked_diff_checks": "pass in all three repositories",
+  "tarball_members_match": 66
+}

@@ -1,0 +1,36 @@
+{
+  "rules": [
+    {
+      "name": "line-release-retired-deployments",
+      "active": true,
+      "action": {
+        "mitigate": {
+          "action": "deny"
+        }
+      },
+      "id": "rule_line_release_quiesce_Zr6KPK",
+      "conditionGroup": [
+        {
+          "conditions": [
+            {
+              "neg": true,
+              "op": "inc",
+              "type": "host",
+              "value": [
+                "facetime.trychert.com",
+                "chert-facetime-control-plane.vercel.app",
+                "chert-facetime-control-plane-chert-technologies.vercel.app",
+                "chert-facetime-control-plane-gj13u9tm6-chert-technologies.vercel.app"
+              ]
+            }
+          ]
+        }
+      ],
+      "valid": true,
+      "validationErrors": null,
+      "_status": "live"
+    }
+  ],
+  "hasDraft": false,
+  "pendingChanges": 0
+}

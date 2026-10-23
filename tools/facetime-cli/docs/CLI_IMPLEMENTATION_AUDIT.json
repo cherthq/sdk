@@ -1,0 +1,40 @@
+{
+  "historical_files_unchanged": 76,
+  "changed_historical_files": [],
+  "whitespace_checked_files": 57,
+  "whitespace_findings": [],
+  "interactive": {
+    "runtime": "24.14.0",
+    "tty_prompts_completed": 6,
+    "exit": 0,
+    "config_mode": "0o600",
+    "transport": "unconfigured",
+    "state_created": false,
+    "network_requests": 0
+  },
+  "artifact": ".local/cli-package-review/chert-local-transport-proof-0.0.0.tgz",
+  "artifact_sha256": "0a7453e5a6669ebc38a2418f13b28945ebc743191a55fb2357b79c49eb9fb0b6",
+  "package_files": 25,
+  "matrix": {
+    "22.23.2": {
+      "tests": 226,
+      "pass": 226,
+      "typecheck": true,
+      "lint": true,
+      "build": true,
+      "synthetic_calls": 20,
+      "remaining_debt": 0,
+      "installed_package_lifecycle": true
+    },
+    "24.14.0": {
+      "tests": 226,
+      "pass": 226,
+      "typecheck": true,
+      "lint": true,
+      "build": true,
+      "synthetic_calls": 20,
+      "remaining_debt": 0,
+      "installed_package_lifecycle": true
+    }
+  }
+}

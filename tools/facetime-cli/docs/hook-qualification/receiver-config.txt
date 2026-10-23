@@ -1,0 +1,18 @@
+
+> demo-agent-0@1.0.0 demo
+> node --env-file-if-exists=.env.local scripts/demo.mjs --config
+
+Demo target: demo-agent-0 (existing hosted agent)
+Receiver: https://talking-head-webhook-production.up.railway.app
+Local env: /Users/garygao/demo-agent-0/.env.local (loaded; shell variables take precedence)
+Local LiveKit project: chert-byor-staging-wi1rapq6.livekit.cloud
+Local AGENT_PROFILE: classic
+Local CHERT_AGENT_RUN_MODE: continuous
+Local REMOTE_VIDEO_ENABLED: true (default)
+Outbound CLI settings: enabled=true; media=audio (default)
+Local credentials: LIVEKIT_API_KEY=set; LIVEKIT_API_SECRET=set; OPENAI_API_KEY=set; LEMONSLICE_API_KEY=set; LEMONSLICE_AGENT_ID=set
+Local worker/outbound settings are informational here; the hosted deployment controls this demo. Secret values are hidden.
+Hosted receiver revision: 08c33cf; mode=continuous, automatic refill; media=audio+video
+Hosted profile: classic
+Hosted limits: preparation=45s; wait=270s; total=600s; terminal lease=not required
+Configuration only. No avatar started.

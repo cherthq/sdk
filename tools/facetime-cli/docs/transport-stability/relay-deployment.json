@@ -1,0 +1,75 @@
+{
+  "deployment": {
+    "id": "9de3f096-fbb2-4105-8934-6f630c619e68",
+    "instances": [
+      {
+        "id": "bc95c7c2-a0c7-4be1-9e15-bb4a04b1f5b2",
+        "status": "RUNNING"
+      }
+    ],
+    "meta": {
+      "buildOnly": false,
+      "cliAgentSessionId": "01a0f013-3591-7a50-a8ab-6ac3fa0aaddb",
+      "cliCaller": "codex",
+      "fileServiceManifest": {},
+      "imageDigest": "sha256:86ca5a60cdaf985a797efd18f8dcc8d6b2388aba6b6dd5270b4853200f1fc2f5",
+      "logsV2": true,
+      "nixpacksProviders": [],
+      "propertyFileMapping": {
+        "build.buildCommand": "$.build.buildCommand",
+        "build.builder": "$.build.builder",
+        "deploy.drainingSeconds": "$.deploy.drainingSeconds",
+        "deploy.healthcheckPath": "$.deploy.healthcheckPath",
+        "deploy.healthcheckTimeout": "$.deploy.healthcheckTimeout",
+        "deploy.numReplicas": "$.deploy.numReplicas",
+        "deploy.overlapSeconds": "$.deploy.overlapSeconds",
+        "deploy.restartPolicyMaxRetries": "$.deploy.restartPolicyMaxRetries",
+        "deploy.restartPolicyType": "$.deploy.restartPolicyType",
+        "deploy.sleepApplication": "$.deploy.sleepApplication",
+        "deploy.startCommand": "$.deploy.startCommand"
+      },
+      "reason": "deploy",
+      "rootDirectory": null,
+      "runtime": "V2",
+      "serviceManifest": {
+        "build": {
+          "buildCommand": "npm ci --omit=dev --ignore-scripts && npm run check",
+          "buildEnvironment": "V3",
+          "builder": "RAILPACK",
+          "dockerfilePath": null,
+          "nixpacksConfigPath": null,
+          "nixpacksPlan": null,
+          "watchPatterns": []
+        },
+        "deploy": {
+          "cronSchedule": null,
+          "drainingSeconds": 30,
+          "healthcheckPath": "/healthz",
+          "healthcheckTimeout": 60,
+          "ipv6EgressEnabled": false,
+          "limitOverride": null,
+          "multiRegionConfig": {
+            "us-west2": {
+              "numReplicas": 1
+            }
+          },
+          "numReplicas": 1,
+          "overlapSeconds": 0,
+          "preDeployCommand": null,
+          "preDeployTimeoutSeconds": null,
+          "region": null,
+          "registryCredentials": null,
+          "requiredMountPath": null,
+          "restartPolicyMaxRetries": 10,
+          "restartPolicyType": "ON_FAILURE",
+          "runtime": "V2",
+          "sleepApplication": false,
+          "startCommand": "npm start",
+          "useLegacyStacker": false
+        }
+      },
+      "volumeMounts": []
+    },
+    "status": "SUCCESS"
+  }
+}

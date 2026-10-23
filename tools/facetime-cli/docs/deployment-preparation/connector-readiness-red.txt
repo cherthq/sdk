@@ -1,0 +1,32 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/connector-production-compatibility.test.ts -t rejects connector acceptance
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/deployment-preparation/candidate/control-plane
+
+ ❯ tests/connector-production-compatibility.test.ts (4 tests | 1 failed | 3 skipped) 888ms
+     × rejects connector acceptance when automatic worker readiness has gone stale 887ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > rejects connector acceptance when automatic worker readiness has gone stale
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/connector-production-compatibility.test.ts:52:114
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  22:22:25
+   Duration  989ms (transform 20ms, setup 12ms, import 16ms, tests 888ms, environment 0ms)
+

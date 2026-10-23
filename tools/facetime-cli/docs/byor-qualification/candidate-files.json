@@ -1,0 +1,105 @@
+{
+  "base": "cbb22ee854e26219aea92d67fa401433cdb4d84c",
+  "files": [
+    {
+      "path": "connector-relay/.gitignore",
+      "sha256": "32aab7889babab433487cf165b2c692488a5c4db094daf31949622c8c6191222"
+    },
+    {
+      "path": "connector-relay/.node-version",
+      "sha256": "08062faf0d7a2d22f5d7933c50e975dd1527034275597be7c1b3b9fd2b9d079a"
+    },
+    {
+      "path": "connector-relay/README.md",
+      "sha256": "b3a6704263c839687d9bc637bfad34a0e77872ecfa0f04eb52a169576c5e0369"
+    },
+    {
+      "path": "connector-relay/main.mjs",
+      "sha256": "e30d8e399c2d55d5a34820926fe43daf9b0130ac8272b1f98940f656811ca752"
+    },
+    {
+      "path": "connector-relay/package-lock.json",
+      "sha256": "892d6a970edff99273027771d83e4d19d465630aa758b27b0c83a3ad8729ab22"
+    },
+    {
+      "path": "connector-relay/package.json",
+      "sha256": "d7f73a84ccfaa9f47eba6028b056e019fcfc53a7048d5f0f55f234e8beaff67c"
+    },
+    {
+      "path": "connector-relay/railway.json",
+      "sha256": "28aaecc8e5eb12e06942a23132b8f9657d542d19eea43ba19d3c3dbaf12df7d5"
+    },
+    {
+      "path": "connector-relay/relay.mjs",
+      "sha256": "fe1c09cff46205bc27747e88288871fa79aa96fdf60945d48b10fb80527fefba"
+    },
+    {
+      "path": "connector-relay/tests/security.test.mjs",
+      "sha256": "34dd8678a4ae241ce8f095d4a89ae5f2fd2a0648c360198f6f5913b7be68f05b"
+    },
+    {
+      "path": "control-plane/app/api/internal/v1/connectors/route.ts",
+      "sha256": "3be3b07abfe04ef50d895bc70fb379e2d6dead606b4e39f1f1954cdc7fae07ed"
+    },
+    {
+      "path": "control-plane/app/api/v1/connectors/route.ts",
+      "sha256": "f954ebad5b8f2f8cca5a4769a707d69a4c323a7927dc3018370288302df899fb"
+    },
+    {
+      "path": "control-plane/src/lib/facetime/connectors.ts",
+      "sha256": "b7833627b36ebcfa24a072b7cfc4dddc0255fbd95841a866cc1f0bf33eefb781"
+    },
+    {
+      "path": "control-plane/src/lib/facetime/data-access.ts",
+      "sha256": "b38365de921c8f7c9d3ba0c1551a6abdfe0f6074fc37f96f7f4463fc14c71d01"
+    },
+    {
+      "path": "control-plane/src/lib/facetime/store.ts",
+      "sha256": "e4f3bbf9857a6f0cd738e920e163452af794c6c9c09d62e9f0b8a71c166999a9"
+    },
+    {
+      "path": "control-plane/src/lib/facetime/webhook-core.ts",
+      "sha256": "ab5ec484b5e7ef739c2e66b510f25f16da7b8484469edd1a846efee8e60eb9fb"
+    },
+    {
+      "path": "control-plane/supabase/migrations/20260929222047_connector_backend.sql",
+      "sha256": "74bef593bfbde04b70ca52412b60efa59d27b83a51a40653fd07a537ad2a15a7"
+    },
+    {
+      "path": "control-plane/tests/connector-incoming.test.ts",
+      "sha256": "4a5ca9ad8526b9bbef6218b2631631882e4a91274fdbc78e80b3608625f90f51"
+    },
+    {
+      "path": "control-plane/tests/connector-production-compatibility.test.ts",
+      "sha256": "17c8f652ac2a9316d7db33145e1ab42e83a741e190a68f7a374b0b0b0484d15b"
+    },
+    {
+      "path": "control-plane/tests/connector-service.test.ts",
+      "sha256": "1e109e89097595c6141278265b16653fb8d91eb897814dd36f7cd364adc0a448"
+    },
+    {
+      "path": "control-plane/tests/connectors.test.ts",
+      "sha256": "0499c11d25e2cb5bc9bdf45b8d7f83fbf32457c407a79020bb99332d148abc8b"
+    },
+    {
+      "path": "control-plane/tests/helpers/isolated-postgres.ts",
+      "sha256": "8bb9cd320a92791f2249e4f590b59ad24597127785a849adca5a5234f2b27e5d"
+    },
+    {
+      "path": "control-plane/package.json",
+      "sha256": "e4efbe2c9a21a84b0e6bd1af3f25b3729345ac4ffdbd2772b05be848e8309354"
+    },
+    {
+      "path": "control-plane/package-lock.json",
+      "sha256": "47af049bdc3845dd4eb02f1256317ff0c12b30772c01179358d4174526867637"
+    },
+    {
+      "path": "control-plane/tests/session-cleanup-ordering.test.ts",
+      "sha256": "504b1880e973904b2c7b3038bb95738d0c18fb6a64fa8e89a9d4f8263348842d"
+    },
+    {
+      "path": "control-plane/supabase/migrations/20260930033750_connector_byor_mode.sql",
+      "sha256": "a8ec9173f70e22b16b8e3b964115383c45064e6609ade1b2f052cdb82d173b4f"
+    }
+  ]
+}

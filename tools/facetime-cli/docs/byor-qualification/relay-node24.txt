@@ -1,0 +1,15 @@
+
+> @chert/connector-relay@0.0.0 test
+> node --test tests/*.test.mjs
+
+✔ deployment requires encrypted origins and isolated mode only permits literal loopback (0.60625ms)
+✔ malformed credentials never reach the control-plane network (15.114958ms)
+✔ an unavailable authority is distinct from rejected authorization (5.275792ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.584

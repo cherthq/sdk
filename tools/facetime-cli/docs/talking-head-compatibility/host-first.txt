@@ -1,0 +1,121 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_________ test_sigkill_reopen_retains_claim_and_expires_independently __________
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-55/test_sigkill_reopen_retains_cl0')
+
+    @pytest.mark.asyncio
+    async def test_sigkill_reopen_retains_claim_and_expires_independently(tmp_path):
+        os.chmod(tmp_path, 0o700)
+>       process = await start(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^
+
+../demo-agent-0/connector/tests/test_host.py:51:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../demo-agent-0/connector/tests/test_host.py:32: in start
+    if (await rpc(directory/'owner.sock', 'health'))['ok']:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../demo-agent-0/connector/tests/test_host.py:14: in rpc
+    reader, writer = await asyncio.open_unix_connection(str(path))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/streams.py:97: in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/unix_events.py:261: in create_unix_connection
+    await self.sock_connect(sock, path)
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py:651: in sock_connect
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_UnixSelectorEventLoop running=False closed=False debug=False>
+fut = None, sock = <socket.socket [closed] fd=-1, family=1, type=1, proto=0>
+address = '/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-55/test_sigkill_reopen_retains_cl0/owner.sock'
+
+    def _sock_connect(self, fut, sock, address):
+        fd = sock.fileno()
+        try:
+>           sock.connect(address)
+E           OSError: AF_UNIX path too long
+
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py:659: OSError
+________ test_owner_watch_expires_short_test_lease_without_any_callback ________
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-55/test_owner_watch_expires_short0')
+
+    @pytest.mark.asyncio
+    async def test_owner_watch_expires_short_test_lease_without_any_callback(tmp_path):
+        os.chmod(tmp_path, 0o700)
+>       process = await start(tmp_path, '--short-ttl')
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../demo-agent-0/connector/tests/test_host.py:81:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../demo-agent-0/connector/tests/test_host.py:32: in start
+    if (await rpc(directory/'owner.sock', 'health'))['ok']:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../demo-agent-0/connector/tests/test_host.py:14: in rpc
+    reader, writer = await asyncio.open_unix_connection(str(path))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/streams.py:97: in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/unix_events.py:261: in create_unix_connection
+    await self.sock_connect(sock, path)
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py:651: in sock_connect
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_UnixSelectorEventLoop running=False closed=False debug=False>
+fut = None, sock = <socket.socket [closed] fd=-1, family=1, type=1, proto=0>
+address = '/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-55/test_owner_watch_expires_short0/owner.sock'
+
+    def _sock_connect(self, fut, sock, address):
+        fd = sock.fileno()
+        try:
+>           sock.connect(address)
+E           OSError: AF_UNIX path too long
+
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py:659: OSError
+________ test_second_writer_cannot_unlink_live_socket_or_mutate_claims _________
+
+tmp_path = PosixPath('/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-55/test_second_writer_cannot_unli0')
+
+    @pytest.mark.asyncio
+    async def test_second_writer_cannot_unlink_live_socket_or_mutate_claims(tmp_path):
+        os.chmod(tmp_path, 0o700)
+>       process = await start(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^
+
+../demo-agent-0/connector/tests/test_host.py:99:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../demo-agent-0/connector/tests/test_host.py:32: in start
+    if (await rpc(directory/'owner.sock', 'health'))['ok']:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../demo-agent-0/connector/tests/test_host.py:14: in rpc
+    reader, writer = await asyncio.open_unix_connection(str(path))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/streams.py:97: in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/unix_events.py:261: in create_unix_connection
+    await self.sock_connect(sock, path)
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py:651: in sock_connect
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_UnixSelectorEventLoop running=False closed=False debug=False>
+fut = None, sock = <socket.socket [closed] fd=-1, family=1, type=1, proto=0>
+address = '/private/var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/pytest-of-garygao/pytest-55/test_second_writer_cannot_unli0/owner.sock'
+
+    def _sock_connect(self, fut, sock, address):
+        fd = sock.fileno()
+        try:
+>           sock.connect(address)
+E           OSError: AF_UNIX path too long
+
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py:659: OSError
+=========================== short test summary info ============================
+FAILED ../demo-agent-0/connector/tests/test_host.py::test_sigkill_reopen_retains_claim_and_expires_independently
+FAILED ../demo-agent-0/connector/tests/test_host.py::test_owner_watch_expires_short_test_lease_without_any_callback
+FAILED ../demo-agent-0/connector/tests/test_host.py::test_second_writer_cannot_unlink_live_socket_or_mutate_claims
+3 failed in 0.32s

@@ -1,0 +1,22 @@
+{
+  "base": "52b43a4be253bc815e32b205a8f1118870b85955",
+  "release": "byor-av-pilot-20260930-r1",
+  "files": [
+    "connector/README.md",
+    "connector/control.py",
+    "connector/handler.ts",
+    "connector/host/chert-byor.service",
+    "connector/host/talking-head-owner.service",
+    "connector/owner.py",
+    "connector/ready_adapter.py",
+    "connector/ready_owner.py",
+    "connector/server.py",
+    "connector/tests/fixture_server.py",
+    "connector/tests/substitutes.py",
+    "connector/tests/test_host.py",
+    "connector/tests/test_owner.py",
+    "connector/tests/test_ready_owner.py",
+    "tests/agent-startup.test.mjs",
+    "tests/muse-startup.test.mjs"
+  ]
+}

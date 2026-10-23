@@ -1,0 +1,614 @@
+[
+  {
+    "source_evidence": [
+      "upload.json"
+    ],
+    "id": "0ee308fc-8d96-4e9f-a47a-31882ac02b97",
+    "instances": [
+      {
+        "id": "3f22bc4e-eeec-4f60-9a71-93ec783eef33",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "UNSPECIFIED",
+      "sleepApplication": false,
+      "startCommand": "python -c \"import time; time.sleep(3600)\"",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "RAILPACK",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "grace-probe-end-upload.json"
+    ],
+    "id": "98b51a9d-e613-4a69-af39-609edc760fae",
+    "instances": [
+      {
+        "id": "b01ac238-c473-4fd6-873b-65e8fbcb8d13",
+        "status": "RUNNING"
+      }
+    ],
+    "status": "SUCCESS",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "grace-probe-upload.json"
+    ],
+    "id": "73dc53a6-49a7-4f46-9678-d78e1944d393",
+    "instances": [
+      {
+        "id": "231d49df-7868-4468-a0a9-a511fdafaa5d",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/local/bin/python /state/grace-timer.py",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "run-upload-corrected.json"
+    ],
+    "id": "bdfaea8e-3f8e-487b-95db-f3e446c2ea45",
+    "instances": [
+      {
+        "id": "e9fd7d46-ba17-46fc-ae90-a94d827351af",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": "/healthz",
+      "healthcheckTimeout": 90,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /qualification/entry.py run",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "hold-upload.json"
+    ],
+    "id": "986e846a-f240-416c-ac84-883036fad7a8",
+    "instances": [
+      {
+        "id": "1d96bf3d-cc9f-4c12-afc1-61eca8f54e0a",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": null,
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": "/healthz",
+      "healthcheckTimeout": 90,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "replacement-upload.json"
+    ],
+    "id": "517ddbb2-8279-4d14-8caf-38c1b3e7a11c",
+    "instances": [
+      {
+        "id": "fc236832-aba8-49e5-a29a-6ed6b51a219f",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": "/healthz",
+      "healthcheckTimeout": 90,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /qualification/entry.py run",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "grace-upload.json"
+    ],
+    "id": "1a9c8197-4136-4c5e-a54c-e13e2d2224d7",
+    "instances": [
+      {
+        "id": "fe48e513-d6d0-461f-baeb-6c87103bd90c",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "hold-corrected-upload.json"
+    ],
+    "id": "2d5814db-f9a6-4ca5-9f2a-7a1607a5f0fc",
+    "instances": [
+      {
+        "id": "f836ce24-2669-4742-afcb-831c8a05172a",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "no-mount-upload.json"
+    ],
+    "id": "b5ac8e2c-5134-4c10-bdb0-db441d516fe7",
+    "instances": [
+      {
+        "id": "aa851804-b969-45eb-bb0d-c0987b9b88b6",
+        "status": "CRASHED"
+      }
+    ],
+    "status": "CRASHED",
+    "imageDigest": "sha256:57e95d9d1a69416da5c0f887d43d2d2b0d7e93b16e77ec9d4c12d0dd7af34e38",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /qualification/entry.py run",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "case-2-upload.json"
+    ],
+    "id": "e6182de9-fa77-4b43-b7a7-8f3a9708acd7",
+    "instances": [
+      {
+        "id": "b9f486b9-d7db-48c5-8bc3-6ef7b45099af",
+        "status": "REMOVED"
+      }
+    ],
+    "status": "REMOVED",
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 65,
+      "healthcheckPath": "/healthz",
+      "healthcheckTimeout": 90,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /qualification/entry.py run",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    }
+  },
+  {
+    "source_evidence": [
+      "grace-70-deployment.json"
+    ],
+    "id": "2e97fa66-57e5-4845-a6cb-78552ef9d244",
+    "status_at_observation": "SUCCESS",
+    "instances": [
+      {
+        "id": "0c2a6f1b-b3da-4b29-8969-d59a4dd196df",
+        "status": "RUNNING"
+      }
+    ],
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 70,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/local/bin/python /state/grace-timer-70.py",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    },
+    "service_retired_after_observation": true
+  },
+  {
+    "source_evidence": [
+      "grace-70-end-deployment.json"
+    ],
+    "id": "c3659060-4d11-45c0-b6ea-2c4f08297dbd",
+    "status_at_observation": "SUCCESS",
+    "instances": [
+      {
+        "id": "06429f69-2c6b-458d-9a8a-21e05355e514",
+        "status": "RUNNING"
+      }
+    ],
+    "imageDigest": "sha256:4861d5dfef8469da5fa8aa685b4d581cd8eeaa47a76b9588a0ba824666a5ee5c",
+    "deploy": {
+      "cronSchedule": null,
+      "drainingSeconds": 70,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "ipv6EgressEnabled": false,
+      "limitOverride": null,
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "numReplicas": 1,
+      "overlapSeconds": 0,
+      "preDeployCommand": null,
+      "preDeployTimeoutSeconds": null,
+      "region": null,
+      "requiredMountPath": null,
+      "restartPolicyMaxRetries": null,
+      "restartPolicyType": "NEVER",
+      "runtime": "V2",
+      "sleepApplication": false,
+      "startCommand": "/usr/local/bin/python -c \"import time; time.sleep(3600)\"",
+      "useLegacyStacker": false
+    },
+    "volumeMounts": [
+      "/state"
+    ],
+    "build": {
+      "buildCommand": null,
+      "buildEnvironment": "V3",
+      "builder": "DOCKERFILE",
+      "dockerfilePath": "/Dockerfile",
+      "nixpacksConfigPath": null,
+      "nixpacksPlan": null,
+      "watchPatterns": []
+    },
+    "service_retired_after_observation": true
+  }
+]

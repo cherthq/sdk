@@ -1,0 +1,14 @@
+E731 Do not assign a `lambda` expression, use a `def`
+  --> /Users/garygao/demo-agent-0/connector/tests/test_host.py:70:9
+   |
+68 |         state = (await rpc(tmp_path/'owner.sock','recover',call=request,context={}))['result']
+69 |         assert state['session_ref'] == accepted['session_ref'] and state['cleanup'] == 'pending'
+70 |         provider = lambda: json.loads((tmp_path/'provider.json').read_text())
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+71 |         assert provider()['creates'] == 1 and provider()['deletes'] == 0
+72 |         assert (await rpc(tmp_path/'owner.sock','prepare',call=request))['result']['action'] == 'decline'
+   |
+help: Rewrite `provider` as a `def`
+
+Found 1 error.
+No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).

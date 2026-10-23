@@ -1,0 +1,32 @@
+{
+  "domains": [
+    {
+      "name": "facetime.trychert.com",
+      "apexName": "trychert.com",
+      "projectId": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5",
+      "redirect": null,
+      "redirectStatusCode": null,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "updatedAt": 1787459511945,
+      "createdAt": 1787459425096,
+      "verified": true
+    },
+    {
+      "name": "chert-facetime-control-plane.vercel.app",
+      "apexName": "vercel.app",
+      "projectId": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5",
+      "redirect": null,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "updatedAt": 1787061863488,
+      "createdAt": 1787061863488,
+      "verified": true
+    }
+  ],
+  "pagination": {
+    "count": 2,
+    "next": null,
+    "prev": 1787459425096
+  }
+}

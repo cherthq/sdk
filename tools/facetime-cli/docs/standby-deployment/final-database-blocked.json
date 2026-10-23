@@ -1,0 +1,16 @@
+[
+  {
+    "observed_at": "2026-09-30 14:25:44.301167+00",
+    "binding_id": "0b758533-1c9a-4cc0-b5a5-cfcd2464b281",
+    "state": "standby",
+    "session_mode": "byor",
+    "generation": 8,
+    "connected": false,
+    "assignment_generation": 3,
+    "integration_id": "946445e1-2c0f-478d-a049-72c8dd9762f2",
+    "inbound_policy": "customer_decides",
+    "default_assistant_id": null,
+    "current_call_id": null,
+    "connector_deliveries": 0
+  }
+]

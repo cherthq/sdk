@@ -1,0 +1,20 @@
+TAP version 13
+# Subtest: authority heartbeat is absent during a stalled poll and emitted only after recovery
+not ok 1 - authority heartbeat is absent during a stalled poll and emitted only after recovery
+  ---
+  duration_ms: 6003.893292
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/.local/transport-stability/relay-heartbeat-red/tests/poll-recovery.test.mjs:92:1'
+  failureType: 'testTimeoutFailure'
+  error: 'test timed out after 6000ms'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 0
+# cancelled 1
+# skipped 0
+# todo 0
+# duration_ms 6084.078708

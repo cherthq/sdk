@@ -1,0 +1,16 @@
+(node:18892) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ probe accepts only signed bounded metadata for the isolated target (5.863125ms)
+✔ expired, unbounded and malformed dispatches fail before job effects (0.211042ms)
+✔ probe effects are fenced: cancel_before_connect (15.107ms)
+✔ probe effects are fenced: cancel_after_connect (0.661125ms)
+✔ probe effects are fenced: ready_then_cleanup (1.569292ms)
+✔ unsupported probe runtime fails during configuration before worker effects (0.179208ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65.37225

@@ -1,0 +1,11 @@
+{
+  "historical_40_entries_unchanged": true,
+  "new_version": "20260930140442",
+  "bindings": 0,
+  "deliveries": 0,
+  "rls": true,
+  "service_runtime": true,
+  "service_private": false,
+  "public_rpcs": false,
+  "public_tables": false
+}

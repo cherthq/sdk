@@ -1,0 +1,39 @@
+TAP version 13
+# Subtest: authoritative decline for a non-allocating health rejection records a tombstone without disconnecting
+not ok 1 - authoritative decline for a non-allocating health rejection records a tombstone without disconnecting
+  ---
+  duration_ms: 4.314041
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/state.test.js:161:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception.
+    Actual message: "forbidden"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'forbidden'
+  stack: |-
+    Connector.entryFor (file:///Users/garygao/chert-facetime-cli/dist/src/runtime/connector.js:172:19)
+    Connector.committed (file:///Users/garygao/chert-facetime-cli/dist/src/runtime/connector.js:176:28)
+    file:///Users/garygao/chert-facetime-cli/dist/tests/transport/state.test.js:167:43
+    getActual (node:assert:609:5)
+    Function.doesNotThrow (node:assert:777:32)
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/state.test.js:167:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  operator: 'doesNotThrow'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/state.test.js:167:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 75.170833

@@ -1,0 +1,64 @@
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/deployment-preparation/candidate/control-plane
+
+ ❯ tests/connector-production-compatibility.test.ts (3 tests | 3 failed) 2254ms
+     × retains unsigned incoming pin, context and acceptance without signing keys 785ms
+     × rejects stale automatic readiness at legacy acceptance commit 745ms
+     × retains outbound call.started at bridge_ready rather than active 724ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > retains unsigned incoming pin, context and acceptance without signing keys
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-25ohwu -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/supabase/migrations/20260929222047_connector_backend.sql
+psql: error: /Users/garygao/chert-facetime-cli/supabase/migrations/20260929222047_connector_backend.sql: No such file or directory
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:22:50
+ ❯ tests/connector-production-compatibility.test.ts:10:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > rejects stale automatic readiness at legacy acceptance commit
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-x5byPH -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/supabase/migrations/20260929222047_connector_backend.sql
+psql: error: /Users/garygao/chert-facetime-cli/supabase/migrations/20260929222047_connector_backend.sql: No such file or directory
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:22:50
+ ❯ tests/connector-production-compatibility.test.ts:19:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/connector-production-compatibility.test.ts > deployed compatibility > retains outbound call.started at bridge_ready rather than active
+Error: Command failed: /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-pg17-build-xwwuaxyg/install/bin/psql -X -h /var/folders/6w/_5rp36r16c71dr4x4qn6k7xm0000gn/T/chert-line-pg-m44GvP -U postgres -d postgres -v ON_ERROR_STOP=1 -f /Users/garygao/chert-facetime-cli/supabase/migrations/20260929222047_connector_backend.sql
+psql: error: /Users/garygao/chert-facetime-cli/supabase/migrations/20260929222047_connector_backend.sql: No such file or directory
+
+ ❯ run tests/helpers/isolated-postgres.ts:10:65
+      8|   const root = mkdtempSync(join(tmpdir(), "chert-line-pg-"));
+      9|   const env = { PATH: process.env.PATH, LC_ALL: "C", HOME: root, NODE_…
+     10|   const run = (name: string, args: string[], input?: string) => execFi…
+       |                                                                 ^
+     11|     { env, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+     12|   run("initdb", ["-D", join(root, "data"), "-A", "trust", "--no-locale…
+ ❯ isolatedPostgres tests/helpers/isolated-postgres.ts:22:50
+ ❯ tests/connector-production-compatibility.test.ts:26:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  22:15:11
+   Duration  2.35s (transform 19ms, setup 11ms, import 15ms, tests 2.25s, environment 0ms)
+

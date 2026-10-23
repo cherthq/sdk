@@ -1,0 +1,32 @@
+
+> @chert/connector-relay@0.0.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: deployment requires encrypted origins and isolated mode only permits literal loopback
+ok 1 - deployment requires encrypted origins and isolated mode only permits literal loopback
+  ---
+  duration_ms: 0.822083
+  type: 'test'
+  ...
+# Subtest: malformed credentials never reach the control-plane network
+ok 2 - malformed credentials never reach the control-plane network
+  ---
+  duration_ms: 14.525833
+  type: 'test'
+  ...
+# Subtest: an unavailable authority is distinct from rejected authorization
+ok 3 - an unavailable authority is distinct from rejected authorization
+  ---
+  duration_ms: 4.420583
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 99.890667

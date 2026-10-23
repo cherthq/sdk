@@ -1,0 +1,39 @@
+{
+  "historical_files_unchanged": 85,
+  "changed_historical_files": [],
+  "historical_debts": "Both preserved; no recovery or reclassification performed",
+  "whitespace_checked_files": [
+    "src/runtime/connector.ts",
+    "tests/transport/expiry.test.ts",
+    "docs/CLI_IMPLEMENTATION_BRIEF.md",
+    "docs/CLI_IMPLEMENTATION_RESULTS.md"
+  ],
+  "whitespace_findings": [],
+  "focused_tests": 16,
+  "supported_matrix": {
+    "22.23.2": {
+      "tests": 242,
+      "pass": 242,
+      "typecheck": true,
+      "lint": true,
+      "build": true,
+      "synthetic_calls": 20,
+      "remaining_debt": 0,
+      "installed_package_lifecycle": true
+    },
+    "24.14.0": {
+      "tests": 242,
+      "pass": 242,
+      "typecheck": true,
+      "lint": true,
+      "build": true,
+      "synthetic_calls": 20,
+      "remaining_debt": 0,
+      "installed_package_lifecycle": true
+    }
+  },
+  "artifact": ".local/cli-expiry-review/chert-local-transport-proof-0.0.0.tgz",
+  "artifact_sha256": "6d3bb36daa4da54dd853a040a85463c5d1da8a4f738cd5f088815437ab2838a3",
+  "package_files": 25,
+  "live_sessions": 0
+}

@@ -1,0 +1,16 @@
+npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+
+added 446 packages, and audited 447 packages in 4s
+
+165 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (2 moderate, 2 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues, run:
+  npm audit fix --force
+
+Run `npm audit` for details.

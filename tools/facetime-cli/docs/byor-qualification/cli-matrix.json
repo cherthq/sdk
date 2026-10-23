@@ -1,0 +1,50 @@
+[
+  {
+    "node": "22",
+    "check": "typecheck",
+    "exit_code": 0,
+    "seconds": 1.25
+  },
+  {
+    "node": "22",
+    "check": "lint",
+    "exit_code": 0,
+    "seconds": 1.01
+  },
+  {
+    "node": "22",
+    "check": "full",
+    "exit_code": 1,
+    "seconds": 21.04
+  },
+  {
+    "node": "22",
+    "check": "transport",
+    "exit_code": 0,
+    "seconds": 2.68
+  },
+  {
+    "node": "24",
+    "check": "typecheck",
+    "exit_code": 0,
+    "seconds": 1.77
+  },
+  {
+    "node": "24",
+    "check": "lint",
+    "exit_code": 0,
+    "seconds": 1.38
+  },
+  {
+    "node": "24",
+    "check": "full",
+    "exit_code": 0,
+    "seconds": 81.27
+  },
+  {
+    "node": "24",
+    "check": "transport",
+    "exit_code": 0,
+    "seconds": 2.19
+  }
+]

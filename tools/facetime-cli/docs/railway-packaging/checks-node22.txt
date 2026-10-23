@@ -1,0 +1,8 @@
+
+> chert-local-transport-proof@0.0.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+
+> chert-local-transport-proof@0.0.0 lint
+> eslint src tests
+

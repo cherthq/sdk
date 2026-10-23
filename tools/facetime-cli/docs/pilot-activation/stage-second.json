@@ -1,0 +1,14 @@
+{
+  "started_at": "2026-09-30T20:08:24.896097+00:00",
+  "slot_id": "pilot-20260930-call2",
+  "operation": "stage",
+  "attempt": 1,
+  "finished_at": "2026-09-30T20:08:27.607145+00:00",
+  "exit_code": 0,
+  "result": {
+    "ok": true,
+    "result": {
+      "state": "ready"
+    }
+  }
+}

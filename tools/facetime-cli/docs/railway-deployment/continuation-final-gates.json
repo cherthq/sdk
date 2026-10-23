@@ -1,0 +1,14 @@
+[
+  {
+    "observed_at": "2026-09-30 13:45:33.583733+00",
+    "other_project_name": "Brodie",
+    "nonterminal_calls": 0,
+    "uncleaned_sessions": 4,
+    "pilot_line": {
+      "inbound_policy": "customer_decides",
+      "current_call_id": null,
+      "default_assistant_id": null,
+      "assignment_generation": 3
+    }
+  }
+]

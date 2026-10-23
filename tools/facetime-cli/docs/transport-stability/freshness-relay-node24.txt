@@ -1,0 +1,21 @@
+✔ a single stalled poll recovers without another connection or lost delivery (2165.928917ms)
+✔ authorization 401 closes immediately without retry (4.383791ms)
+✔ authorization 403 closes immediately without retry (2.86375ms)
+✔ two unavailable polls close instead of retrying indefinitely (105.819333ms)
+✔ invalid authority JSON closes without retry or raw-data diagnostics (2.559708ms)
+✔ a successful retry still honors the new binding role (104.580792ms)
+✔ decision failures are never replayed as poll retries (4.1095ms)
+✔ network reset on a poll is retried without changing generation (103.830209ms)
+✔ retry is bounded by the last confirmed lease, not a fresh five seconds (5003.009584ms)
+✔ authority heartbeat is absent during a stalled poll and emitted only after recovery (2105.549458ms)
+✔ deployment requires encrypted origins and isolated mode only permits literal loopback (0.591292ms)
+✔ malformed credentials never reach the control-plane network (56.546833ms)
+✔ an unavailable authority is distinct from rejected authorization (14.434459ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9744.538958

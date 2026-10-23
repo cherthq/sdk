@@ -1,0 +1,7 @@
+{
+  "relay_secret_configured": true,
+  "secret_name": "CHERT_CONNECTOR_RELAY_SECRET",
+  "installCommand": "npx --yes npm@12.1.0 ci",
+  "nodeVersion": "24.x",
+  "rootDirectory": "control-plane"
+}

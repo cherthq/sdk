@@ -1,0 +1,33 @@
+{
+  "base": "52b43a4be253bc815e32b205a8f1118870b85955",
+  "files": [
+    {
+      "path": "connector/README.md",
+      "sha256": "4febc1146a5ed88ca443fb24e7484202abcdc465567827e23c5bd44f95b4ff00"
+    },
+    {
+      "path": "connector/handler.ts",
+      "sha256": "6d40ff74d8a0c1734d97705dea0890e4a1443fad246cf826918cb6a5c4fb4657"
+    },
+    {
+      "path": "connector/owner.py",
+      "sha256": "f5635014c0ac1ea3a50ff6eada6480d0615cd6414105636601124bd87cb324f2"
+    },
+    {
+      "path": "connector/server.py",
+      "sha256": "85bdbaf59623978680dce0ae54f9e44abfdc41b1aef4d6a4cc615f99bb088798"
+    },
+    {
+      "path": "connector/tests/fixture_server.py",
+      "sha256": "e7269264959b9bf846cca48a370110a401d94541e3b6a7fb85b8d72b62736a7b"
+    },
+    {
+      "path": "connector/tests/substitutes.py",
+      "sha256": "3b997d30e5c27cd41074879fdccb2e8623352125ba9b7526969e63e103d009df"
+    },
+    {
+      "path": "connector/tests/test_owner.py",
+      "sha256": "031ac4730e3ee3034951d6f256dd94a409a91ef284375531eaf94c7347bac9fd"
+    }
+  ]
+}

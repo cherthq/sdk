@@ -1,0 +1,6 @@
+{
+  "observed_at": "2026-09-30T13:07:21.728928+00:00",
+  "url": "https://talking-head-webhook-production.up.railway.app/healthz",
+  "status": 200,
+  "body": "{\"ok\": true}"
+}

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime/control-plane
+
+
+ Test Files  2 passed (2)
+      Tests  16 passed | 1 skipped (17)
+   Start at  00:46:04
+   Duration  13.71s (transform 78ms, setup 0ms, import 120ms, tests 19.61s, environment 0ms)
+

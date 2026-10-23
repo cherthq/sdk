@@ -1,0 +1,26 @@
+[
+  {
+    "node": "22",
+    "check": "demo-check",
+    "exit_code": 0,
+    "seconds": 2.21
+  },
+  {
+    "node": "22",
+    "check": "relay",
+    "exit_code": 0,
+    "seconds": 0.21
+  },
+  {
+    "node": "24",
+    "check": "demo-check",
+    "exit_code": 0,
+    "seconds": 1.69
+  },
+  {
+    "node": "24",
+    "check": "relay",
+    "exit_code": 0,
+    "seconds": 0.19
+  }
+]

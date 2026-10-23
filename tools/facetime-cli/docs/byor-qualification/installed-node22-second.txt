@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: installed package: deployed audio/video profile explicitly declines; startup and health have zero session effects
+not ok 1 - installed package: deployed audio/video profile explicitly declines; startup and health have zero session effects
+  ---
+  duration_ms: 930.247042
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:60:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"schema_version":1,"command":"init","code":"operation_failed","action":"Operation failed. Inspect local permissions and configuration; retained state has not been reset."}
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    fixture (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:29:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:61:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: installed package + real Python owner/AvatarAdapter: synthetic audio capability, duplicate, lost acceptance, two-process restart, 62-second call, replay and verified cleanup
+not ok 2 - installed package + real Python owner/AvatarAdapter: synthetic audio capability, duplicate, lost acceptance, two-process restart, 62-second call, replay and verified cleanup
+  ---
+  duration_ms: 932.514791
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:87:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"schema_version":1,"command":"init","code":"operation_failed","action":"Operation failed. Inspect local permissions and configuration; retained state has not been reset."}
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    fixture (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:29:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:88:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: installed package + real Python owner: preparation timeout, cancellation and late completion never accept or repeat preparation
+not ok 3 - installed package + real Python owner: preparation timeout, cancellation and late completion never accept or repeat preparation
+  ---
+  duration_ms: 1053.963375
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:140:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"schema_version":1,"command":"init","code":"operation_failed","action":"Operation failed. Inspect local permissions and configuration; retained state has not been reset."}
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    fixture (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:29:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/cli/talking-head-package.test.js:141:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...

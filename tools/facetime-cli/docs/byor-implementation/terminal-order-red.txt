@@ -1,0 +1,26 @@
+TAP version 13
+# Subtest: authoritative terminal before incoming suppresses preparation and remains debt-free
+not ok 1 - authoritative terminal before incoming suppresses preparation and remains debt-free
+  ---
+  duration_ms: 5.053333
+  type: 'test'
+  location: '/Users/garygao/chert-facetime-cli/dist/tests/transport/byor.test.js:173:1'
+  failureType: 'testCodeFailure'
+  error: 'request_conflict'
+  code: 'request_conflict'
+  name: 'Fault'
+  stack: |-
+    ByorConnector.committed (file:///Users/garygao/chert-facetime-cli/dist/src/byor/connector.js:164:19)
+    TestContext.<anonymous> (file:///Users/garygao/chert-facetime-cli/dist/tests/transport/byor.test.js:179:17)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 77.8785

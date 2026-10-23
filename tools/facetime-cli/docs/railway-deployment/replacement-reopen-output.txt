@@ -1,0 +1,1 @@
+{"claimed_session_preserved": true, "creates": 1, "pids": {"node": 19, "owner": 9}, "health": {"healthy": true, "mode": "standby", "session_readiness": "unavailable", "acceptance_authority": "per_call_validation_required", "processes": {"owner": "running", "node": "running"}, "ipc": true, "connector_connected": true}}

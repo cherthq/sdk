@@ -1,0 +1,317 @@
+[
+  {
+    "path": "/Users/garygao/chert-facetime-cli/.local/byor-implementation/artifacts/chert-local-transport-proof-0.0.0.tgz",
+    "kind": "new",
+    "sha256": "28d830f0be65f32ce17d76705d9841e51562eef8be5dd09cfd2f4078e7eb436c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/CLI_GUIDE.md",
+    "kind": "modified",
+    "sha256": "0c5b724b39c3735d3144db0a2a671ffb1e9bfbffe41520e335d7c9eaf00d3c90"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/README.md",
+    "kind": "modified",
+    "sha256": "9149a0a4f7a335ab4117736eee944a565d7a4862a85c67a525d6c8914ecd8aa2"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/BACKEND_PILOT_RUNBOOK.md",
+    "kind": "modified",
+    "sha256": "9947ab4c7a2ed3604cbe5766305323f2980d548939bded2dcd878b8b63411b23"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/BYOR_OWNERSHIP.md",
+    "kind": "new",
+    "sha256": "4bbe98ff64bae05139a88a76be460c48a8d60bde34cee448e3d5a7a9fef90673"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/DEPLOYMENT_READINESS.md",
+    "kind": "modified",
+    "sha256": "5156729428dd07500f85c2873b9c7871bf4e8858379b0894f4364f500d906670"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/BRIEF.md",
+    "kind": "new",
+    "sha256": "9bdd3f709caf1cdfad96394083d7eb57667da7848d95dee5b49991959fad6f7a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/RESULTS.md",
+    "kind": "new",
+    "sha256": "41f17167442a9ac931cf554eb0d0c1500bd781ac2e0cf9f3b39c1fa8e408e0e3"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/artifacts.json",
+    "kind": "new",
+    "sha256": "c0679bd02466222baf30aa106c119b142b32967cd319e09f5936c4c3f66b7bb6"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/backend-green.txt",
+    "kind": "new",
+    "sha256": "d35a8a2646b0d78e97fee58f88b3813579fc0c5a30b004fd2a2339b9f6fd2f01"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/backend-red.txt",
+    "kind": "new",
+    "sha256": "42f3569239a12d50ceb30ab63ab6637d085e3feb5ccdc086e8fb0d2bbca0f91a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/baseline.json",
+    "kind": "new",
+    "sha256": "01f4057fddcdbbb2f7db270be186ff99ad26f92b93db2ee075b5b8f1c1897ba6"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/candidate-rehearsal.json",
+    "kind": "new",
+    "sha256": "99eb1be6468e234b113fa9678c71ed613cee351c62f257951bced06f534c5215"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/changed-files.json",
+    "kind": "new",
+    "sha256": null
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/cli-first-full.txt",
+    "kind": "new",
+    "sha256": "77cf59e5f8190156a9ab905e6efeeacba9b6f750739836317fc6c03914d2f80b"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/final-cli-matrix.json",
+    "kind": "new",
+    "sha256": "913841d4ec7a196604a73fdf3589605956188da7ebc837929666ed663d9e7b54"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/final-cli-node22.txt",
+    "kind": "new",
+    "sha256": "379c96c25ce08f7079f66af62cb0d1508de3e422a5d887f8a37cef1de912cc5f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/final-cli-node24.txt",
+    "kind": "new",
+    "sha256": "d5ded5c70d59a932bf406df66a09164ffb8edf638468b44d2e26555cf00cd470"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/final-ownership-node22.txt",
+    "kind": "new",
+    "sha256": "fd00fdbb5d7622d57ee908e1369c9178d9b069bbd839815440b6b21cf1d44764"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/focused-node22.txt",
+    "kind": "new",
+    "sha256": "174827e3e021062624e20fc031fe7022194617ab44e2c3c7f9f9cbbf5d24b6ba"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/health-refresh-node22.txt",
+    "kind": "new",
+    "sha256": "fd403471f778d1aef34b7fc0b490c405b763b41650bed7dd46fe3532fc566b41"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/matrix.json",
+    "kind": "new",
+    "sha256": "f8690c077b2a91933f7082e3a6b7ea4c7b579a7f9adbfa113c32624094690515"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/onboarding-red.txt",
+    "kind": "new",
+    "sha256": "db3a8280ba675717c70f06d56453b3d6acbc8b2cf6298d8f5741c7a33af5f840"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/package-manifest.json",
+    "kind": "new",
+    "sha256": "68eaa54d50ecd86fac98df2335517eb8d7e02b0a6967f989cac959b6d19de404"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/package-node22.txt",
+    "kind": "new",
+    "sha256": "c9be4e06a2f1290ffda941971ee05725d965c66f9cacc457110775c7b3cef96a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/preservation.json",
+    "kind": "new",
+    "sha256": null
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/rehearse_candidate.py",
+    "kind": "new",
+    "sha256": "47b19a50ed0bdcfa6c4cdb500fbeb2b9dc58117408eb72259a6343af07d3df30"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/service-node22-final.txt",
+    "kind": "new",
+    "sha256": "53a014f55a67090b3c65eb7552bdbf7e9ba96e088d46b70e0584e63bad2bbb53"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/service-node22.txt",
+    "kind": "new",
+    "sha256": "ec6d22b75cc35ca9c70e0952786022aa7a85867cc25fd8a96dce0ecc6689ef5c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/terminal-order-red.txt",
+    "kind": "new",
+    "sha256": "5f23399afd157d0ecb115f9b46cfd513074e2248caa0eb6c80ecca33a9a8e9a3"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/validation-node22.txt",
+    "kind": "new",
+    "sha256": "7fd9d2ae5ebbaafa732b70144cdf5bf66f8e88f31d0163af6910226a58119851"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/docs/byor-implementation/validation-node24.txt",
+    "kind": "new",
+    "sha256": "fcd0a9d2829981109e574bf3aca98a0a57b1d2ce7c6f3c4408ec373c0dd88aea"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/examples/byor/README.md",
+    "kind": "new",
+    "sha256": "571988c8553e411960540a10ef25de33c069117be647b185fab545ff338bbf76"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/examples/byor/handler.ts",
+    "kind": "new",
+    "sha256": "2c55670c79ebc16bf1cde11327f5686e37ba7ce8e273598508bf27ce0eba7dba"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/examples/byor/sessions.ts",
+    "kind": "new",
+    "sha256": "ec16cc811e6c28fe60cfc2c3050cecbc86d24ff5a86d9428454318d0d13e8d21"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/examples/byor/tsconfig.json",
+    "kind": "new",
+    "sha256": "8dfbae3fa9bdfbd5507d768aacd382001a991430c50fdacd29b44d268e68f552"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/package.json",
+    "kind": "modified",
+    "sha256": "e0504f21db620780e7a2e2a95203d18abd6e4cd79b0707d556be6800d0beaa1a"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/connector.ts",
+    "kind": "new",
+    "sha256": "940810f0442f89521c6d0b2b7506ba265e28eb578836aec1b2f83ccab03d5848"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/contract.ts",
+    "kind": "new",
+    "sha256": "d3d22dbc7f854a98bbebab4f0fe9da20bb8f6ae11602e1545ed5a9ef830094b5"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/handler.ts",
+    "kind": "new",
+    "sha256": "ebdfbe675b655eaab7dd3c60a594a4ac5f13887cfcec9fd3d9264d4e76acce8f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/journal.ts",
+    "kind": "new",
+    "sha256": "ed9dee673af1b4f7882d79c60e8a5b2fb530f78395b55d5869119c8d21f9cf58"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/run.ts",
+    "kind": "new",
+    "sha256": "4c00714a5e502477778c260f345d17a9ced78c91b8a6ea6b4326727e489eb0ff"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/byor/scaffold.ts",
+    "kind": "new",
+    "sha256": "589e0a0869f7e728c11676236d90c9dff7c519426b56dfdc877cc797e712cf50"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/cli/backend.ts",
+    "kind": "modified",
+    "sha256": "52f9b3cf4b4ec223803d0a3ff4e3f06494911fe3abf97bf7ff6aff0287102c9c"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/cli/commands.ts",
+    "kind": "modified",
+    "sha256": "ae1a1b62ed9927f248fe5020f5e753076bde2f2175ca1410d1081ebf14eb93cf"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/cli/config.ts",
+    "kind": "modified",
+    "sha256": "aa7913b9186bc15e9b0c99a05ce1fb9182f394db24f5b5b2f070c76dbb2840c2"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/cli/diagnostics.ts",
+    "kind": "modified",
+    "sha256": "182c480f44bf160a380d22cb91e336b0a3bf1ee86fe7f366a3125819cd8021fa"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/cli/run.ts",
+    "kind": "modified",
+    "sha256": "39182122021b18c0cca4948d99b1091c4b5a01f7c8bd87896fd02d302860cc72"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/protocol/v1.ts",
+    "kind": "modified",
+    "sha256": "83243434d3cad550d157455fae369c14b2f81c6182acc16360062ab9b2637d7e"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/src/transport/connector-wire.ts",
+    "kind": "modified",
+    "sha256": "0cdaf6883a9b8dd0ca63f52407468f747050d27bdf797ff5c129c5efbbba95e0"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/cli/byor-onboarding.test.ts",
+    "kind": "new",
+    "sha256": "d648ca1d9c621b5f4332ada5417a6a7f7c5b33a198079b3230c48910e0e26655"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/cli/byor-package.test.ts",
+    "kind": "new",
+    "sha256": "327ab69ff31bf465a4359427e331a1c5d45d814c0191ec43d59a499feb8e75ae"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/cli/package.test.ts",
+    "kind": "modified",
+    "sha256": "8c38346ee5917017d240376d9dd97450e884d4137d963e51e0fa358fc82b6b6d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/fixtures/cli-harness.ts",
+    "kind": "modified",
+    "sha256": "989a322fd00ff884002cf2cbaea88d59c4e06e93d2ee7c9bd8cb4d60ee52db6f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/fixtures/control-plane.ts",
+    "kind": "modified",
+    "sha256": "9ff822559d5f76bfe7fae0c03d86dd26c3173470bded406d82d325b3f5a72e76"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tests/transport/byor.test.ts",
+    "kind": "new",
+    "sha256": "c96f7a2c815142a39e98fc79cc6ab40b38f5d1acbdf32f06045592b3fe6a111d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime-cli/tsconfig.json",
+    "kind": "modified",
+    "sha256": "93b083884e795c3ad7fc3b6dc644aa3650d0e4eeb06aa7344ed4ba7074c592b7"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/docs/API_CONTRACT.md",
+    "kind": "modified",
+    "sha256": "73558a1fc3f96997b6c0c8e7dfa6c1b9da9b91f3fc0662ce1e6e05c31085803d"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/src/lib/facetime/connectors.ts",
+    "kind": "modified",
+    "sha256": "b7833627b36ebcfa24a072b7cfc4dddc0255fbd95841a866cc1f0bf33eefb781"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/supabase/migrations/20260930033750_connector_byor_mode.sql",
+    "kind": "new",
+    "sha256": "a8ec9173f70e22b16b8e3b964115383c45064e6609ade1b2f052cdb82d173b4f"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/tests/connector-service.test.ts",
+    "kind": "modified",
+    "sha256": "1e109e89097595c6141278265b16653fb8d91eb897814dd36f7cd364adc0a448"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/control-plane/tests/connectors.test.ts",
+    "kind": "modified",
+    "sha256": "0499c11d25e2cb5bc9bdf45b8d7f83fbf32457c407a79020bb99332d148abc8b"
+  },
+  {
+    "path": "/Users/garygao/chert-facetime/docs/operations/CONNECTORS.md",
+    "kind": "modified",
+    "sha256": "07169fe44db6e127035052850aff76ae7f7c58db220fadb5d8572dbb6edeb1c9"
+  }
+]

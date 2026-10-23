@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "module": "NodeNext", "moduleResolution": "NodeNext",
+    "strict": true, "skipLibCheck": true, "outDir": "dist", "types": ["node"]
+  },
+  "include": ["handler.ts", "sessions.ts"]
+}

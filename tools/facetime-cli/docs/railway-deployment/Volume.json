@@ -1,0 +1,122 @@
+{
+  "matches": [
+    {
+      "description": null,
+      "enumValues": [],
+      "fields": [
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "createdAt",
+          "namedType": "DateTime",
+          "parent": "Volume",
+          "requiredArgs": [],
+          "type": "DateTime!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "id",
+          "namedType": "ID",
+          "parent": "Volume",
+          "requiredArgs": [],
+          "type": "ID!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "name",
+          "namedType": "String",
+          "parent": "Volume",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "project",
+          "namedType": "Project",
+          "parent": "Volume",
+          "requiredArgs": [],
+          "type": "Project!"
+        },
+        {
+          "args": [],
+          "deprecationReason": null,
+          "description": null,
+          "isDeprecated": false,
+          "kind": "field",
+          "name": "projectId",
+          "namedType": "String",
+          "parent": "Volume",
+          "requiredArgs": [],
+          "type": "String!"
+        },
+        {
+          "args": [
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "after",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "before",
+              "namedType": "String",
+              "required": false,
+              "type": "String"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "first",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "last",
+              "namedType": "Int",
+              "required": false,
+              "type": "Int"
+            }
+          ],
+          "deprecationReason": "Use environment.volumeInstances for properly scoped access control",
+          "description": null,
+          "isDeprecated": true,
+          "kind": "field",
+          "name": "volumeInstances",
+          "namedType": "VolumeVolumeInstancesConnection",
+          "parent": "Volume",
+          "requiredArgs": [],
+          "type": "VolumeVolumeInstancesConnection!"
+        }
+      ],
+      "inputFields": [],
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT",
+      "name": "Volume",
+      "possibleTypes": []
+    }
+  ]
+}

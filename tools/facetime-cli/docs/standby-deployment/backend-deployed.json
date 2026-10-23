@@ -1,0 +1,39 @@
+{
+  "id": "dpl_4ZgLa9pkVaM1WbRSJvqu7LB7wFS8",
+  "url": "chert-facetime-control-plane-gj13u9tm6-chert-technologies.vercel.app",
+  "readyState": "READY",
+  "target": "production",
+  "createdAt": 1790777090558,
+  "ready": 1790777133983,
+  "projectId": "prj_sNxcJ3Agi9urdLD4XYaKpe73jsP5",
+  "regions": [
+    "iad1"
+  ],
+  "meta": {
+    "gitCommitAuthorName": "Gary Gao",
+    "gitCommitAuthorEmail": "garygao333@gmail.com",
+    "gitCommitMessage": "initial commit",
+    "gitCommitRef": "main",
+    "gitCommitSha": "54db70ba5f18d2cc8d36053352186af6c1287847",
+    "gitDirty": "1",
+    "actor": "codex",
+    "lambdaRuntimeStats": "{\"nodejs\":3}",
+    "bundler": "turbopack"
+  },
+  "projectSettings": {
+    "buildCommand": null,
+    "devCommand": null,
+    "framework": "nextjs",
+    "commandForIgnoringBuildStep": "exit 0",
+    "installCommand": "npx --yes npm@12.1.0 ci",
+    "outputDirectory": null,
+    "speedInsights": {
+      "id": "6BeLT907Kak1w7uibclfuzhPywh",
+      "hasData": false
+    },
+    "webAnalytics": {
+      "id": "lT6YxLaRKZDjtuHZrfV5CBY4D"
+    },
+    "nodeVersion": "24.x"
+  }
+}

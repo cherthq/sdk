@@ -1,0 +1,57 @@
+{
+  "release": "railway-20260930-r1",
+  "platform": "linux/amd64",
+  "local_engine": "Docker Desktop Linux arm64 (amd64 emulation)",
+  "deployed": false,
+  "published": false,
+  "context": "/Users/garygao/chert-facetime-cli/.local/railway-packaging/railway-20260930-r1/context-v6",
+  "context_archive": {
+    "path": "/Users/garygao/chert-facetime-cli/.local/railway-packaging/railway-20260930-r1/railway-20260930-r1-build-context.tar.gz",
+    "sha256": "9c6f4fe44086db660b85d2c747f15842602852b28a9146d237358610782eff3e",
+    "bytes": 125065
+  },
+  "images": [
+    {
+      "Id": "sha256:efee890e6d0fd3b5adf9091503db2f0f318915255e6981c57acf119f2cc85242",
+      "RepoTags": [
+        "chert-railway:20260930-r1"
+      ],
+      "RepoDigests": [
+        "chert-railway@sha256:efee890e6d0fd3b5adf9091503db2f0f318915255e6981c57acf119f2cc85242"
+      ],
+      "Os": "linux",
+      "Architecture": "amd64"
+    },
+    {
+      "Id": "sha256:6d62bf2a8af733ee382c2a0f4784105e82495e364727f0f708d9e4512a797031",
+      "RepoTags": [
+        "chert-railway-qualification:20260930-r1"
+      ],
+      "RepoDigests": [
+        "chert-railway-qualification@sha256:6d62bf2a8af733ee382c2a0f4784105e82495e364727f0f708d9e4512a797031"
+      ],
+      "Os": "linux",
+      "Architecture": "amd64"
+    }
+  ],
+  "inputs_manifest": {
+    "path": "/Users/garygao/chert-facetime-cli/.local/railway-packaging/railway-20260930-r1/context-v6/inputs.json",
+    "sha256": "7b835a29a27adf5258452bd7167133389c86cf629948933ef86873dcf0bae67e"
+  },
+  "packaging_files": {
+    "packaging/railway/.gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "packaging/railway/Dockerfile": "6fc7b62d79d2e1da0f7152e2f035ef7ed880b82135356db7cfb6afbe0f867a1b",
+    "packaging/railway/node.mjs": "53a7635966405ed0bf2fcde33cc71e3074d8692bc55ed35e6cd9644d58fe37e4",
+    "packaging/railway/package-lock.json": "9c9579a65984fee1d7cf315c7aa9265780c6b8c86b47a7adce2f0916573291fa",
+    "packaging/railway/package.json": "027727510d8e96064174a0640b69ae6fccc11be88544a60e0fc9208866a09d03",
+    "packaging/railway/prepare.py": "96737195fc003fb05acf056b2c57472d2ca4f25f66cf09c7f5b77ef421897f5d",
+    "packaging/railway/requirements-amd64.lock": "3b09066b7311c8f41fef5babd189bd78a4f85004a29eff948fa5bb3eb4245915",
+    "packaging/railway/runtime.py": "21da2c18a3a24bc5282b450141513edf367c700d398e54d8de9990ca42c6e1ba",
+    "packaging/railway/state.mjs": "1c3c27bc642f10e08db8efd3268fefc8e5603214a0203558f75b33dc2e663808",
+    "packaging/railway/tests/entry.py": "8be9aa69a2a3f6c02d757626f00792e12a2d535de0b399eac9b3533debb9d53d",
+    "packaging/railway/tests/owner.py": "f44278a2bdac58f1120f59847102118ec6130bc38adbb888dfaa75489b2de1cd",
+    "packaging/railway/tests/relay.mjs": "c1309cc5e2ded750bf75f8aebaff627cee0530710934c5a2a6ba100f30ba3e82",
+    "packaging/railway/tests/test_container.py": "593940c25d99f75dc5ff8f301ac234f9c9dfa62f2203e39be68b254b8ae7a09c",
+    "packaging/railway/tests/test_runtime.py": "5231e67e131ea4147d085c4e824e2417ec82ff88b34420e9c6e5f8a50d34df91"
+  }
+}

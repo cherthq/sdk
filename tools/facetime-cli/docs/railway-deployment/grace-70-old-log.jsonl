@@ -1,0 +1,4 @@
+{"timestamp":"2026-09-30T13:05:31.455779238Z","message":"Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/0c2a6f1b-b3da-4b29-8969-d59a4dd196df/vol_h3kutt8ksy19iw6d","level":"info"}
+{"message":"Starting Container","timestamp":"2026-09-30T13:05:31.456561512Z","level":"info"}
+{"timestamp":"2026-09-30T13:08:26.482131234Z","level":"info","message":"Stopping Container"}
+{"message":"Stopping Container","timestamp":"2026-09-30T13:08:40.649531319Z","level":"info"}

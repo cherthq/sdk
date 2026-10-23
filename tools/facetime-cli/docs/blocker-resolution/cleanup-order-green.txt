@@ -1,0 +1,53 @@
+
+> @chert/facetime-control-plane@0.1.0 test
+> vitest run --maxWorkers=1 tests/session-cleanup-ordering.test.ts
+
+
+ RUN  v4.1.10 /Users/garygao/chert-facetime-cli/.local/blocker-resolution/candidate/control-plane
+
+ ❯ tests/session-cleanup-ordering.test.ts (8 tests | 3 failed) 6193ms
+     × failed: records cleanup with cleanupFirst=true 798ms
+     × ended: records cleanup with cleanupFirst=true 771ms
+     × rejected: records cleanup with cleanupFirst=true 770ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/session-cleanup-ordering.test.ts > session cleanup event ordering > failed: records cleanup with cleanupFirst=true
+ FAIL  tests/session-cleanup-ordering.test.ts > session cleanup event ordering > rejected: records cleanup with cleanupFirst=true
+AssertionError: expected 'failed:false' to be 'cleaned:true' // Object.is equality
+
+Expected: "cleaned:true"
+Received: "failed:false"
+
+ ❯ tests/session-cleanup-ordering.test.ts:26:133
+     24|           event(terminal);
+     25|           if (!cleanupFirst) event('cleanup_complete');
+     26|           expect(db.sql(`select state||':'||(cleaned_at is not null)::…
+       |                                                                                                                                     ^
+     27|         } finally { db.close(); }
+     28|       }, 30000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/session-cleanup-ordering.test.ts > session cleanup event ordering > ended: records cleanup with cleanupFirst=true
+AssertionError: expected 'ended:false' to be 'cleaned:true' // Object.is equality
+
+Expected: "cleaned:true"
+Received: "ended:false"
+
+ ❯ tests/session-cleanup-ordering.test.ts:26:133
+     24|           event(terminal);
+     25|           if (!cleanupFirst) event('cleanup_complete');
+     26|           expect(db.sql(`select state||':'||(cleaned_at is not null)::…
+       |                                                                                                                                     ^
+     27|         } finally { db.close(); }
+     28|       }, 30000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 5 passed (8)
+   Start at  22:46:14
+   Duration  6.28s (transform 16ms, setup 9ms, import 13ms, tests 6.19s, environment 0ms)
+

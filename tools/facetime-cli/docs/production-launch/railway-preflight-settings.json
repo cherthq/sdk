@@ -1,0 +1,30 @@
+{
+  "project": {
+    "services": {
+      "edges": [
+        {
+          "node": {
+            "id": "679aad53-1b81-4198-a4ae-1bd0cd357b19",
+            "name": "talking-head-webhook",
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "drainingSeconds": 70,
+                    "environmentId": "7815a140-42c1-4238-b72d-fb2935923123",
+                    "healthcheckPath": "/healthz",
+                    "numReplicas": 1,
+                    "overlapSeconds": 0,
+                    "restartPolicyType": "NEVER",
+                    "sleepApplication": false,
+                    "startCommand": "/usr/bin/env PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/python /opt/chert-pilot/railway-20260930-r1/runtime/runtime.py run"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

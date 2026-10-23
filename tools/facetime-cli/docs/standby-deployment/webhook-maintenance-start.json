@@ -1,0 +1,6 @@
+{
+  "observed_at": "2026-09-30T14:10:18.923735+00:00",
+  "original_deployment": "93fd35f6-42dc-4dd0-bb25-f34deb478092",
+  "action": "original application graceful shutdown through SIGTERM; refill watcher cancelled by supported shutdown lifecycle",
+  "recovery": "Original image, full private environment and volume snapshot retained. Do not restart its allocating startup blindly; verify receipts/provider ownership first. New image remains uninitialized until old-owner settlement."
+}

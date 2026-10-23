@@ -1,0 +1,13 @@
+[
+  {
+    "observed_at": "2026-09-30 02:14:07.708525+00",
+    "id": "dedea298-97e0-4321-8c85-1deca994b2a0",
+    "software_version": "0.1.0",
+    "last_heartbeat_at": "2026-09-30 02:14:05.790054+00",
+    "build": "1ee0d259cfb71fca55a8c11c3bcd8eeb2c2ecc3824bfb409473195d1882affae",
+    "evidence_build": null,
+    "audio_ready": false,
+    "production_media_ready": true,
+    "evidence_verified_at": null
+  }
+]

@@ -1,0 +1,19 @@
+v22.23.2
+10.9.8
+
+> chert-local-transport-proof@0.0.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+
+> chert-local-transport-proof@0.0.0 lint
+> eslint src tests
+
+
+> chert-local-transport-proof@0.0.0 build
+> tsc -p tsconfig.json
+
+
+> chert-local-transport-proof@0.0.0 proof:transport
+> node dist/tests/proof.js --host 127.0.0.1 --json
+
+{"schema_version":1,"ok":true,"kind":"private_synthetic_loopback","node":"v22.23.2","sample_count":20,"commits":20,"effects":{"rooms":20,"jobs":20,"providers":20,"deleted":20},"remaining_resources":0,"remaining_debt":0,"configured_budgets_ms":{"preparation":4000,"authority_commit":5000,"real_mac_context_only":6000},"latency":{"request_ms":{"count":20,"p50":11.747,"p95":15.234,"max":15.417},"preparation_ms":{"count":20,"p50":19.336,"p95":26.701,"max":49.005},"response_ms":{"count":20,"p50":1.278,"p95":2.639,"max":4.104},"commit_ms":{"count":20,"p50":4.428,"p95":4.949,"max":4.984},"total_ms":{"count":20,"p50":38.768,"p95":47.733,"max":65.336}},"limitations":["No real LiveKit, provider, Mac, TLS, database or deployed relay verification."]}

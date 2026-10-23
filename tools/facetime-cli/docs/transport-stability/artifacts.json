@@ -1,0 +1,18 @@
+{
+  "release": "relay-20260930-r2",
+  "archive": "/Users/garygao/chert-facetime-cli/.local/transport-stability/relay-20260930-r2.tar.gz",
+  "archive_sha256": "81f8d73a9918c53820242f63b3f4737ed12b6d058553490f3e6f6e7597f74132",
+  "files": {
+    "README.md": "89ef8699f7071cd52e2fa4391f6b1fefbe4f59a37c865a2826b4c7d0a35b0604",
+    "main.mjs": "113fec52f134d6e05031583b40eb32b958c5e0b492e7749aa29c314ad4dc4b35",
+    "package-lock.json": "892d6a970edff99273027771d83e4d19d465630aa758b27b0c83a3ad8729ab22",
+    "package.json": "d7f73a84ccfaa9f47eba6028b056e019fcfc53a7048d5f0f55f234e8beaff67c",
+    "railway.json": "28aaecc8e5eb12e06942a23132b8f9657d542d19eea43ba19d3c3dbaf12df7d5",
+    "relay.mjs": "d6b02d3c94f8bf0cec634a21f9deea3687f048116d5a1187a9eaef20e6ed655d",
+    "tests/poll-recovery.test.mjs": "2504600f9d9d26a41397dcbd3a7eb2a05411b7a0b56b8e37bf23e0fb2f23e81f",
+    "tests/security.test.mjs": "34dd8678a4ae241ce8f095d4a89ae5f2fd2a0648c360198f6f5913b7be68f05b"
+  },
+  "application_image_unchanged": true,
+  "migration_required": false,
+  "binding_preserved": "0b758533-1c9a-4cc0-b5a5-cfcd2464b281"
+}

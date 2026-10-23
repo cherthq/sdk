@@ -1,0 +1,6 @@
+{
+  "observed_at": "2026-09-30T14:04:35.910419+00:00",
+  "public_aliases_http": 403,
+  "exact_deployment_authenticated_protection_bypass_http": 403,
+  "note": "Direct protected-host redirects land on Vercel SSO, not application. Verified exact deployment using vercel curl protection bypass. No credentials logged."
+}
