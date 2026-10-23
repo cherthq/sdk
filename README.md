@@ -13,7 +13,7 @@ the other clients are source previews, with unified channel support under review
 | Python 3.10+ | iMessage transport (`chert`) | Unpublished; `trychert-sdk` / `trychert` unified client in [draft #11](https://github.com/cherthq/sdk/pull/11) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
 | Rust | Async iMessage transport (`cherthq_imessage`) | Unpublished; unified `trychert-sdk` in [draft #8](https://github.com/cherthq/sdk/pull/8) | [Rust guide](https://github.com/cherthq/sdk/blob/main/rust/README.md) |
 | C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
-| C++20 | iMessage transport (`chert`, CMake `cherthq::imessage`) | Unpublished; unified `trychert` preview in [draft #7](https://github.com/cherthq/sdk/pull/7) | [C++ guide](https://github.com/cherthq/sdk/blob/main/cpp/README.md) |
+| C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
 | Go 1.23+ | Standard-library iMessage transport (`chert`) | Unified iMessage/FaceTime source preview on `unified-go-sdk`; no tagged release | [Go guide](go/README.md) |
 
 Draft package names describe proposed distributions, not packages available from
@@ -24,9 +24,11 @@ build/test source; do not substitute a similarly named registry package.
 
 - **iMessage** clients use an explicit service URL, Chert API key and optional
   messaging tenant. A queued receipt does not mean sent, delivered or read.
-- **FaceTime control-plane** clients inspect identity, assigned lines, workers,
-  credentials and connectors. These HTTP APIs are not a media runtime or an
-  outbound-call API. Route availability and permissions depend on the backend.
+- **FaceTime control-plane** coverage differs by language. The published JavaScript
+  client inspects identity, assigned lines, workers, credentials and connectors;
+  it is not an outbound-call API. The C++ source preview also exposes typed call
+  creation/actions, events and transcripts against its documented server contract.
+  Neither is a media runtime. Route availability and permissions depend on the backend.
 - Channel credentials are **separate**. The SDK does not prove that an iMessage
   key belongs to a FaceTime project, map tenants to projects, or convert provider
   credentials. In the JavaScript wrapper, `projectId` is sent to FaceTime only;
@@ -110,9 +112,9 @@ Those drafts are not installed by the current npm release.
 
 ## Source-preview quickstarts
 
-These examples describe the **current `main` APIs**, after following the linked
-language guide's local build setup. They are not registry installation commands
-and do not describe the different unified APIs proposed in the draft PRs.
+These examples describe the APIs in this source tree, after following the linked
+language guide's local build setup. They are not registry installation commands;
+other draft PRs may propose different unified APIs.
 
 **Python** — with `python/` on the module path:
 
@@ -145,13 +147,33 @@ using var client = new ChertClient(
     "https://messaging.example.test", "replace-with-your-key");
 ```
 
-**C++** — link the local CMake target `cherthq::imessage`:
+**C++20** — build/install from `cpp/`, then use
+`find_package(trychert 0.1 CONFIG REQUIRED)` and link `trychert::trychert`:
 
 ```cpp
-#include <chert/client.hpp>
+#include <trychert/client.hpp>
 
-chert::Client client("https://messaging.example.test", "replace-with-your-key");
+trychert::Client sdk({
+    {.api_key = imessage_key, .tenant = imessage_tenant},
+    {.api_key = facetime_key, .project_id = facetime_project_uuid}
+});
+// auto lines = sdk.facetime.list_lines(); // Explicit read-only request.
 ```
+
+Omitted URLs default to `https://console.trychert.com` (iMessage) and
+`https://facetime.trychert.com` (FaceTime), using `/api/v1` exactly once.
+Explicit validated overrides remain available for self-hosting and tests.
+**C++ publication hold:** canonical deployment still needs production smoke
+verification. No production default reaction-routing claim is made; the backend
+text-route change does not establish reaction routing. This is an untagged source
+preview, not a published package. Generic billing transport is not a release promise.
+
+The channels use separate Bearer credentials: iMessage has an optional tenant,
+while FaceTime requires a project UUID. There is no automatic server-side binding.
+Legacy `<chert/client.hpp>` remains an iMessage-only alias; rebuild existing
+binaries. See the [C++ guide](cpp/README.md) for dependencies, install commands,
+typed coverage and tests. Other administration APIs remain JSON-based; native
+media and live-device acceptance are not covered.
 
 **Go** — import the source module `github.com/cherthq/sdk/go`:
 

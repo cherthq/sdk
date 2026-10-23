@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(trychert-consumer LANGUAGES CXX)
+find_package(trychert 0.1 REQUIRED CONFIG)
+add_executable(trychert-example inspect.cpp)
+target_link_libraries(trychert-example PRIVATE trychert::trychert)
