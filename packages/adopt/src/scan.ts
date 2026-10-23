@@ -2,7 +2,7 @@ import ts from 'typescript';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-import { PROVIDERS, type Classification, type Outcome, type Provider } from './providers';
+import { PROVIDERS, sdkImport, type Classification, type Outcome, type Provider } from './providers';
 
 export type Kind = 'dependency' | 'import' | 'constructor' | 'call' | 'http' | 'base_url' | 'env' | 'credential' | 'webhook';
 export type Finding = {
@@ -46,7 +46,7 @@ function listFiles(root: string): string[] {
 const matches = (pattern: string, spec: string) => pattern.endsWith('*') ? spec.startsWith(pattern.slice(0, -1)) : spec === pattern || spec.startsWith(`${pattern}/`);
 function packageProvider(spec: string): { provider: Provider; adopted: boolean; root: boolean } | null {
   for (const provider of PROVIDERS) {
-    if (provider.adapter?.package === spec) return { provider, adopted: true, root: true };
+    if (provider.adapter && [provider.adapter.package, sdkImport(provider.adapter.package)].includes(spec)) return { provider, adopted: true, root: true };
     const pattern = provider.packages.find(p => matches(p, spec));
     if (pattern) return { provider, adopted: false, root: spec === pattern };
   }
@@ -114,7 +114,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
     const finding: Finding = { provider: provider.id, kind: 'import', file, line: line(node), name: spec.text, note: '', adopted };
     const rec: ImportRec = { provider, finding, usages: [] };
     if (provider.adapter?.kind === 'sdk' && !adopted && root) {
-      rec.edit = { file, start: spec.getStart(sf) + 1, end: spec.getEnd() - 1, provider: provider.id, from: spec.text, to: provider.adapter.package, ok: false };
+      rec.edit = { file, start: spec.getStart(sf) + 1, end: spec.getEnd() - 1, provider: provider.id, from: spec.text, to: sdkImport(provider.adapter.package), ok: false };
     }
     if (!root && !adopted) finding.note = `Subpath import stays on ${spec.text}; keep the vendor package installed.`;
     recs.push(rec); local.push(finding);
