@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Chert.Sdk;
+namespace TryChert;
 
 /// <summary>Explicit response data is available only through properties, never error formatting.</summary>
 public sealed class ChertApiException : Exception
@@ -31,20 +31,21 @@ public sealed record ReactionReceipt(string OperationId, string ChatId, string M
 }
 
 /// <summary>One-attempt transport. No redirects, ambient proxy, cookies, retries or provider fallback.</summary>
-public sealed class ChertClient : IDisposable
+internal sealed class ChannelTransport : IDisposable
 {
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
     private readonly HttpClient http;
     private readonly string baseUrl;
     private readonly string basePath;
-    private readonly string key;
+    private readonly string? key;
     private readonly string? tenant;
+    private readonly string? project;
     private readonly TimeSpan deadline;
     private readonly int responseLimit;
-    private sealed record JsonResponse(int Status, string? RequestId, JsonElement? Value);
+    internal sealed record JsonResponse(int Status, string? RequestId, JsonElement? Value);
 
-    public ChertClient(string baseUrl, string apiKey, string? tenant = null,
-        TimeSpan? timeout = null, int maxResponseBytes = 8 * 1024 * 1024)
+    internal ChannelTransport(string baseUrl, string? apiKey, string? tenant = null,
+        TimeSpan? timeout = null, int maxResponseBytes = 8 * 1024 * 1024, string? project = null)
     {
         if (baseUrl is null || baseUrl.Length > 16384 || !ValidUnicode(baseUrl) || HasUnsafeUrlChars(baseUrl)
             || baseUrl.Contains('?') || baseUrl.Contains('#')) throw new ArgumentException("Invalid Chert base URL");
@@ -57,8 +58,9 @@ public sealed class ChertClient : IDisposable
         basePath = path.TrimEnd('/');
         if (basePath.Length == 0) basePath = "/api/v1";
         this.baseUrl = parsed.GetLeftPart(UriPartial.Authority) + basePath;
-        key = Header(apiKey);
+        key = apiKey is null ? null : Header(apiKey);
         this.tenant = tenant is null ? null : Header(tenant);
+        this.project = project is null ? null : Header(project);
         deadline = timeout ?? TimeSpan.FromSeconds(15);
         if (deadline <= TimeSpan.Zero || deadline.TotalMilliseconds > int.MaxValue || maxResponseBytes <= 0)
             throw new ArgumentException("Invalid timeout or response bound");
@@ -117,10 +119,12 @@ public sealed class ChertClient : IDisposable
         return new(String(value, "operation_id")!, canonicalChat, messageId, "acknowledged");
     }
 
-    private async Task<JsonResponse> RequestWithResponseAsync(string path, JsonElement? body, HttpMethod? method,
-        string? idempotencyKey, CancellationToken cancellationToken)
+    internal async Task<JsonResponse> RequestWithResponseAsync(string path, JsonElement? body, HttpMethod? method,
+        string? idempotencyKey, CancellationToken cancellationToken, bool publicRequest = false, bool projectRequest = false)
     {
         ValidateRequestPath(path, true);
+        if (!publicRequest && key is null) throw new ChertApiException(401, "unauthorized");
+        if (projectRequest && project is null) throw new ChertApiException(400, "project_required");
         method ??= body.HasValue ? HttpMethod.Post : HttpMethod.Get;
         if (!new[] { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" }.Contains(method.Method)
             || (body.HasValue && (method == HttpMethod.Get || method == HttpMethod.Head))) throw new ArgumentException("Invalid request method/body");
@@ -130,9 +134,10 @@ public sealed class ChertClient : IDisposable
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         linked.CancelAfter(deadline);
         using var request = new HttpRequestMessage(method, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+        if (!publicRequest) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         if (tenant is not null) request.Headers.Add("x-chert-tenant", tenant);
+        if (projectRequest) request.Headers.Add("x-chert-project-id", project);
         if (idempotencyKey is not null) request.Headers.Add("Idempotency-Key", idempotencyKey);
         if (body.HasValue) request.Content = new StringContent(body.Value.GetRawText(), StrictUtf8, "application/json");
         try
@@ -156,6 +161,12 @@ public sealed class ChertClient : IDisposable
             JsonElement? value = null;
             try { using var document = JsonDocument.Parse(bytes.ToArray()); value = document.RootElement.Clone(); }
             catch (JsonException) { if (response.IsSuccessStatusCode) throw new ChertApiException(502, "invalid_json", requestId); }
+            if (requestId is null && value is { ValueKind: JsonValueKind.Object } envelope
+                && envelope.TryGetProperty("request_id", out var rid) && rid.ValueKind == JsonValueKind.String)
+            {
+                var candidate = rid.GetString();
+                if (candidate is { Length: <= 1024 } && !candidate.Any(char.IsControl)) requestId = candidate;
+            }
             if (!response.IsSuccessStatusCode)
             {
                 var code = "http_error";
