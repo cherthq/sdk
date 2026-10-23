@@ -35,7 +35,7 @@ async function main() {
     if (command !== 'send') throw new Error('Use imessage send.');
     const { values } = parseArgs({ args, options: { phone: { type: 'string' }, body: { type: 'string' }, 'idempotency-key': { type: 'string' } } });
     const client = new ChertClient({ baseURL: required('CHERT_BASE_URL'), apiKey: required('CHERT_API_KEY'), ...(env.CHERT_TENANT ? { tenant: env.CHERT_TENANT } : {}) });
-    result = await client.sendText({ phone: values.phone!, body: values.body!, ...(values['idempotency-key'] ? { idempotency_key: values['idempotency-key'] } : {}) });
+    result = await client.sendText({ phone: values.phone!, body: values.body!, ...(values['idempotency-key'] !== undefined ? { idempotency_key: values['idempotency-key'] } : {}) });
   } else {
     if (args.length || !['status', 'lines', 'workers'].includes(command!)) throw new Error('Use facetime status, lines or workers.');
     const client = new ChertControlPlane({ baseUrl: required('CHERT_FACETIME_URL'), token: required('CHERT_FACETIME_TOKEN'), projectId });
