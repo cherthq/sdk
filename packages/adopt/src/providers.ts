@@ -28,6 +28,11 @@ const notMapped = (pkg: string): Outcome => ({ class: 'unsupported', note: `Not 
 export const CHERT_ENV = ['CHERT_BASE_URL', 'CHERT_API_KEY'];
 export const CHERT_WEBHOOK_ENV = 'CHERT_WEBHOOK_SECRET';
 
+// Legacy package names remain in the coverage table for workspace compatibility.
+// New integrations install one SDK and import the equivalent adapter subpath.
+export const sdkImport = (legacy: string) => legacy.replace('@cherthq/', '@cherthq/sdk/');
+export const SDK_VERSION = '0.1.0';
+
 export const PROVIDERS: Provider[] = [
   {
     id: 'blooio', name: 'Blooio SDK 0.0.2',

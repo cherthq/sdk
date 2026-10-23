@@ -3,7 +3,14 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "chert-sdk-workspace",
+      "name": "@cherthq/sdk",
+      "dependencies": {
+        "@blooio/sdk": "0.0.2",
+        "@linqapp/sdk": "0.78.0",
+        "@simplewebauthn/server": "14.0.3",
+        "sendblue": "3.20.1",
+        "typescript": "5.9.2",
+      },
       "devDependencies": {
         "@cherthq/blooio-adapter": "workspace:*",
         "@cherthq/blooio-v4-adapter": "workspace:*",
@@ -20,7 +27,6 @@
         "@cherthq/sendblue-adapter": "workspace:*",
         "@cherthq/texting-blue-adapter": "workspace:*",
         "@types/bun": "1.3.14",
-        "typescript": "5.9.2",
       },
     },
     "packages/adopt": {

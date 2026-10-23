@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { main } from '../src/main';
-import { PROVIDERS } from '../src/providers';
+import { PROVIDERS, SDK_VERSION, sdkImport } from '../src/providers';
 import { scan, type Finding } from '../src/scan';
 
 const fixtures = resolve(import.meta.dir, '../fixtures');
@@ -37,7 +37,7 @@ describe('detection and classification', () => {
     const result = scan(join(fixtures, 'sendblue-ts'));
     expect(brief(result.findings)).toEqual([
       'src/reaction.ts:1 http POST https://api.sendblue.com/api/send-reaction drop_in',
-      'src/send.ts:1 import sendblue -> @cherthq/sendblue-adapter drop_in',
+      'src/send.ts:1 import sendblue -> @cherthq/sdk/sendblue-adapter drop_in',
       'src/send.ts:3 constructor new SendblueAPI drop_in',
       'src/send.ts:6 call messages.send drop_in',
       'src/send.ts:7 call messages.getStatus drop_in',
@@ -73,7 +73,7 @@ describe('detection and classification', () => {
       'src/legacy.cjs:1 import @blooio/sdk unsupported',
       'src/legacy.cjs:3 constructor new Blooio unsupported',
       'src/legacy.cjs:4 call messages.cancel unsupported',
-      'src/notifier.ts:1 import @blooio/sdk -> @cherthq/blooio-adapter drop_in',
+      'src/notifier.ts:1 import @blooio/sdk -> @cherthq/sdk/blooio-adapter drop_in',
       'src/notifier.ts:5 constructor new Blooio drop_in',
       'src/notifier.ts:8 call messages.send drop_in',
       'src/notifier.ts:12 call me.retrieve drop_in',
@@ -171,13 +171,13 @@ describe('dry run, write and safety', () => {
     const result = run(dir, '--write');
     expect(result.code).toBe(0);
     expect(git(dir, 'status', '--porcelain').split('\n').filter(Boolean).sort()).toEqual([' M .env.example', ' M package.json', ' M src/send.ts', '?? ADOPTION_REPORT.md']);
-    expect(readFileSync(join(dir, 'src/send.ts'), 'utf8')).toBe(readFileSync(join(fixtures, 'sendblue-ts/src/send.ts'), 'utf8').replace("from 'sendblue'", "from '@cherthq/sendblue-adapter'"));
+    expect(readFileSync(join(dir, 'src/send.ts'), 'utf8')).toBe(readFileSync(join(fixtures, 'sendblue-ts/src/send.ts'), 'utf8').replace("from 'sendblue'", "from '@cherthq/sdk/sendblue-adapter'"));
     expect(readFileSync(join(dir, 'package.json'), 'utf8')).toBe(`{
   "name": "sendblue-fixture",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@cherthq/sendblue-adapter": "0.0.0",
+    "@cherthq/sdk": "0.1.0",
     "express": "4.21.2"
   }
 }
@@ -200,9 +200,9 @@ describe('dry run, write and safety', () => {
   test('mixed imports keep the vendor dependency and only rewrite safe files', () => {
     const dir = project('blooio-ts');
     expect(run(dir, '--write').code).toBe(0);
-    expect(readFileSync(join(dir, 'src/notifier.ts'), 'utf8')).toStartWith('import Blooio from "@cherthq/blooio-adapter";\nimport type { MessageSendResponse } from "@blooio/sdk/resources/messages";');
+    expect(readFileSync(join(dir, 'src/notifier.ts'), 'utf8')).toStartWith('import Blooio from "@cherthq/sdk/blooio-adapter";\nimport type { MessageSendResponse } from "@blooio/sdk/resources/messages";');
     expect(readFileSync(join(dir, 'src/legacy.cjs'), 'utf8')).toBe(readFileSync(join(fixtures, 'blooio-ts/src/legacy.cjs'), 'utf8'));
-    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@blooio/sdk': '0.0.2', '@cherthq/blooio-adapter': '0.1.0' });
+    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@blooio/sdk': '0.0.2', '@cherthq/sdk': '0.1.0' });
     expect(readFileSync(join(dir, 'ADOPTION_REPORT.md'), 'utf8')).toContain('`src/legacy.cjs:4` Blooio SDK 0.0.2 `messages.cancel`: Message cancellation is rejected');
   });
 
@@ -216,7 +216,7 @@ describe('dry run, write and safety', () => {
 
     const v4 = project('blooio-v4-ts');
     expect(run(v4, '--write').code).toBe(0);
-    expect(JSON.parse(readFileSync(join(v4, 'package.json'), 'utf8')).dependencies).toEqual({ '@cherthq/blooio-v4-adapter': '0.1.0' });
+    expect(JSON.parse(readFileSync(join(v4, 'package.json'), 'utf8')).dependencies).toEqual({ '@cherthq/sdk': '0.1.0' });
     expect(readFileSync(join(v4, 'src/api.ts'), 'utf8')).toBe(readFileSync(join(fixtures, 'blooio-v4-ts/src/api.ts'), 'utf8'));
   });
 
@@ -241,7 +241,7 @@ describe('dry run, write and safety', () => {
     expect(readFileSync(join(dir, 'src/unused.cjs'), 'utf8')).toBe(unused);
     const dependencies = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies;
     expect(dependencies.sendblue).toBe('3.20.1');
-    expect(dependencies).not.toHaveProperty('@cherthq/sendblue-adapter');
+    expect(dependencies).not.toHaveProperty('@cherthq/sdk');
   });
 
   test('unresolved namespace constructors block an SDK import rewrite', () => {
@@ -280,7 +280,7 @@ describe('dry run, write and safety', () => {
     expect(readFileSync(join(dir, 'src/send.ts'), 'utf8')).toContain("from 'sendblue'");
     expect(existsSync(join(dir, 'ADOPTION_REPORT.md'))).toBe(false);
     expect(run(dir, '--write', '--allow-dirty').code).toBe(0);
-    expect(readFileSync(join(dir, 'src/send.ts'), 'utf8')).toContain("from '@cherthq/sendblue-adapter'");
+    expect(readFileSync(join(dir, 'src/send.ts'), 'utf8')).toContain("from '@cherthq/sdk/sendblue-adapter'");
   });
 
   test('refuses --write outside git and --install without --write', () => {
@@ -303,9 +303,12 @@ describe('dry run, write and safety', () => {
 });
 
 test('adapter versions in the provider table match the workspace packages', () => {
+  const sdk = JSON.parse(readFileSync(resolve(import.meta.dir, '../../../package.json'), 'utf8'));
+  expect(SDK_VERSION).toBe(sdk.version);
   for (const provider of PROVIDERS.filter(p => p.adapter)) {
     const dir = provider.adapter!.package.replace('@cherthq/', '');
     const pkg = JSON.parse(readFileSync(resolve(import.meta.dir, '../..', dir, 'package.json'), 'utf8'));
     expect([pkg.name, pkg.version]).toEqual([provider.adapter!.package, provider.adapter!.version]);
+    expect(sdk.exports['./' + sdkImport(provider.adapter!.package).slice('@cherthq/sdk/'.length)]).toBeDefined();
   }
 });

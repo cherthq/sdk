@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CHERT_ENV, CHERT_WEBHOOK_ENV, PROVIDERS, type Classification } from './providers';
+import { CHERT_ENV, CHERT_WEBHOOK_ENV, PROVIDERS, SDK_VERSION, type Classification } from './providers';
 import { ownerManifest, type Finding, type Scan } from './scan';
 
 export const REPORT = 'ADOPTION_REPORT.md';
@@ -15,7 +15,7 @@ function updateManifest(root: string, file: string, add: Map<string, string>, re
   const indent = /\n([ \t]+)"/.exec(text)?.[1] ?? '  ';
   const sections = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'].filter(s => json[s] && typeof json[s] === 'object');
   const pending = new Map([...add].filter(([pkg]) => !sections.some(s => pkg in (json[s] as object))));
-  const adapterFor = (vendor: string) => PROVIDERS.find(p => p.packages.includes(vendor))?.adapter?.package;
+  const adapterFor = (vendor: string) => PROVIDERS.some(p => p.packages.includes(vendor) && p.adapter) ? '@cherthq/sdk' : undefined;
   let changed = false;
   for (const section of sections) {
     const entries: [string, string][] = [];
@@ -72,7 +72,7 @@ export function apply(scan: Scan): string[] {
       if (!p.adapter) continue;
       const rewritten = scan.edits.some(e => e.ok && e.provider === p.id && owned(e.file));
       const fetchUse = p.adapter.kind === 'fetch' && scan.findings.some(f => f.provider === p.id && f.kind === 'http' && f.class === 'drop_in' && owned(f.file));
-      if (rewritten || fetchUse) add.set(p.adapter.package, p.adapter.version);
+      if (rewritten || fetchUse) add.set('@cherthq/sdk', SDK_VERSION);
       const remaining = scan.findings.some(f => f.provider === p.id && f.kind === 'import' && !f.adopted && owned(f.file)
         && !scan.edits.some(e => e.ok && e.file === f.file && e.from === f.name));
       const declared = Object.values(manifest.deps).flat();
@@ -107,7 +107,7 @@ function manualSteps(findings: Finding[]): string[] {
   const env = [...new Set(findings.filter(f => f.kind === 'env').map(f => f.name!))].sort();
   steps.push('Provide a Chert API key and base URL as `CHERT_API_KEY` / `CHERT_BASE_URL`. Provider credentials, chat IDs and message IDs do not transfer to Chert.');
   if (env.length) steps.push(`Retire vendor configuration once migrated: ${env.map(n => `\`${n}\``).join(', ')}.`);
-  steps.push('Install dependencies with your package manager (or rerun with `--install`). The @cherthq adapters are private and unpublished; obtain them from your Chert distribution.');
+  steps.push('Install @cherthq/sdk with your package manager (or rerun with `--install`). It is private and unpublished; obtain the verified archive from your Chert distribution. Legacy @cherthq/<name> references below correspond to @cherthq/sdk/<name> imports.');
   return steps;
 }
 
@@ -166,4 +166,3 @@ export function human(scan: Scan, mode: string, changed: string[]): string {
   out.push('Subset migration, not full provider parity: see COMPATIBILITY.md.');
   return out.join('\n');
 }
-

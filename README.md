@@ -1,5 +1,39 @@
 # Chert SDK
 
+The JavaScript/TypeScript distribution is **one private, unpublished ESM package,
+`@cherthq/sdk`**. Install an approved local archive with `bun add ./cherthq-sdk-0.1.0.tgz`.
+No npm publication or live onboarding readiness is implied.
+
+```ts
+import ChertClient, { ChertControlPlane } from '@cherthq/sdk';
+import Sendblue from '@cherthq/sdk/sendblue-adapter';
+import { startOnboarding } from '@cherthq/sdk/onboarding/client';
+```
+
+The root exports the iMessage client and FaceTime control-plane client. Explicit
+subpaths are `imessage`, `control-plane`, `facetime` (CLI programmatic `run`),
+`adopt` (migration `main`), `onboarding/client` (protected local helper),
+`onboarding` (server), and every `<provider>-adapter` listed below. Both `chert`
+and `chert-adopt` executables are included. The onboarding **server requires Bun**
+(SQLite); it is not imported by the root. Node 22.12+ is required for CLI/helpers.
+The messaging client and adapters are distribution-tested under Node, Bun and Deno.
+
+Existing `@cherthq/<name>` workspace packages remain for source compatibility;
+the archive needs none of them. Replace those imports with `@cherthq/sdk/<name>`
+without changing call shapes or credentials. Bare legacy package names cannot
+resolve from the single archive. `chert-adopt --write` now writes unified subpath
+imports and one `@cherthq/sdk` dependency; legacy imports remain recognized.
+Provider coverage and unsupported-operation boundaries are unchanged.
+
+To prepare (never publish) an archive: `bun install --frozen-lockfile`, then
+`bun run build`, `bun run test`, `bun run typecheck`, `bun run test:distribution`,
+and `bun run test:package`. The last gate installs a packed archive outside the
+workspace, checks exports/types and CLIs, and reruns the distribution behavior
+under Node/Bun/Deno. After those pass, `bun pm pack --ignore-scripts` creates the
+archive. `private: true` intentionally prevents npm publication; a future private
+registry release needs explicit authorization to remove that guard, with
+`publishConfig.access: restricted` retained.
+
 Chert HTTP clients for JavaScript/TypeScript, Python, Rust, C++, Go and C#/.NET, plus explicit
 iMessage compatibility adapters. This repository is under development: packages
 remain private/unpublished and provider coverage is incomplete.
@@ -30,8 +64,7 @@ All remain private/unpublished (`private: true`, `publish = false`).
 
 | Language | Package / distribution | Import as | Previous name |
 | --- | --- | --- | --- |
-| JS/TS core | `@cherthq/imessage` (`packages/imessage`) | `@cherthq/imessage` | `@chert/sdk` (`packages/sdk`) |
-| JS/TS adapters | `@cherthq/<provider>-adapter` | same | `@chert/<provider>-adapter` |
+| JS/TS unified | `@cherthq/sdk` | root or explicit subpaths above | `@cherthq/imessage`, `@cherthq/<provider>-adapter` |
 | Python | `cherthq-imessage` | `chert` | `chert-sdk` |
 | Rust | `cherthq-imessage` | `cherthq_imessage` | `chert-sdk` / `chert_sdk` |
 | Go | `github.com/cherthq/sdk/go` | package `chert` | `github.com/cherthq/chert-sdk/go` |
