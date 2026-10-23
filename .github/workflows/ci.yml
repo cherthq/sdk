@@ -22,11 +22,15 @@ jobs:
       - run: bun run typecheck
       - run: bun run test
       - run: bun run test:distribution
+      - run: bun run test:package
   python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - run: python3 -m unittest discover -s tests
+      - run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install 'setuptools>=80.10.2' wheel
+          .venv/bin/python -m unittest discover -s tests
         working-directory: python
   rust:
     runs-on: ubuntu-latest
