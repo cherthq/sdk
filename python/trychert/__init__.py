@@ -2,7 +2,12 @@
 from dataclasses import dataclass, field
 
 from chert import ChertClient, ChertAPIError, QueuedTextReceipt, ReactionReceipt, DEFAULT_IMESSAGE_URL
+from chert.events import (MessagingEvent, RecordedMessagingEvent, MessagingEventPage,
+                          MessagingStreamFrame, WebhookSubscription, CreateWebhookSubscription,
+                          UpdateWebhookSubscription, WebhookSubscriptions, WebhookSubscriptionResponse,
+                          CreatedWebhookSubscriptionResponse, DeletedWebhookSubscription, verify_webhook)
 from .control_plane import ChertControlPlane, ChertControlPlaneError, DEFAULT_FACETIME_URL
+from .session import UnsupportedUnifiedBackend, UNIFIED_CONTRACT, UNIFIED_SCOPES, discover, _ContractOpener
 
 
 @dataclass(frozen=True)
@@ -20,7 +25,19 @@ class FaceTimeConfig:
 
 
 class Chert:
-    """Configure either channel explicitly. Credentials never cross channels."""
+    """Independent legacy channels, or opt in to a discovered unified session."""
+
+    @classmethod
+    def connect(cls, access_token: str, project_id: str, *,
+                imessage_base_url: str = DEFAULT_IMESSAGE_URL,
+                facetime_base_url: str = DEFAULT_FACETIME_URL) -> "Chert":
+        """Proposed unified-v1 contract; discovery must succeed before token use."""
+        imessage, facetime = discover(access_token, project_id, imessage_base_url, facetime_base_url)
+        client = cls(imessage=IMessageConfig(base_url=imessage, api_key=access_token),
+                     facetime=FaceTimeConfig(base_url=facetime, token=access_token, project_id=project_id))
+        client.imessage._opener = _ContractOpener(client.imessage._opener, imessage)
+        client.facetime._opener = _ContractOpener(client.facetime._opener, facetime)
+        return client
 
     def __init__(self, *, imessage: IMessageConfig | None = None,
                  facetime: FaceTimeConfig | None = None):
@@ -32,4 +49,9 @@ class Chert:
 
 
 __all__ = ["Chert", "IMessageConfig", "FaceTimeConfig", "ChertClient", "ChertAPIError",
-           "QueuedTextReceipt", "ReactionReceipt", "ChertControlPlane", "ChertControlPlaneError"]
+           "UnsupportedUnifiedBackend", "UNIFIED_CONTRACT", "UNIFIED_SCOPES",
+           "QueuedTextReceipt", "ReactionReceipt", "ChertControlPlane", "ChertControlPlaneError",
+           "MessagingEvent", "RecordedMessagingEvent", "MessagingEventPage", "MessagingStreamFrame",
+           "WebhookSubscription", "CreateWebhookSubscription", "UpdateWebhookSubscription",
+           "WebhookSubscriptions", "WebhookSubscriptionResponse", "CreatedWebhookSubscriptionResponse",
+           "DeletedWebhookSubscription", "verify_webhook"]
