@@ -11,8 +11,13 @@ export interface Worker {id:string;worker_key:string;display_name:string;status:
 export interface Credential {id:string;device_name:string;token_prefix:string;user_id:string;email:string|null;created_at:string;last_used_at:string|null;expires_at:string}
 export interface ConnectorEnrollment {line_id:string;name:string;environment:'production'|'development';session_mode?:'byor'|'create-room'}
 export interface ConnectorReceipt {credentials:{connection:string;recovery:string};[key:string]:unknown}
-export interface BillingCatalog {version:string;test_mode:boolean;enabled:boolean;plans:{id:string;name:string;currency:string;amount:number;interval:string;available:boolean;reason:string|null;minutes_per_day:number|null}[]}
-export interface Checkout {id:string;project_id:string;plan_id:string;created_at:string;state:'creating'|'open'|'complete'|'expired';stripe_session_id:string|null;checkout_url:string|null;expires_at:string|null;stripe_subscription_id:string|null}
+export type BillingPlan = 'shared' | 'dedicated';
+export interface BillingEntitlement {plan:BillingPlan;status:string;valid_until:string;fulfillment_status:string;[key:string]:unknown}
+export interface BillingStatus {entitlement:BillingEntitlement|null;needs_reconciliation:boolean;sales_enabled:boolean;shared_available:boolean;dedicated_available:boolean}
+export interface Checkout {url:string}
+export interface CheckoutInput {plan:BillingPlan;coupon_code?:string}
+export interface BillingCancellation {status:'cancellation_requested';message:string}
+export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
 const safeCodes = new Set(['unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
@@ -64,7 +69,16 @@ export class ChertControlPlane {
   activateConnector(input:{binding_id:string;expected_binding_id:string|null;assignment_generation:number}){return this.request<Json>('connectors','POST',{action:'activate',...input});}
   drainConnector(binding_id:string){return this.request<Json>('connectors','POST',{action:'drain',binding_id});}
   revokeConnector(binding_id:string){return this.request<Json>('connectors','POST',{action:'revoke',binding_id});}
-  billingCatalog(){return this.request<BillingCatalog>('billing/catalog','GET',undefined,'public');}
-  currentCheckout(){return this.request<Checkout|null>('billing/checkout');}
-  createCheckout(input:{plan_id:'shared';catalog_version:'2026-10-22'},idempotencyKey:string){if(idempotencyKey.trim().length<8||idempotencyKey.length>200||/[\r\n]/.test(idempotencyKey))throw new TypeError('Use a stable 8–200 character idempotency key.');return this.request<Checkout>('billing/checkout','POST',input,'project',{'Idempotency-Key':idempotencyKey});}
+  /** Billing requires a signed-in user token and project membership, not a CLI/project key. */
+  billingStatus(){return this.request<BillingStatus>('billing');}
+  createCheckout(input:CheckoutInput,idempotencyKey:string){
+    if(!input||!['shared','dedicated'].includes(input.plan))throw new TypeError('Choose a shared or dedicated billing plan.');
+    return this.request<Checkout>('billing','POST',{action:'checkout',plan:input.plan,...(input.coupon_code===undefined?{}:{coupon_code:input.coupon_code})},'project',this.billingIdempotency(idempotencyKey));
+  }
+  cancelSubscription(idempotencyKey:string){return this.request<BillingCancellation>('billing','POST',{action:'cancel'},'project',this.billingIdempotency(idempotencyKey));}
+  validateCoupon(coupon_code:string,idempotencyKey:string){return this.request<CouponValidation>('billing','POST',{action:'validate_coupon',coupon_code},'project',this.billingIdempotency(idempotencyKey));}
+  private billingIdempotency(key:string){
+    if(typeof key!=='string'||key.trim().length<8||key.trim().length>200||/[\r\n]/.test(key))throw new TypeError('Use a stable 8–200 character idempotency key.');
+    return {'Idempotency-Key':key.trim()};
+  }
 }
