@@ -39,10 +39,9 @@ iMessage defaults to `https://console.trychert.com/api/v1` and FaceTime to
 `https://facetime.trychert.com/api/v1`. Ordinary callers provide credentials/project,
 not URLs. Explicit `BaseUrl` overrides remain available for tests and self-hosting;
 only omission selects a default, while null, empty and invalid overrides reject.
-**Merge/publication remain held for backend smoke verification:** the endpoint
-audit found strict iMessage `POST /api/v1/text-operations/v1` and FaceTime
-`/api/v1/billing/catalog` returning 404. Canonical defaults do not establish route
-compatibility or production readiness. Credentials above come from caller configuration.
+**Merge/publication remain held for live contract verification.** Canonical
+defaults do not establish route compatibility or production readiness.
+Credentials above come from caller configuration.
 The SDK never reads environment variables, logs in, allocates a project or sends
 a communication during construction. Omitted channels are null. The unified
 client owns and disposes both configured channels; standalone `IMessageClient`
@@ -137,7 +136,7 @@ decide whether each destination/media combination can run.
 
 Typed operations cover calls (create/list/get/answer/reject/end/events/transcript),
 lines and workers (paged lists), device login (start/poll/inspect/approve), identity,
-logout, credential list/revocation, connector enrollment, and billing catalog/checkout.
+logout, credential list/revocation, connector enrollment, and billing status/actions.
 Connector list/activate/drain/revoke preserve their versioned results as JSON.
 `FaceTime.RequestAsync` is a project-authenticated JSON escape hatch. It unwraps
 `data` from the FaceTime envelope, unlike iMessage's unwrapped response format.
@@ -152,7 +151,7 @@ Query events/state to reconcile an uncertain outcome before deciding to resend.
 Pagination is explicit (`limit` 1–100, `offset` ≥ 0); there is no hidden page fetch.
 Unknown state strings and additional model fields are retained for forward compatibility.
 
-Public login start/poll and billing catalog send **no authorization or project
+Public login start/poll send **no authorization or project
 headers**, even on an authenticated client. Inspect/approve/logout send the token
 but not a project header. Other methods require both token and project locally.
 The server decides credential permissions: an `ftu_` CLI credential does not gain
@@ -162,8 +161,40 @@ invocation; respect `Interval` and `ExpiresIn`, verify approval URLs before open
 them, and securely store approved credentials yourself. No browser is launched.
 Connector enrollment returns secrets and does not activate routing. Activation
 requires the expected binding (including explicit null) and assignment generation.
-Checkout creation is an explicit financial action; the supported source contract
-is shared plan/catalog `2026-10-22`, not proof of live entitlement or allocation.
+Checkout creation and cancellation are explicit financial actions, not proof of
+live entitlement or allocation.
+
+## Billing and preview migration
+
+All billing methods use `/api/v1/billing` and require a **signed-in user bearer
+token** in `FaceTimeOptions.Token` plus a project UUID in `ProjectId`. They never
+reuse the iMessage key or tenant. A CLI credential is not a substitute for a
+signed-in user token; the server enforces membership and permissions.
+
+| Method | HTTP contract | Result |
+| --- | --- | --- |
+| `GetBillingStatusAsync()` | GET | `BillingStatus`: nullable entitlement, reconciliation/sales flags, shared/dedicated availability |
+| `CreateBillingCheckoutAsync(plan, idempotencyKey, couponCode?)` | POST `{action:"checkout",plan:"shared"\|"dedicated",coupon_code?}` | `BillingCheckout.Url` |
+| `CancelBillingAsync(idempotencyKey)` | POST `{action:"cancel"}` | `BillingCancellation.Status` and `Message` |
+| `ValidateBillingCouponAsync(couponCode, idempotencyKey)` | POST `{action:"validate_coupon",coupon_code}` | `BillingCoupon`: code, percent off, mode, monthly total and currency |
+
+Every POST requires a stable 8–200 printable-ASCII-character idempotency key.
+Coupon codes are trimmed and must contain 1–64 characters; the server decides
+which codes and plans are available. Responses use the normal `data` envelope.
+The client returns checkout URLs without opening them. Cancellation acknowledges
+a request; refresh status to observe its eventual effect. A null entitlement is
+valid, but missing status fields or malformed envelopes are errors.
+
+**Breaking unpublished-preview correction:** `GetBillingCatalogAsync`,
+`GetCurrentCheckoutAsync`, `CreateCheckoutAsync`, `BillingCatalog`, `BillingPlan`
+and `Checkout` have been removed. The former `/billing/catalog` and
+`/billing/checkout` subpaths are unsupported. Replace reads with
+`GetBillingStatusAsync`, and purchases with `CreateBillingCheckoutAsync`; remove
+the catalog-version argument and consume `Url` instead of checkout state/IDs.
+There is no public unauthenticated catalog or current-checkout equivalent.
+The new purchase method has a distinct name to prevent old positional arguments
+from silently becoming an idempotency key or coupon. No billing request is made
+automatically, and no purchase/cancellation is exercised by local tests.
 
 ## Failure and cancellation
 
@@ -192,7 +223,7 @@ upload/download helpers, a LiveKit/media relay, connector runtime, webhook serve
 account signup/passkeys, or typed wrappers for every administration resource.
 Use the raw channel request APIs for supported deployment-specific JSON routes.
 Do not use these APIs to bypass permissions. See `COVERAGE.md` in the source tree
-for the inspected source contracts and explicit coverage boundaries.
+for public contract coverage and explicit boundaries.
 
 ## Offline checks and packaging
 
