@@ -7,7 +7,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
-from .models import (BillingCatalog, Checkout, ConnectorEnrollment, ConnectorReceipt,
+from .models import (BillingStatus, CheckoutSession, BillingCancellation, CouponValidation, ConnectorEnrollment, ConnectorReceipt,
                      Credentials, DeviceLoginStart, Identity, Json, LinePage, LoginApproval,
                      LoginInspection, LoginResult, Revoked, WorkerPage)
 
@@ -181,15 +181,35 @@ class ChertControlPlane:
     def revoke_connector(self, binding_id: str) -> Json:
         return self._request('connectors', 'POST', {'action': 'revoke', 'binding_id': binding_id})
 
-    def billing_catalog(self) -> BillingCatalog:
-        return self._request('billing/catalog', auth='public')
+    def billing_status(self) -> BillingStatus:
+        """Read billing status using a user bearer token and selected project."""
+        return self._request('billing')
 
-    def current_checkout(self) -> Checkout | None:
-        return self._request('billing/checkout')
-
-    def create_checkout(self, *, plan_id: Literal['shared'], catalog_version: Literal['2026-10-22'],
-                        idempotency_key: str) -> Checkout:
-        if not isinstance(idempotency_key, str) or not 8 <= len(idempotency_key.strip()) or len(idempotency_key) > 200:
+    def _billing_action(self, body: dict[str, Any], idempotency_key: str) -> Any:
+        if not isinstance(idempotency_key, str) or not 8 <= len(idempotency_key.strip()) <= 200:
             raise ValueError('Use a stable 8–200 character idempotency key')
-        return self._request('billing/checkout', 'POST', {'plan_id': plan_id, 'catalog_version': catalog_version},
+        return self._request('billing', 'POST', body,
                              idempotency_key=_header(idempotency_key))
+
+    def create_checkout(self, *, plan: Literal['shared', 'dedicated'],
+                        idempotency_key: str, coupon_code: str | None = None) -> CheckoutSession:
+        if plan not in ('shared', 'dedicated'):
+            raise ValueError('Use a shared or dedicated plan')
+        body = {'action': 'checkout', 'plan': plan}
+        if coupon_code is not None:
+            body['coupon_code'] = self._coupon_code(coupon_code)
+        return self._billing_action(body, idempotency_key)
+
+    @staticmethod
+    def _coupon_code(value: str) -> str:
+        if not isinstance(value, str) or not 1 <= len(value.strip()) <= 64:
+            raise ValueError('Use a nonblank coupon code of at most 64 characters')
+        return value
+
+    def cancel_subscription(self, *, idempotency_key: str) -> BillingCancellation:
+        """Request period-end cancellation; this is not confirmation of cancellation."""
+        return self._billing_action({'action': 'cancel'}, idempotency_key)
+
+    def validate_coupon(self, coupon_code: str, *, idempotency_key: str) -> CouponValidation:
+        return self._billing_action({'action': 'validate_coupon',
+                                     'coupon_code': self._coupon_code(coupon_code)}, idempotency_key)

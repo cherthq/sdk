@@ -45,28 +45,55 @@ Each channel keeps its own credential.
 Credentials are excluded from configuration reprs. Explicit successful login and
 connector responses contain secrets: do not log those responses.
 
-**Release hold:** canonical origins are confirmed, but live strict iMessage
-`POST /api/v1/text-operations/v1` and FaceTime `GET /api/v1/billing/catalog`
-currently return 404. Defaults and local contract tests do not establish backend
-compatibility. Do not publish this candidate until routing is reconciled and
-method-correct live route smoke tests pass. No alternate-host retry is performed.
+**Preview limitation:** default origins and offline contract tests do not establish
+live service compatibility. Strict text and reaction availability, and billing
+availability at the default origin, remain unverified for this candidate.
+There is no alternate-host retry or production-readiness claim.
 
 ## FaceTime control plane
 
 `ChertControlPlane(base_url='https://facetime.trychert.com', *, token=None, project_id=None, timeout=15.0)` exposes
-the inspected TypeScript control-plane surface with Python snake_case methods:
+the FaceTime control-plane API with Python snake_case methods:
 
 | Scope | Methods |
 | --- | --- |
-| Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)`, `billing_catalog()` |
+| Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)` |
 | User (bearer only) | `inspect_login(user_code)`, `approve_login(user_code, project_id)`, `logout()` |
-| Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)`, `current_checkout()`, `create_checkout(plan_id=..., catalog_version=..., idempotency_key=...)` |
+| Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)` |
+| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)` |
 
 Pagination parameters and checkout arguments are keyword-only. Enrollment uses
 a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
 annotations describe server responses, not full runtime schema validation.
-Checkout currently types `plan_id='shared'`, `catalog_version='2026-10-22'`.
 Mutating methods can have effects; reconcile uncertain results before retrying.
+
+Billing uses `GET /api/v1/billing` for status and `POST /api/v1/billing`
+with `action` set to `checkout`, `cancel`, or `validate_coupon`. All billing
+requests require a user bearer token and project selection; an API key is not a
+substitute. Every POST requires a stable printable-ASCII `Idempotency-Key`
+(8–200 characters after surrounding whitespace is removed). The SDK does not
+retry. Reuse the same key and inputs only when intentionally retrying the same
+operation after reconciling an uncertain result.
+
+Checkout takes `plan='shared'` or `'dedicated'` and an optional `coupon_code`,
+and returns `CheckoutSession` containing only `url`. Plan acceptance does not
+guarantee availability. Coupon validation requires `coupon_code`; codes must be
+nonblank and at most 64 characters after trimming. `CouponValidation` contains
+`code`, `percent_off`, `mode` (`live` or `test`), `monthly_total`, and `currency`.
+The server determines coupon eligibility; no coupon is promised by the SDK.
+Cancellation returns `BillingCancellation` with `status='cancellation_requested'`
+and `message`, not proof of completed cancellation. Refresh status to confirm.
+`BillingStatus` contains nullable `entitlement`, `needs_reconciliation`, nullable
+`sales_enabled`, `shared_available`, and `dedicated_available`. The entitlement
+is preserved as an extensible JSON object, not modeled as a checkout record.
+
+**Unpublished preview compatibility:** `billing_catalog()` and
+`current_checkout()` and the `BillingPlan`, `BillingCatalog`, and `Checkout`
+models were removed because they described unsupported routes/shapes. Use
+`billing_status()` for status, not as a catalog or checkout-record substitute.
+`create_checkout(plan_id=..., catalog_version=...)` is replaced by
+`create_checkout(plan=..., idempotency_key=...)`; migrate callers explicitly.
+There are no aliases that silently change returned data or authentication.
 
 FaceTime requires an HTTPS origin (or loopback HTTP), without a path, credentials,
 query, or fragment. Omit `base_url` to use the production default; explicit empty
@@ -114,8 +141,8 @@ account selection, callbacks, retries or live-provider compatibility claims.
 The actual route and deployment determine which operations are available.
 For example, messaging `/send`, `/chats`, `/messages/{id}`, `/typing` and
 `/whoami` have different request/response contracts. This client does not pretend
-those contracts are the FaceTime API or a complete provider SDK. Status lookup
-also depends on the installed native worker and durable cloud record.
+those contracts are the FaceTime API or a complete provider SDK. Availability
+and status lookup depend on the service's supported contract.
 
 ## Typed strict plaintext
 
@@ -148,8 +175,7 @@ Use the same explicit key for intended idempotent retries only under the
 server's documented reconciliation policy; this client never retries itself.
 
 A queued receipt identifies a cloud operation, not physical messaging proof.
-Availability depends on the compatible cloud route and installed native
-server/helper; neither SDK packaging nor these offline tests prove deployment
+Availability depends on a compatible service; neither SDK packaging nor these offline tests prove deployment
 or delivery. This synchronous method adds no cancellation token or async API;
 existing socket timeout behavior is unchanged.
 
@@ -187,7 +213,7 @@ retain existing codes and explicit raw `error.data`. There is one attempt, no
 fallback or automatic retry, and no new async cancellation API. An acknowledgement
 proves dispatch acceptance, not applied/current reaction state, recipient receipt,
 or an SMS-fallback guarantee. Offline package tests do not establish a live Python
-reaction or deployment claim; compatible cloud/native installation remains required.
+reaction or deployment claim; a compatible service remains required.
 
 ## Transport boundaries
 
@@ -232,7 +258,7 @@ claim a tested interpreter matrix or production/deployment acceptance.
 
 Run these commands from the repository root. Tooling lives in an isolated venv;
 do not modify system Python. Setuptools is a build-only dependency.
-The unified loopback tests cover all 18 FaceTime operations, explicit auth scopes,
+The unified loopback tests cover all 19 FaceTime operations, explicit auth scopes,
 cross-channel credential isolation, redaction, response bounds, and one-attempt
 transport behavior. Existing messaging tests retain their original contracts.
 

@@ -81,19 +81,19 @@ class UnifiedTests(unittest.TestCase):
 
         # Capture at the HTTP boundary: never send fixture credentials to production.
         with patch('urllib.request.HTTPSHandler.https_open', side_effect=respond):
-            self.assertEqual(ChertControlPlane().billing_catalog(), {'ok': True})
+            self.assertEqual(ChertControlPlane(token=SECRET, project_id='project-only').billing_status(), {'ok': True})
             sdk = Chert(facetime=FaceTimeConfig(token=SECRET, project_id='project-only'))
             self.assertEqual(sdk.facetime.whoami(), {'ok': True})
-            self.assertEqual(ChertControlPlane('https://selfhost.example/').billing_catalog(), {'ok': True})
+            self.assertEqual(ChertControlPlane('https://selfhost.example/', token=SECRET, project_id='project-only').billing_status(), {'ok': True})
         self.assertEqual([request.full_url for request in requests], [
-            'https://facetime.trychert.com/api/v1/billing/catalog',
+            'https://facetime.trychert.com/api/v1/billing',
             'https://facetime.trychert.com/api/v1/cli/whoami',
-            'https://selfhost.example/api/v1/billing/catalog',
+            'https://selfhost.example/api/v1/billing',
         ])
-        self.assertIsNone(requests[0].get_header('Authorization'))
+        self.assertEqual(requests[0].get_header('Authorization'), 'Bearer ' + SECRET)
         self.assertEqual(requests[1].get_header('Authorization'), 'Bearer ' + SECRET)
         self.assertEqual(requests[1].get_header('X-chert-project-id'), 'project-only')
-        self.assertIsNone(requests[2].get_header('Authorization'))
+        self.assertEqual(requests[2].get_header('Authorization'), 'Bearer ' + SECRET)
 
     def test_imessage_default_override_prefix_and_auth_isolation(self):
         requests = []
@@ -149,9 +149,11 @@ class UnifiedTests(unittest.TestCase):
             (lambda: self.client.activate_connector('binding', None, 2), 'POST', 'connectors', {'action': 'activate', 'binding_id': 'binding', 'expected_binding_id': None, 'assignment_generation': 2}, 'project'),
             (lambda: self.client.drain_connector('binding'), 'POST', 'connectors', {'action': 'drain', 'binding_id': 'binding'}, 'project'),
             (lambda: self.client.revoke_connector('binding'), 'POST', 'connectors', {'action': 'revoke', 'binding_id': 'binding'}, 'project'),
-            (self.client.billing_catalog, 'GET', 'billing/catalog', None, 'public'),
-            (self.client.current_checkout, 'GET', 'billing/checkout', None, 'project'),
-            (lambda: self.client.create_checkout(plan_id='shared', catalog_version='2026-10-22', idempotency_key='stable-key'), 'POST', 'billing/checkout', {'plan_id': 'shared', 'catalog_version': '2026-10-22'}, 'project'),
+            (self.client.billing_status, 'GET', 'billing', None, 'project'),
+            (lambda: self.client.create_checkout(plan='shared', idempotency_key='stable-key'), 'POST', 'billing', {'action': 'checkout', 'plan': 'shared'}, 'project'),
+            (lambda: self.client.create_checkout(plan='dedicated', coupon_code='EXAMPLE', idempotency_key='stable-key'), 'POST', 'billing', {'action': 'checkout', 'plan': 'dedicated', 'coupon_code': 'EXAMPLE'}, 'project'),
+            (lambda: self.client.cancel_subscription(idempotency_key='stable-key'), 'POST', 'billing', {'action': 'cancel'}, 'project'),
+            (lambda: self.client.validate_coupon('EXAMPLE', idempotency_key='stable-key'), 'POST', 'billing', {'action': 'validate_coupon', 'coupon_code': 'EXAMPLE'}, 'project'),
         ]
         for call, method, path, body, auth in cases:
             with self.subTest(path=path, body=body):
@@ -164,7 +166,7 @@ class UnifiedTests(unittest.TestCase):
                 self.assertEqual(headers.get('authorization'), None if auth == 'public' else 'Bearer ' + SECRET)
                 self.assertEqual(headers.get('x-chert-project-id'), 'project-only' if auth == 'project' else None)
                 self.assertNotIn('x-chert-tenant', headers)
-                self.assertEqual(headers.get('idempotency-key'), 'stable-key' if path == 'billing/checkout' and method == 'POST' else None)
+                self.assertEqual(headers.get('idempotency-key'), 'stable-key' if path == 'billing' and method == 'POST' else None)
 
     def test_wrapper_keeps_credentials_and_project_independent(self):
         im = IMessageConfig(self.message_base, MESSAGE_SECRET, 'tenant-only')
@@ -196,7 +198,7 @@ class UnifiedTests(unittest.TestCase):
             ChertControlPlane(self.base, token=SECRET).whoami()
         self.assertEqual(caught.exception.code, 'project_required')
         self.assertEqual(self.server.calls, [])
-        ChertControlPlane(self.base).billing_catalog()
+        ChertControlPlane(self.base).begin_login('laptop')
         ChertControlPlane(self.base, token=SECRET).logout()
 
     def test_errors_are_sanitized_and_envelopes_bounded(self):
@@ -227,7 +229,7 @@ class UnifiedTests(unittest.TestCase):
 
     def test_null_data_and_login_tokens_are_returned_explicitly(self):
         self.server.payload = {'data': None}
-        self.assertIsNone(self.client.current_checkout())
+        self.assertIsNone(self.client.billing_status())
         self.server.payload = {'data': {'status': 'approved', 'access_token': SECRET}}
         self.assertEqual(self.client.poll_login('code')['access_token'], SECRET)
 
@@ -248,6 +250,72 @@ class UnifiedTests(unittest.TestCase):
         with patch.dict(os.environ, {'HTTP_PROXY': 'http://127.0.0.1:1', 'http_proxy': 'http://127.0.0.1:1', 'ALL_PROXY': 'http://127.0.0.1:1', 'NO_PROXY': '', 'NETRC': '/nonexistent'}):
             self.assertEqual(self.client.whoami(), {'ok': True})
 
+    def test_billing_responses_are_not_checkout_records(self):
+        from trychert.models import BillingStatus, CheckoutSession, BillingCancellation, CouponValidation
+        cases = [
+            (self.client.billing_status, BillingStatus, {
+                'entitlement': None, 'needs_reconciliation': False, 'sales_enabled': None,
+                'shared_available': False, 'dedicated_available': False}),
+            (lambda: self.client.create_checkout(plan='shared', idempotency_key='stable-key'),
+             CheckoutSession, {'url': 'https://checkout.example/session'}),
+            (lambda: self.client.cancel_subscription(idempotency_key='stable-key'),
+             BillingCancellation, {'status': 'cancellation_requested', 'message': 'Refresh to confirm.'}),
+            (lambda: self.client.validate_coupon('EXAMPLE', idempotency_key='stable-key'),
+             CouponValidation, {'code': 'EXAMPLE', 'percent_off': 100, 'mode': 'test',
+                                'monthly_total': 0, 'currency': 'usd'}),
+        ]
+        for call, model, data in cases:
+            with self.subTest(model=model):
+                self.server.payload = {'data': data}
+                self.assertEqual(call(), data)
+                self.assertEqual(model.__required_keys__, data.keys())
+        status = dict(cases[0][2], entitlement={'plan': 'shared', 'status': 'active'}, sales_enabled=True)
+        self.server.payload = {'data': status}
+        self.assertEqual(self.client.billing_status(), status)
+
+    def test_billing_requires_own_auth_project_and_valid_keys(self):
+        def calls(client, key):
+            return [lambda: client.create_checkout(plan='shared', idempotency_key=key),
+                    lambda: client.cancel_subscription(idempotency_key=key),
+                    lambda: client.validate_coupon('EXAMPLE', idempotency_key=key)]
+        for kwargs, code in [({}, 'unauthorized'), ({'token': SECRET}, 'project_required')]:
+            client = ChertControlPlane(self.base, **kwargs)
+            for call in [client.billing_status, *calls(client, 'stable-key')]:
+                with self.assertRaises(ChertControlPlaneError) as caught:
+                    call()
+                self.assertEqual(caught.exception.code, code)
+        for key in (None, True, '', 'short', ' ' * 8, 'k' * 201, 'long-key\n', 'long-keyé'):
+            for call in calls(self.client, key):
+                with self.assertRaises(ValueError):
+                    call()
+        for coupon in ('', ' ', 'x' * 65, 123):
+            with self.assertRaises(ValueError):
+                self.client.validate_coupon(coupon, idempotency_key='stable-key')
+            with self.assertRaises(ValueError):
+                self.client.create_checkout(plan='shared', coupon_code=coupon, idempotency_key='stable-key')
+        with self.assertRaises(ValueError):
+            self.client.create_checkout(plan='other', idempotency_key='stable-key')
+        # Unpublished preview names fail locally; they never alias incompatible data.
+        self.assertFalse(hasattr(self.client, 'billing_catalog'))
+        self.assertFalse(hasattr(self.client, 'current_checkout'))
+        with self.assertRaises(TypeError):
+            self.client.create_checkout(plan_id='shared', catalog_version='old', idempotency_key='stable-key')
+        self.assertEqual(self.server.calls, [])
+
+    def test_billing_mutations_never_follow_redirects_or_retry(self):
+        for status in (307, 503):
+            self.server.status = status
+            self.server.payload = {'error': {'code': 'forbidden', 'message': PRIVATE}}
+            for call in (lambda: self.client.create_checkout(plan='dedicated', idempotency_key='stable-key'),
+                         lambda: self.client.cancel_subscription(idempotency_key='stable-key'),
+                         lambda: self.client.validate_coupon('EXAMPLE', idempotency_key='stable-key')):
+                before = len(self.server.calls)
+                with self.assertRaises(ChertControlPlaneError) as caught:
+                    call()
+                self.assertNotIn(PRIVATE, str(caught.exception))
+                self.assertEqual(len(self.server.calls), before + 1)
+        self.assertEqual(self.messaging.calls, [])
+
     def test_invalid_input_rejected_before_network(self):
         for base in ('', 'https://user:secret@example.test', 'https://example.test/path', 'https://example.test?', 'https://example.test#', 'https://example.test:99999', 'http://example.test', 'https://example.test\n', None):
             with self.subTest(base=base), self.assertRaises(ValueError):
@@ -265,7 +333,7 @@ class UnifiedTests(unittest.TestCase):
                 self.client.list_workers(offset=value)
         for value in ('short', ' ' * 8, 'k' * 201, 'long-key\n'):
             with self.assertRaises(ValueError):
-                self.client.create_checkout(plan_id='shared', catalog_version='2026-10-22', idempotency_key=value)
+                self.client.create_checkout(plan='shared', idempotency_key=value)
         self.assertEqual(self.server.calls, [])
 
 

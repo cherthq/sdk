@@ -118,34 +118,30 @@ class ConnectorReceipt(TypedDict):
     credentials: ConnectorSecrets
 
 
-class BillingPlan(TypedDict):
-    id: str
-    name: str
+class BillingStatus(TypedDict):
+    # Preserve the server's extensible entitlement object without inventing a schema.
+    entitlement: dict[str, Json] | None
+    needs_reconciliation: bool
+    sales_enabled: bool | None
+    shared_available: bool
+    dedicated_available: bool
+
+
+class CheckoutSession(TypedDict):
+    url: str
+
+
+class BillingCancellation(TypedDict):
+    status: Literal["cancellation_requested"]
+    message: str
+
+
+class CouponValidation(TypedDict):
+    code: str
+    percent_off: float
+    mode: Literal["live", "test"]
+    monthly_total: float
     currency: str
-    amount: float
-    interval: str
-    available: bool
-    reason: str | None
-    minutes_per_day: int | None
-
-
-class BillingCatalog(TypedDict):
-    version: str
-    test_mode: bool
-    enabled: bool
-    plans: list[BillingPlan]
-
-
-class Checkout(TypedDict):
-    id: str
-    project_id: str
-    plan_id: str
-    created_at: str
-    state: Literal["creating", "open", "complete", "expired"]
-    stripe_session_id: str | None
-    checkout_url: str | None
-    expires_at: str | None
-    stripe_subscription_id: str | None
 
 
 class Revoked(TypedDict):
