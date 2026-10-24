@@ -9,7 +9,7 @@ the other clients are source previews, with unified channel support under review
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
-| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | Published: [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk). Planned successor: `chert-sdk` (not yet published); same binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.0`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | Unpublished `chert-sdk` distribution; build from source ([implementation #11](https://github.com/cherthq/sdk/pull/11)) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
@@ -25,9 +25,9 @@ build/test source; do not substitute a similarly named registry package.
 - **iMessage** clients use a Chert API key and optional messaging tenant.
   JavaScript defaults to `https://console.trychert.com` with an optional service
   URL override. A queued receipt does not mean sent, delivered or read.
-- **FaceTime control-plane** coverage differs by language. The published JavaScript
+- **FaceTime control-plane** coverage differs by language. The JavaScript 0.1.0
   client inspects identity, assigned lines, workers, credentials and connectors;
-  it is not an outbound-call API. The successor JavaScript and native source previews
+  it is not an outbound-call API. JavaScript 0.2.0 and the native source previews
   include typed calls and related resources as documented in their language guides.
   None is a media runtime. Route availability and permissions depend on the backend.
 - Legacy channel credentials are **separate**. The SDK does not prove that an iMessage
@@ -40,26 +40,29 @@ build/test source; do not substitute a similarly named registry package.
 
 ## JavaScript / TypeScript
 
-The examples below target the **planned `chert-sdk` successor**, not an already
-available registry release. Until it is published and verified, existing users
-should keep `@trychert/sdk@0.1.0`; local validation installs the packed tarball.
+The examples below target **`@trychert/sdk@0.2.0`**. The
+[npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
+versions; registry commands require the requested version to be available.
+Local validation installs the packed tarball. Package availability does not
+establish live backend support.
 
 ```sh
-npm install chert-sdk
+npm install @trychert/sdk@0.2.0
 # Alternatives:
-pnpm add chert-sdk
-bun add chert-sdk
+pnpm add @trychert/sdk@0.2.0
+bun add @trychert/sdk@0.2.0
 
-npx chert-sdk --help
-bunx chert-sdk --help
+npx --package=@trychert/sdk@0.2.0 chert-sdk --help
+bunx --package @trychert/sdk@0.2.0 chert-sdk --help
 ```
 
 ESM and declarations are shipped for Node 22.12+, current Bun and Deno 2 with
-npm compatibility. Deno imports use `npm:chert-sdk`. CommonJS `require()` is
-not a supported migration target. The npm package and binary are both `chert-sdk`.
+npm compatibility. Deno imports use `npm:@trychert/sdk@0.2.0` (append subpaths
+after the version). CommonJS `require()` is not a supported migration target.
+The npm package is `@trychert/sdk`; the CLI binary remains `chert-sdk`.
 
 ```ts
-import { ChertSDK } from 'chert-sdk';
+import { ChertSDK } from '@trychert/sdk';
 
 const sdk = new ChertSDK({
   projectId: process.env.CHERT_PROJECT_ID!,
@@ -81,9 +84,9 @@ The default export remains the iMessage `ChertClient`. Explicit subpaths include
 `texting-blue`, `contiguity`, `bluereacher`, `jared` (append `-adapter`).
 
 ```ts
-import ChertClient from 'chert-sdk';
-import { ChertControlPlane } from 'chert-sdk/facetime';
-import Sendblue from 'chert-sdk/sendblue-adapter';
+import ChertClient from '@trychert/sdk';
+import { ChertControlPlane } from '@trychert/sdk/facetime';
+import Sendblue from '@trychert/sdk/sendblue-adapter';
 ```
 
 ### Unified session preview
@@ -136,54 +139,61 @@ null values are invalid, not a request to fall back to production. No host
 fallback or request retries are added. Event-stream reconnection is explicit
 and uses only the continuation returned by the server.
 
-**Unpublished source preview:** verify feature availability for your project
+**Backend verification required:** verify feature availability for your project
 before production use. Default-origin reaction support is not yet verified.
 No endpoint fallback or automatic retries are performed; a queued receipt is
-not proof of delivery. Package publication remains a separate approval step.
+not proof of delivery. Package publication and backend availability are separate.
 
 Billing uses a signed-in user session and project UUID, not a CLI/project key.
-Use `billingStatus()` to inspect entitlement and availability. The successor
+Use `billingStatus()` to inspect entitlement and availability. The 0.2.0 preview
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
 ```sh
-bunx chert-sdk context
-bunx chert-sdk facetime status
-bunx chert-sdk facetime lines
-bunx chert-sdk facetime workers
-bunx chert-sdk adopt ./my-app          # Dry-run migration report
-bunx chert-sdk adopt ./my-app --write  # Applies supported rewrites
+bunx --package @trychert/sdk@0.2.0 chert-sdk context
+bunx --package @trychert/sdk@0.2.0 chert-sdk facetime status
+bunx --package @trychert/sdk@0.2.0 chert-sdk facetime lines
+bunx --package @trychert/sdk@0.2.0 chert-sdk facetime workers
+bunx --package @trychert/sdk@0.2.0 chert-sdk adopt ./my-app          # Dry-run migration report
+bunx --package @trychert/sdk@0.2.0 chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
 `adopt --install` additionally uses the target project's package manager.
-Replace legacy `@cherthq/sdk` imports with `chert-sdk` and
-`@cherthq/<adapter>` with `chert-sdk/<adapter>`. Bare legacy package names do
+Replace legacy `@cherthq/sdk` imports with `@trychert/sdk` and
+`@cherthq/<adapter>` with `@trychert/sdk/<adapter>`. Bare legacy package names do
 not resolve from this archive. Provider call shapes and refusal boundaries are
 preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
-### Migrating from `@trychert/sdk@0.1.0`
+### Upgrading from `@trychert/sdk@0.1.0`
 
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
-migration. Registry deprecation is deferred until the successor is published and
-verified; publication is a separate release step.
+migration. To upgrade, check registry availability and update the dependency to
+`@trychert/sdk@0.2.0`, regenerate your consumer lockfile and rerun tests.
+No import rename is needed: root imports stay `@trychert/sdk` and subpaths
+stay `@trychert/sdk/<subpath>`. Publication is a separate release step.
 
-Once the successor is available, replace the dependency with `chert-sdk`, update
-root imports from `@trychert/sdk` to `chert-sdk`, and preserve subpath suffixes
-(for example `@trychert/sdk/facetime` becomes `chert-sdk/facetime`). Regenerate
-your consumer lockfile and rerun tests. The default export, named exports,
-provider contracts and `chert-sdk` CLI are unchanged by this rename. The new
-archive does not provide an alias for old imports. `adopt` migrates supported
-provider usage; it does not automatically rename existing scoped SDK imports.
+### Migrating from accidental unscoped `chert-sdk@0.1.0`
+
+The canonical npm package is `@trychert/sdk`, not `chert-sdk`. If you installed
+the accidental unscoped 0.1.0 package, remove that dependency and install
+`@trychert/sdk@0.2.0` after checking registry availability. Change root imports
+from `chert-sdk` to `@trychert/sdk` and preserve subpath suffixes (for example,
+`chert-sdk/facetime` becomes `@trychert/sdk/facetime`). Regenerate your consumer
+lockfile and rerun tests. The identity correction does not change the default
+export, named exports, provider contracts or `chert-sdk` CLI binary. The scoped
+archive does not alias unscoped imports. `adopt` migrates supported provider
+usage; do not rely on it to rename existing SDK imports. This documentation
+does not deprecate any registry package; registry actions require separate approval.
 
 Published 0.1.0 does not include `login`, `onboard`, `new`, `doctor` or `dev`.
 The preview CLI/onboarding work remains in [draft #5](https://github.com/cherthq/sdk/pull/5)
 and its integration branch in [draft #6](https://github.com/cherthq/sdk/pull/6).
-Those drafts are not installed by the current npm release.
+Those drafts are not installed by `@trychert/sdk@0.1.0`.
 
 ### iMessage events and webhooks (source preview)
 
-The successor adds `listEvents`, `getEvent`, `streamEvents`, and
+The 0.2.0 preview adds `listEvents`, `getEvent`, `streamEvents`, and
 `listWebhookSubscriptions`, `getWebhookSubscription`, `createWebhookSubscription`,
 `updateWebhookSubscription`, `deleteWebhookSubscription`. These require messaging
 tenant credentials; a FaceTime project token or CLI login is not a substitute.
@@ -191,7 +201,7 @@ tenant credentials; a FaceTime project token or CLI login is not a substitute.
 or the presence of these methods as a deployed subscription service.
 
 ```ts
-import { ChertClient, verifyWebhook } from 'chert-sdk';
+import { ChertClient, verifyWebhook } from '@trychert/sdk';
 const messages = new ChertClient({apiKey: authorizedMessagingKey});
 const page = await messages.listEvents({limit: 50, since: startTimestamp});
 // Read older pages with page.next_cursor; do not use it as an SSE cursor.

@@ -6,9 +6,12 @@ fallback or automatic retries. An optional `baseURL` accepts HTTPS or loopback
 HTTP: root origins get `/api/v1`; explicit deployment path prefixes and trailing
 slashes retain their existing semantics. `/api/v1` is not duplicated. Only
 omitted/undefined values select the default; empty/null values are rejected.
-The planned public import is `chert-sdk/imessage` (use a local tarball until
-publication). Release is held because the canonical strict-text endpoint
-currently returns 404; backend fixes and verification are required.
+The public import is `@trychert/sdk/imessage`. This guide targets 0.2.0; the
+[npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
+versions. Requests require a backend supporting the documented contracts and
+authorized access. Verify feature availability for your project; package
+availability does not promise deployment support. A queued receipt is not
+proof of sending, delivery or reading. Use a packed tarball for local validation.
 The transport and `sendText` contracts
 remain documented in the workspace README.
 

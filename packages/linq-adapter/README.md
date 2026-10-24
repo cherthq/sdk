@@ -1,10 +1,10 @@
-# chert-sdk/linq-adapter
+# @trychert/sdk/linq-adapter
 
 Restricted compatibility with `@linqapp/sdk@0.78.0`, retaining the official
 resource objects, types and APIError classes. This is not full Linq compatibility.
 
 ```ts
-import Linq from 'chert-sdk/linq-adapter';
+import Linq from '@trychert/sdk/linq-adapter';
 const client = new Linq({
   chert: { apiKey: process.env.CHERT_API_KEY! },
   maxRetries: 0,

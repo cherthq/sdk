@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "chert-sdk",
+      "name": "@trychert/sdk",
       "dependencies": {
         "@blooio/sdk": "0.0.2",
         "@linqapp/sdk": "0.78.0",

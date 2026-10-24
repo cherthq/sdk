@@ -1,6 +1,6 @@
 {
-  "name": "chert-sdk",
-  "version": "0.1.0",
+  "name": "@trychert/sdk",
+  "version": "0.2.0",
   "description": "Unified Chert iMessage, FaceTime control-plane, provider adapters and migration CLI",
   "type": "module",
   "main": "./dist/index.js",
