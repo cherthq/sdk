@@ -1,4 +1,4 @@
-#include <chert/client.hpp>
+#include <trychert/imessage.hpp>
 #include <curl/curl.h>
 
 #include <algorithm>
@@ -10,7 +10,7 @@
 #include <string_view>
 #include <vector>
 
-namespace chert {
+namespace trychert {
 namespace {
 constexpr std::size_t response_limit = 8 * 1024 * 1024;
 using Url = std::unique_ptr<CURLU, decltype(&curl_url_cleanup)>;
@@ -161,16 +161,16 @@ ApiError::ApiError(long status_value, std::string code_value, std::string id, Js
     : std::runtime_error("Chert request failed; reconcile uncertain sends before retrying"),
       status(status_value), code(std::move(code_value)), request_id(std::move(id)), data(std::move(raw)) {}
 
-Client::Client(std::string base_url, std::string api_key, std::optional<std::string> tenant,
-               std::chrono::milliseconds timeout)
-    : key_(std::move(api_key)), tenant_(std::move(tenant)), timeout_(timeout) {
+detail::Transport::Transport(std::string base_url, std::string api_key, std::optional<std::string> scope,
+                             std::chrono::milliseconds timeout, Scope scope_kind)
+    : key_(std::move(api_key)), scope_(std::move(scope)), timeout_(timeout), scope_kind_(scope_kind) {
     initialize();
     if (timeout_.count() <= 0 || timeout_.count() > std::numeric_limits<long>::max())
         throw std::invalid_argument("Invalid Chert timeout");
     const auto valid_header = [](const std::string& value) {
         return !value.empty() && !controls(value);
     };
-    if (!valid_header(key_) || (tenant_ && !valid_header(*tenant_)))
+    if (!valid_header(key_) || (scope_ && !valid_header(*scope_)))
         throw std::invalid_argument("Explicit Chert credentials are required");
     if (base_url.size() > 16384 || controls(base_url) || base_url.find_first_of("\\?#") != base_url.npos)
         throw std::invalid_argument("Invalid Chert base URL");
@@ -194,11 +194,11 @@ Client::Client(std::string base_url, std::string api_key, std::optional<std::str
     base_ = part(url.get(), CURLUPART_URL);
 }
 
-std::optional<Json> Client::request(const std::string& path, std::optional<Json> body, std::string method) const {
+std::optional<Json> detail::Transport::request(const std::string& path, std::optional<Json> body, std::string method) const {
     return request_with_response(path, std::move(body), std::move(method)).data;
 }
 
-QueuedTextReceipt Client::send_text(const std::string& phone, const std::string& text,
+QueuedTextReceipt IMessageClient::send_text(const std::string& phone, const std::string& text,
                                     std::optional<std::string> key) const {
     if (!canonical_phone(phone) || text.empty() || text.size() > 16384 || text.find('\0') != text.npos
         || !valid_utf8(text) || blank_text(text)) throw std::invalid_argument("Invalid strict plaintext input");
@@ -217,7 +217,7 @@ QueuedTextReceipt Client::send_text(const std::string& phone, const std::string&
     return {true, data->at("message_id").get<std::string>(), data->at("chat_id").get<std::string>(), "queued"};
 }
 
-ReactionReceipt Client::send_reaction(const std::string& input_chat, const std::string& message,
+ReactionReceipt IMessageClient::send_reaction(const std::string& input_chat, const std::string& message,
                                       const std::string& reaction, bool remove, std::optional<std::string> key) const {
     constexpr std::array<std::string_view, 6> kinds{"love", "like", "dislike", "laugh", "emphasize", "question"};
     if (!reaction_chat_id(input_chat) || !reaction_message_id(message)
@@ -241,7 +241,7 @@ ReactionReceipt Client::send_reaction(const std::string& input_chat, const std::
     return {data->at("operation_id").get<std::string>(), chat, message, "acknowledged"};
 }
 
-Client::RequestResult Client::request_with_response(const std::string& path, std::optional<Json> body, std::string method,
+detail::Response detail::Transport::request_with_response(const std::string& path, std::optional<Json> body, std::string method,
                                                      std::optional<std::string> idempotency_key) const {
     if (idempotency_key && !reaction_key(*idempotency_key))
         throw std::invalid_argument("Invalid reaction idempotency header");
@@ -258,7 +258,7 @@ Client::RequestResult Client::request_with_response(const std::string& path, std
     try { if (body) payload = body->dump(); }
     catch (const Json::exception&) { throw std::invalid_argument("Expected valid finite JSON"); }
     const auto url = base_ + path.substr(1);
-    Response response;
+    ::trychert::Response response;
     Headers headers(nullptr, curl_slist_free_all);
     const Easy handle(curl_easy_init(), curl_easy_cleanup);
     if (!handle) throw std::runtime_error("Cannot initialize Chert request");
@@ -272,7 +272,7 @@ Client::RequestResult Client::request_with_response(const std::string& path, std
     add_header("Accept: application/json");
     // Avoid libcurl's Expect/417 retry path for large mutation bodies.
     add_header("Expect:");
-    if (tenant_) add_header("X-Chert-Tenant: " + *tenant_);
+    if (scope_) add_header((scope_kind_ == Scope::tenant ? "X-Chert-Tenant: " : "X-Chert-Project-Id: ") + *scope_);
     if (idempotency_key) add_header("Idempotency-Key: " + *idempotency_key);
     if (body) add_header("Content-Type: application/json");
     const auto set = [&handle](CURLoption option, auto value) {
@@ -321,4 +321,4 @@ Client::RequestResult Client::request_with_response(const std::string& path, std
     }
     return {status, id, data};
 }
-} // namespace chert
+} // namespace trychert
