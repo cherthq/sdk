@@ -23,6 +23,10 @@ if grep -q '<dependency ' "$out/chert-sdk.nuspec"; then echo 'Unexpected package
 if grep -Ev '^(_rels/\.rels|chert-sdk\.nuspec|lib/net8\.0/TryChert\.dll|LICENSE|README\.md|\[Content_Types\]\.xml|package/services/metadata/core-properties/[A-Za-z0-9]+\.psmdcp)$' "$out/package-files.txt"; then
     echo 'Unexpected package contents' >&2; exit 1
 fi
+unzip -p "$package" lib/net8.0/TryChert.dll > "$scratch/TryChert.dll"
+if grep -aqF "$root" "$scratch/TryChert.dll"; then
+    echo 'Local checkout path leaked into package assembly' >&2; exit 1
+fi
 mkdir -p "$scratch/feed" "$scratch/Tests" "$scratch/Examples"
 cp "$package" "$scratch/feed/"
 cp "$root/dotnet/NuGet.Config" "$scratch/NuGet.Config"

@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PathMap>$(MSBuildProjectDirectory)=/_/src</PathMap>
     <Version>0.2.0-preview.1</Version>
     <PackageId>chert-sdk</PackageId>
     <AssemblyName>TryChert</AssemblyName>
