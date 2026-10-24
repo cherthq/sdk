@@ -181,7 +181,7 @@ func (c *FaceTimeClient) ActivateConnector(ctx context.Context, input ConnectorA
 	}{"activate", input}, ProjectAuth, nil, 200)
 }
 
-// DrainConnector requests a drain; it does not prove the worker is physically idle.
+// DrainConnector requests a drain; acceptance does not confirm completion.
 func (c *FaceTimeClient) DrainConnector(ctx context.Context, id string) (Result[json.RawMessage], error) {
 	return c.connectorAction(ctx, "drain", id)
 }

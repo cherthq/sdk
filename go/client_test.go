@@ -128,7 +128,7 @@ func TestUnconfirmedReceipts(t *testing.T) {
 	for _, tc := range []struct {
 		name, body string
 		status     int
-	}{{"status", `{"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 200}, {"extra", `{"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued","secret":"private-key"}`, 202}, {"nativeID", `{"success":true,"message_id":"` + chatID + `","chat_id":"chat","status":"queued"}`, 202}, {"false", `{"success":false,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 202}, {"malformed", "private-key", 202}, {"array", "[]", 202}, {"duplicate", `{"success":true,"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 202}} {
+	}{{"status", `{"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 200}, {"extra", `{"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued","secret":"private-key"}`, 202}, {"invalidMessageID", `{"success":true,"message_id":"` + chatID + `","chat_id":"chat","status":"queued"}`, 202}, {"false", `{"success":false,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 202}, {"malformed", "private-key", 202}, {"array", "[]", 202}, {"duplicate", `{"success":true,"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 202}} {
 		t.Run(tc.name, func(t *testing.T) {
 			var n atomic.Int32
 			s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

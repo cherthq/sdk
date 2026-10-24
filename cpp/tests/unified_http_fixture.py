@@ -1,4 +1,4 @@
-"""Two real HTTP origins, source-derived control-plane contracts, no live credentials."""
+"""Two loopback HTTP origins with synthetic public API responses and credentials."""
 import collections
 import json
 import os
@@ -21,8 +21,7 @@ def call():
     return dict(id=CALL, project_id=PROJECT, direction="outbound", mode="customer_managed",
                 status="future_status", media=dict(audio=True, video=False), line_id=LINE,
                 worker_id=None, assistant_id=None, terminal_reason=None,
-                media_status={"audio": "pending", "video": "not_requested"},
-                facetime_call_events=[{"event_type": "bridge_ready", "source": "worker"}])
+                future_extension={"nested": ["preserved"]})
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -78,7 +77,7 @@ class Handler(BaseHTTPRequestHandler):
                 status = 202
             elif path == f"/calls/{CALL}/events":
                 data = dict(call_id=CALL, events=[dict(id="event-1", type="queued", at="2026-10-23T00:00:00Z", sequence=None, source="api"),
-                                                dict(id="event-2", type="bridge_ready", at="2026-10-23T00:00:01Z", sequence=42, source="worker")])
+                                                dict(id="event-2", type="future_event", at="2026-10-23T00:00:01Z", sequence=42, source="service")])
             elif path == f"/calls/{CALL}/transcript":
                 data = dict(call_id=CALL, schema_version=1, created_at="2026-10-23T00:00:00Z",
                             turns=[dict(occurred_at="2026-10-23T00:00:01Z", speaker="caller", text="hello"),

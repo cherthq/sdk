@@ -16,10 +16,9 @@ const response = await transport('https://a.loopmessage.com/api/v1/message/send/
 
 Only that exact URL/method and three-key body are accepted. Contact must be
 canonical E164; text must be nonempty, lossless UTF8, no NUL, at most 16 KiB and fewer than 10,000 UTF16 code units (a conservative subset of the documented character limit). Input is never truncated.
-Explicit `channel:'imessage'` is required. Sender selection uses Chert's owned
-lead/line policy and the strict existing-Apple-DM native protocol; this does not
-create a new Apple conversation. The candidate verifies selected iMessage service
-before dispatch; it does not yet prove that Messages/OS SMS fallback is disabled.
+Explicit `channel:'imessage'` is required. An authorized sender and existing
+direct conversation are required. This does not establish that device-level
+SMS fallback is disabled.
 Do not treat the channel field as an end-to-end no-SMS guarantee before that
 prevention mechanism and physical acceptance are established. Provider sender IDs, emails, automatic channel
 selection, attachments, markup/options, groups, replies, typing, edits,
@@ -46,10 +45,8 @@ Sources: [sending](https://loopmessage.com/apidocs/send-message/),
 [raw Authorization key](https://loopmessage.com/apidocs/credentials/),
 [error codes](https://loopmessage.com/apidocs/error-codes).
 
-No package is published. Node/Bun/Deno distribution checks are synthetic local
-transport verification; matching native installation, paired CRM release and
-separate live acceptance remain required. This package requires no additional
-Mac installation beyond that pending strict native pair.
+Node/Bun/Deno distribution checks are synthetic local transport verification,
+not evidence of production service availability or physical delivery.
 
 ## Recorded status subset
 
@@ -63,6 +60,5 @@ unknown service and 4103 uncertainty do not prove delivery; failed/unknown rows 
 to `unknown`. Conflicting flat/nested evidence, SMS/RCS and malformed fields fail 502.
 No `failed` lifecycle, provider error code or `last_update` is invented. Read errors
 use the documented status shape `{error_code:100,message}` (send errors use `code`).
-Native reconciliation may perform bounded read-only GETs or persist an observed
-status cache through the actual Chert route; this adapter never POSTs/retries a send.
+Status reads never POST or retry a send from this adapter.
 See [official status documentation](https://loopmessage.com/apidocs/statuses/).

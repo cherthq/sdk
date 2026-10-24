@@ -54,11 +54,11 @@ int main(int argc, char** argv) {
         check(calls.data.items[0].status == "future_status" && !calls.data.items[0].terminal_reason);
         const auto call = client.facetime.get_call("AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE");
         check(call.data.id == call_id && call.data.media.audio && !call.data.media.video);
-        check(call.data.fields.at("facetime_call_events").at(0).at("event_type") == "bridge_ready");
+        check(call.data.fields.at("future_extension").at("nested").at(0) == "preserved");
         check(client.facetime.list_lines({1, 9}).data.items[0].supports_video);
         check(client.facetime.list_workers({100, 3}).data.items[0].status == "offline");
         const auto events = client.facetime.get_call_events(call_id).data.events;
-        check(events.size() == 2 && !events[0].sequence && events[1].sequence == 42 && events[1].source == "worker");
+        check(events.size() == 2 && !events[0].sequence && events[1].sequence == 42 && events[1].source == "service");
         const auto transcript = client.facetime.get_transcript(call_id).data;
         check(transcript.schema_version == 1 && transcript.turns.size() == 2);
         check(transcript.turns[0].speaker == "caller" && transcript.turns[1].text == "héllo");

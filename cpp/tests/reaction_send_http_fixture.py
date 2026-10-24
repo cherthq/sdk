@@ -51,8 +51,8 @@ class Handler(BaseHTTPRequestHandler):
             self.connection.close()
             return
         receipt = {'operation_id': 'a' * 32, 'chat_id': chat, 'message_id': mode, 'status': 'acknowledged'}
-        patches = {'extra': {'native_guid': 'private-response'},
-                   'native-operation': {'operation_id': '550e8400-e29b-41d4-a716-446655440000'},
+        patches = {'extra': {'unexpected_field': 'private-response'},
+                   'uuid-operation': {'operation_id': '550e8400-e29b-41d4-a716-446655440000'},
                    'uppercase-operation': {'operation_id': 'A' * 32}, 'wrong-chat': {'chat_id': 'foreign-chat'},
                    'wrong-case-chat': {'chat_id': chat.upper()},
                    'wrong-message': {'message_id': 'different-message'}, 'wrong-case-message': {'message_id': 'WRONG-CASE-MESSAGE'}, 'applied': {'status': 'applied'},
@@ -92,7 +92,7 @@ try:
                    env=dict(os.environ, http_proxy='http://127.0.0.1:1', ALL_PROXY='http://127.0.0.1:1', NO_PROXY=''))
     expected = ['message-a', 'message-b', 'Message:exact_id.v1',
                 *['standard-' + kind for kind in ['love', 'like', 'dislike', 'laugh', 'emphasize', 'question']],
-                'http200', 'http201', 'http204', 'http206', 'extra', 'native-operation', 'uppercase-operation',
+                'http200', 'http201', 'http204', 'http206', 'extra', 'uuid-operation', 'uppercase-operation',
                 'wrong-chat', 'wrong-case-chat', 'wrong-message', 'wrong-case-message', 'applied', 'missing', 'null', 'wrongtype', 'empty-operation',
                 'api-error', 'redirect', 'nonjson', 'drop', 'slow']
     assert counts == {mode: 1 for mode in expected}, counts

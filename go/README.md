@@ -2,7 +2,7 @@
 
 Standard-library-only iMessage and FaceTime HTTP clients, licensed MIT. This is a
 Chert client, not a drop-in vendor SDK, full iMessage-provider parity, or a LiveKit
-media runtime. No tagged unified Go release is claimed. See [coverage and audit](CONTRACTS.md).
+media runtime. No tagged unified Go release is claimed. See [API coverage and contracts](CONTRACTS.md).
 No telemetry, environment credentials, redirects, ambient proxy or automatic
 request retry. Construction makes no HTTP requests.
 
@@ -10,11 +10,10 @@ request retry. Construction makes no HTTP requests.
 
 Import `github.com/cherthq/sdk/go` as `chert`. Go 1.23+ is required. The module path
 and existing `NewClient`, `SendText`, `SendReaction`, and `Request` API remain intact.
-While this change is a draft, use a reviewed commit or the PR branch, not an
-unrelated similarly named module:
+For this source preview, select a reviewed revision of this repository:
 
 ```sh
-go get github.com/cherthq/sdk/go@unified-go-sdk
+go get github.com/cherthq/sdk/go@<reviewed-revision>
 ```
 
 For reproducible builds, pin the resulting pseudo-version in your `go.mod`.
@@ -100,7 +99,7 @@ defer cancel()
 result, err := sdk.FaceTime.ListLines(ctx, chert.PageOptions{Limit: 25})
 if err != nil { return err }
 for _, line := range result.Data.Items {
-    // Select an already-authorized line; status is not a physical media check.
+    // Select an already-authorized line; status does not verify working media.
     _ = line.ID
 }
 ```
@@ -132,10 +131,10 @@ for reconciliation. Other management mutations have no general idempotency guara
 CLI `ftu_` credentials have a restricted server allowlist: they do not gain call-write,
 transcript, assistant, billing or browser-user permissions from this SDK. Login
 inspection/approval and credential management need the documented signed-in user
-authorization. Checkout requires the project owner's browser session; the inspected
-backend is test-mode/disabled by default. Do not treat checkout completion as line
-allocation. Enroll/activate connector management does not implement its WebSocket,
-recovery, callback or media runtime.
+authorization. Checkout requires the project owner's browser session. Billing is a
+preview contract; check the catalog's test/disabled state before initiating checkout.
+Do not treat checkout completion as line allocation. Connector management does not
+provide a connector or media runtime.
 
 ## Raw access and failures
 
@@ -153,7 +152,7 @@ public reconciliation IDs in `Data`; there is no raw server-message forwarding.
 Malformed successful typed responses become `unconfirmed_text_outcome` or
 `unconfirmed_reaction_outcome` (502). Cancellation and transport failure can follow
 an effect: reconcile before any caller-directed retry. Neither method retries,
-changes an operation key, uses a fallback, or polls native/provider state.
+changes an operation key, uses a fallback, or polls delivery state.
 FaceTime malformed typed data/status yields `invalid_response` for reads or
 `unconfirmed_facetime_outcome` for mutations, retaining the observed HTTP status.
 Malformed/truncated/oversized successful mutation bodies also produce an
@@ -171,5 +170,5 @@ bash scripts/check-go.sh  # from the repository root
 ```
 
 The `httptest` tests exercise local HTTP only. They do not establish deployment,
-provider compatibility or physical device acceptance. No Mac installation is
-required for this client-only package.
+provider compatibility or working audio/video. No service installation is required
+for this client-only package.

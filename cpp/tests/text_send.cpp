@@ -36,14 +36,14 @@ int main(int argc, char** argv) {
         invalid([&] { static_cast<void>(client.send_text("+15550000002", moons + "🌙")); });
         invalid([&] { static_cast<void>(client.send_text("+15550000002", "hello", unicode_key + "🌙")); });
         CHECK(client.send_text("+15550000002", moons, unicode_key).success);
-        for (const auto& mode : {"status200", "status201", "status204", "status206", "numeric-success", "native-uuid",
+        for (const auto& mode : {"status200", "status201", "status204", "status206", "numeric-success", "uuid-id",
                  "uppercase-id", "unsafe-chat", "empty-chat", "sent-status", "extra-field", "null-receipt", "missing-field"}) {
             bool rejected = false;
             try { static_cast<void>(client.send_text("+15550000002", mode)); }
             catch (const chert::ApiError& error) {
                 rejected = true; safe(error);
                 CHECK(error.status == 502 && error.code == "unconfirmed_text_outcome" && error.request_id == "trace-text");
-                if (std::string_view(mode) == "extra-field") CHECK(error.data.at("native_guid") == "private-response");
+                if (std::string_view(mode) == "extra-field") CHECK(error.data.at("unexpected_field") == "private-response");
             }
             CHECK(rejected);
         }

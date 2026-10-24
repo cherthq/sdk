@@ -1,38 +1,53 @@
-# @cherthq/control-plane
+# Chert FaceTime client
 
-Private, original MIT TypeScript client for the inspected Chert FaceTime control-plane API. It is not a replacement for the messaging SDK or a media/FaceTime connector runtime. Requires a Fetch-compatible runtime (Node 18+, Bun or a browser).
+The `chert-sdk/facetime` export provides typed HTTP methods for the Chert FaceTime
+API. The successor package is not yet published; use a reviewed local tarball for
+preview testing. See the root guide for supported Node, Bun and Deno versions.
 
 ```ts
 import { ChertControlPlane } from 'chert-sdk/facetime';
 const publicClient = new ChertControlPlane();
 const login = await publicClient.beginLogin({device_name: 'My laptop'});
-// Display verification_url_complete. The person signs in and approves a project.
-// Wait at least login.interval seconds between polls, until expiry; no polling loop is implicit.
+// Display verification_url_complete for the person to approve their project.
+// Wait at least login.interval seconds between polls, until expiry.
 const result = await publicClient.pollLogin({device_code: login.device_code});
 if (result.status === 'approved') {
   const client = new ChertControlPlane({token: result.access_token, projectId: result.project.id});
-  console.log(await client.whoami());
-  console.log(await client.listLines({limit: 20}));
+  const lines = await client.listLines({limit: 20});
 }
 ```
 
-The planned public package is `chert-sdk`; until published, use its local tarball
-or the private workspace import `@cherthq/control-plane`. The default origin is
-`https://facetime.trychert.com`. Optional `baseUrl` overrides must be origins,
-not API paths: `/api/v1` is appended exactly once. The unified CLI optionally
-reads `CHERT_FACETIME_URL`; it still requires a FaceTime token and project for
-authenticated commands. Public login/catalog calls need neither. iMessage uses
-the separate `https://console.trychert.com` default and its own explicit API key.
-Empty/null URL overrides are rejected, not replaced with a default.
+The default origin is `https://facetime.trychert.com`. Optional `baseUrl` overrides
+must be HTTPS origins (or loopback HTTP), not API paths: `/api/v1` is appended once.
+Empty/null overrides are rejected. iMessage uses its separate default origin and
+credentials. Feature availability must be verified for your project; defaults
+are not a promise of production readiness.
 
-Release is held: the public billing catalog currently returns 404, as does the
-canonical iMessage strict-text endpoint. These source defaults do not establish
-production compatibility; backend fixes and verification are required.
+## Billing
 
-Keep tokens and connector credentials outside source control. Never print an approved login result: it includes the credential returned once. Credentials are sent only in Authorization headers, except the device code required in the token endpoint's JSON body. Public calls do not receive an existing token. HTTPS origins are required except local HTTP; embedded credentials, paths and URL query/fragment are rejected. Redirects are refused. Each request has a 15-second deadline and responses are capped at 1 MiB. No requests retry automatically. Supply `fetch` for isolated tests or runtime integration.
+Use a **signed-in user session**, not the CLI credential returned above. Supply
+the project UUID; billing requires owner/admin membership. Read-only example:
 
-Methods return the server's `data` payload. `ChertApiError` exposes safe HTTP status and a bounded set of known error codes; it intentionally drops server messages, error bodies and transport errors to avoid credential leakage. Response types describe source contracts, not runtime schema validation or deployment proof. Malformed JSON/envelopes are rejected.
+```ts
+const billing = new ChertControlPlane({token: userSessionToken, projectId});
+const status = await billing.billingStatus();
+// With explicit user authorization to purchase:
+// const {url} = await billing.createCheckout({plan: 'shared'}, stableRequestKey);
+// Navigate to url; refresh billingStatus afterward to check entitlement.
+```
 
-Read [BACKEND_COVERAGE.md](./BACKEND_COVERAGE.md) for permission boundaries and missing onboarding services before automating setup. Methods requiring a browser session do not gain that authority merely because a CLI credential was supplied. Checkout is inspected staging/test-mode functionality, not production provisioning.
+`cancelSubscription(key)` and `validateCoupon(code, key)` also require a stable
+caller-owned idempotency key. Checkout completion does not guarantee line access.
+See [API coverage and preview migration](./BACKEND_COVERAGE.md) for the removal of
+the obsolete catalog/checkout-row helpers and all credential boundaries.
 
-Run `bun test packages/control-plane` from the workspace root. Tests use injected fetch and perform no real login, payment, enrollment, message or call.
+Never log login results, session tokens or connector credentials. Public login
+requests do not receive configured bearer credentials. Redirects are refused;
+requests have a 15-second deadline and a 1 MiB response limit. There are no automatic
+retries. Methods return the response `data` payload; TypeScript models do not
+perform runtime schema validation. Malformed JSON/envelopes are rejected.
+`ChertApiError` exposes HTTP status and safe codes, omitting response bodies and
+server/transport messages. Supply `fetch` for isolated tests.
+
+Run `bun test packages/control-plane`. Tests perform no real login, payment,
+enrollment, message or call.

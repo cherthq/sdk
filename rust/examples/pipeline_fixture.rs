@@ -1,4 +1,4 @@
-//! Guarded test-only pipeline CLI. This does not authorize a physical send.
+//! Guarded loopback-only HTTP fixture CLI using synthetic messages.
 use serde_json::{json, Value};
 use std::{
     io::{self, Read},
@@ -40,7 +40,7 @@ fn valid_body(body: &Value) -> bool {
         return false;
     }
     let Some(uuid) = marker
-        .strip_prefix("CHERT-M4D-PIPELINE-")
+        .strip_prefix("CHERT-PIPELINE-")
         .and_then(|s| s.strip_suffix("-rust"))
     else {
         return false;
@@ -102,7 +102,7 @@ fn invalid() -> ExitCode {
 mod tests {
     use super::*;
     fn body() -> Value {
-        json!({"phone":"+15550000001","body":"CHERT-M4D-PIPELINE-12345678-1234-4234-8234-123456789abc-rust"})
+        json!({"phone":"+15550000001","body":"CHERT-PIPELINE-12345678-1234-4234-8234-123456789abc-rust"})
     }
     #[test]
     fn origin_is_literal_loopback_with_canonical_port_only() {
@@ -123,10 +123,10 @@ mod tests {
     fn schema_and_provider_marker_are_exact() {
         assert!(valid_body(&body()));
         for invalid in [
-            json!({"phone":"+15550000001","body":"CHERT-M4D-PIPELINE-12345678-1234-4234-8234-123456789abc-linq"}),
+            json!({"phone":"+15550000001","body":"CHERT-PIPELINE-12345678-1234-4234-8234-123456789abc-linq"}),
             json!({"phone":"15550000001","body":body()["body"]}),
             json!({"phone":"+15550000001","body":body()["body"],"from":"+15550000002"}),
-            json!({"phone":"+15550000001","body":"CHERT-M4D-PIPELINE-12345678-1234-1234-8234-123456789abc-rust"}),
+            json!({"phone":"+15550000001","body":"CHERT-PIPELINE-12345678-1234-1234-8234-123456789abc-rust"}),
             Value::Null,
         ] {
             assert!(!valid_body(&invalid));

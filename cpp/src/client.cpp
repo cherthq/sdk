@@ -75,7 +75,7 @@ bool valid_utf8(const std::string& value) {
     catch (const Json::exception&) { return false; }
 }
 bool blank_text(std::string_view value) {
-    // ECMAScript String.trim whitespace, matching the actual strict HTTP route.
+    // ECMAScript String.trim whitespace for consistent input validation.
     // Encoding validation remains nlohmann/json's job; no Unicode normalization.
     constexpr auto spaces = std::to_array<std::string_view>({
         "\t", "\n", "\v", "\f", "\r", " ", "\xc2\xa0", "\xe1\x9a\x80",

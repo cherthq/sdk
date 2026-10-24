@@ -3,7 +3,7 @@
 Unpublished C++20 HTTP library for Chert iMessage and FaceTime. It uses
 installed libcurl (curl permissive license) and nlohmann/json (MIT); CMake does
 not download dependencies. Locally verified versions: curl 8.21.0 and JSON 3.12.0.
-It is separate from the macOS worker and loads no injected Apple frameworks.
+It depends only on public HTTP APIs, libcurl and nlohmann/json.
 A thread-safe libcurl build (7.84+) with asynchronous DNS is required and checked
 at startup. Linux CI and local macOS builds are tested; Windows and minimum
 dependency versions have not been tested.
@@ -26,12 +26,10 @@ exactly once, never `/api`. To use a test or self-hosted server, set `.base_url`
 before `.api_key` in the designated initializer. Explicit prefixes are preserved;
 empty/invalid overrides reject rather than falling back. Constructors are offline.
 
-**Publication hold:** this is an untagged source preview. Confirmed origins and
-local handler contracts do not establish canonical production deployment. Do not
-publish until production smoke verification passes. No production default
-reaction-routing claim is made: the backend text-route change does not establish
-reaction routing. Generic billing transport is not a promise of deployed billing
-availability and is not a source-preview integration blocker.
+**Publication hold:** this is an untagged source preview. Local contract tests
+do not establish production service availability. No production default
+reaction-routing claim is made. Generic billing transport is not a promise of
+billing availability. Verify the APIs needed by your application before use.
 
 **Credentials remain separate.** iMessage sends its Bearer key and optional
 `X-Chert-Tenant`; FaceTime sends its own Bearer key and required UUID
@@ -84,7 +82,7 @@ The SDK itself never reads these environment variables.
 | Surface | C++ API | Return / semantics |
 |---|---|---|
 | Call list/detail | `list_calls`, `get_call` | `Result<Page<Call>>`, `Result<Call>` |
-| Outbound audio/video | `create_call(CreateCall, key)` | HTTP 201 call snapshot; not native acceptance |
+| Outbound audio/video | `create_call(CreateCall, key)` | HTTP 201 call snapshot; not call completion |
 | Managed / BYOR | `CallMode`, optional `RoomCredentials` | Managed requires assistant; production BYOR requires line and all room fields |
 | Phone/email/Apple ID/link/group | `destination`, `destination_type`, `recipients` | Destination or recipient list, never both; server canonicalizes/admit-checks |
 | Answer/reject/end | `act_on_call(id, CallAction, key, reason)` | HTTP 202 current call; command queued, not completed |
@@ -105,10 +103,8 @@ data is deliberately available only for explicit inspection.
 Request enums are closed; response status strings are open for forward
 compatibility. `Call::fields`, `Line::fields`, and `Worker::fields` retain the
 original JSON, including optional/additive lifecycle and media fields, without
-inventing defaults. Do not log these objects indiscriminately. `active` alone
-is not media readiness; inspect authenticated worker `bridge_ready` and the
-server's directional media evidence. This HTTP client does not connect to
-LiveKit, relay audio/video, run a connector/WebSocket agent, install a Mac worker,
+inventing defaults. Do not log these objects indiscriminately. A call status alone
+does not prove media readiness. This HTTP client does not relay audio/video,
 verify incoming webhook signatures, or provide provider-compatibility adapters.
 Assistant/integration/webhook administration and account/billing/device-login
 flows currently use the JSON escape hatch where the credential is authorized;
@@ -133,12 +129,6 @@ Pagination is explicit: limit 1–100, nonnegative safe-integer offset; no hidde
 auto-pagination, polling, retries or cancellation. Calls are synchronous and
 independent; const methods may be used concurrently while their client stays alive.
 
-The source contract baseline is `cherthq/facetime` commit
-`b5e0de5ddec188cbe872f48e58fba331092a5ecb`, specifically
-`control-plane/app/api/v1/calls/**`, `lines/**`, `workers/route.ts`, and
-`src/lib/facetime/{auth,http,schemas,store,normalization}.ts`.
-Source compatibility does not establish which revision a deployment runs.
-
 ## iMessage generic requests
 
 `IMessageClient::request(path, optional_json, method)` defaults
@@ -160,8 +150,8 @@ auto queued = client.send_text("+15550000002", "Exact plaintext", "unique-operat
 through the same transport. Canonical E.164 and nonblank, lossless UTF-8 text
 of at most 16 KiB without NUL are required. An optional key must be nonempty,
 lossless UTF-8, at most 200 bytes, and contain no NUL. Payload whitespace and
-keys are preserved, not trimmed or normalized. Blankness follows the actual
-route's ECMAScript whitespace rules; UTF-8 validity uses the existing JSON
+keys are preserved, not trimmed or normalized. Blankness follows
+ECMAScript whitespace rules; UTF-8 validity uses the existing JSON
 library. The method requires actual HTTP 202 with exactly four receipt fields,
 strict Boolean `success=true`, `status="queued"`, a lowercase 32-hex public ID,
 and a safe chat ID of 1–160 ASCII letters/digits/colon/underscore/hyphen.
@@ -169,14 +159,13 @@ and a safe chat ID of 1–160 ASCII letters/digits/colon/underscore/hyphen.
 Unexpected successful status or receipt shape raises sanitized
 `ApiError(502, "unconfirmed_text_outcome", ...)`; raw response data is explicit
 only in `error.data`. Other HTTP/transport errors keep existing behavior. No
-native GUID, service, sent/delivered/read state or timestamps are fabricated.
-Queued is a cloud operation identity, not physical messaging evidence. Do not
+identifiers, sent/delivered/read state or timestamps are fabricated.
+Queued is an operation identity, not delivery evidence. Do not
 resend or change the operation key after an uncertain outcome without the
 server's reconciliation policy. The client never retries itself.
 
-The method is synchronous and adds no cancellation API. Deployment requires
-the compatible cloud route and installed native worker/helper; the offline
-fixture is not proof of their installation or device acceptance.
+The method is synchronous and adds no cancellation API. Loopback tests verify
+client HTTP behavior, not production availability or message delivery.
 
 ## Typed reaction dispatch acknowledgement
 
@@ -197,7 +186,7 @@ are not added by this client.
 Chat IDs must be dashed UUIDs; their ASCII hex case is canonicalized to lowercase
 for the request and receipt. Message IDs preserve case and accept 1–160 ASCII
 letters/digits/colon/underscore/dot/hyphen, excluding `.` and `..`; colons are
-percent-encoded in the path. No message/native GUID is case-normalized.
+percent-encoded in the path. Message IDs are not case-normalized.
 
 Unlike the JSON key in `send_text`, the optional reaction key is an HTTP
 `Idempotency-Key` header: 1–200 printable ASCII bytes, with no leading/trailing
@@ -206,15 +195,15 @@ HTTP. There is no arbitrary-header override API.
 
 Success requires HTTP202 and exactly four fields: a lowercase 32-hex
 `operation_id`, matching canonical `chat_id`, exact requested `message_id`, and
-`status:"acknowledged"`. A native UUID, extra fields, inconsistent IDs or another
+`status:"acknowledged"`. A UUID in place of the operation ID, extra fields, inconsistent IDs or another
 successful HTTP status raises sanitized `unconfirmed_reaction_outcome` with the
 explicit raw response available in `ApiError::data`. Transport and HTTP errors
 retain their existing behavior. There is one attempt, no fallback or automatic
 resend, and no added cancellation API. An uncertain result must be reconciled;
 it does not establish that no reaction occurred. No applied-state, current
-reaction, delivery, timestamp or live-device acceptance is claimed.
+reaction, delivery or timestamp is claimed.
 
-The origin must be explicit HTTPS or loopback HTTP, with no URL credentials,
+An origin override must be HTTPS or loopback HTTP, with no URL credentials,
 query or fragment. A root origin defaults to `/api/v1/`; a deployment prefix is
 preserved. Paths stay inside that prefix; encoded separators, double escapes,
 dot segments and control characters reject before dispatch. API key/tenant
@@ -234,10 +223,6 @@ limit error is `outcome_unknown`, never proof that a send had no effect.
 cmake -S cpp -B /tmp/chert-cpp-sdk -DCHERT_SANITIZERS=ON -DCMAKE_BUILD_TYPE=Debug
 cmake --build /tmp/chert-cpp-sdk
 ctest --test-dir /tmp/chert-cpp-sdk --output-on-failure
-# Optional actual FaceTime source-route gate; requires Bun and that checkout's dependencies:
-cmake -S cpp -B /tmp/chert-cpp-sdk -DCHERT_FACETIME_SOURCE=/path/to/facetime/control-plane
-cmake --build /tmp/chert-cpp-sdk
-ctest --test-dir /tmp/chert-cpp-sdk --output-on-failure
 ```
 
 The loopback fixture exercises real HTTP, authentication/header preservation,
@@ -252,13 +237,10 @@ methods, exact JSON/null/PATCH/key behavior, malformed success envelopes/models,
 401/403/404/409/422/429/503, redirects, disconnects, body limits and timeouts.
 The clean-consumer gate installs and relocates the package, rejects checkout paths
 in exported metadata, builds `find_package` consumers and executes the example.
-The optional server-contract gate runs the real FaceTime routes, auth dispatch,
-schemas, envelopes and BYOR parser over loopback, substituting credential storage
-and call persistence. It does not test a real database or worker.
-Tests perform no live messages/calls and do not establish deployed Chert
-authentication or provider/device acceptance. Platform/dependency matrices and
-live acceptance remain release gates; coverage is bounded by the contracts above.
-No per-Mac installation is required for this customer HTTP client.
+All five gates are self-contained: no separate service source checkout, credentials
+or Bun runtime is required. Tests perform no live messages/calls and do not
+establish production authentication or delivery. Platform/dependency matrices and
+service compatibility remain release checks; coverage is bounded by the contracts above.
 
 ## Artifact review before publication
 

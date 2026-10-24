@@ -17,8 +17,8 @@ import (
 
 func data[T any](r Result[T], err error) (any, error) { return r.Data, err }
 
-// These wire fixtures are hand-authored from the inspected server routes, not
-// generated from SDK methods. They exercise real local HTTP, not a media backend.
+// These synthetic wire fixtures are independent of SDK request generation.
+// They exercise local HTTP contracts, not live calls or media.
 func TestFaceTimeRouteContracts(t *testing.T) {
 	ctx := context.Background()
 	const call = `{"id":"call-1","status":"queued","media":{"audio":true,"video":false}}`

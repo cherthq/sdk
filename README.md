@@ -100,11 +100,15 @@ Defaults apply only when a URL option is omitted/undefined. Explicit empty or
 null values are invalid, not a request to fall back to production. No host
 fallback or retries are added.
 
-**Release hold — do not merge or release:** method-correct unauthenticated
-`POST https://console.trychert.com/api/v1/text-operations/v1` and
-`GET https://facetime.trychert.com/api/v1/billing/catalog` currently return 404.
-Backend fixes and verification are required. Canonical hosts and passing local
-tests do not establish full production compatibility.
+**Unpublished source preview:** verify feature availability for your project
+before production use. Default-origin reaction support is not yet verified.
+No endpoint fallback or automatic retries are performed; a queued receipt is
+not proof of delivery. Package publication remains a separate approval step.
+
+Billing uses a signed-in user session and project UUID, not a CLI/project key.
+Use `billingStatus()` to inspect entitlement and availability. The successor
+removes the obsolete catalog and checkout-row APIs; see the
+[billing migration guide](packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
 ```sh
 bunx chert-sdk context
@@ -184,9 +188,8 @@ crates.io installation command, and call snapshots do not prove connection.
 
 URLs default to `https://console.trychert.com` and `https://facetime.trychert.com`,
 with `/api/v1` once. Explicit `base_url` overrides support tests/self-hosting;
-empty or invalid values reject. **Rust publication hold:** canonical deployment
-still needs production smoke verification. No production default reaction-routing
-claim is made; the backend text-route repair does not establish reaction routing.
+empty or invalid values reject. **Rust publication hold:** production feature
+availability, including default-origin reactions, requires separate verification.
 This is an untagged source preview, not a published package. There are no typed
 billing wrappers; generic billing transport is not a release promise.
 
@@ -215,9 +218,8 @@ trychert::Client sdk({
 Omitted URLs default to `https://console.trychert.com` (iMessage) and
 `https://facetime.trychert.com` (FaceTime), using `/api/v1` exactly once.
 Explicit validated overrides remain available for self-hosting and tests.
-**C++ publication hold:** canonical deployment still needs production smoke
-verification. No production default reaction-routing claim is made; the backend
-text-route change does not establish reaction routing. This is an untagged source
+**C++ publication hold:** production feature availability, including default-origin
+reactions, requires separate verification. This is an untagged source
 preview, not a published package. Generic billing transport is not a release promise.
 
 The channels use separate Bearer credentials: iMessage has an optional tenant,
@@ -242,7 +244,7 @@ client, err := chert.NewClient(chert.Config{
 `packages/` contains TypeScript clients, adapters, migration tooling and the
 unified CLI. `python/`, `rust/`, `dotnet/`, `cpp/` and `go/` contain language
 clients and their tests. `tests/` and `scripts/` contain distribution and
-opt-in integration fixtures; `docs/` records API and acceptance boundaries.
+local HTTP contract fixtures; `docs/` records API and verification boundaries.
 
 ```sh
 # JavaScript release gates (Node, Bun and Deno must be installed):
@@ -262,9 +264,9 @@ Contributions should preserve channel contracts, credential isolation, failure
 semantics and legacy compatibility. Keep implementation, tests, packaging and
 documentation changes reviewable. Include reproduction steps and tests for
 observable behavior; never commit secrets. See the
-[integration guide](https://github.com/cherthq/sdk/blob/main/INTEGRATION.md) before
-running backend or device tests: they require explicit prerequisites and consent
-for any real messages, calls or other external effects.
+[integration guide](INTEGRATION.md) for local contract checks. Real messages,
+calls, purchases and other external effects require explicit authorization and
+are not part of the SDK test suite.
 
 ## Compatibility and limits
 

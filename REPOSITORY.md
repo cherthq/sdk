@@ -1,8 +1,8 @@
 # Chert SDK
 
-This repository (`cherthq/sdk`, formerly `cherthq/chert-sdk`) contains the Chert language clients and iMessage compatibility
-adapters extracted from the branch-local platform work. Packages remain private
-and unpublished while compatibility and device acceptance continue.
+This public repository contains Chert language clients, provider compatibility
+adapters and the developer CLI. See README.md for each language's supported API
+surface and package availability. Source previews are not registry releases.
 
-The native Mac worker and control plane live in `cherthq/chert-facetime`.
-Repository publication is separate from package publication and deployment.
+Tests use synthetic credentials and local HTTP contracts. Package publication
+and service deployment are separate from source integration.

@@ -250,8 +250,8 @@ func (c *FaceTimeClient) CreateCall(ctx context.Context, input CreateCallRequest
 	}{"outbound", input}, ProjectAuth, &key, 201, "id", "status", "media")
 }
 
-// CallAction enqueues answer, reject or end. Reason is accepted by the route but
-// currently discarded by the server. An acknowledgement is not terminal state.
+// CallAction enqueues answer, reject or end. Reason has no guaranteed effect.
+// An acknowledgement is not terminal state.
 func (c *FaceTimeClient) CallAction(ctx context.Context, id string, action CallAction, reason string, key string) (Result[Call], error) {
 	if !faceTimeKey(key) || (action != Answer && action != Reject && action != End) || len([]rune(strings.TrimSpace(reason))) > 160 {
 		return Result[Call]{}, invalid()
@@ -261,7 +261,7 @@ func (c *FaceTimeClient) CallAction(ctx context.Context, id string, action CallA
 	}{reason}, ProjectAuth, &key, 202, "id", "status")
 }
 
-// ListLines reads available authorized lines. The inspected API has no GET line detail.
+// ListLines reads one page of available authorized lines.
 func (c *FaceTimeClient) ListLines(ctx context.Context, p PageOptions) (Result[Page[Line]], error) {
 	return perform[Page[Line]](ctx, c, "GET", pagePath("lines", p), nil, ProjectAuth, nil, 200, "items", "total", "limit", "offset")
 }
