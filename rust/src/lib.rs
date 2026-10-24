@@ -1,7 +1,10 @@
 #![doc = include_str!("../README.md")]
+pub mod events;
 pub mod facetime;
 mod unified;
-pub use unified::{ChertSdk, FaceTimeConfig, IMessageConfig, TransportLimits};
+pub use unified::{
+    ChertSdk, FaceTimeConfig, IMessageConfig, TransportLimits, UnifiedSessionOptions,
+};
 /// Explicit name for the messaging client; `ChertClient` remains its compatibility name.
 pub type IMessageClient = ChertClient;
 
@@ -52,6 +55,7 @@ pub struct ChertClient {
     base: Url,
     http: reqwest::Client,
     max_response_bytes: usize,
+    unified_contract: bool,
 }
 
 /// Verified queue acceptance only; this is not sent or delivery evidence.
@@ -152,7 +156,7 @@ fn safe_request(path: &str) -> bool {
             let Ok(decoded) = u8::from_str_radix(hex, 16) else {
                 return false;
             };
-            if decoded < 32 || decoded == 127 || decoded == b'%' {
+            if decoded < 32 || decoded == 127 {
                 return false;
             }
         }
@@ -254,7 +258,25 @@ impl ChertClient {
             base: url,
             http,
             max_response_bytes,
+            unified_contract: false,
         })
+    }
+    fn guard_request(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        if self.unified_contract {
+            request.header("x-chert-contract", unified::CONTRACT)
+        } else {
+            request
+        }
+    }
+    fn check_contract(&self, response: &reqwest::Response) -> Result<(), ChertError> {
+        let mut echoes = response.headers().get_all("x-chert-contract").iter();
+        if self.unified_contract
+            && (echoes.next().and_then(|v| v.to_str().ok()) != Some(unified::CONTRACT)
+                || echoes.next().is_some())
+        {
+            return Err(ChertError::new(None, "unsupported_unified_backend"));
+        }
+        Ok(())
     }
     /// `None` omits the body; `Some(Value::Null)` sends JSON null.
     /// Drop this future to cancel waiting. Cancellation/timeout cannot retract a server effect.
@@ -439,7 +461,7 @@ impl ChertClient {
         if url.origin() != self.base.origin() || !url.path().starts_with(self.base.path()) {
             return Err(ChertError::new(None, "invalid_path"));
         }
-        let mut request = self.http.request(method, url);
+        let mut request = self.guard_request(self.http.request(method, url));
         if let Some(body) = body {
             request = request.json(body);
         }
@@ -453,6 +475,7 @@ impl ChertClient {
             .send()
             .await
             .map_err(|_| ChertError::new(None, "outcome_unknown"))?;
+        self.check_contract(&response)?;
         let status = response.status();
         let request_id = response
             .headers()

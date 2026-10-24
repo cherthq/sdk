@@ -70,6 +70,78 @@ class UnifiedTests(unittest.TestCase):
             server.redirect = self.message_base + '/sink'
         self.client = ChertControlPlane(self.base, token=SECRET, project_id='project-only')
 
+    def test_public_call_routes_bodies_and_distinct_event_shapes(self):
+        from trychert.models import CreateCall, CallDetail, CallEvents
+        body: CreateCall = {'direction': 'outbound', 'mode': 'customer_managed',
+            'line_id': '11111111-1111-4111-8111-111111111111', 'destination': '+15550000002',
+            'media': {'audio': True, 'video': True}, 'livekit_url': 'wss://room.example.test',
+            'participant_token': 'synthetic-room-token', 'remote_participant_identity': 'agent'}
+        detail: CallDetail = {'id': 'call', 'project_id': 'project-only', 'direction': 'outbound',
+            'mode': 'customer_managed', 'media': body['media'], 'status': 'queued', 'media_status': {},
+            'line_id': body['line_id'], 'worker_id': None, 'assistant_id': None, 'terminal_reason': None,
+            'started_at': None, 'ended_at': None, 'duration_seconds': None,
+            'facetime_call_events': [{'id': 'event', 'event_type': 'allocated', 'sequence': 1,
+                'source': 'control', 'created_at': '2026-01-01T00:00:00Z', 'payload': {'synthetic': True}}]}
+        timeline: CallEvents = {'call_id': 'call', 'events': [{'id': 'event', 'type': 'allocated',
+            'sequence': None, 'source': 'control', 'at': '2026-01-01T00:00:00Z'}]}
+        self.server.payload, self.server.status = {'data': detail}, 202
+        self.assertEqual(self.client.create_call(body, idempotency_key='create-key'), detail)
+        for method, action, payload in ((self.client.answer_call, 'answer', None),
+                                       (self.client.reject_call, 'reject', {'reason': 'Unavailable'}),
+                                       (self.client.end_call, 'end', None)):
+            self.assertEqual(method('call', payload, idempotency_key=action + '-call-key'), detail)
+        self.server.status = 200
+        self.assertEqual(self.client.get_call('call'), detail)
+        self.server.payload = {'data': timeline}
+        self.assertEqual(self.client.get_call_events('call'), timeline)
+        page = {'items': [detail], 'total': 1, 'limit': 7, 'offset': 2}
+        self.server.payload = {'data': page}
+        self.assertEqual(self.client.list_calls(limit=7, offset=2), page)
+        self.assertEqual([(method, path) for method, path, _, _ in self.server.calls], [
+            ('POST', '/api/v1/calls'), ('POST', '/api/v1/calls/call/answer'),
+            ('POST', '/api/v1/calls/call/reject'), ('POST', '/api/v1/calls/call/end'),
+            ('GET', '/api/v1/calls/call'), ('GET', '/api/v1/calls/call/events'),
+            ('GET', '/api/v1/calls?limit=7&offset=2')])
+        self.assertEqual([call[3] for call in self.server.calls[:4]], [body, {}, {'reason': 'Unavailable'}, {}])
+        for index, (_, _, headers, _) in enumerate(self.server.calls):
+            headers = {key.lower(): value for key, value in headers.items()}
+            self.assertEqual(headers['authorization'], 'Bearer ' + SECRET)
+            self.assertEqual(headers['x-chert-project-id'], 'project-only')
+            if index < 4:
+                self.assertEqual(headers['idempotency-key'], ['create-key', 'answer-call-key', 'reject-call-key', 'end-call-key'][index])
+            else:
+                self.assertNotIn('idempotency-key', headers)
+
+    def test_calls_validate_before_network_and_never_retry(self):
+        body = {'direction': 'outbound', 'mode': 'managed', 'assistant_id': 'synthetic-assistant',
+                'destination': '+15550000002', 'media': {'audio': True, 'video': False}}
+        for key in ('', 'short', 'x' * 201, 'contains space', 'newline\nkey', 'unicode-☃'):
+            with self.assertRaises(ValueError):
+                self.client.create_call(body, idempotency_key=key)
+        for call_id in ('', '.', '..', None):
+            with self.assertRaises(ValueError):
+                self.client.get_call(call_id)
+        for limit in (True, 0, 101, 1.5):
+            with self.assertRaises(ValueError):
+                self.client.list_calls(limit=limit)
+        for client in (ChertControlPlane(self.base), ChertControlPlane(self.base, token=SECRET)):
+            with self.assertRaises(ChertControlPlaneError):
+                client.create_call(body, idempotency_key='stable-key')
+        self.assertEqual(self.server.calls, [])
+        for status in (301, 302, 303, 307, 308, 429, 503):
+            self.server.status = status
+            with self.assertRaises(ChertControlPlaneError):
+                self.client.create_call(body, idempotency_key='stable-key')
+        self.assertEqual(len(self.server.calls), 7)
+        self.assertEqual(self.messaging.calls, [])
+        self.server.status, self.server.raw = 200, b'invalid JSON'
+        with self.assertRaises(ChertControlPlaneError):
+            self.client.get_call_events('call')
+        self.server.raw = b'x' * 1_048_577
+        with self.assertRaises(ChertControlPlaneError):
+            self.client.get_call_events('call')
+        self.assertEqual(len(self.server.calls), 9)
+
     def test_facetime_default_and_explicit_https_override(self):
         requests = []
 

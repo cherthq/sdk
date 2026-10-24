@@ -301,6 +301,66 @@ async fn creates_managed_byor_and_group_calls_with_exact_keys_and_bodies() {
 }
 
 #[tokio::test]
+async fn managed_destination_can_omit_line_without_changing_explicit_line_requests() {
+    for line_id in ["", "line-2"] {
+        let (url, wire) = ok(201, call());
+        let mut input = create();
+        input.line_id = line_id.into();
+        client(&url)
+            .create_call(&input, "stable-key")
+            .await
+            .unwrap();
+        let wire = wire.join().unwrap();
+        assert_wire(&wire, "POST", "/api/v1/calls");
+        let mut expected = json!({"direction":"outbound","mode":"managed",
+            "assistant_id":"assistant-3","destination":"+15550000001","destination_type":"phone",
+            "media":{"audio":true,"video":false}});
+        if !line_id.is_empty() {
+            expected["line_id"] = json!(line_id);
+        }
+        assert_eq!(body(&wire), expected);
+    }
+}
+
+#[tokio::test]
+async fn byor_groups_and_links_require_line_before_network() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let c = client(&format!("http://{}", listener.local_addr().unwrap()));
+    for variant in 0..3 {
+        let mut input = create();
+        input.line_id.clear();
+        match variant {
+            0 => {
+                input.execution = CallExecution::CustomerManaged {
+                    room: RoomCredentials {
+                        livekit_url: "wss://room.example.test".into(),
+                        participant_token: "token".into(),
+                        remote_participant_identity: "remote".into(),
+                    },
+                }
+            }
+            1 => {
+                input.target = CallTarget::Group {
+                    recipients: vec![Recipient::Email("a@example.test".into())],
+                }
+            }
+            _ => {
+                input.target = CallTarget::Destination {
+                    destination: "https://facetime.apple.com/join#v=1&p=synthetic".into(),
+                    destination_type: DestinationType::FacetimeLink,
+                }
+            }
+        }
+        assert_eq!(
+            c.create_call(&input, "stable-key").await.unwrap_err().code,
+            "invalid_identifier"
+        );
+    }
+    assert!(listener.accept().is_err());
+}
+
+#[tokio::test]
 async fn all_actions_require_202_and_keep_caller_key() {
     for (action, name) in [
         (CallAction::Answer, "answer"),
@@ -567,7 +627,6 @@ async fn invalid_paths_keys_ids_pagination_and_configuration_never_dispatch() {
         "/%2e%2e/calls",
         "/calls/%2fsecret",
         "/calls?x=%0a",
-        "/calls?x=%250a",
         "/calls#fragment",
         "https://evil.test",
     ] {

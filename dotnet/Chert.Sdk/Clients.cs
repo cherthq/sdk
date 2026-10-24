@@ -25,7 +25,7 @@ public sealed class FaceTimeOptions
 }
 
 /// <summary>Owns independently configured channels. Construction performs no network requests.</summary>
-public sealed class ChertClient : IDisposable
+public sealed partial class ChertClient : IDisposable
 {
     public IMessageClient? IMessage { get; }
     public FaceTimeClient? FaceTime { get; }
@@ -41,9 +41,10 @@ public sealed class ChertClient : IDisposable
 }
 
 /// <summary>Single-attempt iMessage requests and strict cloud acceptance receipts.</summary>
-public sealed class IMessageClient : IDisposable
+public sealed partial class IMessageClient : IDisposable
 {
     private readonly ChannelTransport transport;
+    internal IMessageClient(ChannelTransport transport) => this.transport = transport;
     public IMessageClient(IMessageOptions options) : this(options.BaseUrl, options.ApiKey, options.Tenant, options.Timeout, options.MaxResponseBytes) { }
     public IMessageClient(string baseUrl, string apiKey, string? tenant = null,
         TimeSpan? timeout = null, int maxResponseBytes = 8 * 1024 * 1024)

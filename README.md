@@ -30,7 +30,7 @@ build/test source; do not substitute a similarly named registry package.
   it is not an outbound-call API. The successor JavaScript and native source previews
   include typed calls and related resources as documented in their language guides.
   None is a media runtime. Route availability and permissions depend on the backend.
-- Channel credentials are **separate**. The SDK does not prove that an iMessage
+- Legacy channel credentials are **separate**. The SDK does not prove that an iMessage
   key belongs to a FaceTime project, map tenants to projects, or convert provider
   credentials. In the JavaScript wrapper, `projectId` is sent to FaceTime only;
   it is application context, not an authorization check, for iMessage.
@@ -86,6 +86,41 @@ import { ChertControlPlane } from 'chert-sdk/facetime';
 import Sendblue from 'chert-sdk/sendblue-adapter';
 ```
 
+### Unified session preview
+
+The new backend contract supports one approved session and project across both
+services. This is **source-preview functionality, not a deployed availability
+claim**. Obtain the session from the unified onboarding flow; an existing
+FaceTime CLI credential or messaging key cannot be relabeled as a unified token.
+
+```ts
+const sdk = await ChertSDK.connect({
+  accessToken: approvedSession.access_token,
+  projectId: approvedSession.project.id,
+});
+const events = await sdk.imessage.listEvents({limit: 20});
+const calls = await sdk.facetime.listCalls();
+```
+
+`connect` validates a `chu_` session and project UUID, then reads the messaging
+service's unauthenticated `/api/v1/sdk/capabilities` descriptor **before sending
+the token**. It requires `chert-unified` version 1, the expected Bearer audience
+and service URLs, and the required scope vocabulary. Every subsequent request
+sends `X-Chert-Contract: chert-unified-v1` and requires that exact response echo.
+Old backends, malformed descriptors and missing version echoes fail closed;
+there is no legacy fallback, token conversion or automatic login/refresh.
+
+Optional `imessageBaseURL` and `facetimeBaseURL` are explicitly trusted HTTPS
+origins (loopback HTTP for tests), not arbitrary URLs advertised by a server.
+The descriptor must match them exactly. Do not choose these overrides from
+untrusted content. Scope enforcement and project membership remain server-side;
+discovery does not prove the supplied session has permission for an operation.
+Call creation, call control, message send, events and webhook management have
+separate permissions. BYOR still uses separate customer LiveKit credentials.
+
+The existing `new ChertSDK({projectId,imessage,facetime})` constructor and
+standalone clients retain their explicit, separate-credential behavior.
+
 Channel commands require `CHERT_PROJECT_ID` as application context and only their
 own channel credentials. `context` needs only the project ID; help and `adopt`
 need neither project context nor channel credentials. iMessage uses `CHERT_API_KEY`
@@ -98,7 +133,8 @@ override; `/api/v1` is composed once by the client.
 
 Defaults apply only when a URL option is omitted/undefined. Explicit empty or
 null values are invalid, not a request to fall back to production. No host
-fallback or retries are added.
+fallback or request retries are added. Event-stream reconnection is explicit
+and uses only the continuation returned by the server.
 
 **Unpublished source preview:** verify feature availability for your project
 before production use. Default-origin reaction support is not yet verified.
@@ -144,6 +180,75 @@ Published 0.1.0 does not include `login`, `onboard`, `new`, `doctor` or `dev`.
 The preview CLI/onboarding work remains in [draft #5](https://github.com/cherthq/sdk/pull/5)
 and its integration branch in [draft #6](https://github.com/cherthq/sdk/pull/6).
 Those drafts are not installed by the current npm release.
+
+### iMessage events and webhooks (source preview)
+
+The successor adds `listEvents`, `getEvent`, `streamEvents`, and
+`listWebhookSubscriptions`, `getWebhookSubscription`, `createWebhookSubscription`,
+`updateWebhookSubscription`, `deleteWebhookSubscription`. These require messaging
+tenant credentials; a FaceTime project token or CLI login is not a substitute.
+**Console-host availability is not verified.** Do not treat local contract tests
+or the presence of these methods as a deployed subscription service.
+
+```ts
+import { ChertClient, verifyWebhook } from 'chert-sdk';
+const messages = new ChertClient({apiKey: authorizedMessagingKey});
+const page = await messages.listEvents({limit: 50, since: startTimestamp});
+// Read older pages with page.next_cursor; do not use it as an SSE cursor.
+const stop = new AbortController();
+for await (const frame of messages.streamEvents({since: startTimestamp, signal: stop.signal, reconnect: true})) {
+  if (frame.event === 'message') await handleRecordedEvent(frame.data);
+  if (frame.event === 'error') await handleStreamWarning(frame.data);
+  // 'close' carries reconnect_with_since. Persist checkpoints only after handling.
+  // Break or stop.abort() closes the connection. Do not log sensitive payloads.
+}
+```
+
+`listEvents` accepts `type`, `status`, `lead_id`, `since`, `cursor`, and `limit`
+(1–200). `status` and returned `delivery` describe **webhook delivery**, not
+recipient message delivery. Event-row `id` and producer `event_id` are distinct;
+`getEvent` takes the row ID. Payloads and event names remain unmodified, including
+unknown future events. Different compatible services use dotted or underscored
+event names; do not silently translate one into the other.
+
+SSE uses authenticated fetch, not browser `EventSource` or WebSocket. It emits
+`{event,data}` frames: unnamed records become `message`, while named `error` and
+`close` frames are preserved. Comments/heartbeats are ignored. A frame is limited
+to 1 MiB. Without `since`, the server normally starts at connection time.
+`reconnect: true` waits one second and reconnects only after a server close frame
+supplies `reconnect_with_since`; unexpected EOF, malformed frames and transport
+failure stop the iterator. Reconcile with event history before manually resuming.
+There is no `Last-Event-ID`, automatic resend, exactly-once delivery or lossless
+replay guarantee. Continuations are opaque: some services use timestamps and
+others composite cursors. Timestamp-only services can omit ties at batch boundaries.
+Deduplicate persisted row IDs, reject self-generated events, validate sender and
+conversation ownership, and require explicit authorization before replying.
+
+Subscription creation returns a signing `secret` once; subsequent reads omit it.
+Persist that secret securely. Do not log creation results. Mutation requests are
+never retried. For incoming Chert callbacks, read the exact raw body first:
+
+```ts
+const rawBody = await request.text();
+if (!await verifyWebhook(rawBody, request.headers.get('x-chert-signature') ?? '', subscriptionSecret)) {
+  return new Response('Unauthorized', {status: 401});
+}
+const event = JSON.parse(rawBody); // Apply schema, deduplication and policy checks next.
+```
+
+The verifier accepts Chert `v1,timestamp,hex` HMAC-SHA256 signatures with a
+five-minute clock window. It is not Linq's Standard Webhooks verifier and does
+not validate payload schemas or prevent replay within that window. Webhook
+redelivery is a side effect, not stream catch-up; no portable replay helper is
+provided because targeting differs between services.
+
+For a personal-agent app, pass the messaging credential resolved by its authorized
+onboarding integration; this library does not mint one from a FaceTime session.
+Keep the app's existing project/line and LiveKit configuration. Fail closed if
+the integration cannot resolve messaging access. Call-event snapshots are not
+media streams: BYOR audio/video uses the customer's LiveKit SDK and separate
+customer participant credentials. Chert call responses do not issue managed-room
+join tokens. Requesting `media.video` does not prove video availability or receipt.
 
 ## Source-preview quickstarts
 

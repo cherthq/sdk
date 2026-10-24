@@ -8,7 +8,7 @@ describe observable requests/responses; they do not establish live availability.
 | Surface | Implemented / tested | Boundary |
 | --- | --- | --- |
 | Package/namespace/assembly | NuGet `chert-sdk`; namespace/assembly `TryChert`, .NET 8, dependency-free, MIT | Unpublished preview |
-| Unified client | Optional independent `IMessage` and `FaceTime` clients | No unified credential/project binding |
+| Unified client | Legacy independent channels; opt-in `ConnectAsync` validates unauthenticated capabilities and binds one session/project with response contract echoes | Proposed version-1 contract, no deployed guarantee, no login/refresh/fallback |
 | iMessage | Raw JSON, strict text and six standard reactions, typed receipts/errors | No vendor adapters or media helpers |
 | FaceTime calls | Create/list/get/answer/reject/end/events/transcript | API acknowledgements, not device/media proof |
 | FaceTime destinations | Managed/BYOR, direct destinations, links and typed groups | Server permissions and availability remain authoritative |

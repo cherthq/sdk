@@ -81,6 +81,14 @@ and at least one requested medium, without room credentials. The HTTP client
 does not transport frames or implement LiveKit subscriptions. An accepted call
 or media event does not prove that a recipient saw or heard anything.
 
+BYOR applications join their own LiveKit room using their own participant
+credential. The `participant_token` supplied to Chert is a separate, call-scoped
+participant credential with room join, publish and subscribe permission; do not
+reuse it for the application participant. Call creation returns metadata, not
+a client join token. There is no public managed-room observer/join endpoint in
+this client. Use LiveKit's client APIs for audio/video tracks; requesting video
+does not establish that the selected service/line can transmit or receive it.
+
 For inbound calls, authenticate `IncomingCallWebhook` before acting on it.
 Return an `IncomingCallDecision` to that webhook: either `{action:'decline'}` or
 `{action:'accept',livekit_url,participant_token,remote_participant_identity}`.
@@ -89,6 +97,9 @@ These room credentials are not arguments to `answerCall`. Configure the line's
 
 `getCall` returns detail events in `facetime_call_events`; `getCallEvents` returns
 a normalized `{call_id,events}` timeline, not a stream or raw track callbacks.
+There is no FaceTime SSE/WebSocket event endpoint represented by these APIs.
+Applications may poll snapshots explicitly, deduplicating by event ID rather
+than assuming a contiguous or non-null sequence.
 Treat event payloads and transcripts as sensitive. `updateLine` supports settings
 such as `video_framing: 'fit' | 'fill'` and inbound policy. Assistant methods manage
 drafts and publish versions; updates require `expected_draft_revision`. Assistant

@@ -160,3 +160,142 @@ class LoginInspection(TypedDict):
 class LoginApproval(TypedDict):
     device_name: str
     project_id: str
+
+
+class CallMedia(TypedDict):
+    audio: bool
+    video: bool
+
+
+class ByorMedia(TypedDict):
+    audio: Literal[True]
+    video: bool
+
+
+class VideoCallMedia(TypedDict):
+    audio: bool
+    video: Literal[True]
+
+
+class ByorRoom(TypedDict):
+    livekit_url: str
+    participant_token: str
+    remote_participant_identity: str
+
+
+class CallRecipient(TypedDict):
+    type: Literal['phone_number', 'email']
+    value: str
+
+
+class _DestinationOptional(TypedDict, total=False):
+    destination_type: Literal['phone', 'email', 'apple_id', 'facetime_link']
+
+
+class _Destination(_DestinationOptional):
+    destination: str
+
+
+class _Recipients(TypedDict):
+    line_id: str
+    recipients: list[CallRecipient]
+
+
+class _ManagedCall(TypedDict):
+    direction: Literal['outbound']
+    mode: Literal['managed']
+    assistant_id: str
+    media: ByorMedia | VideoCallMedia
+
+
+class _ManagedLine(TypedDict, total=False):
+    line_id: str
+
+
+class ManagedCallDestination(_ManagedCall, _Destination, _ManagedLine):
+    pass
+
+
+class ManagedCallRecipients(_ManagedCall, _Recipients):
+    pass
+
+
+class _ByorCall(ByorRoom):
+    direction: Literal['outbound']
+    mode: Literal['customer_managed']
+    media: ByorMedia
+
+
+class ByorCallDestination(_ByorCall, _Destination):
+    line_id: str
+
+
+class ByorCallRecipients(_ByorCall, _Recipients):
+    pass
+
+
+CreateCall = ManagedCallDestination | ManagedCallRecipients | ByorCallDestination | ByorCallRecipients
+CallStatus = Literal['queued', 'incoming', 'allocating', 'agent_preparing', 'answering', 'dialing',
+                     'connecting', 'active', 'ending', 'ended', 'failed', 'rejected']
+CallEventType = Literal['incoming_registered', 'allocated', 'answer_requested', 'reject_requested',
+                        'end_requested', 'agent_preparing', 'answered', 'dialing', 'connecting',
+                        'active', 'ending', 'bridge_ready', 'agent_connected', 'remote_video_ready',
+                        'remote_video_unavailable', 'caller_video_published', 'ended', 'failed',
+                        'rejected', 'cleanup_complete', 'unknown']
+
+
+class CallAction(TypedDict, total=False):
+    reason: str
+
+
+class CallEvent(TypedDict):
+    id: str
+    type: CallEventType
+    at: str
+    sequence: int | None
+    source: str
+
+
+class CallEvents(TypedDict):
+    call_id: str
+    events: list[CallEvent]
+
+
+class CallDetailEvent(TypedDict):
+    id: str
+    event_type: CallEventType
+    sequence: int
+    source: str
+    created_at: str
+    payload: dict[str, Json]
+
+
+class _CallOptional(TypedDict, total=False):
+    video_framing: Literal['fit', 'fill']
+    connecting_screen_dismissal: Literal['audio', 'video']
+    has_transcript: bool
+
+
+class Call(_CallOptional):
+    id: str
+    project_id: str
+    direction: Literal['inbound', 'outbound']
+    mode: Literal['managed', 'customer_managed']
+    media: CallMedia
+    status: CallStatus
+    media_status: dict[str, Json]
+    line_id: str | None
+    worker_id: str | None
+    assistant_id: str | None
+    terminal_reason: str | None
+    started_at: str | None
+    ended_at: str | None
+    duration_seconds: float | None
+
+
+class CallDetail(Call):
+    facetime_call_events: list[CallDetailEvent]
+
+
+class CallPage(_Page):
+    items: list[Call]

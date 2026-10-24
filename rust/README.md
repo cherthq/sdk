@@ -17,7 +17,7 @@ a release promise. Source availability is separate from publication and service 
 
 ## Two channels, separate credentials
 
-`ChertSdk` accepts either or both channel configurations. It does not load environment
+Legacy `ChertSdk::new` accepts either or both channel configurations. It does not load environment
 variables, discover endpoints, fall back to another channel, or infer a project binding.
 The iMessage tenant and FaceTime project ID are **not interchangeable**.
 The server must establish any future shared credential/project binding first.
@@ -61,9 +61,62 @@ explicit configurable fields. The legacy explicit-URL `ChertClient::new` is unch
 
 ## Supported surface and boundaries
 
+### Proposed unified session v1 (not deployed)
+
+`ChertSdk::connect(UnifiedSessionOptions::new(access_token, project_uuid)).await`
+opts into the proposed `chert-unified` version 1 contract. This source preview is
+not a deployment or service-availability claim. Existing `ChertSdk::new` and
+channel constructors retain their independent-credential behavior unchanged.
+Device login is CLI-owned: this factory accepts an existing token and implements
+no device flow, token storage, refresh, retries, or legacy fallback.
+
+The token must be `chu_` followed by exactly 43 ASCII base64url characters; the
+project must be a dashed UUID. Before transmitting the token, `connect` makes an
+unauthenticated GET to the approved messaging origin's `/api/v1/sdk/capabilities`
+(total timeout is the smaller of the caller timeout and 15 seconds; 64 KiB body limit).
+It validates contract/version,
+Bearer scheme, `chu_` prefix, `chert.unified-api:v1` audience, both service URLs,
+the FaceTime `/api/v1/cli/logins` URL, and all six scopes:
+`imessage:events:read`, `imessage:webhooks:manage`, `imessage:messages:send`,
+`facetime:calls:read`, `facetime:calls:create`, `facetime:calls:control`.
+Scopes must be unique strings; additional unique strings are allowed for forward compatibility.
+
+`imessage_base_url` and `facetime_base_url` default to the official origins.
+Explicit overrides are caller-approved trust decisions, validated using the
+existing HTTPS/loopback rules. Unified overrides must be root origins (an optional
+trailing slash is accepted); non-root paths are rejected before network I/O.
+Legacy constructors still support custom deployment prefixes. Descriptor URLs must exactly match those approved endpoints and
+cannot redirect credentials to another host. Both clients use the same bearer
+token and send `X-Chert-Contract: chert-unified-v1`. FaceTime also sends the project
+header; messaging does not accept or send a caller tenant. Every authenticated
+response must echo the exact contract header before JSON or SSE body consumption,
+including error responses. Missing/wrong echoes and unsupported discovery
+responses fail with `unsupported_unified_backend`; malformed credentials fail
+with `invalid_unified_session`. Redirects and ambient proxies remain disabled.
+
+`imessage:messages:send` authorizes the existing strict
+`POST /api/v1/text-operations/v1` route. `send_text` retains its request body and
+exact HTTP 202 queue-acceptance receipt contract; no route remapping occurs.
+Successful discovery is not proof of live message delivery. Logout remains POST
+and is CLI-owned, like the device-login lifecycle.
+
+```rust,no_run
+use trychert_sdk::{ChertSdk, UnifiedSessionOptions};
+# async fn example(token: &str) -> Result<(), trychert_sdk::ChertError> {
+let sdk = ChertSdk::connect(UnifiedSessionOptions::new(
+    token, "00000000-0000-4000-8000-000000000001",
+)).await?;
+let events = sdk.imessage.as_ref().expect("connect supplies both channels")
+    .list_events(&Default::default()).await?;
+# let _ = events;
+# Ok(()) }
+```
+
+### Channel surface
+
 | Surface | Contract |
 | --- | --- |
-| iMessage | Strict typed text queue acceptance and standard reaction acknowledgement; raw typed JSON transport for other messaging routes |
+| iMessage | Strict typed text queue acceptance, standard reaction acknowledgement, recorded events, webhook subscription CRUD and single-connection SSE; raw typed JSON transport for other messaging routes |
 | FaceTime calls | List/get, managed and BYOR outbound creation, phone/email/Apple ID/link/group targets, answer/reject/end, events and transcripts |
 | FaceTime resources | Typed line list/update, assistant list/get/create/update/publish, project settings read/update; raw `request<T>` for additional control-plane routes |
 | Errors | Shared `ChertError`: status, wire code, request ID, explicit raw data; redacted formatting |
@@ -87,6 +140,12 @@ is enforced by the Rust type. Production BYOR requires audio and a line; video
 readiness is separate. Call actions accept a reason, but callers must not assume
 it is retained or included in subsequent responses.
 
+`CreateCall::line_id` remains a `String` for source compatibility. For a managed
+single phone/email/Apple ID destination, an empty string omits `line_id` from the
+request and lets the server select a line. Nonempty supplied IDs are validated
+and sent unchanged. BYOR, groups and FaceTime-link destinations still require an
+explicit line and reject an empty string before network I/O.
+
 `ChertClient` remains the messaging-only compatibility name; `IMessageClient`
 names that role explicitly. Existing imports migrate from `cherthq_imessage` to
 `trychert_sdk`. The fixture executable names remain unchanged.
@@ -95,7 +154,7 @@ Assistant draft configuration remains versioned JSON validated by the server.
 `UpdateAssistant` requires `expected_draft_revision`; conflicts are returned without
 retry. Nullable patch fields use `Option<Option<T>>`: `None` preserves, `Some(None)`
 clears, and `Some(Some(value))` replaces. Line activation, account/billing/admin,
-webhook management and connector protocols have no dedicated typed helpers in this
+FaceTime webhook management and connector protocols have no dedicated typed helpers in this
 candidate; use the explicit generic transport for JSON routes, with the required
 server permissions. No browser authentication or elevated scope is invented.
 
@@ -191,7 +250,9 @@ cross-platform runtime behavior remain unverified. No package has been published
 
 Malformed JSON, response type mismatches and oversized bodies on successful HTTP
 responses report status 502; unsuccessful HTTP statuses are preserved. Query
-values reject raw/encoded controls and nested encodings before network dispatch.
+values reject raw/encoded controls before network dispatch. Escaped percent signs
+are allowed in queries as literal data, without recursive decoding; path escape
+restrictions remain unchanged.
 
 `send_reaction(chat_id, message_id, reaction, remove, idempotency_key).await`
 uses the authenticated nested Chert reaction operation endpoint. It accepts six
@@ -208,3 +269,66 @@ applied/current UI state or recipient delivery. Unknown outcomes never retry;
 inspect the explicit error data for reconciliation. Dropping the future cancels
 local waiting but cannot retract a server-side effect. This typed generic Chert
 method is not a provider SDK or live reaction acceptance claim.
+
+## Messaging events and webhook subscriptions (preview)
+
+These routes require service/account availability; local contract tests are not
+production acceptance. `events` exports the public wire types. `list_events`
+accepts optional `type` (Rust `r#type`), `status`, `lead_id`, `since`, `cursor` and
+`limit` (1–200). It returns `events`, `next_cursor` and `count`, without automatic
+pagination. Keep cursors opaque and reuse the same filters; do not infer ordering,
+retention, resumability or unlimited history from a cursor. Existing transport
+query safety rules and the 8192-byte path limit still apply. `get_event(row_id)`
+uses the recorded row ID, not the payload's event ID.
+
+`delivery.status` and attempts describe webhook delivery, not recipient message
+delivery/read state. Event names, payloads and status strings remain service-defined.
+Webhook subscriptions support list/get/create/update/delete and retain the wire
+envelopes. Creation exposes the secret only as explicit data; all new types have
+redacted `Debug`. Omitted update fields are not serialized. Protect the returned
+secret, and reconcile uncertain writes rather than retrying. No replay helper is
+provided, and no subscription targeting semantics are inferred.
+
+Typed event and subscription helpers retain only their declared fields, plus
+arbitrary JSON within the event `payload`; unknown metadata fields are discarded.
+For additional response metadata, use the existing generic raw JSON transport:
+`client.request::<serde_json::Value>("/events?limit=50", trychert_sdk::HttpMethod::GET, None).await?`.
+It retains the complete JSON response, without unwrapping envelopes.
+
+```rust,no_run
+use std::ops::ControlFlow;
+use trychert_sdk::{ChertClient, IMessageConfig, events::EventListOptions};
+# async fn example() -> Result<(), trychert_sdk::ChertError> {
+let client = ChertClient::from_config(IMessageConfig::new("explicit-key"))?;
+let page = client.list_events(&EventListOptions {
+    limit: Some(50), ..Default::default()
+}).await?;
+client.stream_events(None, |frame| {
+    // Handle frame.event and frame.data without logging customer content.
+    if frame.event == "close" { ControlFlow::Break(()) }
+    else { ControlFlow::Continue(()) }
+}).await?;
+# let _ = page;
+# Ok(()) }
+```
+
+`stream_events(since, callback)` consumes one authenticated SSE connection using
+the same credentials, prefix, no-proxy/no-redirect/no-retry policy and total
+transport timeout. `since` is opaque. It does not send `Last-Event-ID`, reconnect,
+or interpret continuation tokens. Unnamed frames are `message`; named `error`
+frames do not terminate consumption, while `close` is delivered and then releases
+the connection. Comments are ignored; JSON data supports multiline, UTF-8 and
+CR/LF/CRLF boundaries, with a 1 MiB frame ceiling. Incomplete frames at EOF are not
+delivered. Invalid streams fail with sanitized errors. Return `ControlFlow::Break`
+or drop the consumption future to release resources; callbacks must not block.
+An EOF does not establish delivery or durable resume position.
+
+No webhook signature verifier is included: existing direct dependencies do not
+provide an HMAC API and no crypto dependency was added. Before parsing webhook
+JSON, use a vetted HMAC-SHA256 implementation to verify `v1,timestamp,hex` against
+the exact `timestamp + "." + raw_body` bytes, with constant-time verification and
+a timestamp within ±300 seconds. Reject malformed signatures and empty secrets.
+
+FaceTime `call_events` and `transcript` remain HTTP snapshots. Live call media and
+realtime room events belong to LiveKit, not this iMessage SSE stream; this crate
+does not include a LiveKit runtime or promise a FaceTime event-stream endpoint.

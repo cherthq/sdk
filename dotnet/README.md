@@ -47,10 +47,66 @@ a communication during construction. Omitted channels are null. The unified
 client owns and disposes both configured channels; standalone `IMessageClient`
 and `FaceTimeClient` are also available. Reuse clients for application lifetime.
 
-**Authentication is not unified on the server.** iMessage uses its own bearer key
+**The explicit-credentials constructor keeps authentication separate.** iMessage uses its own bearer key
 and optional `x-chert-tenant`; FaceTime uses its own bearer token and
 `x-chert-project-id`. Neither key, project nor tenant is inferred from the other
 channel. Even equal URLs do not merge their credentials. There is no global key.
+
+### Unified session connection (proposed contract, source preview)
+
+```csharp
+// The CLI owns login/device approval and supplies this session; the SDK does not log in.
+using var connected = await ChertClient.ConnectAsync(new UnifiedSessionOptions {
+    AccessToken = sessionToken,
+    ProjectId = selectedProjectId
+}, cancellation);
+var events = await connected.IMessage!.ListEventsAsync(cancellationToken: cancellation);
+```
+
+`ConnectAsync` is an explicit opt-in, not a replacement for the legacy constructor.
+It validates a `chu_` token with exactly 43 base64url characters and a dashed project
+UUID before network activity. It then makes one **unauthenticated** GET to the
+approved messaging origin's `/api/v1/sdk/capabilities`. Discovery is bounded to
+64 KiB and the smaller of the configured `Timeout` and 15 seconds. Subsequent
+channel requests retain the configured timeout.
+
+The descriptor must contain `data.contract = "chert-unified"`,
+`contract_version = 1`, bearer authentication with prefix `chu_` and audience
+`chert.unified-api:v1`, and the exact approved service `/api/v1` base URLs and
+FaceTime `/api/v1/cli/logins` login URL. It must advertise all six scopes:
+`imessage:events:read`, `imessage:webhooks:manage`, `imessage:messages:send`,
+`facetime:calls:read`, `facetime:calls:create`, and `facetime:calls:control`.
+Scope entries must be unique strings; additional unique strings are accepted for
+forward compatibility.
+This is capability negotiation, not proof of the token's permissions.
+
+Only after validation does the factory bind the same session to both transports.
+FaceTime keeps the selected project header; messaging has no arbitrary tenant
+override. Every subsequent request includes `X-Chert-Contract: chert-unified-v1`;
+every response, including errors and SSE, must echo that exact value before JSON
+is parsed or a frame yielded. Old servers (including discovery 404), malformed
+descriptors, and missing/wrong echoes fail closed with
+`UnsupportedUnifiedBackendException` (`Code = "unsupported_unified_backend"`).
+There is no fallback, refresh, redirect following, retry, or implicit device flow.
+Caller cancellation remains `OperationCanceledException`.
+
+`IMessageBaseUrl` and `FaceTimeBaseUrl` explicitly approve alternate origins for
+self-hosting/tests; defaults are the console and FaceTime HTTPS origins above.
+Only origins (optionally ending in `/`) are accepted; non-root paths such as
+`/deployment` and `/api/v1` reject before network activity. Legacy constructors
+continue to support deployment prefixes. The fixed `/api/v1` namespace is used
+after unified origin validation. Advertised
+URLs cannot change these approved destinations or forward the session elsewhere.
+Do not approve an origin you do not trust with the session. Existing per-channel
+body bounds, no ambient proxy/cookies, and request deadlines remain in force.
+
+This is a **proposed version-1 contract**, not a statement of deployed support.
+No SDK login, token conversion, permission elevation, or route remapping occurs.
+`imessage:messages:send` authorizes the existing strict
+`POST /api/v1/text-operations/v1` used by `SendTextAsync`, with its unchanged JSON
+body and HTTP 202 queued receipt validation. `LogoutAsync` remains
+`POST /api/v1/cli/logout`. Neither operation implies recipient delivery or a
+guarantee of deployed contract availability.
 
 Construction performs no requests. The base URL must use HTTPS, except explicit
 `http://localhost`, `http://127.0.0.1` or `http://[::1]` for local testing. An
@@ -108,6 +164,46 @@ Only HTTP 202 with exactly `operation_id` (lowercase 32 hex), matching canonical
 `chat_id`, exact `message_id`, and `status:"acknowledged"` produces
 `ReactionReceipt`. It is dispatch acknowledgement, not applied/current reaction
 state or recipient proof. Custom emoji, groups and nonzero parts are unsupported.
+
+## Messaging events and webhooks (source preview)
+
+`ListEventsAsync(new EventListOptions { Type = "message.received", Limit = 100 })`
+returns page JSON (`events`, `next_cursor`, `count`); `GetEventAsync(rowId)` returns
+recorded event JSON. Optional filters are `Type`, `Status`, `LeadId`, `Since`,
+`Cursor` and `Limit` (1–200). Delivery status describes webhook delivery, not a
+recipient's sent/delivered/read status. Cursors and stream `since` values are
+opaque, deployment-specific tokens: do not synthesize them from timestamps or
+assume they transfer between list and stream endpoints.
+
+`ListWebhookSubscriptionsAsync`, `GetWebhookSubscriptionAsync`,
+`CreateWebhookSubscriptionAsync`, `UpdateWebhookSubscriptionAsync` and
+`DeleteWebhookSubscriptionAsync` preserve response JSON, including collection/item
+wrappers and the create-only secret. Store secrets securely; never log responses.
+Create/update use `CreateWebhookSubscription` / `UpdateWebhookSubscription`.
+There is no replay helper: console and fleet targeting differ.
+
+```csharp
+await foreach (var frame in chert.IMessage!.StreamEventsAsync(
+    since: savedStreamToken, cancellationToken: cancellation))
+{
+    // frame.Event preserves message/error/close; frame.Data is owned JSON.
+    // Persist only continuation tokens actually supplied by this deployment.
+}
+```
+
+One enumeration opens one authenticated connection. No automatic reconnect,
+`Last-Event-ID`, or hidden retry is sent, even after a close frame or uncertain EOF.
+Comments are skipped; JSON frames are bounded to 1 MiB. The configured timeout
+bounds response headers; the ongoing stream lasts until EOF, caller cancellation,
+or enumerator disposal (including `break`). Reconcile uncertain gaps yourself.
+
+Before parsing webhook JSON, call `ChertWebhook.Verify(rawBodyBytes, signature,
+secret)`. It verifies `v1,timestamp,hex` HMAC-SHA256 over the exact timestamp,
+a period, and unmodified body bytes with constant-time digest comparison and
+a ±300-second window. Keep clocks synchronized and deduplicate event IDs yourself;
+verification does not prevent replay within that window.
+These source-preview contracts are not guarantees of deployed route availability.
+FaceTime has no HTTP media event stream here: customer media uses LiveKit.
 
 ## FaceTime calls and control-plane operations
 

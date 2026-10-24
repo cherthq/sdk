@@ -7,12 +7,22 @@ import http.client
 import json
 import math
 import re
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, Generator, Literal, TypedDict, cast
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, unquote, urlsplit, urlunsplit
+from urllib.parse import quote, unquote, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
-__all__ = ["ChertClient", "ChertAPIError", "QueuedTextReceipt", "ReactionReceipt"]
+from .events import (MessagingEvent, RecordedMessagingEvent, MessagingEventPage,
+                     MessagingStreamFrame, WebhookSubscription, CreateWebhookSubscription,
+                     UpdateWebhookSubscription, WebhookSubscriptions, WebhookSubscriptionResponse,
+                     CreatedWebhookSubscriptionResponse, DeletedWebhookSubscription,
+                     verify_webhook, _read_event_stream)
+
+__all__ = ["ChertClient", "ChertAPIError", "QueuedTextReceipt", "ReactionReceipt",
+           "MessagingEvent", "RecordedMessagingEvent", "MessagingEventPage", "MessagingStreamFrame",
+           "WebhookSubscription", "CreateWebhookSubscription", "UpdateWebhookSubscription",
+           "WebhookSubscriptions", "WebhookSubscriptionResponse", "CreatedWebhookSubscriptionResponse",
+           "DeletedWebhookSubscription", "verify_webhook"]
 _UNSET = object()
 DEFAULT_IMESSAGE_URL = "https://console.trychert.com"
 DEFAULT_MAX_RESPONSE_BYTES = 8 * 1024 * 1024
@@ -196,6 +206,85 @@ class ChertClient:
 
     def request(self, path: str, *, method: str | None = None, body: Any = _UNSET) -> Any:
         return self._request_with_response(path, method=method, body=body)[2]
+
+    def list_events(self, *, type: str | None = None, status: str | None = None,
+                    lead_id: str | None = None, since: str | None = None,
+                    cursor: str | None = None, limit: int | None = None) -> MessagingEventPage:
+        params: dict[str, Any] = {}
+        for key, value in (("type", type), ("status", status), ("lead_id", lead_id),
+                           ("since", since), ("cursor", cursor)):
+            if value is not None:
+                if not isinstance(value, str):
+                    raise ValueError("Event filters must be strings")
+                params[key] = value
+        if limit is not None:
+            if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 200:
+                raise ValueError("Event limit must be 1–200")
+            params["limit"] = limit
+        return self.request("/events" + ("?" + urlencode(params) if params else ""))
+
+    @staticmethod
+    def _resource_id(value: str) -> str:
+        if not isinstance(value, str) or not value or value in (".", ".."):
+            raise ValueError("Invalid resource identity")
+        return quote(value, safe="")
+
+    def get_event(self, row_id: str) -> RecordedMessagingEvent:
+        return self.request("/events/" + self._resource_id(row_id))
+
+    def list_webhook_subscriptions(self) -> WebhookSubscriptions:
+        return self.request("/webhook-subscriptions")
+
+    def get_webhook_subscription(self, subscription_id: str) -> WebhookSubscriptionResponse:
+        return self.request("/webhook-subscriptions/" + self._resource_id(subscription_id))
+
+    def create_webhook_subscription(self, body: CreateWebhookSubscription) -> CreatedWebhookSubscriptionResponse:
+        return self.request("/webhook-subscriptions", method="POST", body=body)
+
+    def update_webhook_subscription(self, subscription_id: str,
+                                    body: UpdateWebhookSubscription) -> WebhookSubscriptionResponse:
+        return self.request("/webhook-subscriptions/" + self._resource_id(subscription_id), method="PATCH", body=body)
+
+    def delete_webhook_subscription(self, subscription_id: str) -> DeletedWebhookSubscription:
+        return self.request("/webhook-subscriptions/" + self._resource_id(subscription_id), method="DELETE")
+
+    def stream_events(self, *, since: str | None = None) -> Generator[MessagingStreamFrame, None, None]:
+        """One SSE connection. Close the iterator explicitly on early exit."""
+        if since is not None and (not isinstance(since, str) or _CONTROL.search(since)):
+            raise ValueError("Invalid event continuation")
+        url = self._base + "/events/stream" + ("?" + urlencode({"since": since}) if since is not None else "")
+        if len(url) > MAX_URL_LENGTH:
+            raise ValueError("Chert URL exceeds length limit")
+        headers = {"Authorization": "Bearer " + self._key, "Accept": "text/event-stream"}
+        if self._tenant is not None:
+            headers["X-Chert-Tenant"] = self._tenant
+        failure = None
+        request_id = None
+        try:
+            try:
+                response = self._opener.open(Request(url, headers=headers, method="GET"), timeout=self._timeout)
+            except HTTPError as response_error:
+                response = response_error
+            with response:
+                status = response.code
+                request_id = response.headers.get("x-trace-id") or response.headers.get("x-request-id")
+                if 300 <= status < 400:
+                    raise ChertAPIError(502, "redirect_blocked", request_id)
+                if not 200 <= status < 300 or response.headers.get_content_type() != "text/event-stream":
+                    raise ChertAPIError(status if status >= 400 else 502, "stream_unavailable", request_id)
+                for frame in _read_event_stream(response):
+                    if frame["event"] == "close":
+                        response.close()
+                        yield frame
+                        return
+                    yield frame
+        except (ValueError, UnicodeError, RecursionError):
+            failure = ChertAPIError(502, "invalid_event_stream", request_id)
+        except (URLError, TimeoutError, OSError, http.client.HTTPException) as error:
+            timed_out = isinstance(error, TimeoutError) or (isinstance(error, URLError) and isinstance(error.reason, TimeoutError))
+            failure = ChertAPIError(0, "timeout" if timed_out else "transport_error", request_id)
+        if failure is not None:
+            raise failure from None
 
     def _request_with_response(self, path: str, *, method: str | None = None,
                                body: Any = _UNSET, idempotency_key: str | None = None,

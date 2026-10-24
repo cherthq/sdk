@@ -38,6 +38,7 @@ func (c Config) GoString() string { return c.String() }
 type Client struct {
 	base, key, tenant string
 	project           string
+	contract          string
 	http              *http.Client
 	limit             int64
 }
@@ -224,6 +225,9 @@ func (c *Client) request(ctx context.Context, method, path string, body any, key
 		req.Header.Set("Authorization", "Bearer "+c.key)
 	}
 	req.Header.Set("Accept", "application/json")
+	if c.contract != "" {
+		req.Header.Set("X-Chert-Contract", c.contract)
+	}
 	if c.project != "" {
 		req.Header.Set("X-Chert-Project-ID", c.project)
 	}
@@ -241,6 +245,9 @@ func (c *Client) request(ctx context.Context, method, path string, body any, key
 		return result, &APIError{Code: "request_failed", cause: cancellationCause(ctx, err)}
 	}
 	defer res.Body.Close()
+	if err := c.checkContract(res); err != nil {
+		return result, err
+	}
 	result.Status = res.StatusCode
 	result.RequestID = res.Header.Get("X-Request-ID")
 	data, err := io.ReadAll(io.LimitReader(res.Body, c.limit+1))

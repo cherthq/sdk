@@ -1,3 +1,6 @@
+import { readEventStream, type MessagingStreamFrame, type StreamEventsOptions, type EventListOptions, type MessagingEventPage, type RecordedMessagingEvent, type WebhookSubscription, type CreateWebhookSubscription, type UpdateWebhookSubscription } from './events.js';
+export { verifyWebhook, type MessagingEvent, type StreamedMessagingEvent, type MessagingWebhookEvent, type MessagingStreamFrame, type StreamEventsOptions, type EventListOptions, type MessagingEventPage, type RecordedMessagingEvent, type WebhookSubscription, type CreateWebhookSubscription, type UpdateWebhookSubscription } from './events.js';
+
 export type ChertFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export const DEFAULT_IMESSAGE_BASE_URL = 'https://console.trychert.com';
 export type ChertClientOptions = {
@@ -123,6 +126,87 @@ export class ChertClient {
   async requestWithResponse<T>(path: string, options: RequestOptions = {}): Promise<{status:number;data:T}> {
     const {status,data}=await this.#performRequest<T>(path,options);
     return {status,data};
+  }
+  listEvents(query: EventListOptions = {}, options: SendTextOptions = {}): Promise<MessagingEventPage> {
+    const params = new URLSearchParams();
+    for (const key of ['type', 'status', 'lead_id', 'since', 'cursor'] as const) {
+      if (query[key] !== undefined) params.set(key, query[key]!);
+    }
+    if (query.limit !== undefined) {
+      if (!Number.isInteger(query.limit) || query.limit < 1 || query.limit > 200) throw new TypeError('Event limit must be 1–200');
+      params.set('limit', String(query.limit));
+    }
+    return this.request(`/events?${params}`, options);
+  }
+  getEvent(id: string, options: SendTextOptions = {}): Promise<RecordedMessagingEvent> {
+    return this.request(`/events/${this.#resourceId(id)}`, options);
+  }
+  listWebhookSubscriptions(options: SendTextOptions = {}): Promise<{ subscriptions: WebhookSubscription[] }> {
+    return this.request('/webhook-subscriptions', options);
+  }
+  getWebhookSubscription(id: string, options: SendTextOptions = {}): Promise<{ subscription: WebhookSubscription }> {
+    return this.request(`/webhook-subscriptions/${this.#resourceId(id)}`, options);
+  }
+  createWebhookSubscription(body: CreateWebhookSubscription, options: SendTextOptions = {}): Promise<{ subscription: WebhookSubscription & { secret: string } }> {
+    return this.request('/webhook-subscriptions', { ...options, method: 'POST', body });
+  }
+  updateWebhookSubscription(id: string, body: UpdateWebhookSubscription, options: SendTextOptions = {}): Promise<{ subscription: WebhookSubscription }> {
+    return this.request(`/webhook-subscriptions/${this.#resourceId(id)}`, { ...options, method: 'PATCH', body });
+  }
+  deleteWebhookSubscription(id: string, options: SendTextOptions = {}): Promise<{ deleted: true; id: string }> {
+    return this.request(`/webhook-subscriptions/${this.#resourceId(id)}`, { ...options, method: 'DELETE' });
+  }
+  /** Authenticated SSE, not a delivery guarantee. No reconnect after transport failure or unexpected EOF. */
+  async *streamEvents(options: StreamEventsOptions = {}): AsyncGenerator<MessagingStreamFrame> {
+    let since = options.since;
+    do {
+      options.signal?.throwIfAborted();
+      const controller = new AbortController();
+      const abort = () => controller.abort(options.signal?.reason);
+      options.signal?.addEventListener('abort', abort, { once: true });
+      let continuation: string | undefined;
+      try {
+        const url = new URL('events/stream', this.#base);
+        if (since !== undefined) url.searchParams.set('since', since);
+        const headers = new Headers({ Authorization: `Bearer ${this.#key}`, Accept: 'text/event-stream' });
+        if (this.#tenant) headers.set('X-Chert-Tenant', this.#tenant);
+        const response = await this.#fetch(url, { headers, signal: controller.signal, redirect: 'error' });
+        const requestId = response.headers.get('x-trace-id') ?? response.headers.get('x-request-id');
+        if (!response.ok || response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() !== 'text/event-stream' || !response.body) {
+          await response.body?.cancel();
+          throw new ChertAPIError(response.ok ? 502 : response.status, 'stream_unavailable', 'Messaging event stream unavailable', requestId);
+        }
+        try {
+          for await (const frame of readEventStream(response.body)) {
+            options.signal?.throwIfAborted();
+            if (frame.event === 'close' && isRecord(frame.data) && typeof frame.data.reconnect_with_since === 'string')
+              continuation = frame.data.reconnect_with_since;
+            yield frame;
+            if (frame.event === 'close') break;
+          }
+        } catch (error) {
+          options.signal?.throwIfAborted();
+          throw new ChertAPIError(502, 'invalid_event_stream', 'Event stream interrupted or invalid; reconcile before reconnecting', requestId);
+        }
+      } finally {
+        controller.abort();
+        options.signal?.removeEventListener('abort', abort);
+      }
+      if (!options.reconnect) return;
+      if (continuation === undefined) throw new ChertAPIError(502, 'event_stream_closed', 'Event stream ended without a continuation; reconcile before reconnecting');
+      since = continuation;
+      // Bound reconnection rate even if an endpoint closes immediately.
+      await new Promise<void>((resolve, reject) => {
+        const abort = () => { clearTimeout(timer); reject(options.signal!.reason); };
+        const timer = setTimeout(() => { options.signal?.removeEventListener('abort', abort); resolve(); }, 1000);
+        options.signal?.addEventListener('abort', abort, { once: true });
+        if (options.signal?.aborted) abort();
+      });
+    } while (true);
+  }
+  #resourceId(id: string): string {
+    if (typeof id !== 'string' || !id || id === '.' || id === '..') throw new TypeError('A resource ID is required');
+    return encodeURIComponent(id);
   }
   async #performRequest<T>(path: string, options: RequestOptions, strictText=false, idempotencyKey?:string): Promise<{status:number;data:T;requestId:string|null}> {
     if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || path.includes('#')) throw new TypeError('Expected a Chert-relative API path');

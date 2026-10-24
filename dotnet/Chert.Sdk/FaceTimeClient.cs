@@ -13,6 +13,7 @@ public sealed class FaceTimeClient : IDisposable
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
+    internal FaceTimeClient(ChannelTransport transport) => this.transport = transport;
     public FaceTimeClient(FaceTimeOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);

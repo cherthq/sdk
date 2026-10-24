@@ -1,4 +1,4 @@
-#include <trychert/imessage.hpp>
+#include <trychert/client.hpp>
 #include <curl/curl.h>
 
 #include <algorithm>
@@ -7,6 +7,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <set>
 #include <string_view>
 #include <vector>
 
@@ -121,26 +122,112 @@ bool reaction_key(std::string_view value) {
     return !value.empty() && value.size() <= 200 && value.front() != ' ' && value.back() != ' '
         && std::all_of(value.begin(), value.end(), [](unsigned char c) { return c >= 0x20 && c <= 0x7e; });
 }
+bool event_stream_content_type(const char* raw) {
+    if (!raw) return false;
+    const std::string_view value(raw);
+    const auto media_type = value.substr(0, value.find(';'));
+    constexpr std::string_view expected = "text/event-stream";
+    return media_type.size() == expected.size()
+        && std::equal(media_type.begin(), media_type.end(), expected.begin(), [](unsigned char a, char b) {
+            return (a >= 'A' && a <= 'Z' ? a + ('a' - 'A') : a) == b;
+        });
+}
 struct Response {
     std::string body;
     std::string trace;
     std::string request;
+    std::string contract;
+    std::size_t contract_count = 0;
+    bool unified = false;
+    std::size_t body_limit = response_limit;
+    CURL* handle = nullptr;
+    std::function<bool(const std::string&, const Json&)> stream;
+    std::stop_token stop;
+    std::string line, event, data;
+    std::size_t frame_size = 0;
+    bool after_cr = false, has_data = false, stopped = false;
+    std::exception_ptr failure;
+
+    void count_byte() {
+        if (++frame_size > 1024 * 1024) throw ApiError(502, "event_frame_too_large", "");
+    }
+    bool consume(char c) {
+        if (after_cr) {
+            after_cr = false;
+            // Delay dispatch until the complete CRLF delimiter is counted.
+            // A non-LF belongs to the next line (or the next frame).
+            if (c == '\n') { count_byte(); return consume_line(); }
+            if (!consume_line()) return false;
+        }
+        count_byte();
+        if (c == '\r') { after_cr = true; return true; }
+        if (c == '\n') return consume_line();
+        line += c;
+        return true;
+    }
+    bool consume_line() {
+        if (!valid_utf8(line)) throw ApiError(502, "invalid_event_stream", "");
+        if (line.empty()) {
+            if (has_data) {
+                auto parsed = Json::parse(data, nullptr, false);
+                if (parsed.is_discarded()) throw ApiError(502, "invalid_event_stream", "");
+                if (!stream(event.empty() ? "message" : event, parsed)) { stopped = true; return false; }
+            }
+            event.clear(); data.clear(); has_data = false; frame_size = 0;
+        } else if (line.front() != ':') {
+            const auto colon = line.find(':');
+            const auto field = line.substr(0, colon);
+            auto value = colon == line.npos ? std::string{} : line.substr(colon + 1);
+            if (value.starts_with(' ')) value.erase(0, 1);
+            if (field == "event") event = std::move(value);
+            if (field == "data") {
+                if (has_data) data += '\n';
+                data += value; has_data = true;
+            }
+        }
+        line.clear();
+        return true;
+    }
 };
+int progress(void* context, curl_off_t, curl_off_t, curl_off_t, curl_off_t) noexcept {
+    return static_cast<Response*>(context)->stop.stop_requested() ? 1 : 0;
+}
 std::size_t write_body(char* data, std::size_t size, std::size_t count, void* context) noexcept {
     try {
-        auto& body = static_cast<Response*>(context)->body;
+        auto& response = *static_cast<Response*>(context);
+        auto& body = response.body;
+        if (response.unified && (response.contract_count != 1 || response.contract != "chert-unified-v1"))
+            throw ApiError(502, "unsupported_unified_backend", "");
         if (size != 0 && count > response_limit / size) return 0;
         const auto length = size * count;
-        if (length > response_limit - body.size()) return 0;
+        if (response.stream) {
+            long status = 0;
+            static_cast<void>(curl_easy_getinfo(response.handle, CURLINFO_RESPONSE_CODE, &status));
+            if (status == 200) {
+                char* content_type = nullptr;
+                static_cast<void>(curl_easy_getinfo(response.handle, CURLINFO_CONTENT_TYPE, &content_type));
+                if (!event_stream_content_type(content_type))
+                    throw ApiError(502, "invalid_event_stream", "");
+                for (std::size_t i = 0; i < length; ++i)
+                    if (response.stop.stop_requested() || !response.consume(data[i])) return 0;
+                return length;
+            }
+        }
+        if (length > response.body_limit - body.size()) return 0;
         body.append(data, length);
         return length;
-    } catch (...) { return 0; }
+    } catch (...) { static_cast<Response*>(context)->failure = std::current_exception(); return 0; }
 }
 std::size_t write_header(char* data, std::size_t size, std::size_t count, void* context) noexcept {
     try {
         if (size != 0 && count > response_limit / size) return 0;
         const auto length = size * count;
         const auto header = std::string_view(data, length);
+        auto& response = *static_cast<Response*>(context);
+        if (header.starts_with("HTTP/")) {
+            response.contract.clear();
+            response.contract_count = 0;
+        }
         const auto colon = header.find(':');
         if (colon == header.npos) return length;
         auto name = std::string(header.substr(0, colon));
@@ -149,7 +236,10 @@ std::size_t write_header(char* data, std::size_t size, std::size_t count, void* 
         const auto first = value.find_first_not_of(" \t");
         value = first == value.npos ? "" : value.substr(first);
         while (!value.empty() && (value.back() == '\r' || value.back() == '\n' || value.back() == ' ')) value.pop_back();
-        auto& response = *static_cast<Response*>(context);
+        if (name == "x-chert-contract") {
+            ++response.contract_count;
+            response.contract = value;
+        }
         if (name == "x-trace-id") response.trace = value;
         if (name == "x-request-id") response.request = value;
         return length;
@@ -198,6 +288,123 @@ std::optional<Json> detail::Transport::request(const std::string& path, std::opt
     return request_with_response(path, std::move(body), std::move(method)).data;
 }
 
+Client Client::connect(UnifiedSessionOptions options) {
+    const auto& token = options.access_token;
+    if (token.size() != 47 || !token.starts_with("chu_") || !reaction_chat_id(options.project_id)
+        || !std::all_of(token.begin() + 4, token.end(), [](unsigned char c) {
+            return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-';
+        })) throw std::invalid_argument("A unified session token and project UUID are required");
+    // Validate both caller-approved origins offline before any discovery request.
+    const auto origin = [](const std::string& value) {
+        const detail::Transport validate(value, "offline-validation", std::nullopt, std::chrono::seconds(15));
+        const Url url(curl_url(), curl_url_cleanup);
+        if (!url || curl_url_set(url.get(), CURLUPART_URL, value.c_str(), 0) != CURLUE_OK
+            || part(url.get(), CURLUPART_PATH) != "/")
+            throw std::invalid_argument("Unified services require root origins");
+        auto result = part(url.get(), CURLUPART_URL);
+        if (result.ends_with('/')) result.pop_back();
+        return result;
+    };
+    const auto im = origin(options.imessage_base_url), ft = origin(options.facetime_base_url);
+    try {
+        detail::Transport discovery(im, "unused-discovery", std::nullopt, std::chrono::seconds(15));
+        discovery.discovery_ = true;
+        const auto envelope = discovery.request("/sdk/capabilities");
+        if (!envelope) throw ApiError(502, "unsupported_unified_backend", "");
+        const auto& data = envelope->at("data");
+        const auto& auth = data.at("auth");
+        const auto& services = data.at("services");
+        const auto& scopes = data.at("scopes");
+        if (data.at("contract") != "chert-unified" || !data.at("contract_version").is_number_integer()
+            || data.at("contract_version") != 1 || auth.at("scheme") != "Bearer"
+            || auth.at("token_prefix") != "chu_" || auth.at("audience") != "chert.unified-api:v1"
+            || auth.at("login_url") != ft + "/api/v1/cli/logins"
+            || services.at("imessage").at("base_url") != im + "/api/v1"
+            || services.at("facetime").at("base_url") != ft + "/api/v1" || !scopes.is_array())
+            throw ApiError(502, "unsupported_unified_backend", "");
+        std::set<std::string> unique_scopes;
+        for (const auto& scope : scopes)
+            if (!scope.is_string() || !unique_scopes.insert(scope.get<std::string>()).second)
+                throw ApiError(502, "unsupported_unified_backend", "");
+        for (const auto* scope : {"imessage:events:read", "imessage:webhooks:manage", "imessage:messages:send",
+                                 "facetime:calls:read", "facetime:calls:create", "facetime:calls:control"})
+            if (std::find(scopes.begin(), scopes.end(), Json(scope)) == scopes.end())
+                throw ApiError(502, "unsupported_unified_backend", "");
+    } catch (const std::exception&) { throw ApiError(502, "unsupported_unified_backend", ""); }
+    Client result({{im, token, std::nullopt}, {ft, token, options.project_id}});
+    result.imessage.unified_ = true;
+    result.facetime.unified_ = true;
+    return result;
+}
+
+namespace {
+std::string encode_query(const std::string& value) {
+    if (value.size() > 16384 || !valid_utf8(value)) throw std::invalid_argument("Invalid event query");
+    const std::unique_ptr<char, decltype(&curl_free)> encoded(
+        curl_easy_escape(nullptr, value.data(), static_cast<int>(value.size())), curl_free);
+    if (!encoded) throw std::runtime_error("Cannot encode event query");
+    return encoded.get();
+}
+std::string resource_id(const std::string& id) {
+    if (id.empty() || id.size() > 200 || id == "." || id == ".."
+        || !std::all_of(id.begin(), id.end(), [](unsigned char c) {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                || c == '-' || c == '_' || c == '.';
+        })) throw std::invalid_argument("Invalid event resource ID");
+    return id;
+}
+Json required_json(std::optional<Json> value) {
+    if (!value) throw ApiError(502, "invalid_response", "");
+    return std::move(*value);
+}
+}
+Json IMessageClient::list_events(const EventListOptions& options) const {
+    std::string path = "/events?";
+    const auto add = [&](const char* name, const std::optional<std::string>& value) {
+        if (value) path += std::string(name) + "=" + encode_query(*value) + "&";
+    };
+    add("type", options.type); add("status", options.status); add("lead_id", options.lead_id);
+    add("since", options.since); add("cursor", options.cursor);
+    if (options.limit) {
+        if (*options.limit < 1 || *options.limit > 200) throw std::invalid_argument("Event limit must be 1-200");
+        path += "limit=" + std::to_string(*options.limit);
+    }
+    return required_json(request(path));
+}
+Json IMessageClient::get_event(const std::string& id) const {
+    return required_json(request("/events/" + resource_id(id)));
+}
+Json IMessageClient::list_webhook_subscriptions() const {
+    return required_json(request("/webhook-subscriptions"));
+}
+Json IMessageClient::get_webhook_subscription(const std::string& id) const {
+    return required_json(request("/webhook-subscriptions/" + resource_id(id)));
+}
+Json IMessageClient::create_webhook_subscription(const CreateWebhookSubscription& input) const {
+    Json body{{"url", input.url}};
+    if (input.events) body["events"] = *input.events;
+    if (input.version) body["version"] = *input.version;
+    return required_json(request("/webhook-subscriptions", body, "POST"));
+}
+Json IMessageClient::update_webhook_subscription(const std::string& id, const UpdateWebhookSubscription& input) const {
+    auto body = Json::object();
+    if (input.url) body["url"] = *input.url;
+    if (input.events) body["events"] = *input.events;
+    if (input.version) body["version"] = *input.version;
+    if (input.is_active) body["is_active"] = *input.is_active;
+    return required_json(request("/webhook-subscriptions/" + resource_id(id), body, "PATCH"));
+}
+Json IMessageClient::delete_webhook_subscription(const std::string& id) const {
+    return required_json(request("/webhook-subscriptions/" + resource_id(id), std::nullopt, "DELETE"));
+}
+void IMessageClient::stream_events(const std::function<bool(const MessagingStreamFrame&)>& callback,
+                                  std::optional<std::string> since, std::stop_token stop) const {
+    if (!callback) throw std::invalid_argument("Event callback is required");
+    const auto path = "/events/stream" + (since ? "?since=" + encode_query(*since) : std::string{});
+    static_cast<void>(request_with_response(path, std::nullopt, "GET", std::nullopt,
+        [&](const std::string& event, const Json& data) { return callback({event, data}); }, stop));
+}
+
 QueuedTextReceipt IMessageClient::send_text(const std::string& phone, const std::string& text,
                                     std::optional<std::string> key) const {
     if (!canonical_phone(phone) || text.empty() || text.size() > 16384 || text.find('\0') != text.npos
@@ -242,7 +449,9 @@ ReactionReceipt IMessageClient::send_reaction(const std::string& input_chat, con
 }
 
 detail::Response detail::Transport::request_with_response(const std::string& path, std::optional<Json> body, std::string method,
-                                                     std::optional<std::string> idempotency_key) const {
+                                                     std::optional<std::string> idempotency_key,
+                                                     std::function<bool(const std::string&, const Json&)> stream,
+                                                     std::stop_token stop) const {
     if (idempotency_key && !reaction_key(*idempotency_key))
         throw std::invalid_argument("Invalid reaction idempotency header");
     if (path.empty() || path.front() != '/' || path.starts_with("//") || path.size() > 16384)
@@ -262,14 +471,20 @@ detail::Response detail::Transport::request_with_response(const std::string& pat
     Headers headers(nullptr, curl_slist_free_all);
     const Easy handle(curl_easy_init(), curl_easy_cleanup);
     if (!handle) throw std::runtime_error("Cannot initialize Chert request");
+    response.handle = handle.get();
+    response.stream = std::move(stream);
+    response.stop = stop;
+    response.unified = unified_;
+    response.body_limit = discovery_ ? 65536 : response_limit;
     const auto add_header = [&headers](const std::string& value) {
         auto* next = curl_slist_append(headers.get(), value.c_str());
         if (!next) throw std::runtime_error("Cannot allocate Chert headers");
         static_cast<void>(headers.release());
         headers.reset(next);
     };
-    add_header("Authorization: Bearer " + key_);
-    add_header("Accept: application/json");
+    if (!discovery_) add_header("Authorization: Bearer " + key_);
+    if (unified_) add_header("X-Chert-Contract: chert-unified-v1");
+    add_header(response.stream ? "Accept: text/event-stream" : "Accept: application/json");
     // Avoid libcurl's Expect/417 retry path for large mutation bodies.
     add_header("Expect:");
     if (scope_) add_header((scope_kind_ == Scope::tenant ? "X-Chert-Tenant: " : "X-Chert-Project-Id: ") + *scope_);
@@ -297,6 +512,12 @@ detail::Response detail::Transport::request_with_response(const std::string& pat
     set(CURLOPT_WRITEDATA, &response);
     set(CURLOPT_HEADERFUNCTION, &write_header);
     set(CURLOPT_HEADERDATA, &response);
+    if (response.stream) {
+        if (stop.stop_requested()) return {0, "", std::nullopt};
+        set(CURLOPT_NOPROGRESS, 0L);
+        set(CURLOPT_XFERINFOFUNCTION, &progress);
+        set(CURLOPT_XFERINFODATA, &response);
+    }
     if (body) {
         set(CURLOPT_POSTFIELDS, payload.c_str());
         set(CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(payload.size()));
@@ -305,7 +526,21 @@ detail::Response detail::Transport::request_with_response(const std::string& pat
     long status = 0;
     static_cast<void>(curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &status));
     const auto id = response.trace.empty() ? response.request : response.trace;
+    if (response.failure) std::rethrow_exception(response.failure);
+    if (response.stream && (response.stopped || stop.stop_requested())) return {status, id, std::nullopt};
     if (result != CURLE_OK) throw ApiError(status, "outcome_unknown", id);
+    if (unified_ && (response.contract_count != 1 || response.contract != "chert-unified-v1"))
+        throw ApiError(502, "unsupported_unified_backend", id);
+    if (response.stream && status == 200) {
+        char* content_type = nullptr;
+        static_cast<void>(curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_TYPE, &content_type));
+        if (!event_stream_content_type(content_type))
+            throw ApiError(502, "invalid_event_stream", id);
+        // A pending CR at successful EOF is a complete bare-CR delimiter.
+        if (response.after_cr) static_cast<void>(response.consume_line());
+        return {status, id, std::nullopt};
+    }
+    if (response.stream && status >= 200 && status < 300) throw ApiError(502, "invalid_event_stream", id);
     if (status == 204 || (method == "HEAD" && status >= 200 && status < 300)) return {status, id, std::nullopt};
     if (method == "HEAD") throw ApiError(status, "request_failed", id);
     const auto data = Json::parse(response.body, nullptr, false);
