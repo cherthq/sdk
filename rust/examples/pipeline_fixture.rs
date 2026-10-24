@@ -1,11 +1,11 @@
 //! Guarded test-only pipeline CLI. This does not authorize a physical send.
-use cherthq_imessage::{ChertClient, HttpMethod};
 use serde_json::{json, Value};
 use std::{
     io::{self, Read},
     process::ExitCode,
     time::Duration,
 };
+use trychert_sdk::{ChertClient, HttpMethod};
 
 fn valid_origin(origin: &str) -> bool {
     let Some(port) = origin.strip_prefix("http://127.0.0.1:") else {

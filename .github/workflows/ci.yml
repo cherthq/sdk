@@ -36,7 +36,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - run: cargo test --locked --manifest-path rust/Cargo.toml
+      - run: cargo fetch --locked --manifest-path rust/Cargo.toml
+      - run: bash scripts/verify-rust-package.sh "$RUNNER_TEMP/rust-artifact-review"
   cpp:
     runs-on: ubuntu-latest
     steps:

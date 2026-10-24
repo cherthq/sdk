@@ -11,7 +11,7 @@ the other clients are source previews, with unified channel support under review
 | --- | --- | --- | --- |
 | JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | npm [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk); binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage transport (`chert`) | Unpublished; `trychert-sdk` / `trychert` unified client in [draft #11](https://github.com/cherthq/sdk/pull/11) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
-| Rust | Async iMessage transport (`cherthq_imessage`) | Unpublished; unified `trychert-sdk` in [draft #8](https://github.com/cherthq/sdk/pull/8) | [Rust guide](https://github.com/cherthq/sdk/blob/main/rust/README.md) |
+| Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
 | Go 1.23+ | Standard-library iMessage transport (`chert`) | Unified iMessage/FaceTime source preview on `unified-go-sdk`; no tagged release | [Go guide](go/README.md) |
@@ -26,9 +26,9 @@ build/test source; do not substitute a similarly named registry package.
   messaging tenant. A queued receipt does not mean sent, delivered or read.
 - **FaceTime control-plane** coverage differs by language. The published JavaScript
   client inspects identity, assigned lines, workers, credentials and connectors;
-  it is not an outbound-call API. The C++ source preview also exposes typed call
-  creation/actions, events and transcripts against its documented server contract.
-  Neither is a media runtime. Route availability and permissions depend on the backend.
+  it is not an outbound-call API. The C++ and Rust source previews also expose typed call
+  creation/actions, events and transcripts against their documented server contracts.
+  None is a media runtime. Route availability and permissions depend on the backend.
 - Channel credentials are **separate**. The SDK does not prove that an iMessage
   key belongs to a FaceTime project, map tenants to projects, or convert provider
   credentials. In the JavaScript wrapper, `projectId` is sent to FaceTime only;
@@ -126,17 +126,38 @@ client = ChertClient(os.environ['CHERT_BASE_URL'], os.environ['CHERT_API_KEY'])
 # identity = client.request('/whoami')  # Explicit read-only request.
 ```
 
-**Rust** — in a consumer configured for the local `rust/` crate:
+**Rust** — use Rust 1.88+ and a Tokio runtime with the local `rust/` crate:
+
+```toml
+[dependencies]
+chert-sdk = { path = "../sdk/rust" }
+```
 
 ```rust
-use cherthq_imessage::ChertClient;
-use std::time::Duration;
+use trychert_sdk::{ChertSdk, IMessageConfig, FaceTimeConfig};
 
-let client = ChertClient::new(
-    "https://messaging.example.test", "replace-with-your-key", None,
-    Duration::from_secs(20), 1024 * 1024,
+let sdk = ChertSdk::new(
+    Some(IMessageConfig::new("messaging-key")),
+    Some(FaceTimeConfig::new("facetime-key", "project-id")),
 )?;
 ```
+
+The distribution is `chert-sdk`; the library import stays `trychert_sdk` for
+preview source compatibility. `ChertClient` remains messaging-only; `ChertSdk` accepts independent
+`IMessageConfig` and `FaceTimeConfig` values for either or both channels.
+FaceTime includes typed calls, events, transcripts, lines, assistants and settings.
+Messaging tenant and FaceTime project credentials remain separate; no shared
+server binding is inferred. See the [Rust guide](rust/README.md) for the unified
+example and API limits. `publish = false` remains enforced: this is not a
+crates.io installation command, and call snapshots do not prove connection.
+
+URLs default to `https://console.trychert.com` and `https://facetime.trychert.com`,
+with `/api/v1` once. Explicit `base_url` overrides support tests/self-hosting;
+empty or invalid values reject. **Rust publication hold:** canonical deployment
+still needs production smoke verification. No production default reaction-routing
+claim is made; the backend text-route repair does not establish reaction routing.
+This is an untagged source preview, not a published package. There are no typed
+billing wrappers; generic billing transport is not a release promise.
 
 **C# / .NET** — reference `dotnet/Chert.Sdk/Chert.Sdk.csproj` locally:
 

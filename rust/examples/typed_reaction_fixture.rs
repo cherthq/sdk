@@ -1,8 +1,8 @@
 //! Offline loopback fixture only. One actual typed SDK call per process.
-use cherthq_imessage::ChertClient;
 use reqwest::Url;
 use serde_json::{json, Value};
 use std::{io::Read, time::Duration};
+use trychert_sdk::ChertClient;
 async fn run() -> Result<Value, ()> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 3 || args[1] != "--typed-reaction-fixture" {
