@@ -14,7 +14,7 @@ the other clients are source previews, with unified channel support under review
 | Rust | Async iMessage transport (`cherthq_imessage`) | Unpublished; unified `trychert-sdk` in [draft #8](https://github.com/cherthq/sdk/pull/8) | [Rust guide](https://github.com/cherthq/sdk/blob/main/rust/README.md) |
 | C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
 | C++20 | iMessage transport (`chert`, CMake `cherthq::imessage`) | Unpublished; unified `trychert` preview in [draft #7](https://github.com/cherthq/sdk/pull/7) | [C++ guide](https://github.com/cherthq/sdk/blob/main/cpp/README.md) |
-| Go 1.23+ | Standard-library iMessage transport (`chert`) | Source module; no unified FaceTime release claimed | [Go guide](https://github.com/cherthq/sdk/blob/main/go/README.md) |
+| Go 1.23+ | Standard-library iMessage transport (`chert`) | Unified iMessage/FaceTime source preview on `unified-go-sdk`; no tagged release | [Go guide](go/README.md) |
 
 Draft package names describe proposed distributions, not packages available from
 PyPI, crates.io, NuGet or a C++ package registry. Follow the language guide to

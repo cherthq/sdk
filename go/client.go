@@ -20,14 +20,24 @@ import (
 
 // Config supplies explicit credentials and transport bounds. Zero bounds use defaults.
 type Config struct {
+	// EndpointOverride is optional, for tests, self-hosting or advanced deployments.
+	EndpointOverride string
+	// BaseURL is the legacy endpoint override. Do not set both overrides.
 	BaseURL, APIKey, Tenant string
 	Timeout                 time.Duration
 	MaxResponseBytes        int64
 }
 
+// DefaultIMessageEndpoint is the production messaging API, independent of FaceTime.
+const DefaultIMessageEndpoint = "https://console.trychert.com/api/v1"
+
+func (c Config) String() string   { return "ChertConfig{redacted}" }
+func (c Config) GoString() string { return c.String() }
+
 // Client is safe for concurrent requests. Construction performs no network requests.
 type Client struct {
 	base, key, tenant string
+	project           string
 	http              *http.Client
 	limit             int64
 }
@@ -103,7 +113,20 @@ func safePath(path string) bool {
 
 // NewClient refuses redirects, ambient proxies and remote cleartext HTTP.
 func NewClient(cfg Config) (*Client, error) {
-	if !cleanURL(cfg.BaseURL) || strings.ContainsAny(cfg.BaseURL, "?#") || !cleanHeader(cfg.APIKey) || cfg.Tenant != "" && !cleanHeader(cfg.Tenant) {
+	return newClient(cfg, DefaultIMessageEndpoint, false)
+}
+
+func newClient(cfg Config, defaultEndpoint string, public bool) (*Client, error) {
+	if cfg.EndpointOverride != "" {
+		if cfg.BaseURL != "" {
+			return nil, invalid()
+		}
+		cfg.BaseURL = cfg.EndpointOverride
+	}
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = defaultEndpoint
+	}
+	if !cleanURL(cfg.BaseURL) || strings.ContainsAny(cfg.BaseURL, "?#") || (!public || cfg.APIKey != "") && !cleanHeader(cfg.APIKey) || cfg.Tenant != "" && !cleanHeader(cfg.Tenant) {
 		return nil, invalid()
 	}
 	base, err := url.Parse(cfg.BaseURL)
@@ -148,6 +171,23 @@ func NewClient(cfg Config) (*Client, error) {
 func (c *Client) Request(ctx context.Context, method, path string, body any) (Response, error) {
 	return c.request(ctx, method, path, body, "")
 }
+
+// RequestOptions supplies a caller-owned header key; nil means absent, not empty.
+type RequestOptions struct{ IdempotencyKey *string }
+
+// RequestWithOptions preserves raw JSON access for routes without a typed method.
+// A key does not imply that the selected server route implements idempotency.
+func (c *Client) RequestWithOptions(ctx context.Context, method, path string, body any, options RequestOptions) (Response, error) {
+	key := ""
+	if options.IdempotencyKey != nil {
+		key = *options.IdempotencyKey
+		if !validHeaderKey(key) {
+			return Response{}, invalid()
+		}
+	}
+	return c.request(ctx, method, path, body, key)
+}
+
 func (c *Client) request(ctx context.Context, method, path string, body any, key string) (Response, error) {
 	var result Response
 	if ctx == nil || !cleanURL(path) || strings.Contains(path, "#") || !methodPattern.MatchString(method) {
@@ -180,8 +220,13 @@ func (c *Client) request(ctx context.Context, method, path string, body any, key
 	if err != nil {
 		return result, invalid()
 	}
-	req.Header.Set("Authorization", "Bearer "+c.key)
+	if c.key != "" {
+		req.Header.Set("Authorization", "Bearer "+c.key)
+	}
 	req.Header.Set("Accept", "application/json")
+	if c.project != "" {
+		req.Header.Set("X-Chert-Project-ID", c.project)
+	}
 	if c.tenant != "" {
 		req.Header.Set("X-Chert-Tenant", c.tenant)
 	}
@@ -263,7 +308,14 @@ func receiptObject(r Response, err error, code string) (map[string]any, error) {
 	v, e := decodeJSON(r.Data)
 	obj, ok := v.(map[string]any)
 	if err != nil || e != nil || !ok || r.Status != 202 || len(obj) != 4 {
-		return nil, unconfirmed(r, code)
+		failure := unconfirmed(r, code).(*APIError)
+		if errors.Is(err, context.Canceled) {
+			failure.cause = context.Canceled
+		}
+		if errors.Is(err, context.DeadlineExceeded) {
+			failure.cause = context.DeadlineExceeded
+		}
+		return nil, failure
 	}
 	return obj, nil
 }
