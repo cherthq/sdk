@@ -79,7 +79,8 @@ Checkout takes `plan='shared'` or `'dedicated'` and an optional `coupon_code`,
 and returns `CheckoutSession` containing only `url`. Plan acceptance does not
 guarantee availability. Coupon validation requires `coupon_code`; codes must be
 nonblank and at most 64 characters after trimming. `CouponValidation` contains
-`code`, `percent_off`, `mode` (`live` or `test`), `monthly_total`, and `currency`.
+`code`, `percent_off`, `mode` (`live` or `test`), and `currency`; `monthly_total`
+is optional. Additional server-returned fields are preserved unchanged.
 The server determines coupon eligibility; no coupon is promised by the SDK.
 Cancellation returns `BillingCancellation` with `status='cancellation_requested'`
 and `message`, not proof of completed cancellation. Refresh status to confirm.

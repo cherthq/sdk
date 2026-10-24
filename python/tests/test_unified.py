@@ -268,10 +268,22 @@ class UnifiedTests(unittest.TestCase):
             with self.subTest(model=model):
                 self.server.payload = {'data': data}
                 self.assertEqual(call(), data)
-                self.assertEqual(model.__required_keys__, data.keys())
+                self.assertEqual(model.__required_keys__ | model.__optional_keys__, data.keys())
         status = dict(cases[0][2], entitlement={'plan': 'shared', 'status': 'active'}, sales_enabled=True)
         self.server.payload = {'data': status}
         self.assertEqual(self.client.billing_status(), status)
+
+    def test_coupon_alternate_shape_is_preserved_without_monthly_total(self):
+        from trychert.models import CouponValidation
+        data = {'code': 'EXAMPLE', 'percent_off': 25, 'mode': 'test', 'currency': 'usd',
+                'due_now': 12, 'access_hours': 7, 'plans': ['shared']}
+        self.server.payload = {'data': data}
+        result = self.client.validate_coupon('EXAMPLE', idempotency_key='stable-key')
+        self.assertEqual(result, data)
+        self.assertNotIn('monthly_total', result)
+        self.assertEqual(CouponValidation.__optional_keys__, {'monthly_total'})
+        self.assertEqual(CouponValidation.__required_keys__, {'code', 'percent_off', 'mode', 'currency'})
+        self.assertEqual(len(self.server.calls), 1)
 
     def test_billing_requires_own_auth_project_and_valid_keys(self):
         def calls(client, key):

@@ -136,11 +136,14 @@ class BillingCancellation(TypedDict):
     message: str
 
 
-class CouponValidation(TypedDict):
+class _CouponValidationOptional(TypedDict, total=False):
+    monthly_total: float
+
+
+class CouponValidation(_CouponValidationOptional):
     code: str
     percent_off: float
     mode: Literal["live", "test"]
-    monthly_total: float
     currency: str
 
 
