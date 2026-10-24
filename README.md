@@ -30,7 +30,7 @@ build/test source; do not substitute a similarly named registry package.
   it is not an outbound-call API. The successor JavaScript and native source previews
   include typed calls and related resources as documented in their language guides.
   None is a media runtime. Route availability and permissions depend on the backend.
-- Channel credentials are **separate**. The SDK does not prove that an iMessage
+- Legacy channel credentials are **separate**. The SDK does not prove that an iMessage
   key belongs to a FaceTime project, map tenants to projects, or convert provider
   credentials. In the JavaScript wrapper, `projectId` is sent to FaceTime only;
   it is application context, not an authorization check, for iMessage.
@@ -85,6 +85,41 @@ import ChertClient from 'chert-sdk';
 import { ChertControlPlane } from 'chert-sdk/facetime';
 import Sendblue from 'chert-sdk/sendblue-adapter';
 ```
+
+### Unified session preview
+
+The new backend contract supports one approved session and project across both
+services. This is **source-preview functionality, not a deployed availability
+claim**. Obtain the session from the unified onboarding flow; an existing
+FaceTime CLI credential or messaging key cannot be relabeled as a unified token.
+
+```ts
+const sdk = await ChertSDK.connect({
+  accessToken: approvedSession.access_token,
+  projectId: approvedSession.project.id,
+});
+const events = await sdk.imessage.listEvents({limit: 20});
+const calls = await sdk.facetime.listCalls();
+```
+
+`connect` validates a `chu_` session and project UUID, then reads the messaging
+service's unauthenticated `/api/v1/sdk/capabilities` descriptor **before sending
+the token**. It requires `chert-unified` version 1, the expected Bearer audience
+and service URLs, and the required scope vocabulary. Every subsequent request
+sends `X-Chert-Contract: chert-unified-v1` and requires that exact response echo.
+Old backends, malformed descriptors and missing version echoes fail closed;
+there is no legacy fallback, token conversion or automatic login/refresh.
+
+Optional `imessageBaseURL` and `facetimeBaseURL` are explicitly trusted HTTPS
+origins (loopback HTTP for tests), not arbitrary URLs advertised by a server.
+The descriptor must match them exactly. Do not choose these overrides from
+untrusted content. Scope enforcement and project membership remain server-side;
+discovery does not prove the supplied session has permission for an operation.
+Call creation, call control, message send, events and webhook management have
+separate permissions. BYOR still uses separate customer LiveKit credentials.
+
+The existing `new ChertSDK({projectId,imessage,facetime})` constructor and
+standalone clients retain their explicit, separate-credential behavior.
 
 Channel commands require `CHERT_PROJECT_ID` as application context and only their
 own channel credentials. `context` needs only the project ID; help and `adopt`

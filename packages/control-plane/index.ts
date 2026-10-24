@@ -41,7 +41,10 @@ export class ChertControlPlane {
     if(auth==='project'){if(!this.projectId)throw new ChertApiError(400,'project_required');headers['x-chert-project-id']=this.projectId;}
     if(input!==undefined)headers['Content-Type']='application/json';
     let response:Response;
-    try{response=await this.fetcher(`${this.origin}/api/v1/${path}`,{method,headers,body:input===undefined?undefined:JSON.stringify(input),redirect:'error',cache:'no-store',signal:AbortSignal.timeout(15_000)});}catch{throw new ChertApiError(0,'network_error');}
+    try{response=await this.fetcher(`${this.origin}/api/v1/${path}`,{method,headers,body:input===undefined?undefined:JSON.stringify(input),redirect:'error',cache:'no-store',signal:AbortSignal.timeout(15_000)});}catch(error){
+      if(error&&typeof error==='object'&&'code' in error&&error.code==='unsupported_unified_backend')throw new ChertApiError(426,'unsupported_unified_backend');
+      throw new ChertApiError(0,'network_error');
+    }
     let envelope:unknown;
     try{
       const reader=response.body?.getReader();if(!reader)throw new Error();

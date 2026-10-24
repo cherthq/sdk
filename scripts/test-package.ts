@@ -61,6 +61,40 @@ assert.equal(requests[0].headers.has('x-chert-project-id'), false);
 assert.equal(requests[1].headers.get('Authorization'), 'Bearer face-token');
 assert.equal(requests[1].headers.get('x-chert-project-id'), 'project');
 for (const request of requests) assert.equal(request.redirect, 'error');
+const unifiedToken = 'chu_' + 'a'.repeat(43);
+const unifiedProject = '11111111-1111-4111-8111-111111111111';
+const unifiedRequests = [];
+const receipt = {success:true,message_id:'a'.repeat(32),chat_id:'chat_fixture',status:'queued'};
+const unified = await ChertSDK.connect({accessToken:unifiedToken,projectId:unifiedProject,fetch:async(url,init)=>{
+  const headers = new Headers(init.headers);
+  unifiedRequests.push(String(url));
+  assert.equal(init.redirect,'error');
+  if (String(url).endsWith('/sdk/capabilities')) {
+    assert.equal(headers.has('Authorization'),false);
+    return Response.json({data:{contract:'chert-unified',contract_version:1,
+      auth:{scheme:'Bearer',token_prefix:'chu_',audience:'chert.unified-api:v1',login_url:'https://facetime.trychert.com/api/v1/cli/logins'},
+      services:{imessage:{base_url:'https://console.trychert.com/api/v1'},facetime:{base_url:'https://facetime.trychert.com/api/v1'}},
+      scopes:['imessage:events:read','imessage:webhooks:manage','imessage:messages:send','facetime:calls:read','facetime:calls:create','facetime:calls:control']}});
+  }
+  assert.equal(headers.get('Authorization'),'Bearer '+unifiedToken);
+  assert.equal(headers.get('X-Chert-Contract'),'chert-unified-v1');
+  assert.equal(headers.has('X-Chert-Tenant'),false);
+  if (String(url).includes('console.')) {
+    assert.equal(String(url),'https://console.trychert.com/api/v1/text-operations/v1');
+    assert.equal(init.method,'POST');
+    assert.deepEqual(JSON.parse(init.body),{phone:'+15555550123',body:'Hello',idempotency_key:'consumer'});
+    return Response.json(receipt,{status:202,headers:{'X-Chert-Contract':'chert-unified-v1'}});
+  }
+  assert.equal(headers.get('X-Chert-Project-Id'),unifiedProject);
+  return Response.json({data:{id:'call'}},{status:201,headers:{'X-Chert-Contract':'chert-unified-v1'}});
+}});
+assert.deepEqual(await unified.imessage.sendText({phone:'+15555550123',body:'Hello',idempotency_key:'consumer'}),receipt);
+assert.equal((await unified.facetime.createCall({direction:'outbound',mode:'managed',assistant_id:'assistant',destination:'+15555550123',media:{audio:true,video:false}},'consumer-call')).id,'call');
+assert.equal(unifiedRequests.length,3);
+await assert.rejects(ChertSDK.connect({accessToken:unifiedToken,projectId:unifiedProject,fetch:async(_,init)=>{
+  assert.equal(new Headers(init.headers).has('Authorization'),false);
+  return new Response(null,{status:404});
+}}),{code:'unsupported_unified_backend'});
 const billingRequests = [];
 const billingReplies = [
   {entitlement:null,needs_reconciliation:false,sales_enabled:true,shared_available:true,dedicated_available:false},
