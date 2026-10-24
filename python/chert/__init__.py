@@ -1,4 +1,4 @@
-"""Synchronous, stdlib-only transport for the explicitly configured Chert API."""
+"""Synchronous, stdlib-only Chert transport with explicit credentials."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,6 +14,7 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 
 __all__ = ["ChertClient", "ChertAPIError", "QueuedTextReceipt", "ReactionReceipt"]
 _UNSET = object()
+DEFAULT_IMESSAGE_URL = "https://console.trychert.com"
 DEFAULT_MAX_RESPONSE_BYTES = 8 * 1024 * 1024
 MAX_URL_LENGTH = 16_384
 _CONTROL = re.compile(r"[\x00-\x20\x7f-\x9f]")
@@ -95,7 +96,7 @@ def _finite_float(value: str) -> float:
 class ChertClient:
     """One-attempt JSON requests; no provider fallback, redirects or environment auth."""
 
-    def __init__(self, base_url: str, api_key: str, tenant: str | None = None,
+    def __init__(self, base_url: str = DEFAULT_IMESSAGE_URL, api_key: str = "", tenant: str | None = None,
                  *, timeout: float = 15.0, max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES):
         if not isinstance(base_url, str) or len(base_url) > MAX_URL_LENGTH or _CONTROL.search(base_url) or "\\" in base_url or "?" in base_url or "#" in base_url:
             raise ValueError("Invalid Chert base URL")
