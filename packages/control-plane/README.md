@@ -51,3 +51,46 @@ server/transport messages. Supply `fetch` for isolated tests.
 
 Run `bun test packages/control-plane`. Tests perform no real login, payment,
 enrollment, message or call.
+
+## Calls and video
+
+The source preview includes `createCall`, `getCall`, `listCalls`,
+`getCallEvents`, `answerCall`, `rejectCall` and `endCall`. Use a project key with
+the required `facetime:read`/`facetime:write` permission or an authorized user
+session. A CLI login does not grant call-write permission. Call mutations require
+stable caller-owned idempotency keys; reconcile uncertain outcomes before retrying.
+
+```ts
+// Invoke only with recipient consent and an authorized video-enabled line.
+async function placeVideoCall(client: ChertControlPlane, key: string) {
+  return client.createCall({
+    direction: 'outbound', mode: 'customer_managed',
+    line_id: authorizedLineId, destination: authorizedDestination,
+    media: {audio: true, video: true},
+    livekit_url: customerRoomUrl,
+    participant_token: callScopedParticipantToken,
+    remote_participant_identity: customerAgentIdentity,
+  }, key);
+}
+// Deliberately not invoked. Never log room credentials or the request body.
+```
+
+Customer-managed calls require an explicit line, audio enabled and all three
+room fields; do not supply an assistant. Managed calls require `assistant_id`
+and at least one requested medium, without room credentials. The HTTP client
+does not transport frames or implement LiveKit subscriptions. An accepted call
+or media event does not prove that a recipient saw or heard anything.
+
+For inbound calls, authenticate `IncomingCallWebhook` before acting on it.
+Return an `IncomingCallDecision` to that webhook: either `{action:'decline'}` or
+`{action:'accept',livekit_url,participant_token,remote_participant_identity}`.
+These room credentials are not arguments to `answerCall`. Configure the line's
+`customer_decides` inbound policy and your authorized integration separately.
+
+`getCall` returns detail events in `facetime_call_events`; `getCallEvents` returns
+a normalized `{call_id,events}` timeline, not a stream or raw track callbacks.
+Treat event payloads and transcripts as sensitive. `updateLine` supports settings
+such as `video_framing: 'fit' | 'fill'` and inbound policy. Assistant methods manage
+drafts and publish versions; updates require `expected_draft_revision`. Assistant
+video configuration is separate from line framing and does not supply credentials
+or guarantee service availability. There is no arbitrary call PATCH method.

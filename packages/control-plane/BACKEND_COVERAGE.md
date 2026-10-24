@@ -11,6 +11,10 @@ the service; the SDK does not upgrade or exchange credentials implicitly.
 | whoami, logout | GET cli/whoami; POST cli/logout | Inspect the current project identity; logout revokes the supplied CLI credential. |
 | listCredentials, revokeCredential | GET cli/credentials; DELETE cli/credentials/:id | Signed-in project owner/admin. |
 | listLines, listWorkers | GET lines, workers | Project read permission; explicit pagination. |
+| listCalls, getCall, getCallEvents | GET calls, calls/:id, calls/:id/events | Call read permission; detail and timeline events are distinct response shapes. |
+| createCall, answerCall, rejectCall, endCall | POST calls, calls/:id/answer, calls/:id/reject, calls/:id/end | Call write permission and stable idempotency keys. Acceptance is not connection or completion. |
+| updateLine | PATCH lines/:id | Authorized line settings; no implicit provisioning. |
+| listAssistants, getAssistant, createAssistant, updateAssistant, publishAssistant | GET/POST assistants; GET/PATCH assistants/:id; POST assistants/:id/publish | Authorized assistant management; updates require the expected draft revision. |
 | listConnectors, enrollConnector, activateConnector, drainConnector, revokeConnector | GET/POST connectors | Authorized owner/admin; enrollment returns credentials that must not be logged. Enrollment does not imply activation. |
 | billingStatus | GET billing | Signed-in user and project UUID. Returns entitlement (possibly null), reconciliation and availability flags. |
 | createCheckout | POST billing | `{action:'checkout',plan:'shared'\|'dedicated',coupon_code?}`; returns `{url}`. |
