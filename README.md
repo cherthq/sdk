@@ -27,8 +27,8 @@ build/test source; do not substitute a similarly named registry package.
   URL override. A queued receipt does not mean sent, delivered or read.
 - **FaceTime control-plane** coverage differs by language. The published JavaScript
   client inspects identity, assigned lines, workers, credentials and connectors;
-  it is not an outbound-call API. The C++ and Rust source previews also expose typed call
-  creation/actions, events and transcripts against their documented server contracts.
+  it is not an outbound-call API. The successor JavaScript and native source previews
+  include typed calls and related resources as documented in their language guides.
   None is a media runtime. Route availability and permissions depend on the backend.
 - Channel credentials are **separate**. The SDK does not prove that an iMessage
   key belongs to a FaceTime project, map tenants to projects, or convert provider

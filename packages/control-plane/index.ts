@@ -1,4 +1,6 @@
 /** Thin client for the inspected Chert FaceTime control-plane routes. No retries or provisioning fiction. */
+import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
+export * from './video';
 export type Json = null | boolean | number | string | Json[] | {[key:string]:Json};
 export interface ClientOptions { baseUrl?:string; token?:string; projectId?:string; fetch?:typeof globalThis.fetch }
 export interface PageOptions { limit?:number; offset?:number }
@@ -6,8 +8,8 @@ export interface Page<T> {items:T[];total:number;limit:number;offset:number}
 export interface DeviceLoginStart {device_code:string;user_code:string;verification_url:string;verification_url_complete:string;expires_in:number;interval:number}
 export type LoginResult = {status:'pending'} | {status:'approved';access_token:string;email:string|null;project:{id:string;name:string|null};device_name:string;expires_in:number};
 export interface Identity {email:string|null;project:{id:string;name:string|null};role:string;device_name?:string;expires_at?:string}
-export interface Line {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;[key:string]:unknown}
-export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;[key:string]:unknown}
+export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;[key:string]:unknown}
+export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;[key:string]:unknown}
 export interface Credential {id:string;device_name:string;token_prefix:string;user_id:string;email:string|null;created_at:string;last_used_at:string|null;expires_at:string}
 export interface ConnectorEnrollment {line_id:string;name:string;environment:'production'|'development';session_mode?:'byor'|'create-room'}
 export interface ConnectorReceipt {credentials:{connection:string;recovery:string};[key:string]:unknown}
@@ -64,6 +66,22 @@ export class ChertControlPlane {
   private page(path:string,options:PageOptions){const params=new URLSearchParams();for(const key of ['limit','offset'] as const){const value=options[key];if(value!==undefined){if(!Number.isInteger(value)||value<0||(key==='limit'&&(value<1||value>100)))throw new TypeError('Invalid pagination.');params.set(key,String(value));}}return `${path}${params.size?'?'+params:''}`;}
   listLines(options:PageOptions={}){return this.request<Page<Line>>(this.page('lines',options));}
   listWorkers(options:PageOptions={}){return this.request<Page<Worker>>(this.page('workers',options));}
+  updateLine(id:string,input:LineUpdate){return this.request<Line>(`lines/${this.resourceId(id)}`,'PATCH',input);}
+  listCalls(options:PageOptions={}){return this.request<Page<Call>>(this.page('calls',options));}
+  getCall(id:string){return this.request<CallDetail>(`calls/${this.resourceId(id)}`);}
+  getCallEvents(id:string){return this.request<{call_id:string;events:CallEvent[]}>(`calls/${this.resourceId(id)}/events`);}
+  /** Acceptance is not connection/media success. Reconcile uncertain outcomes; never retry automatically. */
+  createCall(input:CreateCall,idempotencyKey:string){return this.request<CallDetail>('calls','POST',input,'project',this.idempotency(idempotencyKey));}
+  answerCall(id:string,idempotencyKey:string,input:CallAction={}){return this.request<CallDetail>(`calls/${this.resourceId(id)}/answer`,'POST',input,'project',this.idempotency(idempotencyKey));}
+  rejectCall(id:string,idempotencyKey:string,input:CallAction={}){return this.request<CallDetail>(`calls/${this.resourceId(id)}/reject`,'POST',input,'project',this.idempotency(idempotencyKey));}
+  endCall(id:string,idempotencyKey:string,input:CallAction={}){return this.request<CallDetail>(`calls/${this.resourceId(id)}/end`,'POST',input,'project',this.idempotency(idempotencyKey));}
+  listAssistants(options:PageOptions={}){return this.request<Page<Assistant>>(this.page('assistants',options));}
+  getAssistant(id:string){return this.request<Assistant>(`assistants/${this.resourceId(id)}`);}
+  createAssistant(input:CreateAssistant){return this.request<Assistant>('assistants','POST',input);}
+  updateAssistant(id:string,input:UpdateAssistant){return this.request<Assistant>(`assistants/${this.resourceId(id)}`,'PATCH',input);}
+  publishAssistant(id:string){return this.request<{assistant:Assistant;published_version_id:string}>(`assistants/${this.resourceId(id)}/publish`,'POST');}
+  private resourceId(id:string){if(typeof id!=='string'||!id||id==='.'||id==='..')throw new TypeError('A resource ID is required.');return encodeURIComponent(id);}
+  private idempotency(key:string){if(typeof key!=='string'||!/^[\x21-\x7e]{8,200}$/.test(key))throw new TypeError('Use a stable 8–200 character idempotency key.');return {'Idempotency-Key':key};}
   listConnectors(){return this.request<Json>('connectors');}
   enrollConnector(input:ConnectorEnrollment){return this.request<ConnectorReceipt>('connectors','POST',{action:'enroll',...input});}
   activateConnector(input:{binding_id:string;expected_binding_id:string|null;assignment_generation:number}){return this.request<Json>('connectors','POST',{action:'activate',...input});}
