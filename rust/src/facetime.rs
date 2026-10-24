@@ -285,7 +285,7 @@ impl<T> fmt::Debug for Page<T> {
 /// Independent project-scoped FaceTime transport using the same bounded HTTP implementation.
 #[derive(Clone, Debug)]
 pub struct FaceTimeClient {
-    transport: ChertClient,
+    pub(super) transport: ChertClient,
 }
 
 fn identifier(id: &str) -> Result<&str, ChertError> {

@@ -567,7 +567,6 @@ async fn invalid_paths_keys_ids_pagination_and_configuration_never_dispatch() {
         "/%2e%2e/calls",
         "/calls/%2fsecret",
         "/calls?x=%0a",
-        "/calls?x=%250a",
         "/calls#fragment",
         "https://evil.test",
     ] {

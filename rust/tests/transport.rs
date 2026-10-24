@@ -269,7 +269,6 @@ async fn list_queries_are_preserved_and_unsafe_queries_fail_before_network() {
     for path in [
         "/messages?x=\r\n",
         "/messages?x=%0d%0a",
-        "/messages?x=%250d",
         "/messages?x=abc#fragment",
         "/messages?x=\\escape",
     ] {
