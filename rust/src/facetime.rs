@@ -228,6 +228,9 @@ pub enum CallTarget {
 /// Server authorization, destination policy and room-token validation remain authoritative.
 #[derive(Clone, Serialize)]
 pub struct CreateCall {
+    /// Empty omits the field for a managed single destination, allowing server selection.
+    /// BYOR, groups and FaceTime links require an explicit line.
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub line_id: String,
     #[serde(flatten)]
     pub execution: CallExecution,
@@ -453,7 +456,20 @@ impl FaceTimeClient {
         input: &CreateCall,
         idempotency_key: &str,
     ) -> Result<ApiResponse<Call>, ChertError> {
-        identifier(&input.line_id)?;
+        if !input.line_id.is_empty()
+            || !matches!(&input.execution, CallExecution::Managed { .. })
+            || !matches!(
+                &input.target,
+                CallTarget::Destination {
+                    destination_type: DestinationType::Phone
+                        | DestinationType::Email
+                        | DestinationType::AppleId,
+                    ..
+                }
+            )
+        {
+            identifier(&input.line_id)?;
+        }
         match &input.execution {
             CallExecution::Managed { assistant_id } => {
                 identifier(assistant_id)?;

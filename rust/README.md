@@ -140,6 +140,12 @@ is enforced by the Rust type. Production BYOR requires audio and a line; video
 readiness is separate. Call actions accept a reason, but callers must not assume
 it is retained or included in subsequent responses.
 
+`CreateCall::line_id` remains a `String` for source compatibility. For a managed
+single phone/email/Apple ID destination, an empty string omits `line_id` from the
+request and lets the server select a line. Nonempty supplied IDs are validated
+and sent unchanged. BYOR, groups and FaceTime-link destinations still require an
+explicit line and reject an empty string before network I/O.
+
 `ChertClient` remains the messaging-only compatibility name; `IMessageClient`
 names that role explicitly. Existing imports migrate from `cherthq_imessage` to
 `trychert_sdk`. The fixture executable names remain unchanged.
