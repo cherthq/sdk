@@ -8,6 +8,7 @@ from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 from .models import (BillingStatus, CheckoutSession, BillingCancellation, CouponValidation, ConnectorEnrollment, ConnectorReceipt,
+                     CallAction, CallDetail, CallEvents, CallPage, CreateCall,
                      Credentials, DeviceLoginStart, Identity, Json, LinePage, LoginApproval,
                      LoginInspection, LoginResult, Revoked, WorkerPage)
 
@@ -163,6 +164,44 @@ class ChertControlPlane:
 
     def list_workers(self, *, limit: int | None = None, offset: int | None = None) -> WorkerPage:
         return self._page('workers', limit, offset)
+
+    def list_calls(self, *, limit: int | None = None, offset: int | None = None) -> CallPage:
+        return self._page('calls', limit, offset)
+
+    @staticmethod
+    def _call_id(call_id: str) -> str:
+        if not isinstance(call_id, str) or not call_id or call_id in ('.', '..'):
+            raise ValueError('Invalid call identity')
+        return quote(call_id, safe='')
+
+    def get_call(self, call_id: str) -> CallDetail:
+        return self._request('calls/' + self._call_id(call_id))
+
+    def get_call_events(self, call_id: str) -> CallEvents:
+        """Finite JSON timeline, not SSE or a media stream."""
+        return self._request('calls/' + self._call_id(call_id) + '/events')
+
+    def _call_mutation(self, path: str, body: Any, idempotency_key: str) -> CallDetail:
+        if (not isinstance(idempotency_key, str) or not 8 <= len(idempotency_key) <= 200
+                or any(ord(char) < 33 or ord(char) > 126 for char in idempotency_key)):
+            raise ValueError('Use a stable 8–200 character printable non-space ASCII idempotency key')
+        return self._request(path, 'POST', body, idempotency_key=idempotency_key)
+
+    def create_call(self, body: CreateCall, *, idempotency_key: str) -> CallDetail:
+        """One explicit attempt; acceptance does not prove connection or media success."""
+        return self._call_mutation('calls', body, idempotency_key)
+
+    def answer_call(self, call_id: str, body: CallAction | None = None, *, idempotency_key: str) -> CallDetail:
+        return self._call_mutation('calls/' + self._call_id(call_id) + '/answer',
+                                   {} if body is None else body, idempotency_key)
+
+    def reject_call(self, call_id: str, body: CallAction | None = None, *, idempotency_key: str) -> CallDetail:
+        return self._call_mutation('calls/' + self._call_id(call_id) + '/reject',
+                                   {} if body is None else body, idempotency_key)
+
+    def end_call(self, call_id: str, body: CallAction | None = None, *, idempotency_key: str) -> CallDetail:
+        return self._call_mutation('calls/' + self._call_id(call_id) + '/end',
+                                   {} if body is None else body, idempotency_key)
 
     def list_connectors(self) -> Json:
         return self._request('connectors')

@@ -24,10 +24,12 @@ class Handler(BaseHTTPRequestHandler):
         body = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         self.server.posts.append((self.path, dict(self.headers), body))
         sending = self.path == "/api/v1/text-operations/v1"
-        self.send_response(self.server.send_status if sending else 200)
+        calling = self.path == "/api/v1/calls"
+        self.send_response(self.server.send_status if sending or calling else 200)
         for echo in self.server.echo:
             self.send_header("X-Chert-Contract", echo)
-        payload = json.dumps(RECEIPT if sending else {"data": {"revoked": True}}).encode()
+        payload = json.dumps(RECEIPT if sending else
+                             {"data": self.server.call_response if calling else {"revoked": True}}).encode()
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
@@ -154,6 +156,30 @@ class SessionTest(unittest.TestCase):
                 Chert.connect(TOKEN, PROJECT, imessage_base_url=self.messaging.origin,
                               facetime_base_url=origin)
         self.assertEqual(self.messaging.calls, [])
+
+    def test_unified_public_create_call_uses_shared_token_project_and_guard(self):
+        client = self.connect()
+        body = {'direction': 'outbound', 'mode': 'managed', 'assistant_id': PROJECT,
+                'destination': '+15550000002', 'media': {'audio': True, 'video': False}}
+        self.facetime.call_response = {'id': 'call', 'project_id': PROJECT, 'direction': 'outbound',
+            'mode': 'managed', 'media': body['media'], 'status': 'queued', 'media_status': {},
+            'line_id': None, 'worker_id': None, 'assistant_id': PROJECT, 'terminal_reason': None,
+            'started_at': None, 'ended_at': None, 'duration_seconds': None, 'facetime_call_events': []}
+        self.assertEqual(client.facetime.create_call(body, idempotency_key='stable-call-key'),
+                         self.facetime.call_response)
+        path, headers, raw = self.facetime.posts[0]
+        headers = {key.lower(): value for key, value in headers.items()}
+        self.assertEqual(path, '/api/v1/calls')
+        self.assertEqual(json.loads(raw), body)
+        self.assertEqual(headers['authorization'], 'Bearer ' + TOKEN)
+        self.assertEqual(headers['x-chert-project-id'], PROJECT)
+        self.assertEqual(headers['x-chert-contract'], UNIFIED_CONTRACT)
+        self.assertEqual(headers['idempotency-key'], 'stable-call-key')
+        self.facetime.echo = []
+        with self.assertRaises(UnsupportedUnifiedBackend):
+            client.facetime.create_call(body, idempotency_key='stable-call-key')
+        self.assertEqual(len(self.facetime.posts), 2)
+        self.assertEqual(self.messaging.posts, [])
 
     def test_foreign_or_incompatible_descriptors_never_transmit_token(self):
         mutations = [

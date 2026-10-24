@@ -119,6 +119,58 @@ a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
 annotations describe server responses, not full runtime schema validation.
 Mutating methods can have effects; reconcile uncertain results before retrying.
 
+### Calls: public control-plane methods
+
+These methods work on `sdk.facetime` from `Chert.connect(...)` and on an explicitly
+configured `ChertControlPlane`. All require bearer authentication and the selected
+project header. Unified sessions additionally enforce the contract echo.
+
+| Method | Route | Return model |
+| --- | --- | --- |
+| `list_calls(limit=None, offset=None)` | GET `/api/v1/calls` | `CallPage` (`items`, `total`, `limit`, `offset`) |
+| `get_call(call_id)` | GET `/api/v1/calls/{id}` | `CallDetail` |
+| `get_call_events(call_id)` | GET `/api/v1/calls/{id}/events` | `CallEvents` (`call_id`, `events`) |
+| `create_call(body, idempotency_key=...)` | POST `/api/v1/calls` | `CallDetail` |
+| `answer_call(call_id, body=None, idempotency_key=...)` | POST `/api/v1/calls/{id}/answer` | `CallDetail` |
+| `reject_call(call_id, body=None, idempotency_key=...)` | POST `/api/v1/calls/{id}/reject` | `CallDetail` |
+| `end_call(call_id, body=None, idempotency_key=...)` | POST `/api/v1/calls/{id}/end` | `CallDetail` |
+
+Pagination is keyword-only (limit 1–100; offset nonnegative). Mutations require a
+keyword-only stable `Idempotency-Key`: 8–200 printable non-space ASCII characters,
+preserved exactly, never generated or retried automatically. Action bodies default
+to `{}` and may contain `reason`. Call IDs are encoded as one URL segment.
+
+```python
+from trychert.models import CreateCall
+
+# Explicit effect: only call authorized recipients with provisioned resources.
+request: CreateCall = {
+    "direction": "outbound", "mode": "managed", "assistant_id": assistant_id,
+    "destination": recipient, "media": {"audio": True, "video": False},
+}
+call = sdk.facetime.create_call(request, idempotency_key="one-reviewed-call")
+timeline = sdk.facetime.get_call_events(call["id"])
+```
+
+`CreateCall` models managed calls (assistant required, no room credentials) and
+production customer-managed/BYOR calls (line and all three `ByorRoom` fields
+required: `livekit_url`, `participant_token`, `remote_participant_identity`; audio
+must be enabled). Select a single `destination` with optional `destination_type`,
+or `recipients` with an explicit line, never both. Managed calls enable audio or
+video; FaceTime links require an explicit line. Bodies pass through unchanged;
+these typed models do not replace server validation or provisioning. Keep BYOR
+credentials and call payloads out of logs.
+
+`CallDetail.facetime_call_events` contains detail events with `event_type`,
+`created_at`, and `payload`. The separate `CallEvents.events` timeline contains
+normalized `type`, `at`, nullable `sequence`, and `source`—not detail payloads.
+`get_call_events` is one bounded, finite JSON response, **not SSE**, not an HTTP
+audio/video stream, and not a subscription to LiveKit tracks. BYOR media uses
+LiveKit in the caller's runtime. A queued/accepted control-plane response does
+not prove connection, delivery, or media success. Reconcile uncertain outcomes
+before an intentional retry. The 15-second socket timeout is not a total deadline.
+These additions remain offline-tested source preview, not live deployment proof.
+
 Billing uses `GET /api/v1/billing` for status and `POST /api/v1/billing`
 with `action` set to `checkout`, `cancel`, or `validate_coupon`. All billing
 requests require a user bearer token and project selection; an API key is not a
