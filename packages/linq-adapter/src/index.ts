@@ -3,7 +3,7 @@ import {queuedMediaMessage} from './media.js';
 import { attachmentMetadata, validAttachmentCreate, createdAttachment } from './attachments.js';
 import { historyCursor, recordedMessage, recordedPage } from './history.js';
 import OfficialLinq, { type ClientOptions } from '@linqapp/sdk';
-import { ChertClient, ChertAPIError, type ChertClientOptions } from '@cherthq/imessage';
+import { ChertClient, ChertAPIError, DEFAULT_IMESSAGE_BASE_URL, type ChertClientOptions } from '@cherthq/imessage';
 
 export * from '@linqapp/sdk';
 
@@ -94,11 +94,11 @@ export default class ChertLinqAdapter extends OfficialLinq {
     }
   }
   constructor(options: LinqAdapterOptions) {
-    if (!options?.chert?.baseURL || !options.chert.apiKey) throw new Error('Explicit Chert baseURL and apiKey are required');
+    if (!options?.chert?.apiKey) throw new Error('Explicit Chert apiKey is required');
     if (options.maxRetries !== undefined && options.maxRetries !== 0) throw new Error('Linq adapter requires maxRetries: 0; uncertain sends must not be retried');
     if (options.defaultHeaders || options.defaultQuery) throw new Error('Default headers and query parameters are not supported by this adapter');
     const { chert: chertOptions, ...upstream } = options;
-    const chert = { ...chertOptions };
+    const chert = { ...chertOptions, baseURL: chertOptions.baseURL === undefined ? DEFAULT_IMESSAGE_BASE_URL : chertOptions.baseURL };
     const client = new ChertClient(chert);
     super({ ...upstream, apiKey: 'chert-adapter-local', baseURL: 'https://linq-adapter.invalid', maxRetries: 0,
       fetch: async (input, init) => {
@@ -255,7 +255,7 @@ export default class ChertLinqAdapter extends OfficialLinq {
           request.signal.throwIfAborted();
           if(media){
             if (key !== undefined && (!object(response) || !object(response.message) || typeof response.message.id !== 'string' || !/^[a-f0-9]{32}(?![\s\S])/.test(response.message.id))) return Response.json({error:{code:'outcome_unknown',message:'Original receipt unavailable'}},{status:502});
-            const mapped=queuedMediaMessage(response,chatId,part.attachment_id as string,options.chert.baseURL,historical);
+            const mapped=queuedMediaMessage(response,chatId,part.attachment_id as string,chert.baseURL,historical);
             return mapped?Response.json(mapped,{status:key === undefined ? 202 : 200}):Response.json({error:{code:'outcome_unknown',message:'Chert accepted the request but returned incompatible frozen media metadata. Reconcile before retrying.'}},{status:502});
           }
           const message = object(response) && object(response.message) ? response.message : null;

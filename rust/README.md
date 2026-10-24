@@ -9,11 +9,11 @@ Requires Rust 1.88+ and a Tokio runtime. No device installation is required for 
 
 **Publication hold:** the confirmed production defaults are `https://console.trychert.com`
 for iMessage and `https://facetime.trychert.com` for FaceTime, with `/api/v1` once.
-Canonical deployment still requires production smoke verification before publication.
-No production default reaction-routing claim is made: the backend text-route repair
-does not establish reaction routing. Defaults do not prove route compatibility.
+Service compatibility still requires verification before publication.
+Default origins do not guarantee that every API route is enabled for your account.
+Production reaction routing has not been verified by the local test suite.
 This source preview has no typed billing wrappers; generic billing transport is not
-a release promise. Source integration is separate from publication and backend acceptance.
+a release promise. Source availability is separate from publication and service availability.
 
 ## Two channels, separate credentials
 
@@ -84,8 +84,8 @@ For BYOR, use `CallExecution::CustomerManaged { room: RoomCredentials { ... } }`
 It cannot contain a managed assistant. Use `CallTarget::Group { recipients }` for
 groups and `DestinationType::FacetimeLink` for links. Group/destination exclusivity
 is enforced by the Rust type. Production BYOR requires audio and a line; video
-readiness is separate. Call actions accept a reason, but the current server only
-validates that reason; it does not persist it in the queued command.
+readiness is separate. Call actions accept a reason, but callers must not assume
+it is retained or included in subsequent responses.
 
 `ChertClient` remains the messaging-only compatibility name; `IMessageClient`
 names that role explicitly. Existing imports migrate from `cherthq_imessage` to
@@ -123,8 +123,8 @@ assert_eq!(receipt.status, "queued");
 `send_text(phone, text, key)` makes one request to `/text-operations/v1` and
 requires actual HTTP 202 with exactly `success:true`, a 32-character lowercase
 hex public `message_id`, a validated `chat_id` and `status:"queued"`. Its
-`QueuedTextReceipt` preserves those four fields; it establishes no service,
-delivery, read state or native GUID. Invalid input fails before HTTP. Text and
+`QueuedTextReceipt` preserves those four fields; it establishes no delivery or
+read state. Invalid input fails before HTTP. Text and
 an optional caller key are preserved exactly (lossless UTF8, no NUL, text at
 most 16KiB, key at most 200 bytes). No key is generated automatically.
 Unexpected success statuses or receipt shapes fail with
@@ -133,12 +133,9 @@ Non-2xx Chert error codes and raw data remain available without automatic retry.
 Generic `request<T>` remains an explicit raw transport, including legacy routes;
 it does not acquire this strict policy or route requests to FaceTime.
 
-Use the authenticated cloud messaging origin, whose body is `{phone,body,...}`;
-the same-path internal Mac endpoint has a different frozen-tuple contract.
-Strict text needs the matching cloud/native operation and installed
-FT-INSTALL-095 pair. Local HTTP tests do not establish installation or device
-delivery; no package is published. Timeout and dropping the future only cancel
-waiting and cannot retract an accepted operation.
+The authenticated messaging API accepts `{phone,body,...}`. Local HTTP tests
+verify request and response handling, not message delivery. Timeout and dropping
+the future only cancel waiting and cannot retract an accepted operation.
 
 Root bases use `/api/v1`; explicit deployment prefixes stay pinned. Paths must be
 relative API paths starting with `/`, with optional query parameters (8192-byte total limit), without fragment, traversal, control
@@ -178,8 +175,8 @@ cargo clippy --offline --locked --all-targets --all-features -- -D warnings
 cargo package --offline --locked --allow-dirty
 ```
 
-From the repository root, run `bash scripts/verify-rust-package.sh "$PWD/.amp/in/artifacts"`
-after ensuring `/.amp/in/` is excluded locally. The gate compares every archive source
+From the repository root, run `bash scripts/verify-rust-package.sh /absolute/path/to/artifacts`
+with an output directory outside the source tree. The gate compares every archive source
 file with the reviewed tree, rejects unexpected members and path/git dependencies,
 tests the unpacked archive and a fresh consumer, and records its SHA-256. The exact
 artifact still needs human release approval; this script never publishes.
@@ -190,8 +187,7 @@ redirect sink refusal, errors/redaction, 204, response limits, timeout and
 pre-network namespace validation and dropped-future cancellation.
 The lockfile requires Rust 1.88 or newer (ICU dependencies); the suite passes on
 Rust 1.88 and the installed stable compiler. HTTPS handshake/platform trust integration and
-cross-platform runtime behavior remain unverified. No per-Mac install is needed
-for this customer-side SDK source; no package has been published.
+cross-platform runtime behavior remain unverified. No package has been published.
 
 Malformed JSON, response type mismatches and oversized bodies on successful HTTP
 responses report status 502; unsuccessful HTTP statuses are preserved. Query

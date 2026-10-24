@@ -235,7 +235,7 @@ pub struct CreateCall {
     pub target: CallTarget,
     pub media: Media,
 }
-/// Call actions enqueue commands; a 202 does not establish the resulting native state.
+/// Call actions are asynchronous; a 202 does not establish the resulting call state.
 #[derive(Clone, Copy, Debug)]
 pub enum CallAction {
     Answer,

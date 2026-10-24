@@ -2,7 +2,7 @@ import { listAccountHistory } from './account-history.js';
 import OfficialSendblue, { APIError, type ClientOptions } from 'sendblue';
 import type { TypingIndicatorSendParams } from 'sendblue/resources/typing-indicators';
 import type { MessageResponse, MessageRetrieveResponse } from 'sendblue/resources/messages/messages';
-import { ChertClient, ChertAPIError, validateMediaCapability, type ChertClientOptions } from '@cherthq/imessage';
+import { ChertClient, ChertAPIError, DEFAULT_IMESSAGE_BASE_URL, validateMediaCapability, type ChertClientOptions } from '@cherthq/imessage';
 
 export * from 'sendblue';
 export { unwrapChert } from './webhooks.js';
@@ -135,6 +135,7 @@ export class SendblueAPI extends OfficialSendblue {
       throw new TypeError('Chert sends require maxRetries: 0 to avoid duplicate messages');
     }
     const chert = new ChertClient(options.chert);
+    const baseURL = options.chert.baseURL === undefined ? DEFAULT_IMESSAGE_BASE_URL : options.chert.baseURL;
     const transport: NonNullable<ClientOptions['fetch']> = async (input, init) => {
       const request = new Request(input, init);
       const url = new URL(request.url);
@@ -164,7 +165,7 @@ export class SendblueAPI extends OfficialSendblue {
         }
       }
       if(request.method==='GET'&&url.origin===virtualBase&&url.pathname==='/api/v2/messages'){
-        try{return Response.json(await listAccountHistory(chert,url.searchParams,request.signal,options.chert.baseURL));}
+        try{return Response.json(await listAccountHistory(chert,url.searchParams,request.signal,baseURL));}
         catch(error){
           request.signal.throwIfAborted();
           if(error instanceof ChertAPIError)return Response.json({error:{code:error.code,message:error.message}},{status:error.status>=400&&error.status<=599?error.status:502,headers:error.requestId?{'x-request-id':error.requestId}:undefined});
@@ -175,7 +176,7 @@ export class SendblueAPI extends OfficialSendblue {
       if (read) {
         try {
           const result = await chert.request<unknown>(`/messages/${encodeURIComponent(read.id)}`, { method: 'GET', signal: request.signal });
-          try { return Response.json(read.retrieve ? { data: mapRetrieved(result, read.id, options.chert.baseURL) } : mapRecorded(result, read.id)); }
+          try { return Response.json(read.retrieve ? { data: mapRetrieved(result, read.id, baseURL) } : mapRecorded(result, read.id)); }
           catch { return Response.json({ error: { message: 'Chert returned an incompatible recorded-message response' } }, { status: 502 }); }
         } catch (error) {
           if (error instanceof ChertAPIError) return Response.json({ error: { code: error.code, message: error.message } }, {
@@ -225,7 +226,7 @@ export class SendblueAPI extends OfficialSendblue {
           if (attachmentId) {
             const attachment = result.message.attachments;
             const media = Array.isArray(attachment) && attachment.length === 1
-              ? validateMediaCapability(attachment[0], attachmentId, options.chert.baseURL) : null;
+              ? validateMediaCapability(attachment[0], attachmentId, baseURL) : null;
             if (!media) throw new Error('Incompatible media receipt');
             mapped.media_url = media.download_url;
             if (caption !== undefined) {

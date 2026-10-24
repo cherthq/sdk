@@ -1,7 +1,8 @@
 export type ChertFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export const DEFAULT_IMESSAGE_BASE_URL = 'https://console.trychert.com';
 export type ChertClientOptions = {
-  /** Explicit messaging-service origin, with an optional deployment path prefix. */
-  baseURL: string;
+  /** Defaults to https://console.trychert.com; overrides may include a deployment path prefix. */
+  baseURL?: string;
   apiKey: string;
   tenant?: string;
   fetch?: ChertFetch;
@@ -34,7 +35,16 @@ export class ChertClient {
   readonly #tenant?: string;
   readonly #fetch: ChertFetch;
   constructor(options: ChertClientOptions) {
-    const base = new URL(options.baseURL);
+    const rawURL = options.baseURL === undefined ? DEFAULT_IMESSAGE_BASE_URL : options.baseURL;
+    let base: URL;
+    try {
+      if (typeof rawURL !== 'string' || /[\x00-\x20\x7f\\?#]/.test(rawURL) || !/^https?:\/\//i.test(rawURL)
+        || rawURL.split('/').slice(3).some(segment => {
+          const decoded = decodeURIComponent(segment);
+          return decoded === '.' || decoded === '..' || /[/\\\x00-\x20\x7f]/.test(decoded);
+        })) throw new TypeError();
+      base = new URL(rawURL);
+    } catch { throw new TypeError('Invalid Chert baseURL'); }
     const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname);
     if ((base.protocol !== 'https:' && !(base.protocol === 'http:' && loopback)) || base.username || base.password || base.search || base.hash)
       throw new TypeError('Chert baseURL must use HTTPS (or loopback HTTP), without credentials, query or fragment');

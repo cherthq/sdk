@@ -102,7 +102,6 @@ type Recipient struct {
 // CreateCallRequest selects managed or customer_managed execution. Choose either
 // Destination (optionally typed phone/email/apple_id/facetime_link) or Recipients.
 // BYOR requires an explicit line, audio and all three call-scoped room credentials.
-// Development/demo bypasses are deliberately not modeled.
 type CreateCallRequest struct {
 	Mode                      string      `json:"mode"`
 	LineID                    string      `json:"line_id,omitempty"`

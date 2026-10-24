@@ -31,13 +31,13 @@ int main(int argc, char** argv) {
         CHECK(client.send_reaction("A1000000-0000-4000-8000-000000000001", "Message:exact_id.v1", "love", false, std::string(200, 'k')).chat_id.front() == 'a');
         for (const auto& reaction : {"love", "like", "dislike", "laugh", "emphasize", "question"})
             CHECK(client.send_reaction(chat, "standard-" + std::string(reaction), reaction).status == "acknowledged");
-        for (const auto& mode : {"http200", "http201", "http204", "http206", "extra", "native-operation", "uppercase-operation", "wrong-chat", "wrong-case-chat", "wrong-message", "wrong-case-message", "applied", "missing", "null", "wrongtype", "empty-operation"}) {
+        for (const auto& mode : {"http200", "http201", "http204", "http206", "extra", "uuid-operation", "uppercase-operation", "wrong-chat", "wrong-case-chat", "wrong-message", "wrong-case-message", "applied", "missing", "null", "wrongtype", "empty-operation"}) {
             bool rejected = false;
             try { static_cast<void>(client.send_reaction(chat, mode, "love")); }
             catch (const chert::ApiError& error) {
                 rejected = true; sanitized(error);
                 CHECK(error.status == 502 && error.code == "unconfirmed_reaction_outcome" && error.request_id == "trace-reaction");
-                if (std::string_view(mode) == "extra") CHECK(error.data.at("native_guid") == "private-response");
+                if (std::string_view(mode) == "extra") CHECK(error.data.at("unexpected_field") == "private-response");
             }
             CHECK(rejected);
         }

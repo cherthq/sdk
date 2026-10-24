@@ -9,7 +9,7 @@ use trychert_sdk::{
     facetime::*, ChertSdk, FaceTimeConfig, HttpMethod, IMessageConfig, TransportLimits,
 };
 
-// Synthetic fixtures mirror control-plane http.ts/store.ts/normalization.ts, not SDK serializers.
+// Synthetic API responses are independent of SDK serializers.
 fn call() -> Value {
     json!({"id":"call-1","project_id":"project-ft","direction":"outbound",
         "mode":"managed","status":"queued","media":{"audio":true,"video":false},

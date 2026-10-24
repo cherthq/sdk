@@ -95,7 +95,7 @@ async fn reaction_rejects_malformed_receipts_and_wrong_http_status() {
     let mut wrong_case = ack(MESSAGE);
     wrong_case["message_id"] = json!(MESSAGE.to_ascii_uppercase());
     let mut extra = ack(MESSAGE);
-    extra["native_guid"] = json!("private-native-id");
+    extra["unexpected_field"] = json!("sensitive-extra-value");
     for (status, body) in [
         (200, ack(MESSAGE)),
         (202, bad),
@@ -112,7 +112,7 @@ async fn reaction_rejects_malformed_receipts_and_wrong_http_status() {
         assert_eq!(error.status, Some(502));
         assert_eq!(error.code, "unconfirmed_reaction_outcome");
         assert_eq!(error.request_id.as_deref(), Some("trace-reaction"));
-        assert!(!format!("{error:?} {error}").contains("private-native-id"));
+        assert!(!format!("{error:?} {error}").contains("sensitive-extra-value"));
         assert!(rx.recv().unwrap().starts_with("POST "));
         handle.join().unwrap();
         assert!(rx.try_recv().is_err());

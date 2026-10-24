@@ -82,16 +82,7 @@ are used as API evidence.
 From the SDK workspace: `bun test packages/missblue-adapter/index.test.ts`.
 Tests use the actual ChertClient, including actual loopback HTTP for send and
 typing, with synthetic backend receipts. They prove bounded construction/auth/
-validation/uncertainty behavior, not actual cloud PostgreSQL route execution,
-Miss Blue account operation, deployment or physical iMessage/typing. Workspace checks add packaging/build/distribution verification.
-`tests/missblue-http.test.ts` separately passes 21 cases through actual Chert auth,
-HTTP routes, reservation and HMAC signing, using explicitly fake query storage
-and native peers. The separate six-provider strict text gate now passes real authentication and
-disposable PostgreSQL/PostgREST, including normal and exact Unicode/whitespace
-MissBlue sends and six refusal cases with no native dispatch or reserved row.
-Two additional MissBlue native lost-reply/wrong-ACK cases each make one native
-request, retain the same actual public ID in headers/ledger/permanent claim,
-record an unconfirmed outcome, and refuse a restart of the spent attempt.
-Its native peer remains synthetic. The after-inventory inactive-line refusal does
-not close the documented same-phone UUID-reassignment limitation. Physical-device
-acceptance remains pending. No device actions are performed by these checks.
+validation/uncertainty behavior, not Miss Blue account operation, production
+availability or physical iMessage/typing. Workspace checks add packaging,
+build and distribution verification. These tests do not remove the documented
+same-phone UUID-reassignment limitation. No device actions are performed.
