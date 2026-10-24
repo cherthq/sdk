@@ -1,10 +1,10 @@
-# chert-sdk/sendblue-adapter
+# @trychert/sdk/sendblue-adapter
 
 A restricted transport for `sendblue@3.20.1`, retaining official resources,
 APIPromise helpers, types and API errors. It is not a complete replacement.
 
 ```ts
-import Sendblue from 'chert-sdk/sendblue-adapter';
+import Sendblue from '@trychert/sdk/sendblue-adapter';
 const client = new Sendblue({
   chert: { apiKey: process.env.CHERT_API_KEY! }, maxRetries: 0,
 });

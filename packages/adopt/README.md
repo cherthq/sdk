@@ -6,11 +6,12 @@ documented subset ([COMPATIBILITY.md](../../COMPATIBILITY.md)). It is a static
 analysis aid, not a parity claim: dynamic calls are invisible to it, and every
 adapter still rejects unsupported operations before sending.
 
-The public entry point is `chert-sdk adopt`. New rewrites install `chert-sdk`
-and import `chert-sdk/<adapter>`; the `@cherthq/*` names below are private
-workspace names. This successor package is not yet published: validate with a
-local tarball until release. Existing `@trychert/sdk@0.1.0` dependencies and
-imports are left intact; see the [migration guide](../../README.md#migrating-from-trychertsdk010).
+The public entry point is `chert-sdk adopt`. New rewrites install `@trychert/sdk`
+and import `@trychert/sdk/<adapter>`; the `@cherthq/*` names below are private
+workspace names. This guide targets `@trychert/sdk@0.2.0`; the
+[npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
+versions. Validate locally with a packed tarball. Existing `@trychert/sdk@0.1.0`
+imports need no rename; see the [upgrade guide](../../README.md#upgrading-from-trychertsdk010).
 
 ```sh
 chert-adopt [path] [--from auto|<provider-id>] [--write] [--install] [--json] [--allow-dirty]

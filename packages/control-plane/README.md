@@ -1,11 +1,13 @@
 # Chert FaceTime client
 
-The `chert-sdk/facetime` export provides typed HTTP methods for the Chert FaceTime
-API. The successor package is not yet published; use a reviewed local tarball for
-preview testing. See the root guide for supported Node, Bun and Deno versions.
+The `@trychert/sdk/facetime` export provides typed HTTP methods for the Chert FaceTime
+API. This guide targets `@trychert/sdk@0.2.0`; the
+[npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
+versions. Use a reviewed local tarball for local validation. See the root guide
+for supported Node, Bun and Deno versions.
 
 ```ts
-import { ChertControlPlane } from 'chert-sdk/facetime';
+import { ChertControlPlane } from '@trychert/sdk/facetime';
 const publicClient = new ChertControlPlane();
 const login = await publicClient.beginLogin({device_name: 'My laptop'});
 // Display verification_url_complete for the person to approve their project.

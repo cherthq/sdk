@@ -31,7 +31,7 @@ and coupon eligibility are service-controlled; the SDK promises no inventory.
 
 ## Preview migration
 
-The successor removes `billingCatalog`, `currentCheckout` and `BillingCatalog`:
+The `@trychert/sdk@0.2.0` preview removes `billingCatalog`, `currentCheckout` and `BillingCatalog`:
 there is no equivalent public catalog or checkout-lifecycle API. Use
 `billingStatus()` for current entitlement and availability. `createCheckout`
 now accepts `{plan, coupon_code?}` and returns `{url}`; the former

@@ -1,10 +1,10 @@
-# chert-sdk/blooio-v4-adapter
+# @trychert/sdk/blooio-v4-adapter
 
 A restricted Blooio v4 HTTP fetch replacement, not an official JavaScript SDK.
 The legacy `@blooio/sdk@0.0.2` API uses a separate adapter.
 
 ```ts
-import { createBlooioV4Fetch } from 'chert-sdk/blooio-v4-adapter';
+import { createBlooioV4Fetch } from '@trychert/sdk/blooio-v4-adapter';
 const fetch = createBlooioV4Fetch({ chert: { apiKey: process.env.CHERT_API_KEY! } });
 const response = await fetch('https://api.blooio.com/v4/messages', {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
