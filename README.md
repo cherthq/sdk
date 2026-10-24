@@ -108,7 +108,7 @@ not proof of delivery. Package publication remains a separate approval step.
 Billing uses a signed-in user session and project UUID, not a CLI/project key.
 Use `billingStatus()` to inspect entitlement and availability. The successor
 removes the obsolete catalog and checkout-row APIs; see the
-[billing migration guide](packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
+[billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
 ```sh
 bunx chert-sdk context
