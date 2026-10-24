@@ -1,8 +1,35 @@
 import assert from 'node:assert/strict';
-import { ChertClient, ChertAPIError } from '@cherthq/imessage';
+import { createHmac } from 'node:crypto';
+import { ChertClient, ChertAPIError, verifyWebhook } from '@cherthq/imessage';
 import Linq from '@cherthq/linq-adapter';
 import Sendblue, { unwrapChert, createSendblueReactionFetch } from '@cherthq/sendblue-adapter';
 import Blooio from '@cherthq/blooio-adapter';
+
+// Run the shipped stream parser and signature verifier on all supported runtimes.
+{
+  const record = { id: 'row', event_id: 'producer', type: 'message.received', payload: { text: 'hello 🌍' } };
+  let cancelled = false;
+  const client = new ChertClient({ apiKey: 'event-only', fetch: async (url, init) => {
+    assert.equal(new URL(url).searchParams.get('since'), 'opaque|cursor');
+    assert.equal(new Headers(init.headers).get('Authorization'), 'Bearer event-only');
+    assert.equal(init.redirect, 'error');
+    const bytes = new TextEncoder().encode(': heartbeat\r\n\r\ndata: ' + JSON.stringify(record) + '\r\n\r\n');
+    let i = 0;
+    return new Response(new ReadableStream({
+      pull(controller) { if (i < bytes.length) controller.enqueue(bytes.slice(i, ++i)); },
+      cancel() { cancelled = true; },
+    }), { headers: { 'Content-Type': 'text/event-stream' } });
+  } });
+  for await (const frame of client.streamEvents({ since: 'opaque|cursor' })) {
+    assert.deepEqual(frame, { event: 'message', data: record }); break;
+  }
+  assert.equal(cancelled, true);
+  const raw = JSON.stringify(record), timestamp = Math.floor(Date.now() / 1000), secret = 'synthetic';
+  const signature = 'v1,' + timestamp + ',' + createHmac('sha256', secret).update(timestamp + '.' + raw).digest('hex');
+  assert.equal(await verifyWebhook(raw, signature, secret), true);
+  assert.equal(await verifyWebhook(raw + ' ', signature, secret), false);
+  console.log('Built messaging SSE and raw webhook verification passed.');
+}
 
 // Keep video behavior in the portable and exact-installed-artifact gates.
 {

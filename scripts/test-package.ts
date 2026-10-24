@@ -95,6 +95,16 @@ console.log('All portable unified exports loaded without workspace packages.');
   }
   // Resolve every shipped declaration using both supported TS resolution modes.
   writeFileSync(join(temporary, 'consumer.ts'), subpaths.map((path, i) => `import * as api${i} from '${specifier(path)}';\nvoid api${i};`).join('\n') + `
+import {ChertClient, verifyWebhook, type MessagingStreamFrame, type MessagingEventPage} from 'chert-sdk';
+async function events(client: ChertClient, signal: AbortSignal) {
+  const page: MessagingEventPage = await client.listEvents({limit:2,cursor:'opaque'}, {signal});
+  const secret: string = (await client.createWebhookSubscription({url:'https://receiver.example/events'})).subscription.secret;
+  for await (const frame of client.streamEvents({since:'opaque',signal,reconnect:true})) {
+    const event: MessagingStreamFrame = frame; void event; break;
+  }
+  return verifyWebhook(JSON.stringify(page), 'untrusted', secret);
+}
+void events;
 import {ChertControlPlane} from 'chert-sdk/facetime';
 declare const billing: ChertControlPlane;
 const status: boolean = (await billing.billingStatus()).shared_available;
