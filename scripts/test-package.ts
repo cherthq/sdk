@@ -13,13 +13,14 @@ try {
   const archive = process.env.CHERT_PACKAGE_ARCHIVE ?? join(temporary, 'sdk.tgz');
   if (!process.env.CHERT_PACKAGE_ARCHIVE) await run(['bun', 'pm', 'pack', '--ignore-scripts', '--filename', archive], root);
   writeFileSync(join(temporary, 'package.json'), JSON.stringify({
-    private: true, type: 'module', dependencies: { 'chert-sdk': `file:${archive}` },
+    private: true, type: 'module', dependencies: { '@trychert/sdk': `file:${archive}` },
     devDependencies: { '@types/bun': '1.3.14' },
   }));
   await run(['bun', 'install', '--ignore-scripts']);
-  const installed = join(temporary, 'node_modules/chert-sdk');
+  const installed = join(temporary, 'node_modules/@trychert/sdk');
   const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
-  assert.equal(manifest.name, 'chert-sdk');
+  assert.equal(manifest.name, '@trychert/sdk');
+  assert.equal(manifest.version, '0.2.0');
   assert.deepEqual(manifest.bin, { 'chert-sdk': './dist/unified/cli.js' });
   assert.notEqual(manifest.private, true);
   assert.equal(manifest.publishConfig.access, 'public');
@@ -34,11 +35,11 @@ try {
   }
   const subpaths = Object.keys(manifest.exports).filter(path => path !== './package.json');
   const portable = subpaths;
-  const specifier = (path: string) => 'chert-sdk' + (path === '.' ? '' : path.slice(1));
+  const specifier = (path: string) => '@trychert/sdk' + (path === '.' ? '' : path.slice(1));
   writeFileSync(join(temporary, 'exports.mjs'), `
 import assert from 'node:assert/strict';
-import Client, { ChertClient, ChertAPIError, ChertControlPlane, ChertSDK } from 'chert-sdk';
-import { ChertClient as SubpathClient } from 'chert-sdk/imessage';
+import Client, { ChertClient, ChertAPIError, ChertControlPlane, ChertSDK } from '@trychert/sdk';
+import { ChertClient as SubpathClient } from '@trychert/sdk/imessage';
 assert.equal(Client, ChertClient);
 assert.equal(Client, SubpathClient);
 assert.equal(typeof ChertAPIError, 'function');
@@ -118,7 +119,7 @@ for (const name of ${JSON.stringify(portable.map(specifier))}) assert.ok(Object.
 console.log('All portable unified exports loaded without workspace packages.');
 `);
   // Reuse the existing behavioral distribution contract against the installed archive.
-  writeFileSync(join(temporary, 'distribution.mjs'), readFileSync(join(root, 'tests/distribution-smoke.mjs'), 'utf8').replaceAll('@cherthq/', 'chert-sdk/'));
+  writeFileSync(join(temporary, 'distribution.mjs'), readFileSync(join(root, 'tests/distribution-smoke.mjs'), 'utf8').replaceAll('@cherthq/', '@trychert/sdk/'));
   for (const runtime of [['node'], ['bun'], ['deno', 'run', '--no-config', '--node-modules-dir=manual', '--allow-env', '--allow-read']]) {
     await run([...runtime, 'exports.mjs']);
     await run([...runtime, 'distribution.mjs']);
@@ -127,9 +128,10 @@ console.log('All portable unified exports loaded without workspace packages.');
     for (const bin of Object.values(manifest.bin)) await run([runtime, join(installed, String(bin)), '--help']);
     for (const channel of ['imessage', 'facetime', 'adopt']) await run([runtime, join(installed, manifest.bin['chert-sdk']), channel, '--help']);
   }
+  await run(['bun', 'x', '--no-install', 'chert-sdk', '--help']);
   // Resolve every shipped declaration using both supported TS resolution modes.
   writeFileSync(join(temporary, 'consumer.ts'), subpaths.map((path, i) => `import * as api${i} from '${specifier(path)}';\nvoid api${i};`).join('\n') + `
-import {ChertClient, verifyWebhook, type MessagingStreamFrame, type MessagingEventPage} from 'chert-sdk';
+import {ChertClient, verifyWebhook, type MessagingStreamFrame, type MessagingEventPage} from '@trychert/sdk';
 async function events(client: ChertClient, signal: AbortSignal) {
   const page: MessagingEventPage = await client.listEvents({limit:2,cursor:'opaque'}, {signal});
   const secret: string = (await client.createWebhookSubscription({url:'https://receiver.example/events'})).subscription.secret;
@@ -139,14 +141,14 @@ async function events(client: ChertClient, signal: AbortSignal) {
   return verifyWebhook(JSON.stringify(page), 'untrusted', secret);
 }
 void events;
-import {ChertControlPlane} from 'chert-sdk/facetime';
+import {ChertControlPlane} from '@trychert/sdk/facetime';
 declare const billing: ChertControlPlane;
 const status: boolean = (await billing.billingStatus()).shared_available;
 const url: string = (await billing.createCheckout({plan:'dedicated'},'stable-key')).url;
 // @ts-expect-error The obsolete preview catalog model is not a checkout request.
 billing.createCheckout({plan_id:'shared',catalog_version:'2026-10-22'},'stable-key');
 void status; void url;
-import { ChertSDK, type CreateCall, type IncomingCallDecision, type IncomingCallWebhook, type AssistantConfig } from 'chert-sdk';
+import { ChertSDK, type CreateCall, type IncomingCallDecision, type IncomingCallWebhook, type AssistantConfig } from '@trychert/sdk';
 const video: CreateCall = {direction:'outbound',mode:'customer_managed',line_id:'line',destination:'+61400000000',media:{audio:true,video:true},livekit_url:'wss://room.example',participant_token:'synthetic',remote_participant_identity:'agent'};
 const managed: AssistantConfig = {instructions:'Help',openai:{provider:'openai',model:'gpt-realtime-2.1'},voice:{provider:'openai',voice_id:'marin'},interruption:{},escalation:{},video:{mode:'avatar',provider:'anam',avatar_id:'avatar'},inbound_policy:'auto_answer',media_defaults:{audio:true,video:true}};
 async function example(client: ChertControlPlane, sdk: ChertSDK, incoming: IncomingCallWebhook): Promise<IncomingCallDecision> {
