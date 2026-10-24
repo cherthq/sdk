@@ -31,7 +31,7 @@ public sealed record ReactionReceipt(string OperationId, string ChatId, string M
 }
 
 /// <summary>One-attempt transport. No redirects, ambient proxy, cookies, retries or provider fallback.</summary>
-internal sealed class ChannelTransport : IDisposable
+internal sealed partial class ChannelTransport : IDisposable
 {
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
     private readonly HttpClient http;
@@ -40,12 +40,14 @@ internal sealed class ChannelTransport : IDisposable
     private readonly string? key;
     private readonly string? tenant;
     private readonly string? project;
+    private readonly bool unifiedContract;
+    private readonly bool singleAttemptReads;
     private readonly TimeSpan deadline;
     private readonly int responseLimit;
     internal sealed record JsonResponse(int Status, string? RequestId, JsonElement? Value);
 
     internal ChannelTransport(string baseUrl, string? apiKey, string? tenant = null,
-        TimeSpan? timeout = null, int maxResponseBytes = 8 * 1024 * 1024, string? project = null)
+        TimeSpan? timeout = null, int maxResponseBytes = 8 * 1024 * 1024, string? project = null, bool unifiedContract = false, bool singleAttemptReads = false)
     {
         if (baseUrl is null || baseUrl.Length > 16384 || !ValidUnicode(baseUrl) || HasUnsafeUrlChars(baseUrl)
             || baseUrl.Contains('?') || baseUrl.Contains('#')) throw new ArgumentException("Invalid Chert base URL");
@@ -61,6 +63,8 @@ internal sealed class ChannelTransport : IDisposable
         key = apiKey is null ? null : Header(apiKey);
         this.tenant = tenant is null ? null : Header(tenant);
         this.project = project is null ? null : Header(project);
+        this.unifiedContract = unifiedContract;
+        this.singleAttemptReads = singleAttemptReads || unifiedContract;
         deadline = timeout ?? TimeSpan.FromSeconds(15);
         if (deadline <= TimeSpan.Zero || deadline.TotalMilliseconds > int.MaxValue || maxResponseBytes <= 0)
             throw new ArgumentException("Invalid timeout or response bound");
@@ -134,15 +138,19 @@ internal sealed class ChannelTransport : IDisposable
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         linked.CancelAfter(deadline);
         using var request = new HttpRequestMessage(method, url);
+        if (unifiedContract) request.Headers.Add("X-Chert-Contract", "chert-unified-v1");
         if (!publicRequest) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         if (tenant is not null) request.Headers.Add("x-chert-tenant", tenant);
         if (projectRequest) request.Headers.Add("x-chert-project-id", project);
         if (idempotencyKey is not null) request.Headers.Add("Idempotency-Key", idempotencyKey);
         if (body.HasValue) request.Content = new StringContent(body.Value.GetRawText(), StrictUtf8, "application/json");
+        // A zero-byte content object prevents SocketsHttpHandler replaying a bodyless request after a dropped reply.
+        if (singleAttemptReads && request.Content is null) request.Content = new ByteArrayContent([]);
         try
         {
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token).ConfigureAwait(false);
+            RequireContractEcho(response);
             var status = (int)response.StatusCode;
             string? requestId = response.Headers.TryGetValues("x-request-id", out var ids) ? ids.FirstOrDefault() : null;
             if (requestId is not null && (requestId.Length > 1024 || requestId.Any(char.IsControl))) requestId = null;
@@ -209,7 +217,7 @@ internal sealed class ChannelTransport : IDisposable
         for (var i = 0; i < value.Length; i++) if (value[i] == '%')
         {
             if (i + 2 >= value.Length || !byte.TryParse(value.AsSpan(i + 1, 2), System.Globalization.NumberStyles.HexNumber, null, out var b)
-                || b < (query ? 32 : 33) || b == 127 || b == '%' || (!query && b is (byte)'/' or (byte)'\\' or (byte)'?' or (byte)'#')) throw new ArgumentException("Invalid URL escape");
+                || b < (query ? 32 : 33) || b == 127 || (!query && b is (byte)'%' or (byte)'/' or (byte)'\\' or (byte)'?' or (byte)'#')) throw new ArgumentException("Invalid URL escape");
             i += 2;
         }
         return Uri.UnescapeDataString(value);

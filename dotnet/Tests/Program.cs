@@ -108,7 +108,7 @@ static partial class Program
         await Run("path and base URL guards reject namespace escape and header injection", async () =>
         {
             var before = server.Requests.Count;
-            foreach (var path in new[] { "https://foreign.invalid/x", "//foreign/x", "/../x", "/%2e%2e/x", "/%2Fx", "/%252f", "/a\\b", "/a#x", "/a?x=%0a", "/a?x=%", "/a?x=%25" }) await Throws<ArgumentException>(() => client.RequestAsync(path));
+            foreach (var path in new[] { "https://foreign.invalid/x", "//foreign/x", "/../x", "/%2e%2e/x", "/%2Fx", "/%252f", "/a\\b", "/a#x", "/a?x=%0a", "/a?x=%" }) await Throws<ArgumentException>(() => client.RequestAsync(path));
             foreach (var origin in new[] { "http://foreign.invalid", "https://user:secret@host.invalid", "https://host.invalid/x/../y", "https://host.invalid?x=1", "https://host.invalid/#fragment", "http://127.1", "https://host.invalid:99999" })
                 await Throws<ArgumentException>(() => { using var bad = new ChertClient(origin, "x"); return Task.CompletedTask; });
             await Throws<ArgumentException>(() => { using var bad = new ChertClient(server.Origin, "x\r\nInjected: yes"); return Task.CompletedTask; });
@@ -157,11 +157,13 @@ static partial class Program
             error = await Throws<ChertApiException>(() => shortClient.RequestAsync("/slow-body")); Check(error.Code == "timeout");
         });
         await FaceTimeTests();
+        await MessagingEventTests();
+        await UnifiedSessionTests();
         Console.WriteLine(JsonSerializer.Serialize(new { passed = true, cases, transport = "actual-loopback-http", externalRequests = 0 }));
     }
 }
 sealed record Captured(string Method, string Target, Dictionary<string, string> Headers, string Body);
-sealed record Reply(int Status, string Body, Dictionary<string, string>? Headers = null, int DelayMs = 0, int? AdvertisedLength = null, bool NoLength = false, bool Drop = false, bool SlowBody = false);
+sealed record Reply(int Status, string Body, Dictionary<string, string>? Headers = null, int DelayMs = 0, int? AdvertisedLength = null, bool NoLength = false, bool Drop = false, bool SlowBody = false, int? SplitAt = null, int LingerMs = 0);
 sealed class Loopback : IAsyncDisposable
 {
     readonly TcpListener listener = new(IPAddress.Loopback, 0);
@@ -199,12 +201,20 @@ sealed class Loopback : IAsyncDisposable
                 var raw = new byte[count]; var written = 0; while (written < count) { var n = await stream.ReadAsync(raw.AsMemory(written), stop.Token); if (n == 0) return; written += n; }
                 var request = new Captured(first[0], first[1], headers, Encoding.UTF8.GetString(raw)); Requests.Enqueue(request);
                 var reply = await Handler(request); if (reply.Drop) return; if (reply.DelayMs > 0) await Task.Delay(reply.DelayMs, stop.Token);
-                var body = Encoding.UTF8.GetBytes(reply.Body); var text = $"HTTP/1.1 {reply.Status} fixture\r\nConnection: close\r\nContent-Type: application/json\r\n";
+                var body = Encoding.UTF8.GetBytes(reply.Body); var text = $"HTTP/1.1 {reply.Status} fixture\r\nConnection: close\r\n";
+                if (reply.Headers?.ContainsKey("Content-Type") != true) text += "Content-Type: application/json\r\n";
                 if (!reply.NoLength) text += "Content-Length: " + (reply.AdvertisedLength ?? body.Length) + "\r\n";
                 if (reply.Headers is not null) foreach (var pair in reply.Headers) text += pair.Key + ": " + pair.Value + "\r\n";
                 await stream.WriteAsync(Encoding.ASCII.GetBytes(text + "\r\n"), stop.Token);
                 if (reply.SlowBody) foreach (var value in body) { await stream.WriteAsync(new[] { value }, stop.Token); await Task.Delay(25, stop.Token); }
+                else if (reply.SplitAt is int split)
+                {
+                    await stream.WriteAsync(body.AsMemory(0, split), stop.Token);
+                    await Task.Delay(50, stop.Token);
+                    await stream.WriteAsync(body.AsMemory(split), stop.Token);
+                }
                 else await stream.WriteAsync(body, stop.Token);
+                if (reply.LingerMs > 0) await Task.Delay(reply.LingerMs, stop.Token);
             }
             catch (Exception error) when (error is IOException or OperationCanceledException or SocketException) { }
         }
