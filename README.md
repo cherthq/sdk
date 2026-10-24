@@ -12,7 +12,7 @@ the other clients are source previews, with unified channel support under review
 | JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | Published: [`@trychert/sdk@0.1.0`](https://www.npmjs.com/package/@trychert/sdk). Planned successor: `chert-sdk` (not yet published); same binary `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | Unpublished `chert-sdk` distribution; build from source ([implementation #11](https://github.com/cherthq/sdk/pull/11)) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
-| C# / .NET 8 | iMessage transport (`Chert.Sdk`) | Unpublished; unified `TryChert` preview in [draft #9](https://github.com/cherthq/sdk/pull/9) | [.NET guide](https://github.com/cherthq/sdk/blob/main/dotnet/README.md) |
+| C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
 | Go 1.23+ | Standard-library iMessage transport (`chert`) | Unified iMessage/FaceTime source preview on `unified-go-sdk`; no tagged release | [Go guide](go/README.md) |
 
@@ -208,11 +208,31 @@ billing wrappers; generic billing transport is not a release promise.
 **C# / .NET** — reference `dotnet/Chert.Sdk/Chert.Sdk.csproj` locally:
 
 ```csharp
-using Chert.Sdk;
+using TryChert;
 
 using var client = new ChertClient(
-    "https://messaging.example.test", "replace-with-your-key");
+    iMessage: new IMessageOptions { ApiKey = "replace-with-your-key" },
+    faceTime: new FaceTimeOptions {
+        Token = "replace-with-your-token",
+        ProjectId = "22000000-0000-4000-8000-000000000002" // Replace with your project UUID.
+    });
+// Either channel may be omitted. Construction makes no requests.
 ```
+
+NuGet package `chert-sdk` retains the `TryChert` assembly and namespace. It
+provides typed iMessage text/reactions and FaceTime calls, events, transcripts,
+inventory, login, connectors and billing status/actions. Billing requires a
+signed-in user token and project UUID; messaging and FaceTime credentials remain
+independent. This is an HTTP client, not a media runtime or server implementation.
+
+Defaults are `https://console.trychert.com/api/v1` and
+`https://facetime.trychert.com/api/v1`; explicit validated overrides preserve
+custom prefixes. **Unpublished source preview:** default origins and offline
+tests do not establish live feature availability, including reactions and billing.
+No fallback or automatic retries are performed. Run
+`bash dotnet/verify-package.sh /tmp/chert-sdk-review` for the exact-package and
+empty-cache consumer gate. See the [.NET guide](dotnet/README.md) for API limits
+and breaking preview migration. Publication requires separate approval.
 
 **C++20** — build/install from `cpp/`, then use
 `find_package(trychert 0.1 CONFIG REQUIRED)` and link `trychert::trychert`:

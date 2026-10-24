@@ -3,9 +3,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using Chert.Sdk;
+using TryChert;
+using ChertClient = TryChert.IMessageClient;
 
-static class Program
+static partial class Program
 {
     const string PublicId = "0123456789abcdef0123456789abcdef";
     const string Chat = "11aa0000-0000-4000-8000-000000000001";
@@ -155,6 +156,7 @@ static class Program
             server.Handler = _ => Task.FromResult(new Reply(200, new string('x', 50), SlowBody: true));
             error = await Throws<ChertApiException>(() => shortClient.RequestAsync("/slow-body")); Check(error.Code == "timeout");
         });
+        await FaceTimeTests();
         Console.WriteLine(JsonSerializer.Serialize(new { passed = true, cases, transport = "actual-loopback-http", externalRequests = 0 }));
     }
 }

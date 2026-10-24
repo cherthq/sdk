@@ -66,5 +66,4 @@ jobs:
         with:
           dotnet-version: "8.0.x"
       - run: dotnet --list-sdks
-      - run: dotnet run --project dotnet/Tests -c Release
-      - run: dotnet pack dotnet/Chert.Sdk -c Release -o dotnet/artifacts
+      - run: bash dotnet/verify-package.sh dotnet/artifacts
