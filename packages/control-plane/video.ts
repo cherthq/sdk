@@ -12,12 +12,10 @@ export interface LineUpdate {
 }
 export interface VideoCapabilities {
   audio?: boolean; video?: boolean; managed?: boolean;
-  outbound_audio_protocol?: number | string; outbound_video_protocol?: number | string;
   [key: string]: unknown;
 }
 export interface MediaReadiness {
   audio_ready?: boolean; video_ready?: boolean; avatar_capable?: boolean;
-  production_media_ready?: boolean; screen_capture_ready?: boolean;
   [key: string]: unknown;
 }
 export interface ByorRoom {
@@ -34,12 +32,12 @@ export type IncomingCallDecision = { action: 'decline' } | ({ action: 'accept' }
 type CallDestination =
   | { destination: string; destination_type?: 'phone' | 'email' | 'apple_id' | 'facetime_link'; recipients?: never }
   | { destination?: never; destination_type?: never; line_id: string; recipients: { type: 'phone_number' | 'email'; value: string }[] };
-export type CreateCall = CallDestination & { direction: 'outbound'; media: CallMedia } & (
-  | { mode: 'managed'; assistant_id: string; line_id?: string; authorized_test_call?: boolean;
+export type CreateCall = CallDestination & { direction: 'outbound' } & (
+  | { mode: 'managed'; assistant_id: string; line_id?: string;
+      media: { audio: true; video: boolean } | { audio: boolean; video: true };
       livekit_url?: never; participant_token?: never; remote_participant_identity?: never }
-  | ({ mode: 'customer_managed'; line_id: string; assistant_id?: never; authorized_test_call?: false } & ByorRoom)
-  | { mode: 'customer_managed'; line_id?: string; assistant_id?: never; authorized_test_call: true;
-      livekit_url?: never; participant_token?: never; remote_participant_identity?: never }
+  | ({ mode: 'customer_managed'; line_id: string; assistant_id?: never;
+      media: { audio: true; video: boolean } } & ByorRoom)
 );
 export type CallStatus = 'queued' | 'incoming' | 'allocating' | 'agent_preparing' | 'answering' | 'dialing' | 'connecting' | 'active' | 'ending' | 'ended' | 'failed' | 'rejected';
 /** Public normalized event types. Raw LiveKit track callbacks are not HTTP call events. */

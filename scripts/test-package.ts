@@ -114,7 +114,13 @@ async function example(client: ChertControlPlane, sdk: ChertSDK, incoming: Incom
 }
 // @ts-expect-error Managed calls must not carry BYOR credentials.
 const invalid: CreateCall = {...video,mode:'managed',assistant_id:'assistant'};
-void example; void invalid;
+const audioOnly: CreateCall = {...video,media:{audio:true,video:false}};
+const managedVideo: CreateCall = {direction:'outbound',mode:'managed',assistant_id:'assistant',destination:'person@example.com',media:{audio:false,video:true}};
+// @ts-expect-error Customer-managed video requires audio.
+const noAudio: CreateCall = {...video,media:{audio:false,video:true}};
+// @ts-expect-error A call must request at least one medium.
+const noMedia: CreateCall = {...managedVideo,media:{audio:false,video:false}};
+void example; void invalid; void audioOnly; void managedVideo; void noAudio; void noMedia;
 `);
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'bundler']]) {
     await run(['bun', 'x', '--no-install', 'tsc', '--noEmit', '--strict', '--target', 'ES2022', '--module', module, '--moduleResolution', resolution, '--types', 'bun', 'consumer.ts']);
