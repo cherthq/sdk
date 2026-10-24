@@ -102,6 +102,19 @@ const url: string = (await billing.createCheckout({plan:'dedicated'},'stable-key
 // @ts-expect-error The obsolete preview catalog model is not a checkout request.
 billing.createCheckout({plan_id:'shared',catalog_version:'2026-10-22'},'stable-key');
 void status; void url;
+import { ChertSDK, type CreateCall, type IncomingCallDecision, type IncomingCallWebhook, type AssistantConfig } from 'chert-sdk';
+const video: CreateCall = {direction:'outbound',mode:'customer_managed',line_id:'line',destination:'+61400000000',media:{audio:true,video:true},livekit_url:'wss://room.example',participant_token:'synthetic',remote_participant_identity:'agent'};
+const managed: AssistantConfig = {instructions:'Help',openai:{provider:'openai',model:'gpt-realtime-2.1'},voice:{provider:'openai',voice_id:'marin'},interruption:{},escalation:{},video:{mode:'avatar',provider:'anam',avatar_id:'avatar'},inbound_policy:'auto_answer',media_defaults:{audio:true,video:true}};
+async function example(client: ChertControlPlane, sdk: ChertSDK, incoming: IncomingCallWebhook): Promise<IncomingCallDecision> {
+  const call = await sdk.facetime.createCall(video, 'stable-video-key');
+  const observed: string | undefined = call.media_status.video;
+  await client.updateAssistant('assistant', {expected_draft_revision:1,draft_config:managed});
+  await client.endCall(call.id, 'stable-end-key');
+  return incoming.data.media.video && observed === 'rendered' ? {action:'accept',livekit_url:'wss://room.example',participant_token:'synthetic',remote_participant_identity:'agent'} : {action:'decline'};
+}
+// @ts-expect-error Managed calls must not carry BYOR credentials.
+const invalid: CreateCall = {...video,mode:'managed',assistant_id:'assistant'};
+void example; void invalid;
 `);
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'bundler']]) {
     await run(['bun', 'x', '--no-install', 'tsc', '--noEmit', '--strict', '--target', 'ES2022', '--module', module, '--moduleResolution', resolution, '--types', 'bun', 'consumer.ts']);

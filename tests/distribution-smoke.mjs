@@ -4,6 +4,29 @@ import Linq from '@cherthq/linq-adapter';
 import Sendblue, { unwrapChert, createSendblueReactionFetch } from '@cherthq/sendblue-adapter';
 import Blooio from '@cherthq/blooio-adapter';
 
+// Keep video behavior in the portable and exact-installed-artifact gates.
+{
+  const { ChertControlPlane } = await import('@cherthq/control-plane');
+  const calls = [];
+  const client = new ChertControlPlane({ token: 'video-only', projectId: 'project', fetch: async (url, init) => {
+    calls.push({ url: String(url), init });
+    return Response.json({ data: { id: 'call', media_status: { video: 'rendered' } } }, { status: 201 });
+  } });
+  const input = { direction: 'outbound', mode: 'customer_managed', line_id: 'line', destination: '+61400000000',
+    media: { audio: true, video: true }, livekit_url: 'wss://room.example', participant_token: 'synthetic', remote_participant_identity: 'agent' };
+  assert.equal((await client.createCall(input, 'portable-video-key')).media_status.video, 'rendered');
+  await client.endCall('call', 'portable-end-key');
+  assert.deepEqual(calls.map(c => c.url), ['https://facetime.trychert.com/api/v1/calls', 'https://facetime.trychert.com/api/v1/calls/call/end']);
+  assert.deepEqual(JSON.parse(calls[0].init.body), input);
+  assert.deepEqual(JSON.parse(calls[1].init.body), {});
+  for (const { init } of calls) {
+    assert.equal(init.redirect, 'error'); assert.equal(init.headers.Authorization, 'Bearer video-only');
+    assert.equal(init.headers['x-chert-project-id'], 'project');
+  }
+  assert.equal(calls[0].init.headers['Idempotency-Key'], 'portable-video-key');
+  console.log('Built FaceTime video API preserves default routing, credentials, media and explicit end.');
+}
+
 // Exercise the built reaction API under each supported runtime, including
 // identity preservation and a response that must never become acceptance.
 {
