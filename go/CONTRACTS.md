@@ -12,8 +12,12 @@ nonempty `request_id`; modeled fields are decoded, unknown fields retained raw.
 
 | Go methods | Route and success status | Credential / limit |
 | --- | --- | --- |
-| SendText | POST text-operations/v1, 202 | iMessage key + optional tenant; exact queued receipt; body key |
+| SendText | POST text-operations/v1, 202 | Legacy iMessage key + optional tenant, or unified session with imessage:messages:send and contract echo; exact queued receipt; body key |
 | SendReaction | POST chats/:chat/messages/:message/reactions, 202 | iMessage key + optional tenant; exact acknowledged receipt; header key; part zero |
+| ListEvents, GetEvent | GET events, events/:rowID | iMessage key + optional tenant; list limit 1–200; webhook delivery status |
+| ListWebhookSubscriptions, GetWebhookSubscription | GET webhook-subscriptions, webhook-subscriptions/:id | iMessage key + optional tenant |
+| CreateWebhookSubscription, UpdateWebhookSubscription, DeleteWebhookSubscription | POST collection, PATCH/DELETE item | iMessage key + optional tenant; creation returns one-time secret; no replay helper |
+| StreamEvents | GET events/stream, SSE | iMessage key + optional tenant; one connection; 1 MiB frame cap; context and configured timeout |
 | ListCalls, GetCall | GET calls, calls/:id, 200 | FaceTime project read |
 | CreateCall | POST calls, 201 | Project write; required stable key; managed or BYOR |
 | CallAction | POST calls/:id/answer, /reject, /end, 202 | Project write; required key; optional reason has no guaranteed effect |
@@ -39,9 +43,16 @@ payments. Check the catalog's test/disabled state before initiating checkout.
 
 - No binary iMessage media upload/download, signed URL consumption, provider
   adapters, SMS fallback, lifecycle polling, chat/history/contacts/read-state
-  convenience models, or webhook verification is claimed. Use raw JSON access
+  convenience models are claimed. Use raw JSON access
   for authorized uncovered JSON routes; use a separately reviewed transport for
   binary media. Strict text and reaction receipts prove acceptance only.
+- iMessage event/subscription/SSE support is a source preview, not deployment
+  evidence. List cursors/time filters and opaque stream continuations differ.
+  Delivery metadata describes webhooks, not recipient delivery. SSE never
+  reconnects automatically or sends Last-Event-ID. VerifyWebhook checks exact raw
+  bytes using Chert v1 HMAC-SHA256 and ±300-second freshness; deduplicate separately.
+- FaceTime GetCallEvents returns snapshots, not an SSE stream. Customer LiveKit
+  integration carries media; no event response establishes working audio/video.
 - FaceTime account/project administration, API-key lifecycle, integrations,
   webhooks, previews, activation and connector runtime are not typed here.
   Raw access does not add server permissions.

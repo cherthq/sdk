@@ -4,7 +4,8 @@ Standard-library-only iMessage and FaceTime HTTP clients, licensed MIT. This is 
 Chert client, not a drop-in vendor SDK, full iMessage-provider parity, or a LiveKit
 media runtime. No tagged unified Go release is claimed. See [API coverage and contracts](CONTRACTS.md).
 No telemetry, environment credentials, redirects, ambient proxy or automatic
-request retry. Construction makes no HTTP requests.
+request retry. Legacy constructors make no HTTP requests; the opt-in
+`ConnectUnified` factory performs unauthenticated capability discovery.
 
 ## Installation and configuration
 
@@ -56,6 +57,51 @@ seconds and response cap is 8 MiB; positive `Timeout` and `MaxResponseBytes` ove
 these bounds on each channel. Context cancellation and deadlines remain detectable
 with `errors.Is`. Clients are safe for concurrent use after construction.
 
+### Proposed single-session connection (unpublished)
+
+```go
+sdk, err := chert.ConnectUnified(ctx, chert.UnifiedSessionConfig{
+    AccessToken: unifiedSessionToken, // chu_ followed by 43 base64url characters
+    ProjectID: projectUUID,
+})
+if err != nil { return err }
+```
+
+This is a proposed version-gated protocol, not proof of deployed backend support.
+The CLI owns device login; this factory accepts an already-issued token and does
+not log in, refresh, provision, retry or fall back to legacy credentials.
+`New`, `NewClient` and `NewFaceTimeClient` retain their explicit, separate credential
+behavior. The single-session factory is an opt-in exception to credential isolation.
+
+Before transmitting any token, the factory GETs the messaging origin's
+`/api/v1/sdk/capabilities` without authorization, tenant or project headers.
+Discovery is capped at 64 KiB and 15 seconds (or lower configured bounds). It
+requires contract `chert-unified`, version 1, Bearer `chu_` authentication, audience
+`chert.unified-api:v1`, the exact approved service URLs and FaceTime login URL, and
+all six scopes: `imessage:events:read`, `imessage:webhooks:manage`,
+`imessage:messages:send`, `facetime:calls:read`, `facetime:calls:create`, and
+`facetime:calls:control`. Invalid credentials/configuration fail before discovery.
+
+Optional `IMessageOrigin` and `FaceTimeOrigin` are caller-approved origins, not API
+paths. Defaults are `https://console.trychert.com` and `https://facetime.trychert.com`.
+Only HTTPS or existing literal-loopback HTTP rules are accepted. Discovery cannot
+choose a new credential destination. A 404, redirect, malformed descriptor or
+contract mismatch fails closed with `unsupported_unified_backend`.
+
+Both authenticated channels use the same token. FaceTime project requests send
+`X-Chert-Project-ID`; messaging has no caller-selected tenant. All requests from
+these clients, including SSE and public FaceTime requests, send
+`X-Chert-Contract: chert-unified-v1` and require its exact response echo before
+consuming data. A missing/wrong echo closes the response and fails closed; it is
+not proof a mutation had no effect. Public/user FaceTime authentication scopes
+still omit credentials/project headers as documented for those scopes.
+
+The unified `imessage:messages:send` scope authorizes the existing
+`POST /api/v1/text-operations/v1` route. `SendText` is not remapped: its body remains
+`{phone,body,idempotency_key?}` and its exact HTTP 202 queued receipt is unchanged.
+`Logout` remains `POST /api/v1/cli/logout`. These are source contracts; no live
+sending or deployed cross-service authorization was verified.
+
 ## iMessage operations
 
 ```go
@@ -90,6 +136,60 @@ are normalized to lowercase. Message IDs preserve case, match
 keys use the `Idempotency-Key` header: printable ASCII, 1–200 bytes, no leading or
 trailing spaces; internal spaces are preserved. Only an exact matching four-field
 HTTP 202 acknowledgement is accepted. **Acknowledged is not applied state.**
+
+### Recorded events, webhooks and SSE (source preview)
+
+`ListEvents(ctx, EventListOptions)` reads one page with `Type`, `Status`, `LeadID`,
+`Since`, `Cursor`, and optional `Limit` (pointer to 1–200; nil uses the server default).
+Empty string filters are omitted. `GetEvent(ctx, rowID)` uses the record's `id`,
+not its `event_id`. Results retain typed `Data` and original JSON/HTTP metadata.
+Typed event structs decode only modeled metadata; arbitrary unknown metadata is
+available in `Result.Response.Data`, not in `Result.Data`. The event's `Payload`
+map retains every payload field as raw JSON, including unknown nested data.
+`Status` and `Delivery` describe **webhook delivery**, not recipient delivery.
+List `NextCursor` belongs in list `Cursor`; list `Since` is a time filter. Neither
+is interchangeable with the opaque SSE `Since` continuation.
+
+`ListWebhookSubscriptions`, `GetWebhookSubscription`, `CreateWebhookSubscription`,
+`UpdateWebhookSubscription`, and `DeleteWebhookSubscription` use the public
+`/webhook-subscriptions` collection and item routes. Creation accepts URL, optional
+events and version; PATCH also accepts `IsActive`. Pointer fields distinguish
+omission from false or an empty array (use a pointer to `[]string{}`, not a nil slice).
+Creation returns a one-time secret: store it securely. No replay helper is provided.
+Server validation and authorization remain authoritative; these models are not
+complete response-schema validation. Never infer that a failed mutation had no effect.
+
+```go
+err = client.StreamEvents(ctx, chert.StreamEventsOptions{Since: continuation},
+    func(frame chert.MessagingStreamFrame) error {
+        // Inspect frame.Event and frame.Data without logging private payloads.
+        // Return an error to stop; keep the callback bounded and context-aware.
+        return nil
+    })
+```
+
+`StreamEvents` opens a single authenticated SSE connection. Named `message`,
+`error`, `close` and future frames retain their JSON; an error frame does not
+itself end the connection. Comments are ignored, fragmented UTF-8, multiline data
+and CR/LF/CRLF are supported, and each decoded frame is bounded to 1 MiB.
+The configured total `Timeout` still applies (15 seconds by default); choose a
+larger positive timeout for longer streams and use context cancellation to stop.
+Callbacks run synchronously; cancellation cannot interrupt your callback code.
+Close frames are delivered before cleanup. EOF discards any unterminated frame
+and ends the call; it does not prove delivery. There is no auto-reconnect, retry,
+`Last-Event-ID`, or automatic use of `reconnect_with_since`. Reconcile before any
+caller-directed reconnection. Bodies close on every return path.
+
+`VerifyWebhook(rawBody, signature, secret)` verifies the exact raw bytes before
+JSON parsing. The signature is `v1,<Unix-seconds>,<64 hex characters>`: HMAC-SHA256
+over timestamp + `.` + raw body, compared in constant time, with a ±300-second
+clock tolerance. Do not reserialize JSON before verification. Verification does
+not deduplicate deliveries; bound incoming request bodies and track event IDs.
+
+These APIs are source-preview contracts with synthetic local tests, not a claim
+that routes are deployed or live delivery has been verified. FaceTime call events
+remain HTTP snapshots (`GetCallEvents`), not this iMessage stream. FaceTime media
+runs through the customer's LiveKit integration, not through this SDK or SSE.
 
 ## FaceTime control and management
 
@@ -143,8 +243,8 @@ routes. `FaceTimeClient.Request` returns the unmodified envelope and accepts
 `FaceTimeRequestOptions{Auth: ProjectAuth|UserAuth|PublicAuth}` (default project).
 Public calls omit both credential and project headers; user calls omit project.
 An idempotency header alone does not establish a route's server-side idempotency.
-Binary upload/download, streaming, signed media URL fetching and foreign-origin
-requests are not provided by these JSON transports.
+Binary upload/download, signed media URL fetching and foreign-origin requests
+are not provided by these JSON transports. iMessage SSE uses `StreamEvents`.
 
 `APIError` exposes status, machine code, request ID and bounded `Data` explicitly.
 Error/client formatting redacts raw data and credentials. Non-2xx errors retain
