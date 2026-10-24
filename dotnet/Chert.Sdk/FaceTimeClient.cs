@@ -109,15 +109,25 @@ public sealed class FaceTimeClient : IDisposable
         => Send<JsonElement>("/connectors", new { action = "drain", binding_id = Id(bindingId) }, HttpMethod.Post, cancellationToken: cancellationToken);
     public Task<JsonElement> RevokeConnectorAsync(string bindingId, CancellationToken cancellationToken = default)
         => Send<JsonElement>("/connectors", new { action = "revoke", binding_id = Id(bindingId) }, HttpMethod.Post, cancellationToken: cancellationToken);
-    public Task<BillingCatalog> GetBillingCatalogAsync(CancellationToken cancellationToken = default)
-        => Send<BillingCatalog>("/billing/catalog", cancellationToken: cancellationToken, auth: Auth.Public);
-    public Task<Checkout?> GetCurrentCheckoutAsync(CancellationToken cancellationToken = default)
-        => Send<Checkout?>("/billing/checkout", cancellationToken: cancellationToken, allowNull: true);
-    public Task<Checkout> CreateCheckoutAsync(string planId, string catalogVersion, string idempotencyKey, CancellationToken cancellationToken = default)
+    /// <summary>Billing requires a signed-in user bearer token and a project UUID.</summary>
+    public Task<BillingStatus> GetBillingStatusAsync(CancellationToken cancellationToken = default)
+        => Send<BillingStatus>("/billing", cancellationToken: cancellationToken);
+    public Task<BillingCheckout> CreateBillingCheckoutAsync(string plan, string idempotencyKey, string? couponCode = null,
+        CancellationToken cancellationToken = default)
     {
-        if (planId != "shared" || catalogVersion != "2026-10-22") throw new ArgumentException("Unsupported billing plan or catalog version");
-        return Send<Checkout>("/billing/checkout", new { plan_id = planId, catalog_version = catalogVersion }, HttpMethod.Post,
-            Key(idempotencyKey), cancellationToken);
+        if (plan is not ("shared" or "dedicated")) throw new ArgumentException("Unsupported billing plan");
+        return Send<BillingCheckout>("/billing", new { action = "checkout", plan, coupon_code = couponCode is null ? null : Coupon(couponCode) },
+            HttpMethod.Post, Key(idempotencyKey), cancellationToken);
+    }
+    public Task<BillingCancellation> CancelBillingAsync(string idempotencyKey, CancellationToken cancellationToken = default)
+        => Send<BillingCancellation>("/billing", new { action = "cancel" }, HttpMethod.Post, Key(idempotencyKey), cancellationToken);
+    public Task<BillingCoupon> ValidateBillingCouponAsync(string couponCode, string idempotencyKey, CancellationToken cancellationToken = default)
+        => Send<BillingCoupon>("/billing", new { action = "validate_coupon", coupon_code = Coupon(couponCode) },
+            HttpMethod.Post, Key(idempotencyKey), cancellationToken);
+    private static string Coupon(string value)
+    {
+        if (value is null || value.Trim().Length is < 1 or > 64) throw new ArgumentException("Coupon must contain 1–64 characters");
+        return value.Trim();
     }
 
     private enum Auth { Public, User, Project }

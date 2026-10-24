@@ -94,9 +94,9 @@ static partial class Program
             Check(call.Id == Call && call.Status == "queued" && call.Media!.Audio && !call.Media.Video);
             Wire(server, "POST", "/calls", body: "{\"direction\":\"outbound\",\"mode\":\"managed\",\"assistant_id\":\"" + Chat + "\",\"destination\":\"+15550000002\",\"media\":{\"audio\":true,\"video\":false},\"authorized_test_call\":false}", key: "stable-123");
         });
-        await Run("FaceTime database media_status is an object with independent audio and video", async () =>
+        await Run("FaceTime media_status is an object with independent audio and video", async () =>
         {
-            // facetime_calls.media_status is jsonb, default {}; outbound migrations set per-medium strings.
+            // Empty and populated public response objects are both supported.
             foreach (var media in new[] { "{}", "{\"audio\":\"ready\",\"video\":\"pending\"}" })
             {
                 ReplyWith(CallJson[..^1] + ",\"media_status\":" + media + "}");
@@ -178,14 +178,45 @@ static partial class Program
             await client.DrainConnectorAsync(Chat); Wire(server, "POST", "/connectors", body: "{\"action\":\"drain\",\"binding_id\":\"" + Chat + "\"}");
             await client.RevokeConnectorAsync(Chat); Wire(server, "POST", "/connectors", body: "{\"action\":\"revoke\",\"binding_id\":\"" + Chat + "\"}");
         });
-        await Run("FaceTime billing distinguishes public catalog, no checkout and explicit purchase", async () =>
+        await Run("FaceTime billing uses authenticated status and action POST contracts", async () =>
         {
-            ReplyWith("{\"version\":\"2026-10-22\",\"enabled\":false,\"test_mode\":true,\"plans\":[{\"id\":\"shared\",\"name\":\"Shared\",\"currency\":\"usd\",\"amount\":2500,\"interval\":\"month\",\"available\":false}]}");
-            var catalog = await client.GetBillingCatalogAsync(); Check(!catalog.Enabled && catalog.Plans[0].Amount == 2500); Wire(server, "GET", "/billing/catalog", "public");
-            ReplyWith("null"); Check(await client.GetCurrentCheckoutAsync() is null); Wire(server, "GET", "/billing/checkout");
-            ReplyWith("{\"id\":\"checkout-1\",\"project_id\":\"" + Project + "\",\"plan_id\":\"shared\",\"state\":\"open\",\"checkout_url\":\"https://checkout.example.test/token\"}");
-            Check((await client.CreateCheckoutAsync("shared", "2026-10-22", "checkout-123")).State == "open");
-            Wire(server, "POST", "/billing/checkout", body: "{\"plan_id\":\"shared\",\"catalog_version\":\"2026-10-22\"}", key: "checkout-123");
+            const string flags = "\"needs_reconciliation\":true,\"sales_enabled\":false,\"shared_available\":true,\"dedicated_available\":false";
+            ReplyWith("{\"entitlement\":null," + flags + "}");
+            var status = await client.GetBillingStatusAsync();
+            Check(status.Entitlement is null && status.NeedsReconciliation && !status.SalesEnabled && status.SharedAvailable && !status.DedicatedAvailable);
+            Wire(server, "GET", "/billing");
+            ReplyWith("{\"entitlement\":{\"project_id\":\"" + Project + "\",\"plan\":\"dedicated\",\"status\":\"active\",\"fulfillment_status\":\"pending\",\"valid_from\":\"2026-01-01T00:00:00Z\",\"valid_until\":\"2026-02-01T00:00:00Z\",\"future_field\":7}," + flags + "}");
+            var entitlement = (await client.GetBillingStatusAsync()).Entitlement!;
+            Check(entitlement.Plan == "dedicated" && entitlement.Status == "active" && entitlement.FulfillmentStatus == "pending"
+                && entitlement.ValidUntil == "2026-02-01T00:00:00Z" && entitlement.AdditionalData!["future_field"].GetInt32() == 7);
+            foreach (var plan in new[] { "shared", "dedicated" })
+            {
+                ReplyWith("{\"url\":\"https://checkout.example.test/opaque\"}");
+                var checkout = await client.CreateBillingCheckoutAsync(plan, "checkout-123", plan == "dedicated" ? " SAVE " : null);
+                Check(checkout.Url == "https://checkout.example.test/opaque" && !checkout.ToString().Contains("opaque"));
+                Wire(server, "POST", "/billing", body: "{\"action\":\"checkout\",\"plan\":\"" + plan + "\"" + (plan == "dedicated" ? ",\"coupon_code\":\"SAVE\"" : "") + "}", key: "checkout-123");
+            }
+            ReplyWith("{\"status\":\"cancellation_requested\",\"message\":\"Refresh to confirm.\"}");
+            Check((await client.CancelBillingAsync("cancel-123")).Status == "cancellation_requested");
+            Wire(server, "POST", "/billing", body: "{\"action\":\"cancel\"}", key: "cancel-123");
+            ReplyWith("{\"code\":\"SAVE\",\"percent_off\":25,\"mode\":\"test\",\"monthly_total\":18.75,\"currency\":\"usd\"}");
+            var coupon = await client.ValidateBillingCouponAsync(" SAVE ", "coupon-123");
+            Check(coupon.Code == "SAVE" && coupon.PercentOff == 25 && coupon.MonthlyTotal == 18.75m && coupon.Mode == "test" && coupon.Currency == "usd");
+            Wire(server, "POST", "/billing", body: "{\"action\":\"validate_coupon\",\"coupon_code\":\"SAVE\"}", key: "coupon-123");
+        });
+        await Run("FaceTime billing rejects malformed responses and preserves authorization errors", async () =>
+        {
+            foreach (var json in new[] { "null", "{}", "{\"sales_enabled\":true,\"needs_reconciliation\":false,\"shared_available\":false,\"dedicated_available\":false}" })
+            {
+                ReplyWith(json);
+                Check((await Throws<ChertApiException>(() => client.GetBillingStatusAsync())).Code == "invalid_response");
+            }
+            ReplyWith("{\"url\":null}");
+            Check((await Throws<ChertApiException>(() => client.CreateBillingCheckoutAsync("shared", "checkout-123"))).Code == "invalid_response");
+            var before = server.Requests.Count;
+            server.Handler = _ => Task.FromResult(new Reply(403, "{\"error\":{\"code\":\"forbidden\",\"message\":\"private-secret\"}}"));
+            var error = await Throws<ChertApiException>(() => client.CancelBillingAsync("cancel-123"));
+            Check(error.Status == 403 && error.Code == "forbidden" && !error.ToString().Contains("private-secret") && server.Requests.Count == before + 1);
         });
         await Run("FaceTime missing auth and invalid arguments have zero HTTP effects", async () =>
         {
@@ -200,7 +231,22 @@ static partial class Program
             foreach (var key in new[] { "", "short", " leading-key", "trailing-key ", "inject\r\nkey", "unicode-é", new string('k', 201) }) await Throws<ArgumentException>(() => client.CreateCallAsync(Managed(), key));
             await Throws<ArgumentException>(() => client.PollLoginAsync("bad"));
             await Throws<ArgumentException>(() => client.BeginLoginAsync("invisible\nname"));
-            await Throws<ArgumentException>(() => client.CreateCheckoutAsync("dedicated", "2026-10-22", "stable-key"));
+            Check((await Throws<ChertApiException>(() => publicOnly.GetBillingStatusAsync())).Code == "unauthorized");
+            Check((await Throws<ChertApiException>(() => userOnly.GetBillingStatusAsync())).Code == "project_required");
+            Check((await Throws<ChertApiException>(() => publicOnly.CreateBillingCheckoutAsync("shared", "stable-key"))).Code == "unauthorized");
+            Check((await Throws<ChertApiException>(() => userOnly.CancelBillingAsync("stable-key"))).Code == "project_required");
+            await Throws<ArgumentException>(() => client.CreateBillingCheckoutAsync("unknown", "stable-key"));
+            foreach (var key in new[] { "short", " key-invalid", "injected\r\nkey" })
+            {
+                await Throws<ArgumentException>(() => client.CreateBillingCheckoutAsync("dedicated", key));
+                await Throws<ArgumentException>(() => client.CancelBillingAsync(key));
+                await Throws<ArgumentException>(() => client.ValidateBillingCouponAsync("SAVE", key));
+            }
+            foreach (var coupon in new[] { "", "   ", new string('x', 65) })
+            {
+                await Throws<ArgumentException>(() => client.CreateBillingCheckoutAsync("shared", "stable-key", coupon));
+                await Throws<ArgumentException>(() => client.ValidateBillingCouponAsync(coupon, "stable-key"));
+            }
             await Throws<ArgumentException>(() => client.ActivateConnectorAsync(Chat, null, -1));
             await Throws<ArgumentException>(() => client.EnrollConnectorAsync(Chat, "agent", "staging"));
             Check(server.Requests.Count == before);

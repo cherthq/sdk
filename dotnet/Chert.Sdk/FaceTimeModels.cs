@@ -218,33 +218,39 @@ public sealed class ConnectorSecrets : FaceTimeModel
     public required string Recovery { get; init; }
 }
 public sealed class ConnectorEnrollment : FaceTimeModel { public required ConnectorSecrets Credentials { get; init; } }
-public sealed class BillingPlan : FaceTimeModel
+public sealed class BillingStatus : FaceTimeModel
 {
-    public required string Id { get; init; }
-    public required string Name { get; init; }
-    public required string Currency { get; init; }
-    public required int Amount { get; init; }
-    public required string Interval { get; init; }
-    public required bool Available { get; init; }
-    public string? Reason { get; init; }
-    public int? MinutesPerDay { get; init; }
+    [JsonRequired] public BillingEntitlement? Entitlement { get; init; }
+    public required bool NeedsReconciliation { get; init; }
+    public required bool SalesEnabled { get; init; }
+    public required bool SharedAvailable { get; init; }
+    public required bool DedicatedAvailable { get; init; }
 }
-public sealed class BillingCatalog : FaceTimeModel
+public sealed class BillingEntitlement : FaceTimeModel
 {
-    public required string Version { get; init; }
-    public required bool TestMode { get; init; }
-    public required bool Enabled { get; init; }
-    public required BillingPlan[] Plans { get; init; }
-}
-public sealed class Checkout : FaceTimeModel
-{
-    public required string Id { get; init; }
     public required string ProjectId { get; init; }
-    public required string PlanId { get; init; }
-    public required string State { get; init; }
-    public string? CreatedAt { get; init; }
-    public string? StripeSessionId { get; init; }
-    public string? CheckoutUrl { get; init; }
-    public string? ExpiresAt { get; init; }
-    public string? StripeSubscriptionId { get; init; }
+    public required string Plan { get; init; }
+    public required string Status { get; init; }
+    public required string FulfillmentStatus { get; init; }
+    public required string ValidFrom { get; init; }
+    public required string ValidUntil { get; init; }
+    public string? SubscriptionId { get; init; }
+    public string? ProviderCustomerId { get; init; }
+}
+public sealed class BillingCheckout : FaceTimeModel
+{
+    public required string Url { get; init; }
+}
+public sealed class BillingCancellation : FaceTimeModel
+{
+    public required string Status { get; init; }
+    public required string Message { get; init; }
+}
+public sealed class BillingCoupon : FaceTimeModel
+{
+    public required string Code { get; init; }
+    public required decimal PercentOff { get; init; }
+    public required string Mode { get; init; }
+    public required decimal MonthlyTotal { get; init; }
+    public required string Currency { get; init; }
 }
