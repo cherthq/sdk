@@ -36,3 +36,22 @@ with tempfile.TemporaryDirectory(prefix="trychert-consumer-") as temporary:
                     f"-DCMAKE_PREFIX_PATH={relocated}"], check=True)
     subprocess.run([cmake, "--build", str(root / "build"), "--parallel", "2"], check=True)
     subprocess.run([str(root / "build" / "trychert-example")], check=True)
+    session = root / "session"
+    session.mkdir()
+    (session / "CMakeLists.txt").write_text('''cmake_minimum_required(VERSION 3.20)
+project(session_consumer LANGUAGES CXX)
+find_package(trychert CONFIG REQUIRED)
+add_executable(session main.cpp)
+target_link_libraries(session PRIVATE trychert::trychert)
+''')
+    (session / "main.cpp").write_text('''#include <trychert/client.hpp>
+int main() {
+    try { static_cast<void>(trychert::Client::connect({})); }
+    catch (const std::invalid_argument&) { return 0; }
+    return 1;
+}
+''')
+    subprocess.run([cmake, "-S", str(session), "-B", str(root / "session-build"),
+                    f"-DCMAKE_PREFIX_PATH={relocated}"], check=True)
+    subprocess.run([cmake, "--build", str(root / "session-build")], check=True)
+    subprocess.run([str(root / "session-build" / "session")], check=True)

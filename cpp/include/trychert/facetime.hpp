@@ -84,6 +84,7 @@ struct UpdateLine {
 };
 
 class FaceTimeClient final : private detail::Transport {
+    friend class Client;
 public:
     explicit FaceTimeClient(FaceTimeOptions options);
     // Escape hatch for remaining customer control-plane routes. Unwraps the

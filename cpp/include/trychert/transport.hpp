@@ -1,14 +1,17 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
 #include <nlohmann/json.hpp>
 #include <optional>
+#include <stop_token>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
 namespace trychert {
 using Json = nlohmann::json;
+class Client;
 
 class ApiError final : public std::runtime_error {
 public:
@@ -39,8 +42,13 @@ public:
 protected:
     [[nodiscard]] Response request_with_response(const std::string& path,
         std::optional<Json> body, std::string method,
-        std::optional<std::string> idempotency_key = std::nullopt) const;
+        std::optional<std::string> idempotency_key = std::nullopt,
+        std::function<bool(const std::string&, const Json&)> stream = {},
+        std::stop_token stop = {}) const;
 private:
+    friend class ::trychert::Client;
+    bool discovery_ = false;
+    bool unified_ = false;
     std::string base_;
     std::string key_;
     std::optional<std::string> scope_;
