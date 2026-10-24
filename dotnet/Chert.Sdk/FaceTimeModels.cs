@@ -251,6 +251,6 @@ public sealed class BillingCoupon : FaceTimeModel
     public required string Code { get; init; }
     public required decimal PercentOff { get; init; }
     public required string Mode { get; init; }
-    public required decimal MonthlyTotal { get; init; }
+    public decimal? MonthlyTotal { get; init; }
     public required string Currency { get; init; }
 }

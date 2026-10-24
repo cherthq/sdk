@@ -176,11 +176,16 @@ signed-in user token; the server enforces membership and permissions.
 | `GetBillingStatusAsync()` | GET | `BillingStatus`: nullable entitlement, reconciliation/sales flags, shared/dedicated availability |
 | `CreateBillingCheckoutAsync(plan, idempotencyKey, couponCode?)` | POST `{action:"checkout",plan:"shared"\|"dedicated",coupon_code?}` | `BillingCheckout.Url` |
 | `CancelBillingAsync(idempotencyKey)` | POST `{action:"cancel"}` | `BillingCancellation.Status` and `Message` |
-| `ValidateBillingCouponAsync(couponCode, idempotencyKey)` | POST `{action:"validate_coupon",coupon_code}` | `BillingCoupon`: code, percent off, mode, monthly total and currency |
+| `ValidateBillingCouponAsync(couponCode, idempotencyKey)` | POST `{action:"validate_coupon",coupon_code}` | `BillingCoupon`: code, percent off, mode, nullable monthly total and currency |
 
 Every POST requires a stable 8–200 printable-ASCII-character idempotency key.
 Coupon codes are trimmed and must contain 1–64 characters; the server decides
 which codes and plans are available. Responses use the normal `data` envelope.
+Coupon offers may have different total/validity shapes. `MonthlyTotal` is null
+when absent or explicitly null; it must not be interpreted as a zero monthly price.
+Variant fields such as `due_now`, `access_hours` and `plans` are retained in
+`AdditionalData` as JSON. Inspect the returned fields rather than assuming a fixed
+offer, access duration or recurring price.
 The client returns checkout URLs without opening them. Cancellation acknowledges
 a request; refresh status to observe its eventual effect. A null entitlement is
 valid, but missing status fields or malformed envelopes are errors.

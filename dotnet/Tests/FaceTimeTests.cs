@@ -203,6 +203,16 @@ static partial class Program
             var coupon = await client.ValidateBillingCouponAsync(" SAVE ", "coupon-123");
             Check(coupon.Code == "SAVE" && coupon.PercentOff == 25 && coupon.MonthlyTotal == 18.75m && coupon.Mode == "test" && coupon.Currency == "usd");
             Wire(server, "POST", "/billing", body: "{\"action\":\"validate_coupon\",\"coupon_code\":\"SAVE\"}", key: "coupon-123");
+            foreach (var monthly in new[] { "", ",\"monthly_total\":null" })
+            {
+                ReplyWith("{\"code\":\"SHORT\",\"percent_off\":100,\"mode\":\"test\",\"currency\":\"usd\",\"due_now\":0,\"access_hours\":6,\"plans\":[\"shared\"]" + monthly + "}");
+                var limited = await client.ValidateBillingCouponAsync("SHORT", "coupon-456");
+                Check(Equals(limited.MonthlyTotal, null) && limited.Code == "SHORT"
+                    && limited.AdditionalData!["due_now"].GetDecimal() == 0
+                    && limited.AdditionalData["access_hours"].GetInt32() == 6
+                    && limited.AdditionalData["plans"][0].GetString() == "shared");
+                Wire(server, "POST", "/billing", body: "{\"action\":\"validate_coupon\",\"coupon_code\":\"SHORT\"}", key: "coupon-456");
+            }
         });
         await Run("FaceTime billing rejects malformed responses and preserves authorization errors", async () =>
         {
