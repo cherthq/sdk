@@ -101,8 +101,17 @@ static partial class Program
                 ReplyWith("{\"error\":{\"code\":\"" + code + "\",\"message\":\"internal host 10.0.0.5\"},\"request_id\":\"r\"}", status);
                 var before = server.Requests.Count;
                 var error = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, MediaDirection.Publish));
-                Check(error.Status == status && error.Code == code && server.Requests.Count == before + 1, code);
+                Check(error.Status == status && error.Code == code && error.ResponseData is null && server.Requests.Count == before + 1, code);
                 Check(!error.Message.Contains("10.0.0.5") && !error.ToString().Contains("10.0.0.5"), "server text " + code);
+            }
+        });
+        await Run("unknown media session error code becomes request_failed without data", async () =>
+        {
+            foreach (var body in new[] { "{\"error\":{\"code\":\"internal_detail\",\"message\":\"internal host 10.0.0.5\"},\"request_id\":\"r\"}", "not json" })
+            {
+                ReplyWith(body, 418);
+                var error = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, MediaDirection.Publish));
+                Check(error.Status == 418 && error.Code == "request_failed" && error.ResponseData is null, "unknown code " + body);
             }
         });
         await Run("media capabilities parse strictly and per section", () =>

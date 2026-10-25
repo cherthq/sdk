@@ -87,7 +87,14 @@ public sealed class FaceTimeClient : IDisposable
             response = await transport.RequestWithResponseAsync(path, JsonSerializer.SerializeToElement(body), HttpMethod.Post, null,
                 cancellationToken, projectRequest: true).ConfigureAwait(false);
         }
-        catch (ChertApiException error) when (error.Code == "invalid_json") { throw new ChertApiException(error.Status, "invalid_response", error.RequestId); }
+        catch (ChertApiException error)
+        {
+            // Raw response data is never returned. Server error responses keep their status and an
+            // allowlisted code; local and transport failures keep their code.
+            var server = error.Status >= 300 && (error.ResponseData is not null || error.Code == "http_error");
+            var code = error.Code == "invalid_json" ? "invalid_response" : server && !MediaSafeCodes.Contains(error.Code) ? "request_failed" : error.Code;
+            throw new ChertApiException(error.Status, code, error.RequestId);
+        }
         try
         {
             if (response.Status != 201 || response.Value is not { ValueKind: JsonValueKind.Object } envelope || !envelope.TryGetProperty("data", out var data))
@@ -171,6 +178,13 @@ public sealed class FaceTimeClient : IDisposable
         return value.Trim();
     }
 
+    private static readonly HashSet<string> MediaSafeCodes = new(StringComparer.Ordinal)
+    {
+        "unauthorized", "forbidden", "cli_scope_denied", "billing_owner_required", "billing_unavailable", "project_required",
+        "invalid_request", "cli_login_expired", "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited",
+        "cli_login_busy", "not_found", "conflict", "media_capability_unsupported", "media_session_conflict", "call_not_active",
+        "call_ended", "call_not_found", "media_session_expired", "media_transport_unavailable"
+    };
     private enum Auth { Public, User, Project }
     private async Task<T> Send<T>(string path, object? body = null, HttpMethod? method = null, string? key = null,
         CancellationToken cancellationToken = default, Auth auth = Auth.Project, int? expectedStatus = 200, bool allowNull = false)
