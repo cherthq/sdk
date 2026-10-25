@@ -1,8 +1,11 @@
 /**
  * Public page bridge for FaceTime living services (`chert.living.v1`).
  * The host posts `{protocol, type:'connect'}` with one MessagePort to the page's window using the page's exact
- * origin, and re-sends it with a fresh port until the page replies `hello`. Pages may post
- * `{protocol, type:'request'}` to ask for a connect. Every message below travels over the port.
+ * origin (never '*'), and re-offers with a fresh port until the page replies `hello` on any of them or the ready
+ * deadline passes. Hosts keep every offered port open until then, adopt the one that said hello and close the rest.
+ * Pages may post `{protocol, type:'request'}` to ask for a connect. Every message below travels over the port.
+ * Hosts should hold state, events and input until `ready`; the page also keeps the latest state sent during startup.
+ * Trust model: any script running in the page itself can win the handshake; the page's own code is trusted.
  * Nothing here describes how the host renders or transports the page.
  */
 export const PROTOCOL = 'chert.living.v1';
@@ -45,8 +48,9 @@ export const jsonBytes = (v: unknown): number => new TextEncoder().encode(JSON.s
 /** Throws TypeError unless `value` is plain JSON within `max` encoded bytes. */
 export function assertJson(value: unknown, max: number, label: string): asserts value is Json {
   const seen = new Set<object>();
+  let nodes = 0;   // bounds work for shared references, which structured clone preserves
   const walk = (v: unknown, depth: number): boolean => {
-    if (depth > 64) return false;
+    if (depth > 64 || ++nodes > max) return false;
     if (v === null || typeof v === 'string' || typeof v === 'boolean') return true;
     if (typeof v === 'number') return Number.isFinite(v);
     if (typeof v !== 'object' || seen.has(v)) return false;
@@ -57,7 +61,7 @@ export function assertJson(value: unknown, max: number, label: string): asserts 
     seen.delete(v);
     return ok;
   };
-  if (!walk(value, 0)) throw new TypeError(`${label} must be plain JSON.`);
+  if (!walk(value, 0)) throw new TypeError(nodes > max ? `${label} exceeds ${max} bytes.` : `${label} must be plain JSON.`);
   if (jsonBytes(value) > max) throw new TypeError(`${label} exceeds ${max} bytes.`);
 }
 

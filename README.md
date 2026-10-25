@@ -247,16 +247,16 @@ Voice keeps working on the existing call path, and your backend updates the page
 through the API. Everything the page renders is visible to the caller.
 
 **Server side** (`@trychert/sdk/facetime`):
-- `parseLivingCapabilities(call.living_capabilities)` checks the explicit, versioned
+- `parseLivingServices(call.living_services)` checks the explicit, versioned
   capability. A missing field, unknown version or `supported: false` means
   unavailable. It is never inferred from custom video.
-- `createLivingService({ name, entry_url, entry_digest?, viewport, fps, input? })` /
+- `createLivingService({ name, entry_url, entry_digest?, viewport, fps, input? }, idempotencyKey)` /
   `deployLivingService` create immutable revisions. `entry_url` must be HTTPS with
   no credentials or fragment, and must serve fixed content for each revision.
   Viewport sizes are even, up to 1920×1080; fps is 1–30. `input` is any of
   `pointer`, `keyboard` and `text`.
-- `attachLivingService(callId, { deployment_id, initial_state }, idempotencyKey)`
-  returns the effective viewport and fps. If you already hold a publish media
+- `attachLivingService(callId, { deployment_id, initial_state, viewport?, fps? }, idempotencyKey)`
+  returns the effective viewport and fps, which are min(requested, manifest, call limits). If you already hold a publish media
   session on that call, it fails with `living_surface_conflict`. While a surface is
   attached, `createMediaSession(publish)` fails with `media_session_conflict`.
 - `getLivingSession` returns lifecycle and health: `starting | ready | live |
@@ -276,7 +276,8 @@ handles the `chert.living.v1` bridge.
 - The connect message is accepted only from the page's own window and origin.
 - `ready` is sent after `onStart` resolves and must arrive within 15 s.
 - Heartbeats are sent every 5 s.
-- Stale state revisions are dropped.
+- Stale state revisions are dropped. State that arrives during `onStart` is
+  applied right after `ready`.
 - `page.send(name, json)` and `page.health('ok' | 'degraded', code)` report back.
 - The page never receives project credentials, media grants or service internals.
   Never put secrets in state, events or messages.
@@ -288,7 +289,7 @@ through the same bridge, without a call. Examples: a
 [developer backend](packages/living/examples/server.ts).
 
 Limitations: these routes are a draft contract and require a backend that reports
-`living_capabilities`. There is no audio from the page, and no uploaded bundles yet.
+`living_services`. There is no audio from the page, and no uploaded bundles yet.
 Input is relayed to the page, not injected as OS events. Not in any published
 package version.
 

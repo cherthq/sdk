@@ -4,7 +4,10 @@ import { connectLivingPage, type LivingPage } from '@trychert/sdk/living';
 
 type BoardState = { title: string; items: { name: string; done: boolean }[] };
 
-/** Connects once and exposes state plus a typed `send`. */
+/**
+ * Connects once and exposes state plus a typed `send`. Mount this at the app root: unmounting disposes the
+ * bridge, and the service then ends the session (StrictMode's dev double-mount is fine; it happens before connect).
+ */
 function useLivingService<S>(initial: S) {
   const [state, setState] = useState<S>(initial);
   const [live, setLive] = useState(false);

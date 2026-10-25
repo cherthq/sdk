@@ -33,7 +33,7 @@ export interface LivingPage {
   /** Sends a message to the developer's backend, delivered as a signed webhook (≤16 KiB JSON). Never send credentials. */
   send(message: string, data?: Json): void;
   health(status: HealthStatus, code?: string): void;
-  /** Detaches listeners and the port without notifying the host. */
+  /** Detaches listeners and the port without notifying the host; the host then times out the session. */
   dispose(): void;
 }
 
@@ -48,6 +48,8 @@ export function connectLivingPage<S extends Json = Json>(handlers: LivingPageHan
   let revision = -1;
   let heartbeat: ReturnType<typeof setInterval> | undefined;
   let input: InputKind[] = [];
+  // Latest state that arrived while onStart was running; applied right after ready.
+  let pending: { state: Json; revision: number } | null = null;
 
   const post = (m: PageMessage) => { try { port?.postMessage(m); } catch { /* port closed */ } };
   const call = <A extends unknown[]>(fn: ((...a: A) => unknown) | undefined, ...args: A) => {
@@ -68,6 +70,8 @@ export function connectLivingPage<S extends Json = Json>(handlers: LivingPageHan
       state = 'live';
       post({ type: 'ready' });
       heartbeat = setInterval(() => post({ type: 'heartbeat' }), heartbeatMs);
+      if (pending && pending.revision > revision) { revision = pending.revision; call(handlers.onState, pending.state as S, pending.revision); }
+      pending = null;
       return;
     }
     if (m.type === 'stop') {
@@ -79,6 +83,7 @@ export function connectLivingPage<S extends Json = Json>(handlers: LivingPageHan
       finish();
       return;
     }
+    if (state === 'starting' && m.type === 'state') { if (m.revision > revision && (!pending || m.revision > pending.revision)) pending = m; return; }
     if (state !== 'live') return;
     if (m.type === 'state') { if (m.revision <= revision) return; revision = m.revision; call(handlers.onState, m.state as S, m.revision); }
     else if (m.type === 'event') call(handlers.onEvent, m.event, m.data);
@@ -103,8 +108,8 @@ export function connectLivingPage<S extends Json = Json>(handlers: LivingPageHan
     post({ type: 'hello', sdk: SDK });
   };
   target.addEventListener('message', onWindow as EventListener);
-  // Pages may subscribe after the host's first connect (e.g. inside a React effect): announce readiness
-  // so the host re-sends `connect`. Hosts also retry until `hello`, so this is an optimisation.
+  // Pages may subscribe after the host's first connect (e.g. inside a React effect): ask for a connect.
+  // Hosts also re-offer until `hello`, so this only shortens startup.
   try { (trusted.source as { postMessage?: (m: unknown, o: string) => void }).postMessage?.({ protocol: PROTOCOL, type: 'request' }, trusted.origin); }
   catch { /* no reachable host window */ }
 

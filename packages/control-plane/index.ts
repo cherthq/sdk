@@ -1,8 +1,8 @@
 /** Thin client for the inspected Chert FaceTime control-plane routes. No retries or provisioning fiction. */
 import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
 export * from './video';
-export * from './living';
-import { validateEvent, validateInitialState, validateInput, validateManifest, validateState, type AttachLivingService, type LivingDeployment, type LivingInputEvent, type LivingJson, type LivingServiceManifest, type LivingSession } from './living';
+export { parseLivingServices, type LivingServicesCapability, type LivingInputKind, type LivingViewport, type LivingJson, type LivingServiceManifest, type LivingDeploymentStatus, type LivingDeployment, type AttachLivingService, type LivingSessionStatus, type LivingSession, type LivingInputEvent, type LivingServiceMessageWebhook } from './living';
+import { validateAttach, validateEvent, validateInput, validateLivingSession, validateManifest, validateState, type AttachLivingService, type LivingDeployment, type LivingInputEvent, type LivingJson, type LivingServiceManifest, type LivingSession } from './living';
 export type MediaSessionCodec = 'h264' | 'vp8';
 export type MediaDirection = 'publish' | 'subscribe';
 export interface CreateMediaSession { direction: MediaDirection; codecs?: MediaSessionCodec[] }
@@ -18,6 +18,7 @@ export interface MediaSessionGrant {
   limits: { max_width: number; max_height: number; max_fps: number; max_frame_bytes: number };
 }
 const invalidGrant = () => new ChertApiError(201, 'invalid_response');
+const checkSession = (session: LivingSession) => { try { return validateLivingSession(session); } catch { throw new ChertApiError(200, 'invalid_response'); } };
 const rfc3339 = (v: unknown): v is string => typeof v === 'string'
   && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/i.test(v) && !Number.isNaN(Date.parse(v));
 const iceServer = (s: unknown): boolean => {
@@ -52,8 +53,8 @@ export interface Page<T> {items:T[];total:number;limit:number;offset:number}
 export interface DeviceLoginStart {device_code:string;user_code:string;verification_url:string;verification_url_complete:string;expires_in:number;interval:number}
 export type LoginResult = {status:'pending'} | {status:'approved';access_token:string;email:string|null;project:{id:string;name:string|null};device_name:string;expires_in:number};
 export interface Identity {email:string|null;project:{id:string;name:string|null};role:string;device_name?:string;expires_at?:string}
-export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;/** Parse with parseMediaCapabilities; never infer from supports_video. */media_capabilities?:unknown;living_capabilities?:unknown;[key:string]:unknown}
-export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;/** Present only on line/call-scoped projections. */media_capabilities?:unknown;living_capabilities?:unknown;[key:string]:unknown}
+export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;/** Parse with parseMediaCapabilities; never infer from supports_video. */media_capabilities?:unknown;living_services?:unknown;[key:string]:unknown}
+export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;/** Present only on line/call-scoped projections. */media_capabilities?:unknown;living_services?:unknown;[key:string]:unknown}
 export interface Credential {id:string;device_name:string;token_prefix:string;user_id:string;email:string|null;created_at:string;last_used_at:string|null;expires_at:string}
 export interface ConnectorEnrollment {line_id:string;name:string;environment:'production'|'development';session_mode?:'byor'|'create-room'}
 export interface ConnectorReceipt {credentials:{connection:string;recovery:string};[key:string]:unknown}
@@ -127,17 +128,16 @@ export class ChertControlPlane {
     return validateGrant(grant,input.direction,input.codecs);
   }
   /** Registers a living service and its first immutable deployment revision. Draft backend contract. */
-  createLivingService(manifest:LivingServiceManifest){return this.request<LivingDeployment>('living-services','POST',validateManifest(manifest));}
-  /** Deploys a new immutable revision of an existing living service. */
-  deployLivingService(serviceId:string,manifest:LivingServiceManifest){return this.request<LivingDeployment>(`living-services/${this.resourceId(serviceId)}/deployments`,'POST',validateManifest(manifest));}
+  createLivingService(manifest:LivingServiceManifest,idempotencyKey:string){return this.request<LivingDeployment>('living-services','POST',validateManifest(manifest),'project',this.idempotency(idempotencyKey));}
+  /** Deploys a new immutable revision of an existing living service. Reuse the key when retrying. */
+  deployLivingService(serviceId:string,manifest:LivingServiceManifest,idempotencyKey:string){return this.request<LivingDeployment>(`living-services/${this.resourceId(serviceId)}/deployments`,'POST',validateManifest(manifest),'project',this.idempotency(idempotencyKey));}
   getLivingDeployment(serviceId:string,deploymentId:string){return this.request<LivingDeployment>(`living-services/${this.resourceId(serviceId)}/deployments/${this.resourceId(deploymentId)}`);}
   /** Renders a ready deployment as the call's video. Voice continues on the existing call path. */
   attachLivingService(callId:string,input:AttachLivingService,idempotencyKey:string){
-    if(!input||typeof input.deployment_id!=='string'||!input.deployment_id)throw new TypeError('deployment_id is required.');
-    if(input.initial_state!==undefined)validateInitialState(input.initial_state);
-    return this.request<LivingSession>(`calls/${this.resourceId(callId)}/living-sessions`,'POST',{deployment_id:input.deployment_id,...(input.initial_state!==undefined?{initial_state:input.initial_state}:{})},'project',this.idempotency(idempotencyKey));
+    const body=validateAttach(input);
+    return this.request<LivingSession>(`calls/${this.resourceId(callId)}/living-sessions`,'POST',body,'project',this.idempotency(idempotencyKey)).then(checkSession);
   }
-  getLivingSession(callId:string,sessionId:string){return this.request<LivingSession>(this.livingPath(callId,sessionId));}
+  getLivingSession(callId:string,sessionId:string){return this.request<LivingSession>(this.livingPath(callId,sessionId)).then(checkSession);}
   /** Replaces page state. Revisions must strictly increase; a stale revision rejects with living_state_conflict. */
   setLivingState(callId:string,sessionId:string,revision:number,state:LivingJson){validateState(revision,state);return this.request<{revision:number}>(`${this.livingPath(callId,sessionId)}/state`,'PUT',{revision,state});}
   sendLivingEvent(callId:string,sessionId:string,type:string,data:LivingJson=null){validateEvent(type,data);return this.request<{accepted:true}>(`${this.livingPath(callId,sessionId)}/events`,'POST',{type,data});}

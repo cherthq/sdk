@@ -20,13 +20,15 @@
     <button id="confirm" hidden>Confirm</button>
   </main>
   <script type="module">
-    // Self-hosted copy of the SDK's page runtime, e.g. bundled from '@trychert/sdk/living'.
+    // Serve the page runtime next to this file, e.g. copy node_modules/@trychert/sdk/dist/living/index.js to ./living.js
+    // (it has no imports), or bundle it with your toolchain.
     import { connectLivingPage } from './living.js';
     const $ = id => document.getElementById(id);
+    let confirmed = false;   // repeated taps must not send repeated confirmations
     const render = state => {
       $('title').textContent = state?.title ?? 'Your order';
       $('step').textContent = state?.step ?? '';
-      $('confirm').hidden = !state?.needsConfirmation;
+      $('confirm').hidden = confirmed || !state?.needsConfirmation;
     };
     const page = connectLivingPage({
       onStart: ({ state }) => render(state),
@@ -36,7 +38,7 @@
       onInput: input => {
         if (input.kind !== 'pointer' || input.action !== 'down') return;
         const target = document.elementFromPoint(input.x * innerWidth, input.y * innerHeight);
-        if (target?.id === 'confirm') page.send('order.confirmed', { at: Date.now() });
+        if (target?.id === 'confirm' && !confirmed) { confirmed = true; $('confirm').hidden = true; page.send('order.confirmed', { at: Date.now() }); }
       },
     });
   </script>

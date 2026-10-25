@@ -158,10 +158,10 @@ declare const rtcModule: LiveKitRtcModule; declare const lkSource: LiveKitVideoS
 const lk: MediaTransport = liveKitVideoTransport(rtcModule, lkSource);
 void customVideo; void lk;
 import {connectLivingPage, startLivingPreview, type LivingPage} from '@trychert/sdk/living';
-import {parseLivingCapabilities, type LivingSession} from '@trychert/sdk/facetime';
+import {parseLivingServices, type LivingSession} from '@trychert/sdk/facetime';
 async function living(client: ChertControlPlane, frame: Window) {
-  if (!parseLivingCapabilities((await client.getCall('call')).living_capabilities).living_services) return;
-  const deployment = await client.createLivingService({name:'Board',entry_url:'https://app.example/v1/',viewport:{width:1280,height:720},fps:30,input:['pointer']});
+  if (!parseLivingServices((await client.getCall('call')).living_services)) return;
+  const deployment = await client.createLivingService({name:'Board',entry_url:'https://app.example/v1/',viewport:{width:1280,height:720},fps:30,input:['pointer']},'create-key-1');
   const session: LivingSession = await client.attachLivingService('call',{deployment_id:deployment.deployment_id,initial_state:{step:1}},'attach-key-1');
   await client.setLivingState('call',session.session_id,1,{step:2});
   const page: LivingPage = connectLivingPage<{step:number}>({onState: s => { const n: number = s.step; void n; }});

@@ -62,8 +62,8 @@ export interface Call {
   has_transcript?: boolean;
   /** Explicit custom-media capability; parse with parseMediaCapabilities. */
   media_capabilities?: unknown;
-  /** Draft: explicit living-services capability; parse with parseLivingCapabilities. */
-  living_capabilities?: unknown;
+  /** Draft: explicit versioned living-services capability; parse with parseLivingServices. */
+  living_services?: unknown;
   [key: string]: unknown;
 }
 export interface CallDetail extends Call { facetime_call_events: CallDetailEvent[] }

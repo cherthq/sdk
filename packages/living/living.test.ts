@@ -115,3 +115,46 @@ test('preview re-offers connect until a late-subscribing page (e.g. a React effe
   expect(started).toEqual([{ late: true }]);
   const stopped = new Promise<void>(r => preview.on('stopped', r)); preview.stop(); await stopped;
 });
+
+test('a busy page that adopts an older connect offer still starts (offered ports stay open until hello)', async () => {
+  // A window whose messages queue until the page is "free", then deliver in FIFO order.
+  const target = new EventTarget(); const queue: MessageEvent[] = [];
+  const win: FakeWindow = { addEventListener: target.addEventListener.bind(target), removeEventListener: target.removeEventListener.bind(target),
+    postMessage(data, _o, ports = []) { const e = new MessageEvent('message', { data, ports, origin: ORIGIN }); Object.defineProperty(e, 'source', { value: win }); queue.push(e); } };
+  const preview = startLivingPreview(win, { origin: ORIGIN, viewport: { width: 640, height: 360 }, fps: 15, readyTimeoutMs: 2000 });
+  const page = connectLivingPage({}, { target: win, trusted: trustedFor(win) });
+  await tick(600);                                   // page busy: several offers queue up
+  for (const e of queue.splice(0)) target.dispatchEvent(e);
+  await new Promise<void>((resolve, reject) => { preview.on('ready', resolve); preview.on('failed', c => reject(new Error(c))); });
+  expect(page.state).toBe('live');
+  const stopped = new Promise<void>(r => preview.on('stopped', r)); preview.stop(); await stopped;
+});
+
+test('state that arrives while onStart is running is applied right after ready', async () => {
+  const win = fakeWindow();
+  const states: unknown[] = [];
+  let release!: () => void;
+  connectLivingPage<{ n: number }>({ onStart: () => new Promise<void>(r => { release = r; }), onState: (s, rev) => states.push([s.n, rev]) },
+    { target: win, trusted: trustedFor(win) });
+  const channel = new MessageChannel();
+  const got: string[] = []; channel.port1.onmessage = e => got.push((e.data as { type: string }).type);
+  win.postMessage({ protocol: PROTOCOL, type: 'connect' }, ORIGIN, [channel.port2]);
+  await tick(5);
+  channel.port1.postMessage({ type: 'start', session_id: 's', viewport: { width: 640, height: 360 }, fps: 15, input: [], state: { n: 0 }, revision: 0 });
+  await tick(5);
+  for (const revision of [1, 3, 2]) channel.port1.postMessage({ type: 'state', revision, state: { n: revision } });
+  await tick(5);
+  expect(states).toEqual([]);
+  release(); await tick(5);
+  expect([states, got.includes('ready')]).toEqual([[[3, 3]], true]);
+  channel.port1.close();
+});
+
+test('JSON validation is bounded for shared references', async () => {
+  const { assertJson } = await import('./index');
+  let node: unknown = 1;
+  for (let i = 0; i < 40; i++) node = [node, node];     // 2^40 logical nodes, 40 objects
+  const started = performance.now();
+  expect(() => assertJson(node, 16 * 1024, 'Data')).toThrow('exceeds');
+  expect(performance.now() - started).toBeLessThan(200);
+});

@@ -3,8 +3,11 @@ export type LivingInputKind = 'pointer' | 'keyboard' | 'text';
 export interface LivingViewport { width: number; height: number }
 export type LivingJson = null | boolean | number | string | LivingJson[] | { [key: string]: LivingJson };
 
-/** Explicit, versioned capability (`living_capabilities`). Never inferred from custom video or generic video flags. `supported: false` parses as null. */
-export interface LivingCapabilities { version: 1; living_services: { supported: true; max_width: number; max_height: number; max_fps: number; input: LivingInputKind[] } | null }
+/**
+ * Explicit, versioned `living_services` capability on line, call and scoped worker. Never inferred from
+ * custom video or generic video flags. Supported only when the service reports it, including a usable publish path.
+ */
+export interface LivingServicesCapability { version: 1; supported: true; max_width: number; max_height: number; max_fps: number; input: LivingInputKind[] }
 
 export interface LivingServiceManifest {
   name: string;
@@ -23,7 +26,11 @@ export interface LivingDeployment {
   service_id: string; deployment_id: string; revision: number; status: LivingDeploymentStatus;
   error_code: string | null; [key: string]: unknown;
 }
-export interface AttachLivingService { deployment_id: string; initial_state?: LivingJson }
+export interface AttachLivingService {
+  deployment_id: string; initial_state?: LivingJson;
+  /** Optional request; the effective value is min(requested, manifest, call limits). */
+  viewport?: LivingViewport; fps?: number;
+}
 export type LivingSessionStatus = 'starting' | 'ready' | 'live' | 'stopping' | 'stopped' | 'failed';
 export interface LivingSession {
   session_id: string; call_id: string; deployment_id: string; status: LivingSessionStatus;
@@ -37,23 +44,24 @@ export type LivingInputEvent =
   | { kind: 'text'; text: string };
 
 const record = (v: unknown): Record<string, unknown> | null => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : null;
-const positive = (v: unknown, max: number): v is number => Number.isInteger(v) && (v as number) > 0 && (v as number) <= max;
 
-/** Parses `living_capabilities`. Absent, malformed or unknown-version input is unsupported. */
-export function parseLivingCapabilities(input: unknown): LivingCapabilities {
-  const raw = record(input), section = record(raw?.living_services);
-  if (raw?.version !== 1 || !section || section.supported !== true) return { version: 1, living_services: null };
-  const kinds = section.input;
-  if (!positive(section.max_width, 1920) || !positive(section.max_height, 1080) || !positive(section.max_fps, 30)
-    || !Array.isArray(kinds) || !kinds.every(k => k === 'pointer' || k === 'keyboard' || k === 'text')) return { version: 1, living_services: null };
-  return { version: 1, living_services: { supported: true, max_width: section.max_width, max_height: section.max_height, max_fps: section.max_fps,
-    input: [...new Set(kinds as LivingInputKind[])] } };
+/** Parses the `living_services` field. Absent, malformed, unknown-version or `supported: false` input returns null. */
+export function parseLivingServices(input: unknown): LivingServicesCapability | null {
+  const raw = record(input);
+  if (!raw || raw.version !== 1 || raw.supported !== true) return null;
+  const kinds = raw.input;
+  const int = (v: unknown): v is number => Number.isInteger(v) && (v as number) > 0;
+  if (!int(raw.max_width) || !int(raw.max_height) || !int(raw.max_fps) || !Array.isArray(kinds)) return null;
+  // Unknown input kinds are ignored and larger limits clamp to SDK v1 bounds, so newer services stay usable.
+  return { version: 1, supported: true, max_width: Math.min(raw.max_width, 1920), max_height: Math.min(raw.max_height, 1080), max_fps: Math.min(raw.max_fps, 30),
+    input: [...new Set(kinds.filter((k): k is LivingInputKind => k === 'pointer' || k === 'keyboard' || k === 'text'))] };
 }
 
 const NAME = /^[a-z][a-z0-9_.-]{0,63}$/;
 const bytes = (v: unknown) => new TextEncoder().encode(JSON.stringify(v)).byteLength;
 function plainJson(v: unknown, max: number, label: string): void {
-  const walk = (x: unknown, d: number): boolean => d <= 64 && (x === null || typeof x === 'string' || typeof x === 'boolean'
+  let nodes = 0;   // bounds work for shared references
+  const walk = (x: unknown, d: number): boolean => d <= 64 && ++nodes <= max && (x === null || typeof x === 'string' || typeof x === 'boolean'
     || (typeof x === 'number' && Number.isFinite(x))
     || (Array.isArray(x) ? x.every(y => walk(y, d + 1))
       : !!x && typeof x === 'object' && [Object.prototype, null].includes(Object.getPrototypeOf(x)) && Object.values(x).every(y => walk(y, d + 1))));
@@ -64,6 +72,7 @@ function plainJson(v: unknown, max: number, label: string): void {
 const evenDim = (v: unknown, max: number) => Number.isInteger(v) && (v as number) >= 16 && (v as number) <= max && (v as number) % 2 === 0;
 const inputs = (v: unknown) => Array.isArray(v) && v.every(k => k === 'pointer' || k === 'keyboard' || k === 'text') && new Set(v).size === v.length;
 
+/** @internal */
 export function validateManifest(m: LivingServiceManifest): LivingServiceManifest {
   if (!m || typeof m.name !== 'string' || !m.name.trim() || m.name.length > 120) throw new TypeError('A service name of 1-120 characters is required.');
   let url: URL;
@@ -77,14 +86,17 @@ export function validateManifest(m: LivingServiceManifest): LivingServiceManifes
   return { name: m.name, entry_url: url.href, viewport: { width: m.viewport.width, height: m.viewport.height }, fps: m.fps,
     ...(m.entry_digest ? { entry_digest: m.entry_digest } : {}), ...(m.input ? { input: [...m.input] } : {}), ...(m.state_schema_version !== undefined ? { state_schema_version: m.state_schema_version } : {}) };
 }
+/** @internal */
 export function validateState(revision: number, state: unknown): void {
   if (!Number.isSafeInteger(revision) || revision < 0) throw new TypeError('revision must be a non-negative integer.');
   plainJson(state, 64 * 1024, 'State');
 }
+/** @internal */
 export function validateEvent(type: string, data: unknown): void {
   if (!NAME.test(type)) throw new TypeError('Event names are 1-64 chars: lowercase letter, then [a-z0-9_.-].');
   plainJson(data, 16 * 1024, 'Event data');
 }
+/** @internal */
 export function validateInput(i: LivingInputEvent): LivingInputEvent {
   const unit = (n: unknown) => typeof n === 'number' && n >= 0 && n <= 1;
   if (i?.kind === 'pointer' && ['down', 'move', 'up'].includes(i.action) && unit(i.x) && unit(i.y)) return { kind: 'pointer', action: i.action, x: i.x, y: i.y };
@@ -92,6 +104,7 @@ export function validateInput(i: LivingInputEvent): LivingInputEvent {
   if (i?.kind === 'text' && typeof i.text === 'string' && i.text.length <= 1024) return { kind: 'text', text: i.text };
   throw new TypeError('Invalid input event.');
 }
+/** @internal */
 export function validateInitialState(state: unknown): void { plainJson(state, 64 * 1024, 'initial_state'); }
 
 /**
@@ -102,4 +115,23 @@ export function validateInitialState(state: unknown): void { plainJson(state, 64
 export interface LivingServiceMessageWebhook {
   event_id: string; type: 'living_service.message'; created_at: string;
   data: { call_id: string; session_id: string; deployment_id: string; message: string; data: LivingJson; occurred_at: string };
+}
+
+/** @internal Checks the effective viewport/fps returned by attach and status. */
+export function validateLivingSession(session: LivingSession): LivingSession {
+  const s = session as unknown as Record<string, unknown>, v = s?.viewport as Record<string, unknown> | undefined;
+  const statuses = ['starting', 'ready', 'live', 'stopping', 'stopped', 'failed'];
+  if (!s || typeof s.session_id !== 'string' || !s.session_id || !statuses.includes(s.status as string)
+    || !v || !evenDim(v.width, 1920) || !evenDim(v.height, 1080) || !Number.isInteger(s.fps) || (s.fps as number) < 1 || (s.fps as number) > 30)
+    throw new TypeError('invalid_response');
+  return session;
+}
+/** @internal */
+export function validateAttach(input: AttachLivingService): Record<string, unknown> {
+  if (!input || typeof input.deployment_id !== 'string' || !input.deployment_id) throw new TypeError('deployment_id is required.');
+  if (input.initial_state !== undefined) validateInitialState(input.initial_state);
+  if (input.viewport !== undefined && !(evenDim(input.viewport?.width, 1920) && evenDim(input.viewport?.height, 1080))) throw new TypeError('viewport must be even, 16..1920 x 16..1080.');
+  if (input.fps !== undefined && !(Number.isInteger(input.fps) && input.fps >= 1 && input.fps <= 30)) throw new TypeError('fps must be 1..30.');
+  return { deployment_id: input.deployment_id, ...(input.initial_state !== undefined ? { initial_state: input.initial_state } : {}),
+    ...(input.viewport ? { viewport: { width: input.viewport.width, height: input.viewport.height } } : {}), ...(input.fps !== undefined ? { fps: input.fps } : {}) };
 }
