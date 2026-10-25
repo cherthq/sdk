@@ -1,6 +1,8 @@
 /** Thin client for the inspected Chert FaceTime control-plane routes. No retries or provisioning fiction. */
 import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
 export * from './video';
+export * from './living';
+import { validateEvent, validateInitialState, validateInput, validateManifest, validateState, type AttachLivingService, type LivingDeployment, type LivingInputEvent, type LivingJson, type LivingServiceManifest, type LivingSession } from './living';
 export type MediaSessionCodec = 'h264' | 'vp8';
 export type MediaDirection = 'publish' | 'subscribe';
 export interface CreateMediaSession { direction: MediaDirection; codecs?: MediaSessionCodec[] }
@@ -50,8 +52,8 @@ export interface Page<T> {items:T[];total:number;limit:number;offset:number}
 export interface DeviceLoginStart {device_code:string;user_code:string;verification_url:string;verification_url_complete:string;expires_in:number;interval:number}
 export type LoginResult = {status:'pending'} | {status:'approved';access_token:string;email:string|null;project:{id:string;name:string|null};device_name:string;expires_in:number};
 export interface Identity {email:string|null;project:{id:string;name:string|null};role:string;device_name?:string;expires_at?:string}
-export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;/** Parse with parseMediaCapabilities; never infer from supports_video. */media_capabilities?:unknown;[key:string]:unknown}
-export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;/** Present only on line/call-scoped projections. */media_capabilities?:unknown;[key:string]:unknown}
+export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;/** Parse with parseMediaCapabilities; never infer from supports_video. */media_capabilities?:unknown;living_capabilities?:unknown;[key:string]:unknown}
+export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;/** Present only on line/call-scoped projections. */media_capabilities?:unknown;living_capabilities?:unknown;[key:string]:unknown}
 export interface Credential {id:string;device_name:string;token_prefix:string;user_id:string;email:string|null;created_at:string;last_used_at:string|null;expires_at:string}
 export interface ConnectorEnrollment {line_id:string;name:string;environment:'production'|'development';session_mode?:'byor'|'create-room'}
 export interface ConnectorReceipt {credentials:{connection:string;recovery:string};[key:string]:unknown}
@@ -64,7 +66,7 @@ export interface BillingCancellation {status:'cancellation_requested';message:st
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
-const safeCodes = new Set(['media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
+const safeCodes = new Set(['living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -124,6 +126,25 @@ export class ChertControlPlane {
     const grant=await this.request<MediaSessionGrant>(`calls/${this.resourceId(callId)}/media-sessions`,'POST',{direction:input.direction,...(input.codecs?{codecs:input.codecs}:{})});
     return validateGrant(grant,input.direction,input.codecs);
   }
+  /** Registers a living service and its first immutable deployment revision. Draft backend contract. */
+  createLivingService(manifest:LivingServiceManifest){return this.request<LivingDeployment>('living-services','POST',validateManifest(manifest));}
+  /** Deploys a new immutable revision of an existing living service. */
+  deployLivingService(serviceId:string,manifest:LivingServiceManifest){return this.request<LivingDeployment>(`living-services/${this.resourceId(serviceId)}/deployments`,'POST',validateManifest(manifest));}
+  getLivingDeployment(serviceId:string,deploymentId:string){return this.request<LivingDeployment>(`living-services/${this.resourceId(serviceId)}/deployments/${this.resourceId(deploymentId)}`);}
+  /** Renders a ready deployment as the call's video. Voice continues on the existing call path. */
+  attachLivingService(callId:string,input:AttachLivingService,idempotencyKey:string){
+    if(!input||typeof input.deployment_id!=='string'||!input.deployment_id)throw new TypeError('deployment_id is required.');
+    if(input.initial_state!==undefined)validateInitialState(input.initial_state);
+    return this.request<LivingSession>(`calls/${this.resourceId(callId)}/living-sessions`,'POST',{deployment_id:input.deployment_id,...(input.initial_state!==undefined?{initial_state:input.initial_state}:{})},'project',this.idempotency(idempotencyKey));
+  }
+  getLivingSession(callId:string,sessionId:string){return this.request<LivingSession>(this.livingPath(callId,sessionId));}
+  /** Replaces page state. Revisions must strictly increase; a stale revision rejects with living_state_conflict. */
+  setLivingState(callId:string,sessionId:string,revision:number,state:LivingJson){validateState(revision,state);return this.request<{revision:number}>(`${this.livingPath(callId,sessionId)}/state`,'PUT',{revision,state});}
+  sendLivingEvent(callId:string,sessionId:string,type:string,data:LivingJson=null){validateEvent(type,data);return this.request<{accepted:true}>(`${this.livingPath(callId,sessionId)}/events`,'POST',{type,data});}
+  /** Optional input relay; only kinds declared in the manifest are accepted. Pointer coordinates are normalized 0..1. */
+  sendLivingInput(callId:string,sessionId:string,input:LivingInputEvent){return this.request<{accepted:true}>(`${this.livingPath(callId,sessionId)}/input`,'POST',validateInput(input));}
+  detachLivingService(callId:string,sessionId:string){return this.request<LivingSession>(this.livingPath(callId,sessionId),'DELETE');}
+  private livingPath(callId:string,sessionId:string){return `calls/${this.resourceId(callId)}/living-sessions/${this.resourceId(sessionId)}`;}
   getCallEvents(id:string){return this.request<{call_id:string;events:CallEvent[]}>(`calls/${this.resourceId(id)}/events`);}
   /** Acceptance is not connection/media success. Reconcile uncertain outcomes; never retry automatically. */
   createCall(input:CreateCall,idempotencyKey:string){return this.request<CallDetail>('calls','POST',input,'project',this.idempotency(idempotencyKey));}

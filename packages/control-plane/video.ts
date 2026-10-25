@@ -43,7 +43,9 @@ export type CallStatus = 'queued' | 'incoming' | 'allocating' | 'agent_preparing
 /** Public normalized event types. Raw LiveKit track callbacks are not HTTP call events. */
 export type CallEventType = 'incoming_registered' | 'allocated' | 'answer_requested' | 'reject_requested' | 'end_requested'
   | 'agent_preparing' | 'answered' | 'dialing' | 'connecting' | 'active' | 'ending' | 'bridge_ready' | 'agent_connected'
-  | 'remote_video_ready' | 'remote_video_unavailable' | 'caller_video_published' | 'ended' | 'failed' | 'rejected' | 'cleanup_complete' | 'unknown';
+  | 'remote_video_ready' | 'remote_video_unavailable' | 'caller_video_published' | 'ended' | 'failed' | 'rejected' | 'cleanup_complete'
+  /** Draft living-services lifecycle events. Payload-free; page messages arrive by signed webhook. */
+  | 'living_service.ready' | 'living_service.failed' | 'living_service.stopped' | 'unknown';
 export interface CallEvent { id: string; type: CallEventType; at: string; sequence: number | null; source: string }
 export interface CallDetailEvent {
   id: string; event_type: CallEventType; sequence: number; source: string; created_at: string;
@@ -60,6 +62,8 @@ export interface Call {
   has_transcript?: boolean;
   /** Explicit custom-media capability; parse with parseMediaCapabilities. */
   media_capabilities?: unknown;
+  /** Draft: explicit living-services capability; parse with parseLivingCapabilities. */
+  living_capabilities?: unknown;
   [key: string]: unknown;
 }
 export interface CallDetail extends Call { facetime_call_events: CallDetailEvent[] }

@@ -120,3 +120,45 @@ test('media sessions: strict request, validated grant and stable error codes wit
     expect([error.status, error.code, error.message.includes('10.0.0.5')]).toEqual([status, code, false]);
   }
 });
+
+test('living services: validated manifests, idempotent attach, revisioned state, events, gated input and capability parsing', async () => {
+  const { parseLivingCapabilities } = await import('./index');
+  const seen: { method: string; path: string; body: unknown; key: string | null }[] = [];
+  const client = new ChertControlPlane({ token: 'project-key', projectId: 'project', fetch: (async (url, init) => {
+    seen.push({ method: init!.method!, path: new URL(String(url)).pathname, body: init?.body ? JSON.parse(String(init.body)) : undefined,
+      key: new Headers(init?.headers).get('idempotency-key') });
+    return Response.json({ data: { ok: true } }, { status: 200 });
+  }) as typeof fetch });
+  const manifest = { name: 'Order board', entry_url: 'https://app.example/board', viewport: { width: 1280, height: 720 }, fps: 30, input: ['pointer' as const] };
+  await client.createLivingService(manifest);
+  await client.deployLivingService('svc', { ...manifest, state_schema_version: 2 });
+  await client.getLivingDeployment('svc', 'dep');
+  await client.attachLivingService('call', { deployment_id: 'dep', initial_state: { step: 1 } }, 'attach-key-1');
+  await client.getLivingSession('call', 'ls');
+  await client.setLivingState('call', 'ls', 2, { step: 2 });
+  await client.sendLivingEvent('call', 'ls', 'order.updated', { id: 7 });
+  await client.sendLivingInput('call', 'ls', { kind: 'pointer', action: 'down', x: 0.5, y: 0.5 });
+  await client.detachLivingService('call', 'ls');
+  expect(seen.map(s => `${s.method} ${s.path}`)).toEqual(['POST /api/v1/living-services', 'POST /api/v1/living-services/svc/deployments',
+    'GET /api/v1/living-services/svc/deployments/dep', 'POST /api/v1/calls/call/living-sessions', 'GET /api/v1/calls/call/living-sessions/ls',
+    'PUT /api/v1/calls/call/living-sessions/ls/state', 'POST /api/v1/calls/call/living-sessions/ls/events', 'POST /api/v1/calls/call/living-sessions/ls/input',
+    'DELETE /api/v1/calls/call/living-sessions/ls']);
+  expect(seen[0]!.body).toEqual(manifest);
+  expect([seen[3]!.body, seen[3]!.key]).toEqual([{ deployment_id: 'dep', initial_state: { step: 1 } }, 'attach-key-1']);
+  expect(seen[5]!.body).toEqual({ revision: 2, state: { step: 2 } });
+  const calls = seen.length;
+  for (const bad of [{ ...manifest, entry_url: 'http://app.example' }, { ...manifest, entry_url: 'https://u:p@app.example' }, { ...manifest, entry_url: 'https://app.example/#x' },
+    { ...manifest, viewport: { width: 1281, height: 720 } }, { ...manifest, fps: 60 }, { ...manifest, input: ['pointer', 'pointer'] as never }, { ...manifest, name: '' }])
+    expect(() => client.createLivingService(bad)).toThrow(TypeError);
+  expect(() => client.setLivingState('call', 'ls', -1, null)).toThrow(TypeError);
+  expect(() => client.setLivingState('call', 'ls', 1, { big: 'x'.repeat(64 * 1024) })).toThrow('exceeds');
+  expect(() => client.sendLivingEvent('call', 'ls', 'Not Valid')).toThrow(TypeError);
+  expect(() => client.sendLivingInput('call', 'ls', { kind: 'pointer', action: 'down', x: 2, y: 0 })).toThrow(TypeError);
+  expect(() => client.attachLivingService('call', { deployment_id: 'dep' }, 'short')).toThrow();
+  expect(seen.length).toBe(calls);   // local validation never sends a request
+  expect(parseLivingCapabilities({ version: 1, living_services: { supported: true, max_width: 1280, max_height: 720, max_fps: 30, input: ['pointer', 'pointer'] } }))
+    .toEqual({ version: 1, living_services: { supported: true, max_width: 1280, max_height: 720, max_fps: 30, input: ['pointer'] } });
+  for (const bad of [undefined, { version: 2, living_services: { supported: true } }, { version: 1, living_services: { supported: true, max_width: 3840, max_height: 720, max_fps: 30, input: [] } },
+    { version: 1, custom_video: { supported: true } }])
+    expect(parseLivingCapabilities(bad).living_services).toBeNull();
+});
