@@ -18,6 +18,7 @@
     "./facetime": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
     "./media": { "types": "./dist/media/index.d.ts", "import": "./dist/media/index.js" },
     "./media/livekit": { "types": "./dist/media/livekit.d.ts", "import": "./dist/media/livekit.js" },
+    "./living": { "types": "./dist/living/index.d.ts", "import": "./dist/living/index.js" },
     "./adopt": { "types": "./dist/adopt/main.d.ts", "import": "./dist/adopt/main.js" },
     "./linq-adapter": { "types": "./dist/linq-adapter/index.d.ts", "import": "./dist/linq-adapter/index.js" },
     "./sendblue-adapter": { "types": "./dist/sendblue-adapter/index.d.ts", "import": "./dist/sendblue-adapter/index.js" },
@@ -57,7 +58,8 @@
     "@cherthq/bluereacher-adapter": "workspace:*",
     "@cherthq/jared-adapter": "workspace:*",
     "@cherthq/control-plane": "workspace:*",
-    "@cherthq/media": "workspace:*"
+    "@cherthq/media": "workspace:*",
+    "@cherthq/living": "workspace:*"
   },
   "dependencies": {
     "@blooio/sdk": "0.0.2",
