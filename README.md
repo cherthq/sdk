@@ -240,6 +240,58 @@ guaranteed to arrive, and the SDK does not promise any bitrate. Caller video is
 capped at 1280×720 and 30 fps. These APIs require a backend that reports these
 capabilities, and they are not in any published package version yet.
 
+### Living services (draft, unreleased)
+
+A living service is a web page you host, which Chert renders as the call's video.
+Voice keeps working on the existing call path, and your backend updates the page
+through the API. Everything the page renders is visible to the caller.
+
+**Server side** (`@trychert/sdk/facetime`):
+- `parseLivingCapabilities(call.living_capabilities)` checks the explicit, versioned
+  capability. A missing field, unknown version or `supported: false` means
+  unavailable. It is never inferred from custom video.
+- `createLivingService({ name, entry_url, entry_digest?, viewport, fps, input? })` /
+  `deployLivingService` create immutable revisions. `entry_url` must be HTTPS with
+  no credentials or fragment, and must serve fixed content for each revision.
+  Viewport sizes are even, up to 1920×1080; fps is 1–30. `input` is any of
+  `pointer`, `keyboard` and `text`.
+- `attachLivingService(callId, { deployment_id, initial_state }, idempotencyKey)`
+  returns the effective viewport and fps. If you already hold a publish media
+  session on that call, it fails with `living_surface_conflict`. While a surface is
+  attached, `createMediaSession(publish)` fails with `media_session_conflict`.
+- `getLivingSession` returns lifecycle and health: `starting | ready | live |
+  stopping | stopped | failed`, plus a sanitized `error_code`.
+- `setLivingState` takes revisions that must strictly increase (stale:
+  `living_state_conflict`; 64 KiB JSON). `sendLivingEvent` takes a named event with
+  up to 16 KiB of JSON. `sendLivingInput` relays only declared input kinds, with
+  pointer x/y normalized to 0..1. `detachLivingService` removes the page.
+- Messages the page sends arrive as a signed, durable `living_service.message`
+  webhook (`LivingServiceMessageWebhook`). Verify the signature over the raw bytes
+  and de-duplicate on `event_id`. The call timeline only records payload-free
+  lifecycle events (`living_service.ready|failed|stopped`).
+
+**Page side** (`@trychert/sdk/living`, no dependencies, no framework required):
+`connectLivingPage({ onStart, onState, onEvent, onCallEvent, onInput, onStop })`
+handles the `chert.living.v1` bridge.
+- The connect message is accepted only from the page's own window and origin.
+- `ready` is sent after `onStart` resolves and must arrive within 15 s.
+- Heartbeats are sent every 5 s.
+- Stale state revisions are dropped.
+- `page.send(name, json)` and `page.health('ok' | 'degraded', code)` report back.
+- The page never receives project credentials, media grants or service internals.
+  Never put secrets in state, events or messages.
+
+`startLivingPreview(frame, { origin, viewport, fps, state })` drives a page locally
+through the same bridge, without a call. Examples: a
+[framework-neutral HTML page](packages/living/examples/html/index.html), a
+[React app](packages/living/examples/react/App.tsx), and a
+[developer backend](packages/living/examples/server.ts).
+
+Limitations: these routes are a draft contract and require a backend that reports
+`living_capabilities`. There is no audio from the page, and no uploaded bundles yet.
+Input is relayed to the page, not injected as OS events. Not in any published
+package version.
+
 ### iMessage events and webhooks (source preview)
 
 The 0.2.0 preview adds `listEvents`, `getEvent`, `streamEvents`, and
