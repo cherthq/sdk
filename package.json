@@ -16,6 +16,8 @@
     "./imessage": { "types": "./dist/imessage/index.d.ts", "import": "./dist/imessage/index.js" },
     "./control-plane": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
     "./facetime": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
+    "./media": { "types": "./dist/media/index.d.ts", "import": "./dist/media/index.js" },
+    "./media/livekit": { "types": "./dist/media/livekit.d.ts", "import": "./dist/media/livekit.js" },
     "./adopt": { "types": "./dist/adopt/main.d.ts", "import": "./dist/adopt/main.js" },
     "./linq-adapter": { "types": "./dist/linq-adapter/index.d.ts", "import": "./dist/linq-adapter/index.js" },
     "./sendblue-adapter": { "types": "./dist/sendblue-adapter/index.d.ts", "import": "./dist/sendblue-adapter/index.js" },
@@ -54,7 +56,8 @@
     "@cherthq/contiguity-adapter": "workspace:*",
     "@cherthq/bluereacher-adapter": "workspace:*",
     "@cherthq/jared-adapter": "workspace:*",
-    "@cherthq/control-plane": "workspace:*"
+    "@cherthq/control-plane": "workspace:*",
+    "@cherthq/media": "workspace:*"
   },
   "dependencies": {
     "@blooio/sdk": "0.0.2",
