@@ -236,6 +236,40 @@ preview contract; check the catalog's test/disabled state before initiating chec
 Do not treat checkout completion as line allocation. Connector management does not
 provide a connector or media runtime.
 
+### Custom video sessions (v1, video-only)
+
+Check explicit capabilities first; never infer support from `SupportsVideo`:
+
+```go
+caps := chert.ParseMediaCapabilities(line.MediaCapabilities) // also on Call and scoped Worker
+if caps.CustomVideo == nil { return errors.New("custom video unsupported") }
+grant, err := sdk.FaceTime.CreateMediaSession(ctx, callID, chert.CreateMediaSessionRequest{
+    Direction: chert.MediaPublish, Codecs: []chert.VideoCodec{chert.H264}, // Codecs optional
+})
+if err != nil { return err } // e.g. media_capability_unsupported, call_not_active, call_ended
+// Hand grant.Data.Endpoint, grant.Data.Token and grant.Data.ICEServers to any
+// standards WHIP client (RFC 9725), e.g. one built on pion/webrtc.
+```
+
+`CreateMediaSession` mints one session for an active call. `MediaPublish` grants a WHIP
+endpoint; `MediaSubscribe` grants an experimental WHEP endpoint
+(draft-ietf-wish-whep-05) capped at 1280x720. Treat `Endpoint` as opaque, connect
+before `ConnectBy`, and send the same `Authorization: Bearer <Token>` on the POST and
+on PATCH/DELETE to the returned `Location`. The grant prints as redacted; never log
+`Token`. A malformed grant fails with `invalid_response`; server error codes
+(`unauthorized`, `call_not_found`, `media_capability_unsupported`,
+`media_session_conflict`, `call_not_active`, `call_ended`, `media_session_expired`,
+`media_transport_unavailable`) surface without server text. Requests are never retried.
+
+`CopyVideoFrame` validates a raw `i420`/`nv12`/`rgba`/`bgra` frame (even sizes from
+16x16 to 1920x1080, per-plane strides, 8 MiB total) and copies only the required
+bytes so buffers can be reused; failures are `*MediaFrameError` with `Code`
+`invalid_frame` or `frame_too_large`.
+
+Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC
+stack; keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send
+periodic keyframes.
+
 ## Raw access and failures
 
 `RequestWithOptions` adds an optional iMessage header idempotency key for uncovered
