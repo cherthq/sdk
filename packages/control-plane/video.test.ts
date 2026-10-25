@@ -85,3 +85,35 @@ test('video requests use the canonical default once and preserve explicit origin
     expect(seen).toBe(`${baseUrl ? 'https://override.example' : 'https://facetime.trychert.com'}/api/v1/calls`);
   }
 });
+
+test('media sessions: strict request, validated grant and stable error codes without leaking server text', async () => {
+  const grant = { session_id: '3f2b8c1e-0d4a-4b7e-9c11-2a6f5e0d9b77', direction: 'publish', endpoint: 'https://signal.example/opaque/abc', token: 'session-bearer',
+    connect_by: '2026-10-25T00:05:00Z', expires_at: '2026-10-25T01:00:00Z', ice_servers: [{ urls: ['turn:turn.example:3478'], username: 'u', credential: 'c', credentialType: 'password' }],
+    codecs: ['h264', 'vp8'], limits: { max_width: 1920, max_height: 1080, max_fps: 30, max_frame_bytes: 8_388_608 } };
+  const seen: { url: string; body: unknown }[] = [];
+  let reply: () => Response = () => Response.json({ data: grant }, { status: 201 });
+  const client = new ChertControlPlane({ token: 'project-key', projectId: 'project', fetch: (async (url, init) => {
+    seen.push({ url: String(url), body: JSON.parse(String(init?.body)) }); return reply();
+  }) as typeof fetch });
+  expect(await client.createMediaSession('call', { direction: 'publish' })).toEqual(grant as never);
+  await client.createMediaSession('call', { direction: 'publish', codecs: ['vp8', 'h264'] });
+  expect(seen.map(s => [s.url, s.body])).toEqual([
+    ['https://facetime.trychert.com/api/v1/calls/call/media-sessions', { direction: 'publish' }],
+    ['https://facetime.trychert.com/api/v1/calls/call/media-sessions', { direction: 'publish', codecs: ['vp8', 'h264'] }]]);
+  for (const bad of [{ direction: 'both' }, { direction: 'publish', codecs: [] }, { direction: 'publish', codecs: ['av1'] }, { direction: 'publish', codecs: ['h264', 'h264'] }])
+    await expect(client.createMediaSession('call', bad as never)).rejects.toBeInstanceOf(TypeError);
+  // Subscribe grants are capped at 1280x720; a publish-sized subscribe grant or a wrong direction is rejected.
+  reply = () => Response.json({ data: grant }, { status: 201 });
+  await expect(client.createMediaSession('call', { direction: 'subscribe' })).rejects.toMatchObject({ code: 'invalid_response' });
+  for (const patch of [{ endpoint: 'http://signal.example/x' }, { endpoint: 'https://u:p@signal.example/x' }, { token: 'a\r\nb' }, { connect_by: 'soon' },
+    { codecs: ['av1'] }, { ice_servers: [{ urls: 7 }] }, { limits: { ...grant.limits, max_frame_bytes: 9_000_000 } }, { session_id: 'x' }]) {
+    reply = () => Response.json({ data: { ...grant, ...patch } }, { status: 201 });
+    await expect(client.createMediaSession('call', { direction: 'publish' })).rejects.toMatchObject({ code: 'invalid_response' });
+  }
+  for (const [status, code] of [[401, 'unauthorized'], [404, 'call_not_found'], [409, 'media_capability_unsupported'], [409, 'media_session_conflict'],
+    [409, 'call_not_active'], [410, 'call_ended'], [503, 'media_transport_unavailable']] as const) {
+    reply = () => Response.json({ error: { code, message: 'internal host 10.0.0.5' } }, { status });
+    const error = await client.createMediaSession('call', { direction: 'publish' }).catch(e => e);
+    expect([error.status, error.code, error.message.includes('10.0.0.5')]).toEqual([status, code, false]);
+  }
+});
