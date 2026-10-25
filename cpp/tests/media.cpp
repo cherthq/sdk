@@ -136,7 +136,7 @@ void sessions(const std::string& origin, int bad_cases, int error_cases, int acc
     }
     const std::vector<std::pair<long, std::string>> expected = {{401, "unauthorized"}, {401, "media_session_expired"}, {404, "call_not_found"},
         {409, "media_capability_unsupported"}, {409, "media_session_conflict"}, {409, "call_not_active"}, {410, "call_ended"},
-        {503, "media_transport_unavailable"}};
+        {503, "media_transport_unavailable"}, {418, "request_failed"}}; // unknown server code
     check(static_cast<int>(expected.size()) == error_cases, "error case count");
     for (int i = 0; i < error_cases; ++i) {
         try {
@@ -144,6 +144,7 @@ void sessions(const std::string& origin, int bad_cases, int error_cases, int acc
             check(false, "accepted error");
         } catch (const trychert::ApiError& error) {
             check(error.status == expected[i].first && error.code == expected[i].second
+                && error.data.is_null() && error.request_id == "r"
                 && std::string(error.what()).find("10.0.0.5") == std::string::npos, "error " + expected[i].second);
         }
     }

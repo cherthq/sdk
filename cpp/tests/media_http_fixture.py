@@ -44,7 +44,7 @@ ACCEPT = [(["vp8", "h264"], dict(codecs=["h264"])),
           (None, dict(ice_servers=[dict(urls="", username="u", credential="c", credentialType="password")]))]
 ERRORS = [(401, "unauthorized"), (401, "media_session_expired"), (404, "call_not_found"),
           (409, "media_capability_unsupported"), (409, "media_session_conflict"), (409, "call_not_active"),
-          (410, "call_ended"), (503, "media_transport_unavailable")]
+          (410, "call_ended"), (503, "media_transport_unavailable"), (418, "internal_detail")]
 requests, errors = [], []
 
 

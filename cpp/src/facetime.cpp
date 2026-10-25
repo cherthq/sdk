@@ -394,19 +394,34 @@ Result<MediaSessionGrant> FaceTimeClient::create_media_session(const std::string
             body["codecs"].push_back(name);
         }
     }
-    Result<Json> result;
-    try { result = request("/calls/" + id + "/media-sessions", std::move(body), "POST"); }
+    detail::Response response;
+    try { response = request_with_response("/calls/" + id + "/media-sessions", std::move(body), "POST"); }
     catch (const ApiError& error) {
-        if (error.code != "invalid_response") throw;
-        // Response data is withheld: an invalid grant may still carry a bearer token.
-        throw ApiError(error.status, error.code, error.request_id);
+        // Raw response data is never returned. Server error responses (parsed bodies) keep their
+        // status and an allowlisted code, else request_failed; local failures keep their code.
+        static constexpr std::array<std::string_view, 22> safe = {"unauthorized", "forbidden", "cli_scope_denied",
+            "billing_owner_required", "billing_unavailable", "project_required", "invalid_request", "cli_login_expired",
+            "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited", "cli_login_busy", "not_found",
+            "conflict", "media_capability_unsupported", "media_session_conflict", "call_not_active", "call_ended",
+            "call_not_found", "media_session_expired", "media_transport_unavailable"};
+        auto request_id = error.request_id;
+        if (error.data.is_object() && error.data.contains("request_id") && error.data["request_id"].is_string())
+            request_id = error.data["request_id"].get<std::string>();
+        const bool server = error.status >= 300 && !error.data.is_null();
+        const bool allowed = std::find(safe.begin(), safe.end(), error.code) != safe.end();
+        throw ApiError(error.status, server && !allowed ? "request_failed" : error.code, std::move(request_id));
     }
+    auto request_id = response.request_id;
     try {
-        require(result.status == 201);
-        return {grant(result.data, input.direction, input.codecs), result.request_id, result.status};
+        // Same envelope rules as request(), plus the exact 201 status.
+        const auto& envelope = response.data;
+        require(response.status == 201 && envelope && envelope->is_object() && envelope->contains("data") && !envelope->contains("error"));
+        request_id = envelope->at("request_id").get<std::string>();
+        require(!request_id.empty());
+        return {grant(envelope->at("data"), input.direction, input.codecs), request_id, response.status};
     } catch (const std::exception&) {
         // Response data is withheld: an invalid grant may still carry a bearer token.
-        throw ApiError(502, "invalid_response", result.request_id);
+        throw ApiError(502, "invalid_response", request_id);
     }
 }
 
