@@ -59,6 +59,46 @@ public sealed class FaceTimeClient : IDisposable
         return Send<FaceTimeCall>($"/calls/{Id(id)}/{action}", new { reason }, HttpMethod.Post, Key(key), ct, expectedStatus: 202);
     }
 
+    /// <summary>
+    /// Mints one WHIP (publish) or experimental WHEP (subscribe) session for an active call. v1 is video-only.
+    /// Codecs, when given, must be a non-empty ordered unique list. Single attempt; never retried.
+    /// </summary>
+    public async Task<MediaSessionGrant> CreateMediaSessionAsync(string callId, MediaDirection direction,
+        IReadOnlyList<VideoCodec>? codecs = null, CancellationToken cancellationToken = default)
+    {
+        var path = "/calls/" + Id(callId) + "/media-sessions";
+        var body = new Dictionary<string, object>
+        {
+            ["direction"] = direction switch
+            {
+                MediaDirection.Publish => "publish", MediaDirection.Subscribe => "subscribe",
+                _ => throw new ArgumentException("direction must be publish or subscribe")
+            }
+        };
+        if (codecs is not null)
+        {
+            if (codecs.Count == 0 || codecs.Any(c => !Enum.IsDefined(c)) || codecs.Distinct().Count() != codecs.Count)
+                throw new ArgumentException("codecs must be a non-empty ordered subset of h264, vp8");
+            body["codecs"] = codecs.Select(c => c == VideoCodec.H264 ? "h264" : "vp8").ToArray();
+        }
+        ChannelTransport.JsonResponse response;
+        try
+        {
+            response = await transport.RequestWithResponseAsync(path, JsonSerializer.SerializeToElement(body), HttpMethod.Post, null,
+                cancellationToken, projectRequest: true).ConfigureAwait(false);
+        }
+        catch (ChertApiException error) when (error.Code == "invalid_json") { throw new ChertApiException(error.Status, "invalid_response", error.RequestId); }
+        try
+        {
+            if (response.Status != 201 || response.Value is not { ValueKind: JsonValueKind.Object } envelope || !envelope.TryGetProperty("data", out var data))
+                throw new JsonException();
+            UniqueProperties(envelope);
+            return MediaSessionGrant.Parse(data, direction, codecs);
+        }
+        // Response data is withheld: an invalid grant may still carry a bearer token.
+        catch (JsonException) { throw new ChertApiException(502, "invalid_response", response.RequestId); }
+    }
+
     public Task<DeviceLogin> BeginLoginAsync(string deviceName, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(deviceName) || deviceName.Length > 80 || deviceName.Any(c => c < 32 || c > 126))
