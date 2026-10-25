@@ -1,7 +1,12 @@
 #![doc = include_str!("../README.md")]
 pub mod events;
 pub mod facetime;
+pub mod media;
 mod unified;
+pub use media::{
+    parse_media_capabilities, CreateMediaSession, MediaCapabilities, MediaDirection,
+    MediaFrameError, MediaSessionGrant, VideoCodec, VideoFrame,
+};
 pub use unified::{
     ChertSdk, FaceTimeConfig, IMessageConfig, TransportLimits, UnifiedSessionOptions,
 };
