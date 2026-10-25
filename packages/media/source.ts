@@ -75,7 +75,11 @@ export class ChertVideoSource {
       const { transport } = this.#options;
       if (!transport.accepts.includes('video') && !transport.accepts.includes('encoded')) throw new MediaError('codec_unsupported');
       await transport.connect(this.#abort.signal);
-      if (this.#abort.signal.aborted) throw new MediaError('aborted');
+      if (this.#abort.signal.aborted) {
+        // Connected after stop/abort: release the just-opened session before reporting.
+        await transport.close('aborted').catch(() => {});
+        throw new MediaError('aborted');
+      }
       const offKey = transport.onKeyframeRequest?.(() => { this.#keyframeRequests++; this.#emit('keyframe-request'); });
       const offFail = transport.onFailure?.(error => void this.#fail(error));
       for (const off of [offKey, offFail]) if (off) this.#detach.push(off);
@@ -134,7 +138,13 @@ export class ChertVideoSource {
   #enqueue(item: OutboundItem): PushResult {
     const key = item.kind === 'encoded' && item.chunk.keyFrame;
     this.#last = item.kind === 'encoded' ? item.chunk.timestampUs : item.frame.timestampUs;
-    if (key) this.#awaitingKey = false;
+    if (key) {
+      // A keyframe restarts the decode chain: queued encoded items are obsolete.
+      this.#awaitingKey = false;
+      const kept = this.#items.filter(i => i.kind !== 'encoded');
+      this.#dropped += this.#items.length - kept.length;
+      this.#items = kept;
+    }
     if (this.#items.length >= this.#max) {
       this.#dropped++;
       if (this.#overflow === 'drop-newest') {
@@ -177,7 +187,8 @@ export class ChertVideoSource {
     })();
   }
   async #fail(error: MediaError) {
-    if (this.#state === 'failed' || this.#state === 'stopped') return;
+    // A failure observed while stopping is the expected result of closing, not an error.
+    if (this.#state === 'failed' || this.#state === 'stopped' || this.#state === 'stopping') return;
     this.#abort.abort(); this.#teardown();
     this.#set('failed');
     this.#emit('error', error);

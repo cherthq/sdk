@@ -16,7 +16,16 @@ export interface MediaSessionGrant {
   limits: { max_width: number; max_height: number; max_fps: number; max_frame_bytes: number };
 }
 const invalidGrant = () => new ChertApiError(201, 'invalid_response');
-function validateGrant(grant: MediaSessionGrant, direction: MediaDirection): MediaSessionGrant {
+const rfc3339 = (v: unknown): v is string => typeof v === 'string'
+  && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/i.test(v) && !Number.isNaN(Date.parse(v));
+const iceServer = (s: unknown): boolean => {
+  if (!s || typeof s !== 'object') return false;
+  const { urls, username, credential, credentialType } = s as Record<string, unknown>;
+  return (typeof urls === 'string' || (Array.isArray(urls) && urls.length > 0 && urls.every(u => typeof u === 'string')))
+    && (username === undefined || typeof username === 'string') && (credential === undefined || typeof credential === 'string')
+    && (credentialType === undefined || credentialType === 'password');
+};
+function validateGrant(grant: MediaSessionGrant, direction: MediaDirection, requested?: readonly MediaSessionCodec[]): MediaSessionGrant {
   const g = grant as unknown as Record<string, unknown>, limits = g?.limits as Record<string, unknown> | undefined;
   let endpoint: URL;
   try { endpoint = new URL(String(g?.endpoint)); } catch { throw invalidGrant(); }
@@ -26,9 +35,10 @@ function validateGrant(grant: MediaSessionGrant, direction: MediaDirection): Med
   if (g?.direction !== direction || typeof g.session_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(g.session_id)
     || (endpoint.protocol !== 'https:' && !local) || endpoint.username || endpoint.password || endpoint.hash
     || typeof g.token !== 'string' || !g.token || /[\r\n]/.test(g.token)
-    || Number.isNaN(Date.parse(String(g.connect_by))) || Number.isNaN(Date.parse(String(g.expires_at)))
-    || !Array.isArray(g.ice_servers) || !g.ice_servers.every(s => s && typeof s === 'object' && (typeof s.urls === 'string' || (Array.isArray(s.urls) && s.urls.every((u: unknown) => typeof u === 'string'))))
-    || !Array.isArray(g.codecs) || !g.codecs.length || !g.codecs.every(c => c === 'h264' || c === 'vp8')
+    || !rfc3339(g.connect_by) || !rfc3339(g.expires_at) || Date.parse(g.connect_by) > Date.parse(g.expires_at)
+    || !Array.isArray(g.ice_servers) || !g.ice_servers.every(iceServer)
+    || !Array.isArray(g.codecs) || !g.codecs.length || new Set(g.codecs).size !== g.codecs.length
+    || !g.codecs.every(c => (c === 'h264' || c === 'vp8') && (!requested || requested.includes(c)))
     || !limits || !int(limits.max_width, cap[0]!) || !int(limits.max_height, cap[1]!) || !int(limits.max_fps, 30) || !int(limits.max_frame_bytes, 8_388_608))
     throw invalidGrant();
   return grant;
@@ -112,7 +122,7 @@ export class ChertControlPlane {
     if(!input||(input.direction!=='publish'&&input.direction!=='subscribe'))throw new TypeError('direction must be publish or subscribe.');
     if(input.codecs!==undefined&&(!Array.isArray(input.codecs)||!input.codecs.length||input.codecs.some(c=>c!=='h264'&&c!=='vp8')||new Set(input.codecs).size!==input.codecs.length))throw new TypeError('codecs must be a non-empty ordered subset of h264, vp8.');
     const grant=await this.request<MediaSessionGrant>(`calls/${this.resourceId(callId)}/media-sessions`,'POST',{direction:input.direction,...(input.codecs?{codecs:input.codecs}:{})});
-    return validateGrant(grant,input.direction);
+    return validateGrant(grant,input.direction,input.codecs);
   }
   getCallEvents(id:string){return this.request<{call_id:string;events:CallEvent[]}>(`calls/${this.resourceId(id)}/events`);}
   /** Acceptance is not connection/media success. Reconcile uncertain outcomes; never retry automatically. */

@@ -102,11 +102,14 @@ test('media sessions: strict request, validated grant and stable error codes wit
     ['https://facetime.trychert.com/api/v1/calls/call/media-sessions', { direction: 'publish', codecs: ['vp8', 'h264'] }]]);
   for (const bad of [{ direction: 'both' }, { direction: 'publish', codecs: [] }, { direction: 'publish', codecs: ['av1'] }, { direction: 'publish', codecs: ['h264', 'h264'] }])
     await expect(client.createMediaSession('call', bad as never)).rejects.toBeInstanceOf(TypeError);
+  // A returned codec the caller did not request is a contract violation.
+  await expect(client.createMediaSession('call', { direction: 'publish', codecs: ['vp8'] })).rejects.toMatchObject({ code: 'invalid_response' });
   // Subscribe grants are capped at 1280x720; a publish-sized subscribe grant or a wrong direction is rejected.
   reply = () => Response.json({ data: grant }, { status: 201 });
   await expect(client.createMediaSession('call', { direction: 'subscribe' })).rejects.toMatchObject({ code: 'invalid_response' });
   for (const patch of [{ endpoint: 'http://signal.example/x' }, { endpoint: 'https://u:p@signal.example/x' }, { token: 'a\r\nb' }, { connect_by: 'soon' },
-    { codecs: ['av1'] }, { ice_servers: [{ urls: 7 }] }, { limits: { ...grant.limits, max_frame_bytes: 9_000_000 } }, { session_id: 'x' }]) {
+    { codecs: ['av1'] }, { codecs: ['h264', 'h264'] }, { ice_servers: [{ urls: 7 }] }, { ice_servers: [{ urls: 'turn:x', credential: 5 }] },
+    { connect_by: '2026' }, { connect_by: '2026-10-25T02:00:00Z' }, { limits: { ...grant.limits, max_frame_bytes: 9_000_000 } }, { session_id: 'x' }]) {
     reply = () => Response.json({ data: { ...grant, ...patch } }, { status: 201 });
     await expect(client.createMediaSession('call', { direction: 'publish' })).rejects.toMatchObject({ code: 'invalid_response' });
   }

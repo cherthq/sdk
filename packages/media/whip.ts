@@ -40,7 +40,7 @@ export interface SignalingSession {
   patch(sdpFragment: string): Promise<boolean>;
   /**
    * Sends an ICE-restart fragment (new ice-ufrag/ice-pwd) and resolves with the server's answer fragment,
-   * which the caller applies to its peer connection. Uses If-Match with the current entity tag.
+   * which the caller applies to its peer connection. Sends `If-Match: *` as RFC 9725 §4.3.2 requires.
    */
   restartIce(sdpFragment: string): Promise<string>;
   /** Terminates the session resource. Idempotent and best effort. */
@@ -116,7 +116,8 @@ async function negotiate(protocol: 'whip' | 'whep', pc: PeerConnectionLike, cred
   if (credentials.connectBy && Date.parse(credentials.connectBy) <= Date.now()) throw new MediaError('session_expired');
   const fetcher = options.fetch ?? globalThis.fetch;
   if (options.signal?.aborted) throw new MediaError('aborted');
-  await pc.setLocalDescription(await pc.createOffer());
+  try { await pc.setLocalDescription(await pc.createOffer()); }
+  catch { throw new MediaError('transport_unavailable', 'The peer connection could not create an offer.'); }
   await gathered(pc, options.iceGatheringTimeoutMs ?? 5000, options.signal);
   const offer = pc.localDescription?.sdp;
   if (!offer) throw new MediaError('transport_unavailable', 'The peer connection produced no offer.');
@@ -131,15 +132,21 @@ async function negotiate(protocol: 'whip' | 'whep', pc: PeerConnectionLike, cred
   try { resource = new URL(location ?? '', endpoint); } catch { throw new MediaError('transport_unavailable'); }
   // The bearer is replayed to the session resource, so it must stay on the issuing origin.
   if (!location || resource.origin !== endpoint.origin) { await response.body?.cancel(); throw new MediaError('transport_unavailable', 'Session resource must share the endpoint origin.'); }
-  if (!/^application\/sdp\b/i.test(response.headers.get('Content-Type') ?? '')) { await response.body?.cancel(); throw new MediaError('transport_unavailable'); }
-  const answer = await response.text();
-  if (!answer.startsWith('v=0') || new TextEncoder().encode(answer).byteLength > MAX_SDP_BYTES) throw new MediaError('transport_unavailable');
+  const authorized = (extra: Record<string, string>) => ({ Authorization: `Bearer ${credentials.token}`, ...extra });
+  // From here a server resource exists; any failure must release it.
+  const release = () => fetcher(resource, { method: 'DELETE', redirect: 'error', headers: authorized({}) }).then(r => r.body?.cancel(), () => {});
+  let answer: string;
+  try {
+    if (options.signal?.aborted) throw new MediaError('aborted');
+    if (!/^application\/sdp\b/i.test(response.headers.get('Content-Type') ?? '')) throw new MediaError('transport_unavailable');
+    answer = await response.text().catch(() => { throw new MediaError(options.signal?.aborted ? 'aborted' : 'transport_unavailable'); });
+    if (!answer.startsWith('v=0') || new TextEncoder().encode(answer).byteLength > MAX_SDP_BYTES) throw new MediaError('transport_unavailable');
+  } catch (error) { await response.body?.cancel().catch(() => {}); await release(); throw error; }
   const iceServers = Object.freeze(parseIceServerLinks(response.headers.get('Link')));
   let etag = response.headers.get('ETag');
   let closed = false;
-  const authorized = (extra: Record<string, string>) => ({ Authorization: `Bearer ${credentials.token}`, ...extra });
   try { await pc.setRemoteDescription({ type: 'answer', sdp: answer }); }
-  catch { await fetcher(resource, { method: 'DELETE', redirect: 'error', headers: authorized({}) }).then(r => r.body?.cancel(), () => {}); throw new MediaError('codec_unsupported'); }
+  catch { await release(); throw new MediaError('codec_unsupported'); }
   return {
     protocol, iceServers,
     async patch(fragment) {
@@ -148,13 +155,13 @@ async function negotiate(protocol: 'whip' | 'whep', pc: PeerConnectionLike, cred
         headers: authorized({ 'Content-Type': 'application/trickle-ice-sdpfrag', ...(etag ? { 'If-Match': etag } : {}) }) })
         .catch(() => { throw new MediaError('transport_unavailable'); });
       if (r.status === 204 || r.status === 200) { await r.body?.cancel(); return true; }
-      if (r.status === 405 || r.status === 501) { await r.body?.cancel(); return false; }
+      if (r.status === 405 || r.status === 422 || r.status === 501) { await r.body?.cancel(); return false; }
       throw await statusError(r);
     },
     async restartIce(fragment) {
       if (closed) throw new MediaError('invalid_state');
       const r = await fetcher(resource, { method: 'PATCH', redirect: 'error', body: fragment,
-        headers: authorized({ 'Content-Type': 'application/trickle-ice-sdpfrag', Accept: 'application/trickle-ice-sdpfrag', 'If-Match': etag ?? '*' }) })
+        headers: authorized({ 'Content-Type': 'application/trickle-ice-sdpfrag', Accept: 'application/trickle-ice-sdpfrag', 'If-Match': '*' }) })
         .catch(() => { throw new MediaError('transport_unavailable'); });
       if (r.status !== 200 || !/^application\/trickle-ice-sdpfrag\b/i.test(r.headers.get('Content-Type') ?? '')) throw await statusError(r);
       const answer = await r.text();

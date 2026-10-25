@@ -87,9 +87,11 @@ test('source: losing encoded chunks drops dependent deltas until the next keyfra
   expect(source.pushEncoded(chunk(5n, true))).toBe('queued');
   expect(source.pushEncoded(chunk(6n))).toBe('dropped');                      // evicts key 5: chain broken again
   expect(source.pushEncoded(chunk(7n, true))).toBe('queued');
-  t.key(); expect(source.stats().keyframeRequests).toBe(3);                        // remote request is surfaced too
+  t.key(); expect(source.stats().keyframeRequests).toBe(3);
+  // 7 is still queued behind the in-flight 1; a new keyframe at a full queue replaces it and is never lost.
+  expect(source.pushEncoded(chunk(8n, true))).toBe('queued');                        // remote request is surfaced too
   t.open(); await tick(); await tick();
-  expect(t.sent.map(i => i.kind === 'encoded' ? [i.chunk.timestampUs, i.chunk.keyFrame] : null)).toEqual([[1n, true], [7n, true]]);
+  expect(t.sent.map(i => i.kind === 'encoded' ? [i.chunk.timestampUs, i.chunk.keyFrame] : null)).toEqual([[1n, true], [8n, true]]);
   await source.stop();
 });
 
@@ -163,7 +165,7 @@ test('WHIP/WHEP: RFC 9725 exchange with the session bearer on every method, tric
     expect(await session.patch('a=candidate:2')).toBe(true);
     expect(log[1]).toMatchObject({ method: 'PATCH', path: '/sessions/whip', type: 'application/trickle-ice-sdpfrag', ifMatch: '"e1"', auth: 'Bearer session-token' });
     expect(await session.restartIce('a=ice-ufrag:new\r\na=ice-pwd:x\r\n')).toBe('a=ice-ufrag:srv2\r\na=ice-pwd:p\r\n');
-    expect(log[2]).toMatchObject({ method: 'PATCH', ifMatch: '"e1"' });
+    expect(log[2]).toMatchObject({ method: 'PATCH', ifMatch: '*' });                   // RFC 9725 §4.3.2
     await session.patch('a=candidate:3');
     expect(log[3]!.ifMatch).toBe('"e2"');                                       // entity tag follows the restart
     await expect(session.patch('bad')).rejects.toMatchObject({ code: 'invalid_signaling' });
@@ -208,4 +210,37 @@ test('LiveKit adapter: optional, structural, repacks strided planes and maps for
   const { frame, ts, rotation } = captured[0]!;
   expect([frame.type, frame.width, frame.height, frame.data.byteLength, ts, rotation]).toEqual([10, 16, 16, 16 * 16 + 16 * 8, 7n, 3]);
   expect([...frame.data.subarray(16, 20)]).toEqual([0, 1, 2, 3]);    // row 1 starts at packed offset 16, not stride 20
+});
+
+test('source: stop during an in-flight send is clean, and a late connect after stop is closed', async () => {
+  let reject!: (e: Error) => void; let closes = 0;
+  const closing: MediaTransport = { kind: 'closing', accepts: ['video'], async connect() {},
+    send: () => new Promise((_, r) => { reject = r; }), async close() { closes++; reject?.(new Error('closed')); } };
+  const source = new ChertVideoSource({ transport: closing, width: 16, height: 16, maxFps: 30 });
+  const events: string[] = []; source.on('state', s => events.push(s)); source.on('error', e => events.push('error:' + e.code));
+  await source.start(); source.pushFrame(i420(16, 16, 0n)); await tick();
+  await source.stop(); await tick();
+  expect([events, closes]).toEqual([['starting', 'live', 'stopping', 'stopped'], 1]);
+
+  let finish!: () => void; let lateCloses = 0;
+  const late: MediaTransport = { kind: 'late', accepts: ['video'], async send() {}, async close(reason) { if (reason === 'aborted') lateCloses++; },
+    connect: () => new Promise<void>(r => { finish = r; }) };
+  const delayed = new ChertVideoSource({ transport: late, width: 16, height: 16, maxFps: 30 });
+  const starting = delayed.start(); await tick();
+  await delayed.stop(); finish();
+  expect([(await starting.catch(e => e)).code, lateCloses, delayed.state]).toEqual(['aborted', 1, 'stopped']);
+});
+
+test('WHIP: a resource created by a 201 is released when the answer is unusable or the caller aborted', async () => {
+  const deletes: string[] = []; let body = 'not sdp'; const controller = new AbortController();
+  const fetcher = (async (url: string | URL, init?: RequestInit) => {
+    if (init?.method === 'DELETE') { deletes.push(String(url)); return new Response(null, { status: 200 }); }
+    if (body === 'abort') controller.abort();
+    return new Response(body === 'abort' ? 'v=0\r\n' : body, { status: 201, headers: { Location: '/r/1', 'Content-Type': 'application/sdp' } });
+  }) as typeof fetch;
+  const creds = { endpoint: 'https://signal.example/opaque', token: 't' };
+  await expect(publishWhip(new FakePeer(), creds, { fetch: fetcher })).rejects.toMatchObject({ code: 'transport_unavailable' });
+  body = 'abort';
+  await expect(publishWhip(new FakePeer(), creds, { fetch: fetcher, signal: controller.signal })).rejects.toMatchObject({ code: 'aborted' });
+  expect(deletes).toEqual(['https://signal.example/r/1', 'https://signal.example/r/1']);
 });
