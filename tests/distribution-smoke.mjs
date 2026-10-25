@@ -54,6 +54,32 @@ import Blooio from '@cherthq/blooio-adapter';
   console.log('Built FaceTime video API preserves default routing, credentials, media and explicit end.');
 }
 
+// Custom media core is portable: frame copy, capability parsing, bounded source and WHIP signaling with a fake peer.
+{
+  const media = await import('@cherthq/media');
+  const caps = media.parseMediaCapabilities({ version: 1, custom_video: { supported: true, transports: ['whip'], codecs: ['h264'], max_width: 1280, max_height: 720, max_fps: 30 }, inbound_caller_video: null });
+  assert.deepEqual(caps.custom_video.transports, ['whip']);
+  assert.deepEqual(media.parseMediaCapabilities({ video: true }), { version: 1, custom_video: null, inbound_caller_video: null });
+  const plane = new Uint8Array(64 * 16);
+  const frame = media.copyVideoFrame({ format: 'rgba', width: 16, height: 16, timestampUs: 1n, planes: [{ data: plane, stride: 64 }] });
+  plane[0] = 7; assert.equal(frame.planes[0].data[0], 0);
+  const sent = [];
+  const source = new media.ChertVideoSource({ transport: { kind: 'memory', accepts: ['video'], async connect() {}, async send(i) { sent.push(i); }, async close() {} }, width: 16, height: 16, maxFps: 30 });
+  await source.start(); assert.equal(source.pushFrame({ format: 'rgba', width: 16, height: 16, timestampUs: 0n, planes: [{ data: plane, stride: 64 }] }), 'queued');
+  await new Promise(r => setTimeout(r, 0)); await source.stop();
+  assert.equal(sent.length, 1);
+  const requests = [];
+  const peer = { localDescription: null, iceGatheringState: 'complete', async createOffer() { return { type: 'offer', sdp: 'v=0\r\n' }; },
+    async setLocalDescription(d) { this.localDescription = d; }, async setRemoteDescription() {}, addEventListener() {}, removeEventListener() {}, close() {} };
+  const session = await media.publishWhip(peer, { endpoint: 'https://signal.example/opaque', token: 'bearer' }, { fetch: async (url, init) => {
+    requests.push([init.method, String(url), new Headers(init.headers).get('authorization')]);
+    return init.method === 'POST' ? new Response('v=0\r\n', { status: 201, headers: { Location: '/session/1', 'Content-Type': 'application/sdp' } }) : new Response(null, { status: 200 });
+  } });
+  await session.close();
+  assert.deepEqual(requests, [['POST', 'https://signal.example/opaque', 'Bearer bearer'], ['DELETE', 'https://signal.example/session/1', 'Bearer bearer']]);
+  console.log('Built custom media core and WHIP signaling passed.');
+}
+
 // Exercise the built reaction API under each supported runtime, including
 // identity preservation and a response that must never become acceptance.
 {

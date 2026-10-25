@@ -141,7 +141,22 @@ async function events(client: ChertClient, signal: AbortSignal) {
   return verifyWebhook(JSON.stringify(page), 'untrusted', secret);
 }
 void events;
-import {ChertControlPlane} from '@trychert/sdk/facetime';
+import {ChertControlPlane, type MediaSessionGrant} from '@trychert/sdk/facetime';
+import {ChertVideoSource, parseMediaCapabilities, publishWhip, type MediaTransport, type VideoFrameInit} from '@trychert/sdk/media';
+async function customVideo(client: ChertControlPlane, transport: MediaTransport, pc: RTCPeerConnection, frame: VideoFrameInit) {
+  if (!parseMediaCapabilities((await client.getCall('call')).media_capabilities).custom_video?.transports.includes('whip')) return;
+  const grant: MediaSessionGrant = await client.createMediaSession('call', {direction:'publish', codecs:['h264']});
+  const signaling = await publishWhip(pc, {endpoint: grant.endpoint, token: grant.token, connectBy: grant.connect_by});
+  const source = new ChertVideoSource({transport, width: 1280, height: 720, maxFps: 30});
+  await source.start(); const result: 'queued' | 'dropped' = source.pushFrame(frame); void result;
+  // @ts-expect-error v1 is video-only: there is no audio push.
+  source.pushAudio(frame);
+  await source.stop(); await signaling.close();
+}
+import {liveKitVideoTransport, type LiveKitRtcModule, type LiveKitVideoSourceLike} from '@trychert/sdk/media/livekit';
+declare const rtcModule: LiveKitRtcModule; declare const lkSource: LiveKitVideoSourceLike;
+const lk: MediaTransport = liveKitVideoTransport(rtcModule, lkSource);
+void customVideo; void lk;
 declare const billing: ChertControlPlane;
 const status: boolean = (await billing.billingStatus()).shared_available;
 const url: string = (await billing.createCheckout({plan:'dedicated'},'stable-key')).url;
