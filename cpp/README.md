@@ -131,6 +131,7 @@ The SDK itself never reads these environment variables.
 | Call events/transcripts | `get_call_events`, `get_transcript` | Typed ordered records; optional event sequence is preserved |
 | Lines/worker health | `list_lines`, `list_workers` | Typed paginated records with additional server fields retained |
 | Line configuration | `update_line(id, UpdateLine)` | PATCH; distinguish omitted, null and assigned references |
+| Custom video session (v1) | `create_media_session(call_id, CreateMediaSession)` | HTTP 201 validated WHIP/WHEP grant; see below |
 | Other customer JSON routes | `request(path, body, method, key)` | `Result<Json>` escape hatch, not full typed management coverage |
 
 `Result<T>` contains `data`, `request_id`, and HTTP `status`. FaceTime unwraps
@@ -170,6 +171,38 @@ in UTF-8 bytes (conservative versus some server character-count limits).
 Pagination is explicit: limit 1–100, nonnegative safe-integer offset; no hidden
 auto-pagination, polling, retries or cancellation. Calls are synchronous and
 independent; const methods may be used concurrently while their client stays alive.
+
+### Custom video sessions (v1, video-only)
+
+Check explicit capabilities first; never infer support from `supports_video`:
+
+```cpp
+const auto caps = trychert::parse_media_capabilities(line.fields.value("media_capabilities", trychert::Json()));
+if (!caps.custom_video) return; // unsupported
+const auto grant = sdk.facetime.create_media_session(call_id,
+    {trychert::MediaDirection::publish, std::vector{trychert::VideoCodec::h264}}); // codecs optional
+// Hand grant.data.endpoint, grant.data.token and grant.data.ice_servers to any
+// standards WHIP client (RFC 9725).
+```
+
+`create_media_session` mints one session for an active call. `publish` grants a WHIP
+endpoint; `subscribe` grants an experimental WHEP endpoint (draft-ietf-wish-whep-05)
+capped at 1280x720. Treat `endpoint` as opaque, connect before `connect_by`, and send
+the same `Authorization: Bearer <token>` on the POST and on PATCH/DELETE to the returned
+`Location`. No stream operator prints the grant; never log `token`. A malformed grant
+throws `ApiError` with code `invalid_response` (raw data withheld); server codes
+(`unauthorized`, `call_not_found`, `media_capability_unsupported`,
+`media_session_conflict`, `call_not_active`, `call_ended`, `media_session_expired`,
+`media_transport_unavailable`) surface without server text. Requests are never retried.
+
+`copy_video_frame` validates a raw i420/nv12/rgba/bgra frame (even sizes from 16x16 to
+1920x1080, per-plane strides, 8 MiB total) and copies only the required bytes so
+buffers can be reused; failures throw `MediaFrameError` with `code` `invalid_frame` or
+`frame_too_large`.
+
+Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC stack;
+keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send periodic
+keyframes.
 
 ## iMessage generic requests
 

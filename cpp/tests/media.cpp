@@ -1,0 +1,164 @@
+#include <trychert/client.hpp>
+#include <cstdint>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <vector>
+
+namespace {
+void check(bool ok, const std::string& label = "Media contract failed") {
+    if (!ok) throw std::runtime_error(label);
+}
+void invalid(const std::function<void()>& body) {
+    try { body(); } catch (const std::invalid_argument&) { return; }
+    check(false, "accepted invalid input");
+}
+std::string frame_code(const trychert::VideoFrameInit& input) {
+    try { static_cast<void>(trychert::copy_video_frame(input)); }
+    catch (const trychert::MediaFrameError& error) { return error.code; }
+    return "accepted";
+}
+trychert::MediaCapabilities caps(const char* json) { return trychert::parse_media_capabilities(trychert::Json::parse(json)); }
+
+void capabilities() {
+    const auto full = caps(R"({"version":1,"custom_video":{"supported":true,"transports":["whip","livekit","whip"],"codecs":["vp8","h264","vp8"],"max_width":1920,"max_height":1080.0,"max_fps":30},"inbound_caller_video":{"supported":true,"transports":["whep"],"max_width":1280,"max_height":720,"max_fps":15}})");
+    check(full.version == 1 && full.custom_video && full.inbound_caller_video, "full capabilities");
+    check(full.custom_video->transports == std::vector<std::string>{"whip", "livekit"});
+    check(full.custom_video->codecs == std::vector{trychert::VideoCodec::vp8, trychert::VideoCodec::h264});
+    check(full.custom_video->max_width == 1920 && full.custom_video->max_height == 1080 && full.custom_video->max_fps == 30);
+    check(full.inbound_caller_video->transports == std::vector<std::string>{"whep"} && full.inbound_caller_video->max_fps == 15);
+    check(!trychert::parse_media_capabilities(trychert::Json()).custom_video, "absent");
+    for (const auto* raw : {"null", "[]", "\"x\"", "{}", R"({"version":"1"})",
+            R"({"version":2,"custom_video":{"supported":true,"transports":["whip"],"codecs":["h264"],"max_width":1,"max_height":1,"max_fps":1}})"}) {
+        const auto parsed = caps(raw);
+        check(parsed.version == 1 && !parsed.custom_video && !parsed.inbound_caller_video, raw);
+    }
+    const std::string ok_cv = R"({"supported":true,"transports":["whip"],"codecs":["h264"],"max_width":640,"max_height":360,"max_fps":30})";
+    const std::string ok_iv = R"({"supported":true,"transports":["livekit"],"max_width":640,"max_height":360,"max_fps":30})";
+    const auto section = [](const std::string& cv, const std::string& iv) {
+        return trychert::parse_media_capabilities(trychert::Json::parse(R"({"version":1,"custom_video":)" + cv + R"(,"inbound_caller_video":)" + iv + "}"));
+    };
+    const auto replace = [](std::string value, const std::string& from, const std::string& to) {
+        return value.replace(value.find(from), from.size(), to);
+    };
+    for (const auto& cv : {replace(ok_cv, "640", "1921"), replace(ok_cv, "360", "1081"), replace(ok_cv, "30}", "31}"),
+            replace(ok_cv, "640", "0"), replace(ok_cv, "640", "1.5"), replace(ok_cv, "\"whip\"", "\"rtmp\""),
+            replace(ok_cv, "[\"whip\"]", "[\"whip\",\"rtmp\"]"), replace(ok_cv, "[\"whip\"]", "[]"),
+            replace(ok_cv, "\"h264\"", "\"av1\""), replace(ok_cv, "[\"h264\"]", "[]"), replace(ok_cv, "true", "\"true\""),
+            replace(ok_cv, "true", "false"), std::string("[]"), std::string("null")}) {
+        const auto parsed = section(cv, ok_iv);
+        check(!parsed.custom_video && parsed.inbound_caller_video, cv);
+    }
+    for (const auto& iv : {replace(ok_iv, "640", "1281"), replace(ok_iv, "360", "721"), replace(ok_iv, "\"livekit\"", "\"whip\""),
+            replace(ok_iv, "[\"livekit\"]", "\"whep\"")}) {
+        const auto parsed = section(ok_cv, iv);
+        check(parsed.custom_video && !parsed.inbound_caller_video, iv);
+    }
+    // Generic video flags never imply support.
+    const auto line = trychert::Json::parse(R"({"id":"l","supports_video":true})");
+    check(!trychert::parse_media_capabilities(line.value("media_capabilities", trychert::Json())).custom_video);
+}
+
+void frames() {
+    using trychert::PixelFormat;
+    std::vector<std::uint8_t> y(256), u(64), v(64);
+    const trychert::VideoFrameInit i420{PixelFormat::i420, 16, 16, {{y, 16}, {u, 8}, {v, 8}}, 0, std::nullopt, 0, std::nullopt};
+    auto frame = trychert::copy_video_frame(i420);
+    check(frame.color_space == trychert::ColorSpace::bt709_limited && frame.rotation == 0 && frame.planes.size() == 3, "i420");
+    std::vector<std::uint8_t> source(100 * 20);
+    source[0] = 7;
+    frame = trychert::copy_video_frame({PixelFormat::rgba, 16, 20, {{source, 100}}, 5, std::nullopt, 270, std::nullopt});
+    source[0] = 9;
+    check(frame.planes[0].data.size() == 100 * 19 + 64 && frame.planes[0].data[0] == 7
+        && frame.color_space == trychert::ColorSpace::srgb_full && frame.rotation == 270, "copy semantics");
+    std::vector<std::uint8_t> luma(1920 * 1080), chroma(1920 * 540), large(7936 * 1080);
+    frame = trychert::copy_video_frame({PixelFormat::nv12, 1920, 1080, {{luma, 1920}, {chroma, 1920}}, 1, std::nullopt, 0, trychert::ColorSpace::bt601_limited});
+    check(frame.color_space == trychert::ColorSpace::bt601_limited, "nv12");
+    check(frame_code({PixelFormat::bgra, 1920, 1080, {{std::span(large).first(7680 * 1080), 7680}}, 1, std::nullopt, 0, std::nullopt}) == "accepted", "max bgra");
+    check(frame_code({PixelFormat::rgba, 1920, 1080, {{large, 7936}}, 1, std::nullopt, 0, std::nullopt}) == "frame_too_large", "8 MiB");
+    std::vector<std::uint8_t> short_plane(63), padded(272 * 15 + 16);
+    const std::vector<std::function<void(trychert::VideoFrameInit&)>> edits = {
+        [](auto& f) { f.format = static_cast<PixelFormat>(9); }, [](auto& f) { f.width = 17; },
+        [](auto& f) { f.width = 14; f.height = 14; }, [](auto& f) { f.width = 1922; }, [](auto& f) { f.height = 1082; },
+        [](auto& f) { f.timestamp_us = -1; }, [](auto& f) { f.duration_us = 0; }, [](auto& f) { f.rotation = 45; },
+        [](auto& f) { f.color_space = static_cast<trychert::ColorSpace>(9); }, [](auto& f) { f.planes.pop_back(); },
+        [](auto& f) { f.planes[1].stride = 7; }, [](auto& f) { f.planes[0].stride = 16 + 257; },
+        [&](auto& f) { f.planes[2].data = short_plane; }};
+    for (const auto& edit : edits) {
+        auto bad = i420;
+        edit(bad);
+        check(frame_code(bad) == "invalid_frame", "invalid frame accepted");
+    }
+    auto max_stride = i420;
+    max_stride.planes[0] = {padded, 272};
+    check(frame_code(max_stride) == "accepted", "max stride");
+}
+
+void sessions(const std::string& origin, int bad_cases, int error_cases, int accept_cases) {
+    const std::string project = "11111111-1111-4111-8111-111111111111", call = "22222222-2222-4222-8222-222222222222";
+    const auto client = [&](const std::string& name) { return trychert::FaceTimeClient({origin + "/case/" + name, "ft-secret", project}); };
+    using trychert::MediaDirection;
+    const auto grant = client("publish").create_media_session(call, {MediaDirection::publish, std::nullopt});
+    const auto& g = grant.data;
+    check(grant.status == 201 && grant.request_id == "trace" && g.token == "grant-secret-token" && g.direction == MediaDirection::publish, "grant");
+    check(g.endpoint == "https://signal.example/whip/s1" && g.session_id == "0f8fad5b-d9cb-469f-a165-70867728950e");
+    check(g.connect_by == "2026-10-25T10:00:00Z" && g.codecs == std::vector{trychert::VideoCodec::h264, trychert::VideoCodec::vp8});
+    check(g.limits.max_width == 1920 && g.limits.max_height == 1080 && g.limits.max_fps == 30 && g.limits.max_frame_bytes == 8388608);
+    check(g.ice_servers.size() == 2 && g.ice_servers[0].urls == std::vector<std::string>{"stun:stun.example:3478"}
+        && !g.ice_servers[0].username && g.ice_servers[1].credential == "c" && g.ice_servers[1].credential_type == "password", "ice");
+    static_cast<void>(client("codecs").create_media_session(call, {MediaDirection::publish, std::vector{trychert::VideoCodec::vp8, trychert::VideoCodec::h264}}));
+    check(client("subscribe").create_media_session(call, {MediaDirection::subscribe, std::nullopt}).data.limits.max_height == 720, "subscribe");
+
+    // Local validation throws before any request (the fixture counts requests).
+    const auto local = client("local");
+    invalid([&] { static_cast<void>(local.create_media_session(call, {static_cast<MediaDirection>(7), std::nullopt})); });
+    invalid([&] { static_cast<void>(local.create_media_session(call, {MediaDirection::publish, std::vector<trychert::VideoCodec>{}})); });
+    invalid([&] { static_cast<void>(local.create_media_session(call, {MediaDirection::publish, std::vector{static_cast<trychert::VideoCodec>(9)}})); });
+    invalid([&] { static_cast<void>(local.create_media_session(call, {MediaDirection::publish, std::vector{trychert::VideoCodec::h264, trychert::VideoCodec::h264}})); });
+    invalid([&] { static_cast<void>(local.create_media_session("call", {MediaDirection::publish, std::nullopt})); });
+
+    for (int i = 0; i < bad_cases; ++i) {
+        const auto direction = i < 2 ? MediaDirection::subscribe : MediaDirection::publish;
+        try {
+            static_cast<void>(client("bad-" + std::to_string(i)).create_media_session(call, {direction, std::nullopt}));
+            check(false, "accepted invalid grant " + std::to_string(i));
+        } catch (const trychert::ApiError& error) {
+            check(error.code == "invalid_response" && error.data.dump().find("grant-secret") == std::string::npos, "grant code " + std::to_string(i));
+        }
+    }
+    try {
+        static_cast<void>(client("outside").create_media_session(call, {MediaDirection::publish, std::vector{trychert::VideoCodec::vp8}}));
+        check(false, "accepted codec outside request");
+    } catch (const trychert::ApiError& error) { check(error.code == "invalid_response", "outside code"); }
+    for (int i = 0; i < accept_cases; ++i) {
+        const auto codecs = i == 0 ? std::optional(std::vector{trychert::VideoCodec::vp8, trychert::VideoCodec::h264}) : std::nullopt;
+        static_cast<void>(client("accept-" + std::to_string(i)).create_media_session(call, {MediaDirection::publish, codecs}));
+    }
+    const std::vector<std::pair<long, std::string>> expected = {{401, "unauthorized"}, {401, "media_session_expired"}, {404, "call_not_found"},
+        {409, "media_capability_unsupported"}, {409, "media_session_conflict"}, {409, "call_not_active"}, {410, "call_ended"},
+        {503, "media_transport_unavailable"}};
+    check(static_cast<int>(expected.size()) == error_cases, "error case count");
+    for (int i = 0; i < error_cases; ++i) {
+        try {
+            static_cast<void>(client("error-" + std::to_string(i)).create_media_session(call, {MediaDirection::publish, std::nullopt}));
+            check(false, "accepted error");
+        } catch (const trychert::ApiError& error) {
+            check(error.status == expected[i].first && error.code == expected[i].second
+                && std::string(error.what()).find("10.0.0.5") == std::string::npos, "error " + expected[i].second);
+        }
+    }
+}
+} // namespace
+
+int main(int argc, char** argv) {
+    try {
+        check(argc == 5);
+        capabilities();
+        frames();
+        sessions(argv[1], std::stoi(argv[2]), std::stoi(argv[3]), std::stoi(argv[4]));
+        std::cout << "Media capabilities, frames, session minting and grant validation passed\n";
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << '\n';
+        return 1;
+    }
+}

@@ -1,6 +1,8 @@
 #include <trychert/facetime.hpp>
 #include <algorithm>
 #include <array>
+#include <cctype>
+#include <cmath>
 #include <limits>
 #include <string_view>
 
@@ -128,6 +130,140 @@ Json create_body(const CreateCall& input) {
     // admission remain server decisions. Never retry a rejected/uncertain call.
     return body;
 }
+// JavaScript Number.isInteger(v) && 0 < v <= max.
+std::optional<int> js_integer(const Json& owner, const char* field, int max) {
+    if (!owner.is_object() || !owner.contains(field) || !owner.at(field).is_number()) return std::nullopt;
+    const auto number = owner.at(field).get<double>();
+    if (!std::isfinite(number) || number <= 0 || number > max || std::trunc(number) != number) return std::nullopt;
+    return static_cast<int>(number);
+}
+std::optional<std::vector<std::string>> allowed_list(const Json& owner, const char* field,
+                                                     std::initializer_list<std::string_view> allowed) {
+    if (!owner.contains(field) || !owner.at(field).is_array()) return std::nullopt;
+    std::vector<std::string> result;
+    for (const auto& item : owner.at(field)) {
+        if (!item.is_string()) return std::nullopt;
+        const auto& value = item.get_ref<const std::string&>();
+        if (std::find(allowed.begin(), allowed.end(), value) == allowed.end()) return std::nullopt;
+        if (std::find(result.begin(), result.end(), value) == result.end()) result.push_back(value);
+    }
+    return result;
+}
+VideoCodec codec(const std::string& value) {
+    require(value == "h264" || value == "vp8");
+    return value == "h264" ? VideoCodec::h264 : VideoCodec::vp8;
+}
+bool digits(std::string_view value, std::size_t at, std::size_t count, int& out) {
+    if (at + count > value.size()) return false;
+    out = 0;
+    for (std::size_t i = at; i < at + count; ++i) {
+        if (value[i] < '0' || value[i] > '9') return false;
+        out = out * 10 + (value[i] - '0');
+    }
+    return true;
+}
+// RFC 3339 date-time: YYYY-MM-DDTHH:MM:SS[.frac](Z|+HH:MM|-HH:MM), T/Z case-insensitive as in
+// the reference SDK. Returns Unix milliseconds (fraction truncated, as JavaScript Date.parse).
+std::optional<std::int64_t> rfc3339(std::string_view value) {
+    int year, month, day, hour, minute, second, offset_hour = 0, offset_minute = 0;
+    if (!digits(value, 0, 4, year) || value.size() < 20 || value[4] != '-' || !digits(value, 5, 2, month) || value[7] != '-'
+        || !digits(value, 8, 2, day) || (value[10] != 'T' && value[10] != 't') || !digits(value, 11, 2, hour) || value[13] != ':'
+        || !digits(value, 14, 2, minute) || value[16] != ':' || !digits(value, 17, 2, second)) return std::nullopt;
+    std::size_t at = 19;
+    std::int64_t millis = 0;
+    if (value[at] == '.') {
+        const auto start = ++at;
+        while (at < value.size() && value[at] >= '0' && value[at] <= '9') {
+            if (at - start < 3) millis = millis * 10 + (value[at] - '0');
+            ++at;
+        }
+        if (at == start) return std::nullopt;
+        for (auto n = at - start; n < 3; ++n) millis *= 10;
+    }
+    if (at == value.size()) return std::nullopt;
+    int sign = 0;
+    if (value[at] == 'Z' || value[at] == 'z') { if (at + 1 != value.size()) return std::nullopt; }
+    else if ((value[at] != '+' && value[at] != '-') || at + 6 != value.size() || !digits(value, at + 1, 2, offset_hour)
+             || value[at + 3] != ':' || !digits(value, at + 4, 2, offset_minute) || offset_hour > 23 || offset_minute > 59) return std::nullopt;
+    else sign = value[at] == '+' ? 1 : -1;
+    const bool leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    const int days[] = {31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (month < 1 || month > 12 || day < 1 || day > days[month - 1] || hour > 23 || minute > 59 || second > 59) return std::nullopt;
+    // Days since 1970-01-01 (proleptic Gregorian civil calendar).
+    const std::int64_t y = month <= 2 ? year - 1 : year;
+    const std::int64_t era = (y >= 0 ? y : y - 399) / 400, yoe = y - era * 400;
+    const std::int64_t doy = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
+    const std::int64_t epoch_days = era * 146097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719468;
+    const std::int64_t seconds = epoch_days * 86400 + hour * 3600 + minute * 60 + second - sign * (offset_hour * 3600 + offset_minute * 60);
+    return seconds * 1000 + millis;
+}
+// Absolute HTTPS URL (HTTP only for loopback hosts) without user information or fragment.
+bool media_endpoint(std::string_view url) {
+    if (std::any_of(url.begin(), url.end(), [](unsigned char c) { return c <= 32 || c >= 127; })) return false;
+    const auto separator = url.find("://");
+    if (separator == url.npos) return false;
+    std::string scheme(url.substr(0, separator));
+    std::transform(scheme.begin(), scheme.end(), scheme.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    const auto rest = url.substr(separator + 3);
+    const auto authority = rest.substr(0, rest.find_first_of("/?#"));
+    const auto hash = url.find('#');
+    if (authority.empty() || authority.find('@') != authority.npos || (hash != url.npos && hash + 1 < url.size())) return false;
+    std::string host(authority.front() == '[' ? authority.substr(0, authority.find(']') + 1) : authority.substr(0, authority.find(':')));
+    if (host.empty() || (host.front() == '[' && host.back() != ']')) return false;
+    const auto port = authority.substr(host.size());
+    if (!port.empty() && (port.front() != ':' || !std::all_of(port.begin() + 1, port.end(), [](char c) { return c >= '0' && c <= '9'; })))
+        return false;
+    std::transform(host.begin(), host.end(), host.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return scheme == "https" || (scheme == "http" && (host == "localhost" || host == "127.0.0.1" || host == "[::1]"));
+}
+MediaSessionGrant grant(const Json& value, MediaDirection direction, const std::optional<std::vector<VideoCodec>>& requested) {
+    require(value.is_object());
+    const auto wire = direction == MediaDirection::publish ? "publish" : "subscribe";
+    const auto id = string(value, "session_id");
+    require(string(value, "direction") == wire && id.size() == 36);
+    require(std::all_of(id.begin(), id.end(), [](char c) {
+        return c == '-' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }));
+    MediaSessionGrant result{id, direction, string(value, "endpoint"), string(value, "token"),
+        string(value, "connect_by"), string(value, "expires_at"), {}, {}, {}};
+    require(media_endpoint(result.endpoint) && !result.token.empty() && result.token.find_first_of("\r\n") == std::string::npos);
+    const auto connect_by = rfc3339(result.connect_by), expires_at = rfc3339(result.expires_at);
+    require(connect_by && expires_at && *connect_by <= *expires_at && value.at("ice_servers").is_array());
+    for (const auto& item : value.at("ice_servers")) {
+        require(item.is_object());
+        IceServer server;
+        const auto& urls = item.at("urls");
+        if (urls.is_string()) server.urls.push_back(urls.get<std::string>());
+        else {
+            require(urls.is_array() && !urls.empty());
+            for (const auto& url : urls) server.urls.push_back(url.get<std::string>());
+        }
+        // Optional fields must be absent or strings (JSON null rejects); credentialType is only "password".
+        const auto optional = [&](const char* field) {
+            return item.contains(field) ? std::optional(item.at(field).get<std::string>()) : std::nullopt;
+        };
+        server.username = optional("username");
+        server.credential = optional("credential");
+        server.credential_type = optional("credentialType");
+        require(!server.credential_type || *server.credential_type == "password");
+        result.ice_servers.push_back(std::move(server));
+    }
+    require(value.at("codecs").is_array() && !value.at("codecs").empty());
+    for (const auto& item : value.at("codecs")) {
+        const auto parsed = codec(item.get<std::string>());
+        require(std::find(result.codecs.begin(), result.codecs.end(), parsed) == result.codecs.end());
+        if (requested) require(std::find(requested->begin(), requested->end(), parsed) != requested->end());
+        result.codecs.push_back(parsed);
+    }
+    const auto publish = direction == MediaDirection::publish;
+    const auto& limits = value.at("limits");
+    const auto width = js_integer(limits, "max_width", publish ? 1920 : 1280);
+    const auto height = js_integer(limits, "max_height", publish ? 1080 : 720);
+    const auto fps = js_integer(limits, "max_fps", 30);
+    const auto bytes = js_integer(limits, "max_frame_bytes", max_frame_bytes);
+    require(width && height && fps && bytes);
+    result.limits = {*width, *height, *fps, *bytes};
+    return result;
+}
 } // namespace
 
 FaceTimeClient::FaceTimeClient(FaceTimeOptions options)
@@ -242,5 +378,112 @@ Result<Line> FaceTimeClient::update_line(const std::string& id, const UpdateLine
     return decode(request("/lines/" + expected, body, "PATCH"), [&](const Json& data) {
         auto result = line(data); require(result.id == expected); return result;
     });
+}
+Result<MediaSessionGrant> FaceTimeClient::create_media_session(const std::string& call_id,
+                                                               const CreateMediaSession& input) const {
+    const auto id = uuid(call_id);
+    require(input.direction == MediaDirection::publish || input.direction == MediaDirection::subscribe);
+    Json body{{"direction", input.direction == MediaDirection::publish ? "publish" : "subscribe"}};
+    if (input.codecs) {
+        require(!input.codecs->empty());
+        body["codecs"] = Json::array();
+        for (const auto item : *input.codecs) {
+            require(item == VideoCodec::h264 || item == VideoCodec::vp8);
+            const auto name = item == VideoCodec::h264 ? "h264" : "vp8";
+            require(std::find(body["codecs"].begin(), body["codecs"].end(), name) == body["codecs"].end());
+            body["codecs"].push_back(name);
+        }
+    }
+    Result<Json> result;
+    try { result = request("/calls/" + id + "/media-sessions", std::move(body), "POST"); }
+    catch (const ApiError& error) {
+        if (error.code != "invalid_response") throw;
+        // Response data is withheld: an invalid grant may still carry a bearer token.
+        throw ApiError(error.status, error.code, error.request_id);
+    }
+    try {
+        require(result.status == 201);
+        return {grant(result.data, input.direction, input.codecs), result.request_id, result.status};
+    } catch (const std::exception&) {
+        // Response data is withheld: an invalid grant may still carry a bearer token.
+        throw ApiError(502, "invalid_response", result.request_id);
+    }
+}
+
+MediaCapabilities parse_media_capabilities(const Json& input) {
+    MediaCapabilities result;
+    if (!input.is_object() || !input.contains("version") || !input.at("version").is_number()
+        || input.at("version").get<double>() != 1.0) return result;
+    const auto enabled = [&](const char* field) {
+        return input.contains(field) && input.at(field).is_object() && input.at(field).contains("supported")
+            && input.at(field).at("supported") == true;
+    };
+    if (enabled("custom_video")) {
+        const auto& cv = input.at("custom_video");
+        const auto transports = allowed_list(cv, "transports", {"whip", "livekit"});
+        const auto codecs = allowed_list(cv, "codecs", {"h264", "vp8"});
+        const auto width = js_integer(cv, "max_width", 1920), height = js_integer(cv, "max_height", 1080), fps = js_integer(cv, "max_fps", 30);
+        if (transports && !transports->empty() && codecs && !codecs->empty() && width && height && fps) {
+            CustomVideoCapability section{true, *transports, {}, *width, *height, *fps};
+            for (const auto& item : *codecs) section.codecs.push_back(codec(item));
+            result.custom_video = std::move(section);
+        }
+    }
+    if (enabled("inbound_caller_video")) {
+        const auto& iv = input.at("inbound_caller_video");
+        const auto transports = allowed_list(iv, "transports", {"whep", "livekit"});
+        const auto width = js_integer(iv, "max_width", 1280), height = js_integer(iv, "max_height", 720), fps = js_integer(iv, "max_fps", 30);
+        if (transports && !transports->empty() && width && height && fps)
+            result.inbound_caller_video = InboundCallerVideoCapability{true, *transports, *width, *height, *fps};
+    }
+    return result;
+}
+
+MediaFrameError::MediaFrameError(std::string code_value, const std::string& message)
+    : std::invalid_argument(message), code(std::move(code_value)) {}
+
+void check_frame_dimensions(int width, int height) {
+    if (width % 2 || height % 2 || width < 16 || height < 16 || width > 1920 || height > 1080)
+        throw MediaFrameError("invalid_frame", "Dimensions must be even integers between 16 and 1920x1080.");
+}
+
+VideoFrame copy_video_frame(const VideoFrameInit& input) {
+    struct Layout { std::int64_t row_bytes, rows; };
+    const std::int64_t w = input.width, h = input.height;
+    std::vector<Layout> layout;
+    switch (input.format) {
+        case PixelFormat::rgba: case PixelFormat::bgra: layout = {{w * 4, h}}; break;
+        case PixelFormat::i420: layout = {{w, h}, {w / 2, h / 2}, {w / 2, h / 2}}; break;
+        case PixelFormat::nv12: layout = {{w, h}, {w, h / 2}}; break;
+        default: throw MediaFrameError("invalid_frame", "Unsupported pixel format.");
+    }
+    check_frame_dimensions(input.width, input.height);
+    if (input.timestamp_us < 0) throw MediaFrameError("invalid_frame", "timestamp_us must be non-negative.");
+    if (input.duration_us && *input.duration_us <= 0) throw MediaFrameError("invalid_frame", "duration_us must be positive.");
+    if (input.rotation != 0 && input.rotation != 90 && input.rotation != 180 && input.rotation != 270)
+        throw MediaFrameError("invalid_frame", "Unsupported rotation.");
+    if (input.color_space && *input.color_space != ColorSpace::bt709_limited && *input.color_space != ColorSpace::bt601_limited
+        && *input.color_space != ColorSpace::srgb_full) throw MediaFrameError("invalid_frame", "Unsupported color space.");
+    if (input.planes.size() != layout.size())
+        throw MediaFrameError("invalid_frame", "Pixel format requires " + std::to_string(layout.size()) + " plane(s).");
+    const bool yuv = input.format == PixelFormat::i420 || input.format == PixelFormat::nv12;
+    VideoFrame result{input.format, input.width, input.height, {}, input.timestamp_us, input.duration_us, input.rotation,
+        input.color_space.value_or(yuv ? ColorSpace::bt709_limited : ColorSpace::srgb_full)};
+    std::int64_t total = 0;
+    for (std::size_t i = 0; i < layout.size(); ++i) {
+        const auto [row_bytes, rows] = layout[i];
+        const auto& plane = input.planes[i];
+        if (plane.stride < row_bytes || plane.stride > row_bytes + 256)
+            throw MediaFrameError("invalid_frame", "Plane " + std::to_string(i) + " stride must be between "
+                + std::to_string(row_bytes) + " and " + std::to_string(row_bytes + 256) + " bytes.");
+        const auto needed = plane.stride * (rows - 1) + row_bytes;
+        if (static_cast<std::int64_t>(plane.data.size()) < needed)
+            throw MediaFrameError("invalid_frame", "Plane " + std::to_string(i) + " needs at least " + std::to_string(needed) + " bytes.");
+        total += needed;
+        if (total > max_frame_bytes) throw MediaFrameError("frame_too_large", "Frame exceeds 8 MiB.");
+        const auto first = plane.data.begin();
+        result.planes.push_back({std::vector<std::uint8_t>(first, first + static_cast<std::ptrdiff_t>(needed)), plane.stride});
+    }
+    return result;
 }
 } // namespace trychert
