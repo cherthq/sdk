@@ -85,6 +85,10 @@ func TestCreateMediaSessionRequestAndGrant(t *testing.T) {
 		t.Fatalf("bodies %q", f.bodies)
 	}
 	for _, verb := range []string{"%v", "%+v", "%#v", "%s", "%d", "%x", "%q"} {
+		ice := fmt.Sprintf(verb, g.ICEServers[1]) + fmt.Sprintf(verb, &g.ICEServers[1]) + fmt.Sprintf(verb, g.ICEServers)
+		if strings.Contains(ice, "turn.example") || strings.Contains(ice, `"c"`) || !strings.Contains(ice, "redacted") {
+			t.Fatalf("%s ICE server leaked: %s", verb, ice)
+		}
 		if s := fmt.Sprintf(verb, g) + fmt.Sprintf(verb, &g) + fmt.Sprintf(verb, r); strings.Contains(s, "grant-secret") || strings.Contains(s, "signal.example") {
 			t.Fatalf("%s leaked: %s", verb, s)
 		}
@@ -180,6 +184,17 @@ func TestCreateMediaSessionRequestAndGrant(t *testing.T) {
 		}
 	}
 
+	// Unknown server codes become request_failed; raw data and response are never returned.
+	f.set(func() (int, string) {
+		return 418, `{"error":{"code":"internal_detail","message":"internal host 10.0.0.5"},"request_id":"trace"}`
+	})
+	if r, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish}); true {
+		var api *APIError
+		if !errors.As(err, &api) || api.Status != 418 || api.Code != "request_failed" || api.Data != nil || api.RequestID != "trace" || r.Response.Data != nil || r.Response.Status != 0 {
+			t.Fatalf("unknown code: %v %+v", err, r.Response)
+		}
+	}
+
 	// Server errors surface verbatim codes and never server text.
 	for _, tc := range []struct {
 		status int
@@ -191,7 +206,7 @@ func TestCreateMediaSessionRequestAndGrant(t *testing.T) {
 		before := f.requests()
 		_, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish})
 		var api *APIError
-		if !errors.As(err, &api) || api.Status != tc.status || api.Code != tc.code || f.requests() != before+1 ||
+		if !errors.As(err, &api) || api.Status != tc.status || api.Code != tc.code || f.requests() != before+1 || api.Data != nil ||
 			strings.Contains(err.Error(), "10.0.0.5") || strings.Contains(fmt.Sprintf("%v %+v %#v", err, err, err), "10.0.0.5") {
 			t.Fatalf("%d %s: %v", tc.status, tc.code, err)
 		}

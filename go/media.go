@@ -35,13 +35,18 @@ type CreateMediaSessionRequest struct {
 	Codecs    []VideoCodec   `json:"codecs,omitempty"`
 }
 
-// ICEServer mirrors the WebRTC RTCIceServer shape. URLs may be empty.
+// ICEServer mirrors the WebRTC RTCIceServer shape. URLs has at least one entry
+// (a single wire string becomes one entry). Formatting redacts the credential.
 type ICEServer struct {
 	URLs           []string
 	Username       string
 	Credential     string
 	CredentialType string
 }
+
+func (s ICEServer) String() string             { return "ICEServer{redacted}" }
+func (s ICEServer) GoString() string           { return s.String() }
+func (s ICEServer) Format(f fmt.State, _ rune) { _, _ = fmt.Fprint(f, s.String()) }
 
 // MediaLimits are server-granted bounds for one session.
 type MediaLimits struct {
@@ -88,7 +93,7 @@ func (c *FaceTimeClient) CreateMediaSession(ctx context.Context, callID string, 
 	}
 	r, err := c.Request(ctx, "POST", path, input, FaceTimeRequestOptions{Auth: ProjectAuth})
 	if err != nil {
-		return Result[MediaSessionGrant]{Response: r}, err
+		return Result[MediaSessionGrant]{}, mediaError(err)
 	}
 	var envelope struct {
 		Data      json.RawMessage `json:"data"`
@@ -104,6 +109,29 @@ func (c *FaceTimeClient) CreateMediaSession(ctx context.Context, callID string, 
 		return Result[MediaSessionGrant]{}, &APIError{Status: r.Status, Code: "invalid_response", RequestID: r.RequestID}
 	}
 	return Result[MediaSessionGrant]{grant, r}, nil
+}
+
+// mediaSafeCodes are the server error codes surfaced verbatim; others become request_failed.
+var mediaSafeCodes = map[string]bool{
+	"unauthorized": true, "forbidden": true, "cli_scope_denied": true, "billing_owner_required": true, "billing_unavailable": true,
+	"project_required": true, "invalid_request": true, "cli_login_expired": true, "cli_login_not_found": true, "cli_login_forbidden": true,
+	"slow_down": true, "cli_login_rate_limited": true, "cli_login_busy": true, "not_found": true, "conflict": true,
+	"media_capability_unsupported": true, "media_session_conflict": true, "call_not_active": true, "call_ended": true,
+	"call_not_found": true, "media_session_expired": true, "media_transport_unavailable": true,
+}
+
+// mediaError never returns raw response data. Server error responses keep their status
+// and an allowlisted code; local and transport errors keep their code.
+func mediaError(err error) error {
+	api, ok := err.(*APIError)
+	if !ok {
+		return err
+	}
+	out := &APIError{Status: api.Status, Code: api.Code, RequestID: api.RequestID, cause: api.cause}
+	if api.Status >= 300 && api.Data != nil && !mediaSafeCodes[api.Code] {
+		out.Code = "request_failed"
+	}
+	return out
 }
 
 var sessionIDPattern = regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)
