@@ -1,6 +1,7 @@
 # @cherthq/adopt
 
-Private, unpublished migration helper. `chert-adopt` finds iMessage provider
+Migration helper (ships inside `@trychert/sdk` as `chert-sdk adopt`; this
+workspace package itself is private and unpublished). `chert-adopt` finds iMessage provider
 usage in a project and classifies each usage against the Chert adapters'
 documented subset ([COMPATIBILITY.md](../../COMPATIBILITY.md)). It is a static
 analysis aid, not a parity claim: dynamic calls are invisible to it, and every

@@ -29,12 +29,15 @@ async function main() {
   if (channel === 'adopt') { process.exitCode = adopt(process.argv.slice(3)); return; }
   if (!channel || process.argv.includes('--help') || process.argv.includes('-h')) { console.log(help); return; }
   // Reject unknown commands before asking for credentials, so typos are not reported as missing configuration.
-  if (!['context', 'imessage', 'facetime'].includes(channel)) throw Object.assign(new Error(), { code: 'unknown_command' });
+  const unknown = channel === 'context' ? command !== undefined
+    : channel === 'imessage' ? command !== 'send'
+    : channel === 'facetime' ? args.length > 0 || !['status', 'lines', 'workers'].includes(command!)
+    : true;
+  if (unknown) throw Object.assign(new Error(), { code: 'unknown_command' });
   const env = process.env;
   const required = (name: string) => { const value = env[name]; if (!value?.trim()) throw new Error(`Set ${name}.`); return value; };
   const projectId = required('CHERT_PROJECT_ID');
   if (channel === 'context') {
-    if (command) throw new Error('context takes no arguments');
     console.log(JSON.stringify({ projectId, channels: ['imessage', 'facetime'], credentials: 'service-specific' })); return;
   }
   // Instantiate only the selected transport; unrelated channel secrets are not required.
@@ -42,7 +45,6 @@ async function main() {
   const { ChertControlPlane } = await import('@cherthq/control-plane');
   let result: unknown;
   if (channel === 'imessage') {
-    if (command !== 'send') throw new Error('Use imessage send.');
     const { values } = parseArgs({ args, options: { phone: { type: 'string' }, body: { type: 'string' }, 'idempotency-key': { type: 'string' }, confirm: { type: 'boolean' } } });
     if (!values.phone?.trim() || !values.body?.trim()) throw Object.assign(new Error(), { code: 'invalid_request' });
     if (values['idempotency-key'] === undefined) throw Object.assign(new Error(), { code: 'idempotency_key_required' });
@@ -51,7 +53,6 @@ async function main() {
     const client = new ChertClient({ baseURL: env.CHERT_BASE_URL, apiKey: required('CHERT_API_KEY'), ...(env.CHERT_TENANT ? { tenant: env.CHERT_TENANT } : {}) });
     result = await client.sendText({ phone: values.phone, body: values.body, idempotency_key: values['idempotency-key'] });
   } else {
-    if (args.length || !['status', 'lines', 'workers'].includes(command!)) throw new Error('Use facetime status, lines or workers.');
     const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId });
     result = command === 'lines' ? await client.listLines() : command === 'workers' ? await client.listWorkers() : await client.whoami();
   }

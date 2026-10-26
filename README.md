@@ -43,9 +43,7 @@ build/test source; do not substitute a similarly named registry package.
 
 The examples below target **`@trychert/sdk@0.2.0`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
-versions; registry commands require the requested version to be available.
-Local validation installs the packed tarball. Package availability does not
-establish live backend support.
+versions. Package availability does not establish live backend support.
 
 ```sh
 npm install @trychert/sdk@0.2.0

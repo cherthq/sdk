@@ -10,8 +10,9 @@ python -m pip install chert-sdk==0.1.0
 # or: uv add chert-sdk==0.1.0
 ```
 
-This guide matches the published 0.1.0 package. Unreleased APIs are marked as
-source preview and are not in 0.1.0.
+This guide matches the published 0.1.0 package, which was built from this source
+tree. "Source preview" below means not production-verified, not absent from the
+package.
 
 ```python
 from trychert import Chert, IMessageConfig, FaceTimeConfig
