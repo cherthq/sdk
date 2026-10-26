@@ -1,14 +1,18 @@
 # Chert Python SDK (`chert-sdk`)
 
-Unpublished Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
+Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
 The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
-Install the built wheel and import `trychert`. The legacy `chert`
-import and explicit-URL constructor calls remain compatible.
+[`chert-sdk` 0.1.0](https://pypi.org/project/chert-sdk/0.1.0/) is published on PyPI.
+The legacy `chert` import and explicit-URL constructor calls remain compatible.
 
 ```sh
-# Install a locally built artifact; no PyPI release is claimed yet.
-python -m pip install ./chert_sdk-0.1.0-py3-none-any.whl
+python -m pip install chert-sdk==0.1.0
+# or: uv add chert-sdk==0.1.0
 ```
+
+This guide matches the published 0.1.0 package, which was built from this source
+tree. "Source preview" below means not production-verified, not absent from the
+package.
 
 ```python
 from trychert import Chert, IMessageConfig, FaceTimeConfig
@@ -192,7 +196,7 @@ and `message`, not proof of completed cancellation. Refresh status to confirm.
 `sales_enabled`, `shared_available`, and `dedicated_available`. The entitlement
 is preserved as an extensible JSON object, not modeled as a checkout record.
 
-**Unpublished preview compatibility:** `billing_catalog()` and
+**Pre-release preview compatibility:** `billing_catalog()` and
 `current_checkout()` and the `BillingPlan`, `BillingCatalog`, and `Checkout`
 models were removed because they described unsupported routes/shapes. Use
 `billing_status()` for status, not as a catalog or checkout-record substitute.

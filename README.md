@@ -10,14 +10,15 @@ the other clients are source previews, with unified channel support under review
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
 | JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.0`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
-| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | Unpublished `chert-sdk` distribution; build from source ([implementation #11](https://github.com/cherthq/sdk/pull/11)) | [Python guide](https://github.com/cherthq/sdk/blob/main/python/README.md) |
+| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.1.0 on PyPI](https://pypi.org/project/chert-sdk/0.1.0/): `pip install chert-sdk==0.1.0` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
-| Go 1.23+ | Standard-library iMessage transport (`chert`) | Unified iMessage/FaceTime source preview on `unified-go-sdk`; no tagged release | [Go guide](go/README.md) |
+| Go 1.23+ | Standard-library iMessage and FaceTime clients (`chert`) | Source preview on `main`; no tagged release | [Go guide](go/README.md) |
 
-Draft package names describe proposed distributions, not packages available from
-PyPI, crates.io, NuGet or a C++ package registry. Follow the language guide to
+Only `@trychert/sdk` (npm) and `chert-sdk` 0.1.0 (PyPI) are published. Other
+package names describe proposed distributions, not packages available from
+crates.io, NuGet or a C++ package registry. Follow the language guide to
 build/test source; do not substitute a similarly named registry package.
 
 ## Channels and credentials
@@ -42,9 +43,7 @@ build/test source; do not substitute a similarly named registry package.
 
 The examples below target **`@trychert/sdk@0.2.0`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
-versions; registry commands require the requested version to be available.
-Local validation installs the packed tarball. Package availability does not
-establish live backend support.
+versions. Package availability does not establish live backend support.
 
 ```sh
 npm install @trychert/sdk@0.2.0
@@ -168,16 +167,16 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
-migration. To upgrade, check registry availability and update the dependency to
-`@trychert/sdk@0.2.0`, regenerate your consumer lockfile and rerun tests.
+migration. To upgrade, update the dependency to `@trychert/sdk@0.2.0`
+(published, `latest`), regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
-stay `@trychert/sdk/<subpath>`. Publication is a separate release step.
+stay `@trychert/sdk/<subpath>`.
 
 ### Migrating from accidental unscoped `chert-sdk@0.1.0`
 
 The canonical npm package is `@trychert/sdk`, not `chert-sdk`. If you installed
-the accidental unscoped 0.1.0 package, remove that dependency and install
-`@trychert/sdk@0.2.0` after checking registry availability. Change root imports
+the accidental unscoped 0.1.0 package (since unpublished from npm), remove that
+dependency and install `@trychert/sdk@0.2.0`. Change root imports
 from `chert-sdk` to `@trychert/sdk` and preserve subpath suffixes (for example,
 `chert-sdk/facetime` becomes `@trychert/sdk/facetime`). Regenerate your consumer
 lockfile and rerun tests. The identity correction does not change the default
@@ -186,10 +185,11 @@ archive does not alias unscoped imports. `adopt` migrates supported provider
 usage; do not rely on it to rename existing SDK imports. This documentation
 does not deprecate any registry package; registry actions require separate approval.
 
-Published 0.1.0 does not include `login`, `onboard`, `new`, `doctor` or `dev`.
-The preview CLI/onboarding work remains in [draft #5](https://github.com/cherthq/sdk/pull/5)
-and its integration branch in [draft #6](https://github.com/cherthq/sdk/pull/6).
-Those drafts are not installed by `@trychert/sdk@0.1.0`.
+The published CLI commands are `imessage send`, `facetime status|lines|workers`,
+`adopt` and `context`. Published 0.1.0 and 0.2.0 do not include `login`,
+`onboard`, `new`, `doctor` or `dev`. The preview CLI/onboarding work remains in
+[draft #5](https://github.com/cherthq/sdk/pull/5) and its integration branch in
+[draft #6](https://github.com/cherthq/sdk/pull/6).
 
 ### Custom video sources (source preview, unreleased)
 
@@ -365,10 +365,11 @@ join tokens. Requesting `media.video` does not prove video availability or recei
 ## Source-preview quickstarts
 
 These examples describe the APIs in this source tree, after following the linked
-language guide's local build setup. They are not registry installation commands;
-other draft PRs may propose different unified APIs.
+language guide's local build setup. Apart from Python, they are not registry
+installation commands; other draft PRs may propose different unified APIs.
 
-**Python** — with `python/` on the module path:
+**Python** — `pip install chert-sdk==0.1.0` (or `python/` on the module path for
+unreleased source):
 
 ```python
 import os
@@ -385,7 +386,7 @@ sdk = Chert(
 
 Python defaults to `https://console.trychert.com` for iMessage and
 `https://facetime.trychert.com` for FaceTime; explicit `base_url` overrides remain
-available for tests/self-hosting. **Unpublished source preview:** default origins
+available for tests/self-hosting. **Published 0.1.0 on PyPI:** default origins
 and offline tests do not establish live service compatibility. Strict text,
 default-origin reactions, and billing availability require separate verification.
 No host fallback or automatic retries are performed; publication remains separate.
