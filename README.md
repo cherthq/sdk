@@ -10,13 +10,13 @@ the other clients are source previews, with unified channel support under review
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
 | JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.1`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
-| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.1.0 on PyPI](https://pypi.org/project/chert-sdk/0.1.0/): `pip install chert-sdk==0.1.0` | [Python guide](python/README.md) |
+| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.1.1 on PyPI](https://pypi.org/project/chert-sdk/0.1.1/): `pip install chert-sdk==0.1.1` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
 | Go 1.23+ | Standard-library iMessage and FaceTime clients (`chert`) | Source preview on `main`; no tagged release | [Go guide](go/README.md) |
 
-Only `@trychert/sdk` (npm) and `chert-sdk` 0.1.0 (PyPI) are published. Other
+Only `@trychert/sdk` (npm) and `chert-sdk` (PyPI) are published. Other
 package names describe proposed distributions, not packages available from
 crates.io, NuGet or a C++ package registry. Follow the language guide to
 build/test source; do not substitute a similarly named registry package.
@@ -267,7 +267,7 @@ These examples describe the APIs in this source tree, after following the linked
 language guide's local build setup. Apart from Python, they are not registry
 installation commands; other draft PRs may propose different unified APIs.
 
-**Python** — `pip install chert-sdk==0.1.0` (or `python/` on the module path for
+**Python** — `pip install chert-sdk==0.1.1` (or `python/` on the module path for
 unreleased source):
 
 ```python
@@ -285,7 +285,7 @@ sdk = Chert(
 
 Python defaults to `https://console.trychert.com` for iMessage and
 `https://facetime.trychert.com` for FaceTime; explicit `base_url` overrides remain
-available for tests/self-hosting. **Published 0.1.0 on PyPI:** default origins
+available for tests/self-hosting. **Published 0.1.1 on PyPI:** default origins
 and offline tests do not establish live service compatibility. Strict text,
 default-origin reactions, and billing availability require separate verification.
 No host fallback or automatic retries are performed; publication remains separate.
