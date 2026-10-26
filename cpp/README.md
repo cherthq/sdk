@@ -152,7 +152,8 @@ There are no typed C++ wrappers for assistants, connectors, billing or device
 login. The JSON escape hatch (`FaceTimeClient::request`) always sends the
 project-scoped bearer and project header and requires a `request_id` envelope,
 so it is suitable only for project-authorized routes. It cannot perform the
-unauthenticated device-login flow; use another Chert SDK or the CLI for login.
+unauthenticated device-login flow; use the device-login methods of the
+JavaScript, Python, Go or .NET SDK to obtain a token.
 
 ```cpp
 trychert::CreateCall call;

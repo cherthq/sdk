@@ -421,3 +421,12 @@ func TestBillingLocalValidationSendsNothing(t *testing.T) {
 		t.Fatalf("local validation sent %d requests", calls.Load())
 	}
 }
+
+func TestCouponLengthCountsTrimmedCharacters(t *testing.T) {
+	if !couponCode("  " + strings.Repeat("é", 64) + "  ") {
+		t.Fatal("64 non-ASCII characters with padding should be accepted, as the server trims and counts characters")
+	}
+	if couponCode(strings.Repeat("é", 65)) || couponCode("   ") {
+		t.Fatal("over-long or blank coupons must be rejected")
+	}
+}

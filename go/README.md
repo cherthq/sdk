@@ -227,7 +227,7 @@ Call creation/actions require a caller-owned 8–200 byte printable
 ASCII idempotency key without surrounding spaces. Retain the key and exact body
 for reconciliation. Other management mutations have no general idempotency guarantee.
 `PublishAssistant` can create another version if manually repeated. Billing
-actions require an 8–200 character key (surrounding spaces trimmed, no line breaks).
+actions require an 8–200 character printable-ASCII key (surrounding spaces trimmed).
 
 CLI `ftu_` credentials have a restricted server allowlist: they do not gain call-write,
 transcript, assistant, billing or browser-user permissions from this SDK. Login
@@ -240,8 +240,9 @@ confirmation. Do not treat checkout completion as line allocation.
 **Breaking change from earlier source previews:** `GetBillingCatalog`,
 `CurrentCheckout` and `CheckoutRequest{PlanID, CatalogVersion}` targeted removed
 `billing/catalog` and `billing/checkout` routes and were removed. Use
-`BillingStatus` and `CreateCheckout(ctx, CheckoutInput{Plan: "shared"}, key)`. Connector management does not
-provide a connector or media runtime.
+`BillingStatus` and `CreateCheckout(ctx, CheckoutInput{Plan: "shared"}, key)`.
+
+Connector management does not provide a connector or media runtime.
 
 ## Raw access and failures
 

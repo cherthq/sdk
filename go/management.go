@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"unicode/utf8"
 )
 
 // DeviceLoginStart contains a secret device code; display only the user code and
@@ -198,7 +199,8 @@ func (c *FaceTimeClient) connectorAction(ctx context.Context, action, id string)
 	return perform[json.RawMessage](ctx, c, "POST", "/connectors", map[string]string{"action": action, "binding_id": id}, ProjectAuth, nil, 200)
 }
 
-// BillingStatus reports entitlement and availability. Entitlement is preserved as server JSON.
+// BillingStatus reports entitlement and availability. Entitlement is preserved as server JSON;
+// a null entitlement decodes as json.RawMessage("null").
 type BillingStatus struct {
 	Entitlement         json.RawMessage `json:"entitlement"`
 	NeedsReconciliation bool            `json:"needs_reconciliation"`
@@ -231,6 +233,9 @@ type CouponValidation struct {
 	Mode         string   `json:"mode"`
 	Currency     string   `json:"currency"`
 	MonthlyTotal *float64 `json:"monthly_total,omitempty"`
+	DueNow       *float64 `json:"due_now,omitempty"`
+	AccessHours  *float64 `json:"access_hours,omitempty"`
+	Plans        []string `json:"plans,omitempty"`
 }
 
 func billingKey(key string) bool {
@@ -238,8 +243,10 @@ func billingKey(key string) bool {
 	return len(k) >= 8 && len(k) <= 200 && !strings.ContainsAny(key, "\r\n")
 }
 
+// couponCode mirrors the server: 1-64 characters after trimming.
 func couponCode(code string) bool {
-	return len(strings.TrimSpace(code)) >= 1 && len(code) <= 64
+	n := utf8.RuneCountInString(strings.TrimSpace(code))
+	return n >= 1 && n <= 64
 }
 
 // BillingStatus reads entitlement and availability with a signed-in user token and selected project.
