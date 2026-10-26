@@ -148,9 +148,12 @@ original JSON, including optional/additive lifecycle and media fields, without
 inventing defaults. Do not log these objects indiscriminately. A call status alone
 does not prove media readiness. This HTTP client does not relay audio/video,
 verify incoming webhook signatures, or provide provider-compatibility adapters.
-Assistant/integration/webhook administration and account/billing/device-login
-flows currently use the JSON escape hatch where the credential is authorized;
-they do not have dedicated typed C++ wrappers.
+There are no typed C++ wrappers for assistants, connectors, billing or device
+login. The JSON escape hatch (`FaceTimeClient::request`) always sends the
+project-scoped bearer and project header and requires a `request_id` envelope,
+so it is suitable only for project-authorized routes. It cannot perform the
+unauthenticated device-login flow; use the device-login methods of the
+JavaScript, Python, Go or .NET SDK to obtain a token.
 
 ```cpp
 trychert::CreateCall call;

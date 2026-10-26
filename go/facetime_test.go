@@ -83,10 +83,17 @@ func TestFaceTimeRouteContracts(t *testing.T) {
 		}},
 		{"drain", "POST", "/connectors", `{"action":"drain","binding_id":"binding-1"}`, "", "project", `{"draining":true}`, 200, func(c *FaceTimeClient) (any, error) { return data(c.DrainConnector(ctx, "binding-1")) }},
 		{"revoke", "POST", "/connectors", `{"action":"revoke","binding_id":"binding-1"}`, "", "project", `{"revoked":true}`, 200, func(c *FaceTimeClient) (any, error) { return data(c.RevokeConnector(ctx, "binding-1")) }},
-		{"catalog", "GET", "/billing/catalog", "", "", "public", `{"version":"2026-10-22","test_mode":true,"enabled":false,"plans":[]}`, 200, func(c *FaceTimeClient) (any, error) { return data(c.GetBillingCatalog(ctx)) }},
-		{"no checkout", "GET", "/billing/checkout", "", "", "project", `null`, 200, func(c *FaceTimeClient) (any, error) { return data(c.CurrentCheckout(ctx)) }},
-		{"checkout", "POST", "/billing/checkout", `{"plan_id":"shared","catalog_version":"2026-10-22"}`, "stable-key", "project", `{"id":"checkout-1","project_id":"project-1","state":"open"}`, 200, func(c *FaceTimeClient) (any, error) {
-			return data(c.CreateCheckout(ctx, CheckoutRequest{"shared", "2026-10-22"}, "stable-key"))
+		{"billing status", "GET", "/billing", "", "", "project", `{"entitlement":null,"needs_reconciliation":false,"sales_enabled":true,"shared_available":true,"dedicated_available":false}`, 200, func(c *FaceTimeClient) (any, error) { return data(c.BillingStatus(ctx)) }},
+		{"checkout", "POST", "/billing", `{"action":"checkout","plan":"shared"}`, "stable-key", "project", `{"url":"https://checkout.example/s"}`, 200, func(c *FaceTimeClient) (any, error) {
+			return data(c.CreateCheckout(ctx, CheckoutInput{Plan: "shared"}, "stable-key"))
+		}},
+		{"checkout coupon", "POST", "/billing", `{"action":"checkout","coupon_code":"WELCOME","plan":"dedicated"}`, "stable-key", "project", `{"url":"https://checkout.example/s"}`, 200, func(c *FaceTimeClient) (any, error) {
+			code := "WELCOME"
+			return data(c.CreateCheckout(ctx, CheckoutInput{Plan: "dedicated", CouponCode: &code}, " stable-key "))
+		}},
+		{"cancel", "POST", "/billing", `{"action":"cancel"}`, "stable-key", "project", `{"status":"cancellation_requested","message":"Ends at period end."}`, 200, func(c *FaceTimeClient) (any, error) { return data(c.CancelSubscription(ctx, "stable-key")) }},
+		{"coupon", "POST", "/billing", `{"action":"validate_coupon","coupon_code":"WELCOME"}`, "stable-key", "project", `{"code":"WELCOME","percent_off":20,"mode":"test","currency":"usd"}`, 200, func(c *FaceTimeClient) (any, error) {
+			return data(c.ValidateCoupon(ctx, "WELCOME", "stable-key"))
 		}},
 	}
 	for _, tc := range tests {
@@ -339,7 +346,11 @@ func TestFaceTimeNestedMalformedResults(t *testing.T) {
 		{"missing project identity", `{"project":{},"role":""}`, 200, false, func(c *FaceTimeClient) (any, error) { return data(c.WhoAmI(ctx)) }},
 		{"negative total", `{"items":[],"total":-1,"limit":1,"offset":0}`, 200, false, func(c *FaceTimeClient) (any, error) { return data(c.ListLines(ctx, PageOptions{})) }},
 		{"negative login expiry", `{"device_name":"device","created_at":"now","expires_in":-1}`, 200, true, func(c *FaceTimeClient) (any, error) { return data(c.InspectLogin(ctx, "code")) }},
-		{"empty checkout", `{}`, 200, false, func(c *FaceTimeClient) (any, error) { return data(c.CurrentCheckout(ctx)) }},
+		{"billing status missing availability", `{"entitlement":null,"needs_reconciliation":false}`, 200, false, func(c *FaceTimeClient) (any, error) { return data(c.BillingStatus(ctx)) }},
+		{"empty checkout url", `{"url":""}`, 200, true, func(c *FaceTimeClient) (any, error) {
+			return data(c.CreateCheckout(ctx, CheckoutInput{Plan: "shared"}, "stable-key"))
+		}},
+		{"cancellation not requested", `{"status":"cancelled","message":"x"}`, 200, true, func(c *FaceTimeClient) (any, error) { return data(c.CancelSubscription(ctx, "stable-key")) }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -376,5 +387,46 @@ func TestFaceTimeNestedMalformedResults(t *testing.T) {
 				t.Fatalf("wrong mutation failure: %v", err)
 			}
 		})
+	}
+}
+
+func TestBillingLocalValidationSendsNothing(t *testing.T) {
+	var calls atomic.Int32
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls.Add(1) }))
+	defer s.Close()
+	c, err := NewFaceTimeClient(FaceTimeConfig{EndpointOverride: s.URL, Token: "key", ProjectID: "project"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	empty, long := "", strings.Repeat("x", 65)
+	for name, call := range map[string]func() error{
+		"plan": func() error {
+			_, err := c.CreateCheckout(ctx, CheckoutInput{Plan: "enterprise"}, "stable-key")
+			return err
+		},
+		"short key":   func() error { _, err := c.CreateCheckout(ctx, CheckoutInput{Plan: "shared"}, "short"); return err },
+		"newline key": func() error { _, err := c.CancelSubscription(ctx, "stable\r\nkey"); return err },
+		"empty coupon": func() error {
+			_, err := c.CreateCheckout(ctx, CheckoutInput{Plan: "shared", CouponCode: &empty}, "stable-key")
+			return err
+		},
+		"long coupon": func() error { _, err := c.ValidateCoupon(ctx, long, "stable-key"); return err },
+	} {
+		if err := call(); err == nil {
+			t.Errorf("%s: expected a local validation error", name)
+		}
+	}
+	if calls.Load() != 0 {
+		t.Fatalf("local validation sent %d requests", calls.Load())
+	}
+}
+
+func TestCouponLengthCountsTrimmedCharacters(t *testing.T) {
+	if !couponCode("  " + strings.Repeat("é", 64) + "  ") {
+		t.Fatal("64 non-ASCII characters with padding should be accepted, as the server trims and counts characters")
+	}
+	if couponCode(strings.Repeat("é", 65)) || couponCode("   ") {
+		t.Fatal("over-long or blank coupons must be rejected")
 	}
 }

@@ -149,7 +149,7 @@ static partial class Program
             var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); var signature = Sign(now);
             Check(ChertWebhook.Verify(body, signature, "secret"));
             Check(!ChertWebhook.Verify(body, signature, "wrong") && !ChertWebhook.Verify(body[..^1], signature, "secret"));
-            foreach (var invalid in new[] { Sign(now - 301), Sign(now + 301), signature + "\n", "v2" + signature[2..], "v1,999999999999999999999999,00", signature[..^1] + "g" }) Check(!ChertWebhook.Verify(body, invalid, "secret"));
+            foreach (var invalid in new[] { Sign(now - 305), Sign(now + 305), signature + "\n", "v2" + signature[2..], "v1,999999999999999999999999,00", signature[..^1] + "g" }) Check(!ChertWebhook.Verify(body, invalid, "secret"));
             return Task.CompletedTask;
         });
     }

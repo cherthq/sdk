@@ -33,11 +33,11 @@ nonempty `request_id`; modeled fields are decoded, unknown fields retained raw.
 | WhoAmI, Logout | GET cli/whoami; POST cli/logout, 200 | Project user/CLI identity; logout requires CLI token and no project header |
 | ListCredentials, RevokeCredential | GET cli/credentials; DELETE cli/credentials/:id, 200 | Owner/admin browser user + project; not CLI/project-key authorization |
 | ListConnectors, EnrollConnector, ActivateConnector, DrainConnector, RevokeConnector | GET/POST connectors, 200 | Owner/admin user principal; permitted CLI owner/admin may manage; no runtime provided |
-| GetBillingCatalog | GET billing/catalog, 200 | Public, no credentials; exposes test/disabled state |
-| CurrentCheckout, CreateCheckout | GET/POST billing/checkout, 200 | Owner browser user + project; creation requires stable key; current may be null |
+| BillingStatus | GET billing, 200 | Signed-in user + project; entitlement preserved as JSON |
+| CreateCheckout, CancelSubscription, ValidateCoupon | POST billing `{action: checkout\|cancel\|validate_coupon}`, 200 | Signed-in user + project; stable key required; returns URL / cancellation request / coupon assessment |
 
 Billing support is a preview contract, not a guarantee of availability or live
-payments. Check the catalog's test/disabled state before initiating checkout.
+payments. Check `BillingStatus` before initiating checkout.
 
 ## Deliberate limits
 
