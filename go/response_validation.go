@@ -70,14 +70,19 @@ func validResponse(value any, model any) bool {
 		return nonempty(o, "id", "device_name", "token_prefix", "user_id", "created_at", "expires_at")
 	case ConnectorReceipt:
 		return nonempty(object(o["credentials"]), "connection", "recovery")
-	case BillingCatalog:
-		return nonempty(o, "version") && booleanFields(o, "test_mode", "enabled") && validElements(o["plans"], BillingPlan{})
-	case BillingPlan:
-		return nonempty(o, "id", "name", "currency", "interval") && integer(o["amount"], 0) && booleanFields(o, "available")
-	case *Checkout:
-		return value == nil || validResponse(value, Checkout{})
+	case BillingStatus:
+		_, sales := o["sales_enabled"].(bool)
+		e, hasEntitlement := o["entitlement"]
+		_, entitlementObject := e.(map[string]any)
+		return booleanFields(o, "needs_reconciliation", "shared_available", "dedicated_available") &&
+			(o["sales_enabled"] == nil || sales) && hasEntitlement && (e == nil || entitlementObject)
 	case Checkout:
-		return nonempty(o, "id", "project_id", "state")
+		return nonempty(o, "url")
+	case BillingCancellation:
+		return o["status"] == "cancellation_requested" && nonempty(o, "message")
+	case CouponValidation:
+		_, pct := o["percent_off"].(float64)
+		return nonempty(o, "code", "currency") && pct && (o["mode"] == "live" || o["mode"] == "test")
 	case json.RawMessage:
 		return true
 	default:

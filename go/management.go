@@ -3,6 +3,7 @@ package chert
 import (
 	"context"
 	"encoding/json"
+	"strings"
 )
 
 // DeviceLoginStart contains a secret device code; display only the user code and
@@ -197,59 +198,82 @@ func (c *FaceTimeClient) connectorAction(ctx context.Context, action, id string)
 	return perform[json.RawMessage](ctx, c, "POST", "/connectors", map[string]string{"action": action, "binding_id": id}, ProjectAuth, nil, 200)
 }
 
-// BillingPlan reports catalog availability, not entitlement or allocation.
-type BillingPlan struct {
-	ID            string  `json:"id"`
-	Name          string  `json:"name"`
-	Currency      string  `json:"currency"`
-	Amount        int64   `json:"amount"`
-	Interval      string  `json:"interval"`
-	Available     bool    `json:"available"`
-	Reason        *string `json:"reason"`
-	MinutesPerDay *int    `json:"minutes_per_day"`
+// BillingStatus reports entitlement and availability. Entitlement is preserved as server JSON.
+type BillingStatus struct {
+	Entitlement         json.RawMessage `json:"entitlement"`
+	NeedsReconciliation bool            `json:"needs_reconciliation"`
+	SalesEnabled        *bool           `json:"sales_enabled"`
+	SharedAvailable     bool            `json:"shared_available"`
+	DedicatedAvailable  bool            `json:"dedicated_available"`
 }
 
-// BillingCatalog is the public server catalog, including disabled/test-mode state.
-type BillingCatalog struct {
-	Version  string        `json:"version"`
-	TestMode bool          `json:"test_mode"`
-	Enabled  bool          `json:"enabled"`
-	Plans    []BillingPlan `json:"plans"`
+// CheckoutInput selects a plan ("shared" or "dedicated") and an optional coupon.
+type CheckoutInput struct {
+	Plan       string  `json:"plan"`
+	CouponCode *string `json:"coupon_code,omitempty"`
 }
 
-// Checkout describes billing progress only. A complete checkout grants no SDK authority.
+// Checkout is a hosted checkout URL. Opening it is the caller's decision; it grants no SDK authority.
 type Checkout struct {
-	ID                   string  `json:"id"`
-	ProjectID            string  `json:"project_id"`
-	PlanID               string  `json:"plan_id"`
-	CreatedAt            string  `json:"created_at"`
-	State                string  `json:"state"`
-	StripeSessionID      *string `json:"stripe_session_id"`
-	CheckoutURL          *string `json:"checkout_url"`
-	ExpiresAt            *string `json:"expires_at"`
-	StripeSubscriptionID *string `json:"stripe_subscription_id"`
+	URL string `json:"url"`
 }
 
-// CheckoutRequest must match the server's currently supported plan/catalog version.
-type CheckoutRequest struct {
-	PlanID         string `json:"plan_id"`
-	CatalogVersion string `json:"catalog_version"`
+// BillingCancellation acknowledges a period-end cancellation request, not completed cancellation.
+type BillingCancellation struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }
 
-// GetBillingCatalog reads public catalog data without configured credentials.
-func (c *FaceTimeClient) GetBillingCatalog(ctx context.Context) (Result[BillingCatalog], error) {
-	return perform[BillingCatalog](ctx, c, "GET", "/billing/catalog", nil, PublicAuth, nil, 200, "version", "test_mode", "enabled", "plans")
+// CouponValidation is the server's coupon assessment; eligibility is never promised by the SDK.
+type CouponValidation struct {
+	Code         string   `json:"code"`
+	PercentOff   float64  `json:"percent_off"`
+	Mode         string   `json:"mode"`
+	Currency     string   `json:"currency"`
+	MonthlyTotal *float64 `json:"monthly_total,omitempty"`
 }
 
-// CurrentCheckout requires a project-owner browser session. Data is nil when no checkout exists.
-func (c *FaceTimeClient) CurrentCheckout(ctx context.Context) (Result[*Checkout], error) {
-	return perform[*Checkout](ctx, c, "GET", "/billing/checkout", nil, ProjectAuth, nil, 200)
+func billingKey(key string) bool {
+	k := strings.TrimSpace(key)
+	return len(k) >= 8 && len(k) <= 200 && !strings.ContainsAny(key, "\r\n")
 }
 
-// CreateCheckout makes one explicitly authorized billing request; never retries or opens a URL.
-func (c *FaceTimeClient) CreateCheckout(ctx context.Context, input CheckoutRequest, key string) (Result[Checkout], error) {
-	if !faceTimeKey(key) {
+func couponCode(code string) bool {
+	return len(strings.TrimSpace(code)) >= 1 && len(code) <= 64
+}
+
+// BillingStatus reads entitlement and availability with a signed-in user token and selected project.
+func (c *FaceTimeClient) BillingStatus(ctx context.Context) (Result[BillingStatus], error) {
+	return perform[BillingStatus](ctx, c, "GET", "/billing", nil, ProjectAuth, nil, 200, "needs_reconciliation", "shared_available", "dedicated_available")
+}
+
+// CreateCheckout makes one explicitly authorized billing request; never retries or opens the URL.
+func (c *FaceTimeClient) CreateCheckout(ctx context.Context, input CheckoutInput, key string) (Result[Checkout], error) {
+	if (input.Plan != "shared" && input.Plan != "dedicated") || !billingKey(key) || (input.CouponCode != nil && !couponCode(*input.CouponCode)) {
 		return Result[Checkout]{}, invalid()
 	}
-	return perform[Checkout](ctx, c, "POST", "/billing/checkout", input, ProjectAuth, &key, 200, "id", "state", "project_id")
+	body := map[string]any{"action": "checkout", "plan": input.Plan}
+	if input.CouponCode != nil {
+		body["coupon_code"] = *input.CouponCode
+	}
+	k := strings.TrimSpace(key)
+	return perform[Checkout](ctx, c, "POST", "/billing", body, ProjectAuth, &k, 200, "url")
+}
+
+// CancelSubscription requests period-end cancellation; refresh BillingStatus to confirm.
+func (c *FaceTimeClient) CancelSubscription(ctx context.Context, key string) (Result[BillingCancellation], error) {
+	if !billingKey(key) {
+		return Result[BillingCancellation]{}, invalid()
+	}
+	k := strings.TrimSpace(key)
+	return perform[BillingCancellation](ctx, c, "POST", "/billing", map[string]string{"action": "cancel"}, ProjectAuth, &k, 200, "status", "message")
+}
+
+// ValidateCoupon asks the server to assess a coupon code.
+func (c *FaceTimeClient) ValidateCoupon(ctx context.Context, code, key string) (Result[CouponValidation], error) {
+	if !couponCode(code) || !billingKey(key) {
+		return Result[CouponValidation]{}, invalid()
+	}
+	k := strings.TrimSpace(key)
+	return perform[CouponValidation](ctx, c, "POST", "/billing", map[string]string{"action": "validate_coupon", "coupon_code": code}, ProjectAuth, &k, 200, "code", "percent_off", "mode", "currency")
 }

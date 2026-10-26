@@ -35,7 +35,7 @@ if err != nil { return err }
 ```
 
 Either channel can be omitted. `NewClient(Config{APIKey: key})` constructs only
-iMessage; `NewFaceTimeClient(FaceTimeConfig{})` permits only public login/catalog
+iMessage; `NewFaceTimeClient(FaceTimeConfig{})` permits only public device-login
 operations until an explicitly configured authenticated client is constructed.
 Credentials are never inferred, exchanged, or inherited across channels.
 `Tenant` and `ProjectID` are **not a verified shared server binding**.
@@ -207,7 +207,7 @@ for _, line := range result.Data.Items {
 Typed methods cover calls (list/get/create, answer/reject/end, events, transcript),
 lines (list/update), workers (list), assistants (list/get/create/update/publish),
 settings (get/replace), device login and credential management, connector management,
-and billing catalog/checkout. See the [route and authorization matrix](CONTRACTS.md).
+and billing (status, checkout, cancel, coupon validation). See the [route and authorization matrix](CONTRACTS.md).
 No automatic polling, pagination, browser approval, URL opening or provisioning occurs.
 
 `Result[T]` contains typed `Data` and the complete original `Response`, preserving
@@ -223,17 +223,24 @@ group, never both. The server owns scope, destination, room-token, quota and med
 validation. **HTTP 201/202 is control acceptance, not a connected call, completed
 hangup, active connector runtime, or verified two-way media.**
 
-Call creation/actions and checkout require a caller-owned 8–200 byte printable
+Call creation/actions require a caller-owned 8–200 byte printable
 ASCII idempotency key without surrounding spaces. Retain the key and exact body
 for reconciliation. Other management mutations have no general idempotency guarantee.
-`PublishAssistant` can create another version if manually repeated.
+`PublishAssistant` can create another version if manually repeated. Billing
+actions require an 8–200 character key (surrounding spaces trimmed, no line breaks).
 
 CLI `ftu_` credentials have a restricted server allowlist: they do not gain call-write,
 transcript, assistant, billing or browser-user permissions from this SDK. Login
 inspection/approval and credential management need the documented signed-in user
-authorization. Checkout requires the project owner's browser session. Billing is a
-preview contract; check the catalog's test/disabled state before initiating checkout.
-Do not treat checkout completion as line allocation. Connector management does not
+authorization. Billing requires a signed-in user token with project membership;
+check `BillingStatus` (`sales_enabled`, availability) before initiating checkout.
+The SDK never opens the checkout URL. `CancelSubscription` is a request, not
+confirmation. Do not treat checkout completion as line allocation.
+
+**Breaking change from earlier source previews:** `GetBillingCatalog`,
+`CurrentCheckout` and `CheckoutRequest{PlanID, CatalogVersion}` targeted removed
+`billing/catalog` and `billing/checkout` routes and were removed. Use
+`BillingStatus` and `CreateCheckout(ctx, CheckoutInput{Plan: "shared"}, key)`. Connector management does not
 provide a connector or media runtime.
 
 ## Raw access and failures
