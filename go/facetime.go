@@ -13,7 +13,7 @@ import (
 const DefaultFaceTimeEndpoint = "https://facetime.trychert.com/api/v1"
 
 // FaceTimeConfig never inherits an iMessage credential or tenant. Token may be
-// omitted for public login/catalog calls. ProjectID is required for project calls.
+// omitted for public device-login calls. ProjectID is required for project calls.
 type FaceTimeConfig struct {
 	Token, ProjectID string
 	EndpointOverride string

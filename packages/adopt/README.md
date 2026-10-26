@@ -1,6 +1,7 @@
 # @cherthq/adopt
 
-Private, unpublished migration helper. `chert-adopt` finds iMessage provider
+Migration helper (ships inside `@trychert/sdk` as `chert-sdk adopt`; this
+workspace package itself is private and unpublished). `chert-adopt` finds iMessage provider
 usage in a project and classifies each usage against the Chert adapters'
 documented subset ([COMPATIBILITY.md](../../COMPATIBILITY.md)). It is a static
 analysis aid, not a parity claim: dynamic calls are invisible to it, and every
@@ -10,7 +11,8 @@ The public entry point is `chert-sdk adopt`. New rewrites install `@trychert/sdk
 and import `@trychert/sdk/<adapter>`; the `@cherthq/*` names below are private
 workspace names. This guide targets `@trychert/sdk@0.2.0`; the
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
-versions. Validate locally with a packed tarball. Existing `@trychert/sdk@0.1.0`
+versions. Run it from the published package with
+`npx --package=@trychert/sdk@0.2.0 chert-sdk adopt ./my-app` (dry run). Existing `@trychert/sdk@0.1.0`
 imports need no rename; see the [upgrade guide](../../README.md#upgrading-from-trychertsdk010).
 
 ```sh
