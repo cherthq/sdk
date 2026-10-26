@@ -9,7 +9,7 @@ the other clients are source previews, with unified channel support under review
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
-| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.0`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.1`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.1.0 on PyPI](https://pypi.org/project/chert-sdk/0.1.0/): `pip install chert-sdk==0.1.0` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
@@ -28,7 +28,7 @@ build/test source; do not substitute a similarly named registry package.
   URL override. A queued receipt does not mean sent, delivered or read.
 - **FaceTime control-plane** coverage differs by language. The JavaScript 0.1.0
   client inspects identity, assigned lines, workers, credentials and connectors;
-  it is not an outbound-call API. JavaScript 0.2.0 and the native source previews
+  it is not an outbound-call API. JavaScript 0.2.x and the native source previews
   include typed calls and related resources as documented in their language guides.
   None is a media runtime. Route availability and permissions depend on the backend.
 - Legacy channel credentials are **separate**. The SDK does not prove that an iMessage
@@ -41,22 +41,22 @@ build/test source; do not substitute a similarly named registry package.
 
 ## JavaScript / TypeScript
 
-The examples below target **`@trychert/sdk@0.2.0`**. The
+The examples below target **`@trychert/sdk@0.2.1`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
 
 ```sh
-npm install @trychert/sdk@0.2.0
+npm install @trychert/sdk@0.2.1
 # Alternatives:
-pnpm add @trychert/sdk@0.2.0
-bun add @trychert/sdk@0.2.0
+pnpm add @trychert/sdk@0.2.1
+bun add @trychert/sdk@0.2.1
 
-npx --package=@trychert/sdk@0.2.0 chert-sdk --help
-bunx --package @trychert/sdk@0.2.0 chert-sdk --help
+npx --package=@trychert/sdk@0.2.1 chert-sdk --help
+bunx --package @trychert/sdk@0.2.1 chert-sdk --help
 ```
 
 ESM and declarations are shipped for Node 22.12+, current Bun and Deno 2 with
-npm compatibility. Deno imports use `npm:@trychert/sdk@0.2.0` (append subpaths
+npm compatibility. Deno imports use `npm:@trychert/sdk@0.2.1` (append subpaths
 after the version). CommonJS `require()` is not a supported migration target.
 The npm package is `@trychert/sdk`; the CLI binary remains `chert-sdk`.
 
@@ -149,12 +149,12 @@ removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
 ```sh
-bunx --package @trychert/sdk@0.2.0 chert-sdk context
-bunx --package @trychert/sdk@0.2.0 chert-sdk facetime status
-bunx --package @trychert/sdk@0.2.0 chert-sdk facetime lines
-bunx --package @trychert/sdk@0.2.0 chert-sdk facetime workers
-bunx --package @trychert/sdk@0.2.0 chert-sdk adopt ./my-app          # Dry-run migration report
-bunx --package @trychert/sdk@0.2.0 chert-sdk adopt ./my-app --write  # Applies supported rewrites
+bunx --package @trychert/sdk@0.2.1 chert-sdk context
+bunx --package @trychert/sdk@0.2.1 chert-sdk facetime status
+bunx --package @trychert/sdk@0.2.1 chert-sdk facetime lines
+bunx --package @trychert/sdk@0.2.1 chert-sdk facetime workers
+bunx --package @trychert/sdk@0.2.1 chert-sdk adopt ./my-app          # Dry-run migration report
+bunx --package @trychert/sdk@0.2.1 chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
 `adopt --install` additionally uses the target project's package manager.
@@ -167,7 +167,7 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
-migration. To upgrade, update the dependency to `@trychert/sdk@0.2.0`
+migration. To upgrade, update the dependency to `@trychert/sdk@0.2.1`
 (published, `latest`), regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
 stay `@trychert/sdk/<subpath>`.
@@ -176,7 +176,7 @@ stay `@trychert/sdk/<subpath>`.
 
 The canonical npm package is `@trychert/sdk`, not `chert-sdk`. If you installed
 the accidental unscoped 0.1.0 package (since unpublished from npm), remove that
-dependency and install `@trychert/sdk@0.2.0`. Change root imports
+dependency and install `@trychert/sdk@0.2.1`. Change root imports
 from `chert-sdk` to `@trychert/sdk` and preserve subpath suffixes (for example,
 `chert-sdk/facetime` becomes `@trychert/sdk/facetime`). Regenerate your consumer
 lockfile and rerun tests. The identity correction does not change the default
@@ -186,8 +186,9 @@ usage; do not rely on it to rename existing SDK imports. This documentation
 does not deprecate any registry package; registry actions require separate approval.
 
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
-`adopt` and `context`. Published 0.1.0 and 0.2.0 do not include `login`,
-`onboard`, `new`, `doctor` or `dev`. The preview CLI/onboarding work remains in
+`adopt` and `context`. Since 0.2.1, unknown commands and subcommands exit with
+`unknown_command` before any credential lookup. Published 0.1.0, 0.2.0 and 0.2.1
+do not include `login`, `onboard`, `new`, `doctor` or `dev`. The preview CLI/onboarding work remains in
 [draft #5](https://github.com/cherthq/sdk/pull/5) and its integration branch in
 [draft #6](https://github.com/cherthq/sdk/pull/6).
 
