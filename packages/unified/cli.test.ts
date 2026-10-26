@@ -61,3 +61,12 @@ test('CLI preserves a safe SDK error code without exposing server text or respon
     expect(error).not.toContain('private-token');
   } finally { server.stop(true); }
 });
+
+test('CLI reports unknown commands as such, even without credentials', async () => {
+  for (const command of ['login', 'onboard', 'facetim']) {
+    const env = { ...process.env }; delete env.CHERT_PROJECT_ID;
+    const child = Bun.spawn(['node', resolve(import.meta.dir, '../../dist/unified/cli.js'), command], { env, stdout: 'pipe', stderr: 'pipe' });
+    expect(await child.exited).toBe(1);
+    expect(JSON.parse(await new Response(child.stderr).text())).toEqual({ error: 'Unknown command. Use --help.', code: 'unknown_command' });
+  }
+});

@@ -28,6 +28,8 @@ async function main() {
   const [channel, command, ...args] = process.argv.slice(2);
   if (channel === 'adopt') { process.exitCode = adopt(process.argv.slice(3)); return; }
   if (!channel || process.argv.includes('--help') || process.argv.includes('-h')) { console.log(help); return; }
+  // Reject unknown commands before asking for credentials, so typos are not reported as missing configuration.
+  if (!['context', 'imessage', 'facetime'].includes(channel)) throw Object.assign(new Error(), { code: 'unknown_command' });
   const env = process.env;
   const required = (name: string) => { const value = env[name]; if (!value?.trim()) throw new Error(`Set ${name}.`); return value; };
   const projectId = required('CHERT_PROJECT_ID');
@@ -35,7 +37,6 @@ async function main() {
     if (command) throw new Error('context takes no arguments');
     console.log(JSON.stringify({ projectId, channels: ['imessage', 'facetime'], credentials: 'service-specific' })); return;
   }
-  if (!['imessage', 'facetime'].includes(channel!)) throw new Error('Unknown channel. Use --help.');
   // Instantiate only the selected transport; unrelated channel secrets are not required.
   const { ChertClient } = await import('@cherthq/imessage');
   const { ChertControlPlane } = await import('@cherthq/control-plane');
@@ -59,6 +60,8 @@ async function main() {
 main().catch(error => {
   // Do not expose server response bodies or credentials.
   const code = safeErrorCode(error);
-  console.error(JSON.stringify({ error: error instanceof Error && error.message.startsWith('Set CHERT_') ? error.message : 'Command failed. Check arguments, credentials and service access; no success is claimed.', ...(code ? { code } : {}) }));
+  const message = code === 'unknown_command' ? 'Unknown command. Use --help.'
+    : error instanceof Error && error.message.startsWith('Set CHERT_') ? error.message : 'Command failed. Check arguments, credentials and service access; no success is claimed.';
+  console.error(JSON.stringify({ error: message, ...(code ? { code } : {}) }));
   process.exitCode = 1;
 });
