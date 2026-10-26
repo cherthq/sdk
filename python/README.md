@@ -2,17 +2,17 @@
 
 Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
 The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
-[`chert-sdk` 0.1.0](https://pypi.org/project/chert-sdk/0.1.0/) is published on PyPI.
+[`chert-sdk` 0.1.1](https://pypi.org/project/chert-sdk/0.1.1/) is published on PyPI.
 The legacy `chert` import and explicit-URL constructor calls remain compatible.
 
 ```sh
-python -m pip install chert-sdk==0.1.0
-# or: uv add chert-sdk==0.1.0
+python -m pip install chert-sdk==0.1.1
+# or: uv add chert-sdk==0.1.1
 ```
 
-This guide matches the published 0.1.0 package, which was built from this source
-tree. "Source preview" below means not production-verified, not absent from the
-package.
+This guide matches the published 0.1.1 package, which was built from this source
+tree. 0.1.1 changes only package documentation from 0.1.0; the code is identical.
+"Source preview" below means not production-verified, not absent from the package.
 
 ```python
 from trychert import Chert, IMessageConfig, FaceTimeConfig
