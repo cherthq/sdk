@@ -11,3 +11,6 @@ node_modules/
 .DS_Store
 **/artifacts/
 .amp/portals/*
+**/.dev.vars
+**/python_modules/
+**/.wrangler/
