@@ -16,7 +16,7 @@ from .media import MediaDirection, MediaSessionContent, MediaSessionGrant, Video
 DEFAULT_FACETIME_URL = 'https://facetime.trychert.com'
 _UNSET = object()
 _SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
-                         "media_capability_unsupported media_session_conflict caller_screen_not_shared call_not_active call_ended call_not_found "
+                         "media_capability_unsupported media_session_conflict caller_screen_not_shared media_content_unsupported caller_screen_unsupported media_limit_exceeded call_not_active call_ended call_not_found "
                          "media_session_expired media_transport_unavailable".split())
 
 

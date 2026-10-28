@@ -519,6 +519,24 @@ async fn screen_content_is_validated_echoed_and_capped() {
         (Some(409), "caller_screen_not_shared")
     );
     assert!(!format!("{error:?} {error}").contains(PRIVATE));
+
+    for (status, code) in [
+        (409, "media_content_unsupported"),
+        (409, "caller_screen_unsupported"),
+        (422, "media_limit_exceeded"),
+    ] {
+        let (url, handle) = server(
+            status,
+            json!({"error":{"code":code,"message":PRIVATE}}).to_string(),
+        );
+        let error = client(&url)
+            .create_media_session("call-1", session(Publish, Some(Screen)))
+            .await
+            .unwrap_err();
+        handle.join().unwrap();
+        assert_eq!((error.status, error.code.as_str()), (Some(status), code));
+        assert!(!format!("{error:?} {error}").contains(PRIVATE));
+    }
 }
 
 fn caps() -> Value {

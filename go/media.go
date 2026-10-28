@@ -139,7 +139,8 @@ var mediaSafeCodes = map[string]bool{
 	"unauthorized": true, "forbidden": true, "cli_scope_denied": true, "billing_owner_required": true, "billing_unavailable": true,
 	"project_required": true, "invalid_request": true, "cli_login_expired": true, "cli_login_not_found": true, "cli_login_forbidden": true,
 	"slow_down": true, "cli_login_rate_limited": true, "cli_login_busy": true, "not_found": true, "conflict": true,
-	"media_capability_unsupported": true, "media_session_conflict": true, "caller_screen_not_shared": true, "call_not_active": true, "call_ended": true,
+	"media_capability_unsupported": true, "media_session_conflict": true, "caller_screen_not_shared": true,
+	"media_content_unsupported": true, "caller_screen_unsupported": true, "media_limit_exceeded": true, "call_not_active": true, "call_ended": true,
 	"call_not_found": true, "media_session_expired": true, "media_transport_unavailable": true,
 }
 

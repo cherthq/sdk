@@ -244,7 +244,8 @@ if caps.custom_video is not None:
 request; a grant that violates the contract raises `ChertControlPlaneError(201,
 'invalid_response')`. Server errors surface allowlisted codes such as `unauthorized`,
 `media_session_expired`, `call_not_found`, `media_capability_unsupported`,
-`media_session_conflict`, `caller_screen_not_shared`, `call_not_active`, `call_ended` and
+`media_session_conflict`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended` and
 `media_transport_unavailable`, never server message text.
 
 Screen sharing: pass `content="screen"` with `direction="publish"` to stream an agent's

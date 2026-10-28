@@ -279,7 +279,8 @@ same `Authorization: Bearer <Token>` on the POST and on PATCH/DELETE to the retu
 `Location`. `ToString()` redacts the grant; never log `Token`. A malformed grant throws
 `ChertApiException` with `Code == "invalid_response"`; server codes (`unauthorized`,
 `call_not_found`, `media_capability_unsupported`, `media_session_conflict`,
-`caller_screen_not_shared`, `call_not_active`, `call_ended`, `media_session_expired`,
+`caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended`, `media_session_expired`,
 `media_transport_unavailable`) surface without server text. Requests are never retried.
 
 Screen sharing: pass `content: MediaSessionContent.Screen` with `Publish` to stream an

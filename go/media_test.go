@@ -286,6 +286,18 @@ func TestScreenMediaSessions(t *testing.T) {
 	if !errors.As(err, &api) || api.Status != 409 || api.Code != "caller_screen_not_shared" || strings.Contains(fmt.Sprintf("%+v", err), "10.0.0.5") {
 		t.Fatalf("caller_screen_not_shared: %v", err)
 	}
+	for _, d := range []struct {
+		status int
+		code   string
+	}{{409, "media_content_unsupported"}, {409, "caller_screen_unsupported"}, {422, "media_limit_exceeded"}} {
+		f.set(func() (int, string) {
+			return d.status, `{"error":{"code":"` + d.code + `","message":"internal host 10.0.0.5"},"request_id":"trace"}`
+		})
+		_, err = c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish, Content: MediaContentScreen})
+		if !errors.As(err, &api) || api.Status != d.status || api.Code != d.code || strings.Contains(fmt.Sprintf("%+v", err), "10.0.0.5") {
+			t.Fatalf("%s: %v", d.code, err)
+		}
+	}
 }
 
 func TestMediaCapabilityContents(t *testing.T) {
