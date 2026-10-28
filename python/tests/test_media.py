@@ -34,7 +34,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         raw = self.rfile.read(int(self.headers.get('Content-Length', 0)))
         self.server.calls.append((self.command, self.path, self.headers, json.loads(raw) if raw else None))
-        data = json.dumps(self.server.payload).encode()
+        payload = self.server.payload
+        data = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
         self.send_response(self.server.status)
         self.send_header('Content-Length', str(len(data)))
         self.end_headers()
@@ -158,7 +159,14 @@ class MediaSessionTests(unittest.TestCase):
             expected = 'request_failed' if code == 'something_else' else code
             self.assertEqual((caught.exception.status, caught.exception.code), (status, expected))
             self.assertNotIn(PRIVATE, str(caught.exception) + repr(caught.exception))
-        self.assertEqual(len(self.server.calls), len(cases))
+        # An HTML 404 is a route the backend does not serve; other non-JSON errors stay invalid_response.
+        for status, expected in ((404, 'endpoint_unavailable'), (502, 'invalid_response')):
+            self.server.status = status
+            self.server.payload = b'<!DOCTYPE html><html>not here</html>'
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.create_media_session('call-1', direction='publish')
+            self.assertEqual((caught.exception.status, caught.exception.code), (status, expected))
+        self.assertEqual(len(self.server.calls), len(cases) + 2)
 
     def test_screen_content_is_validated_echoed_and_capped(self):
         screen_limits = {'max_width': 1920, 'max_height': 1080, 'max_fps': 15, 'max_frame_bytes': 8388608}
