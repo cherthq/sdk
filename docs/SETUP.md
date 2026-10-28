@@ -150,11 +150,16 @@ retry cannot send twice. A queued receipt means accepted, not delivered or read.
   gets shared access, and when, is decided by Chert, not by the SDK. The SDK can
   show an assigned shared line but does not allocate one.
 
-**Buying a plan or a line cannot be done from this guide.** Billing needs a
+**Buying a plan or a line cannot be done from this guide today.** Billing needs a
 signed-in browser session: buy on the Billing page at https://facetime.trychert.com,
 where checkout opens a Stripe-hosted page. `billingStatus()` and `createCheckout`
 accept only that browser session's token, not a project API key or a CLI login,
-and the SDK does not allocate lines. `chert-sdk` commands only inspect access. The `chert` agent CLI's `chert dev` claims your project's line
+and the SDK does not allocate lines. Other `chert-sdk` commands only inspect
+access. Terminal billing (`chert-sdk billing buy|switch|card|cancel`, `purchase`,
+`changePlan`) is a draft the backend does not serve yet; it will charge a saved
+card and return a Stripe-hosted URL whenever card entry or authentication is
+needed, and will accept a CLI credential only with the `billing` scope and an
+owner/admin role. The `chert` agent CLI's `chert dev` claims your project's line
 while it runs and can end at a time slot you set.
 
 ## Voice and video
@@ -176,13 +181,15 @@ The SDK does not relay media itself; call media flows between FaceTime and
 LiveKit. Custom video sources over WHIP/WHEP (`@trychert/sdk/media`: frame
 validation, a bounded video source and signaling for your own WebRTC peer
 connection), web frontends rendered as call video, and screen sharing (an agent
-streaming its screen into a call, and receiving the caller's shared screen) are
-unreleased drafts. Their code ships in `@trychert/sdk` 0.2.2, but the hosted
-backend does not serve them yet: calls fail with `404 endpoint_unavailable`, so
-do not build on them
+streaming its screen into a call, and receiving the caller's shared screen) and
+call video composition (a page as the call video, or layered over live video) are
+unreleased drafts. Their code ships in `@trychert/sdk`, but the hosted backend
+does not serve them yet: calls fail with `404 endpoint_unavailable`, so do not
+build on them
 ([#17](https://github.com/cherthq/sdk/pull/17),
 [#18](https://github.com/cherthq/sdk/pull/18),
-[#25](https://github.com/cherthq/sdk/pull/25)).
+[#25](https://github.com/cherthq/sdk/pull/25),
+[#29](https://github.com/cherthq/sdk/pull/29)).
 
 ## Put a LiveKit agent on a FaceTime line
 

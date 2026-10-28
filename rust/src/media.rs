@@ -3,7 +3,7 @@
 //! (RFC 9725) client to publish, or a WHEP (draft-ietf-wish-whep-05, experimental) client to subscribe.
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::fmt;
 
 /// Upper bound for one raw frame's required plane bytes and for grant `max_frame_bytes`.
@@ -680,4 +680,620 @@ impl VideoFrame {
     pub fn color_space(&self) -> ColorSpace {
         self.color_space
     }
+}
+
+// Call video composition (draft, unreleased): the call's video as up to two layers, composed
+// server-side and published through the call's single publish slot. A base layer (z 0) carries
+// camera frames over a publish grant or a backend-managed source; page layers (z >= 1) are living
+// sessions of ready deployments. Native SDKs do not deploy pages or drive page state/events/input.
+
+/// SDK v1 layer bound. The capability's `max_layers` is the backend's real limit.
+pub const COMPOSITION_MAX_LAYERS: usize = 2;
+const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+
+/// `Camera`: the response carries a publish grant for WHIP frames. `Managed`: a backend-provided
+/// source, only where the `video_composition` capability lists it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CompositionBaseKind {
+    Camera,
+    Managed,
+}
+/// Normalized to the output frame: 0..1, width/height > 0, and x+width, y+height <= 1.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct CompositionRegion {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+impl CompositionRegion {
+    pub const FULL: Self = Self {
+        x: 0.0,
+        y: 0.0,
+        width: 1.0,
+        height: 1.0,
+    };
+}
+/// `Transparent` renders the page with alpha (premultiplied source-over).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CompositionBackground {
+    #[default]
+    Opaque,
+    Transparent,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LivingInputKind {
+    Pointer,
+    Keyboard,
+    Text,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BaseLayerInput {
+    pub id: String,
+    pub source: CompositionBaseKind,
+}
+/// A page layer. `deployment_id` names a ready living-service deployment: the call-video resource
+/// never loads a URL, and native SDKs cannot deploy one (deploy with the TypeScript SDK).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PageLayerInput {
+    pub id: String,
+    /// Unique, 1..=64; paints in ascending order above the base.
+    pub z: u32,
+    pub deployment_id: String,
+    /// Default: full frame.
+    pub region: Option<CompositionRegion>,
+    /// Default: `Opaque`.
+    pub background: Option<CompositionBackground>,
+    /// Layer multiplier 0..1. Default 1.
+    pub opacity: Option<f64>,
+    /// Agent-relayed input kinds; `None` for a non-interactive layer.
+    pub input: Option<Vec<LivingInputKind>>,
+    /// Plain JSON up to 64 KiB.
+    pub initial_state: Option<Value>,
+}
+impl PageLayerInput {
+    /// A full-frame, opaque, non-interactive page layer.
+    pub fn new(id: impl Into<String>, z: u32, deployment_id: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            z,
+            deployment_id: deployment_id.into(),
+            region: None,
+            background: None,
+            opacity: None,
+            input: None,
+            initial_state: None,
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub enum VideoLayerInput {
+    Base(BaseLayerInput),
+    Page(PageLayerInput),
+}
+/// `Page` is one opaque, full-frame page layer (id `page`, z 1). `revision` makes the PUT
+/// compare-and-set; it must equal the current revision.
+#[derive(Clone, Debug, PartialEq)]
+pub enum SetCallVideo {
+    Page {
+        deployment_id: String,
+        input: Option<Vec<LivingInputKind>>,
+        initial_state: Option<Value>,
+        revision: Option<u64>,
+    },
+    Layers {
+        layers: Vec<VideoLayerInput>,
+        revision: Option<u64>,
+    },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CompositionStatus {
+    Starting,
+    Live,
+    Stopping,
+    Stopped,
+    Failed,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LivingSessionStatus {
+    Starting,
+    Ready,
+    Live,
+    Stopping,
+    Stopped,
+    Failed,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LivingViewport {
+    pub width: u32,
+    pub height: u32,
+}
+/// The living session rendering a page layer; effective viewport and fps.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LivingSession {
+    pub session_id: String,
+    pub call_id: String,
+    pub deployment_id: String,
+    pub status: LivingSessionStatus,
+    pub viewport: LivingViewport,
+    pub fps: u32,
+    pub ready_at: Option<String>,
+    pub last_heartbeat_at: Option<String>,
+    pub error_code: Option<String>,
+}
+/// Effective output: fps = min(base fps, grant limit); page layers render at or below it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CompositionOutput {
+    pub width: u32,
+    pub height: u32,
+    pub fps: u32,
+}
+/// The base layer, always at z 0. `publish` is a camera publish grant when the backend issues one.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BaseLayer {
+    pub id: String,
+    pub source: CompositionBaseKind,
+    pub publish: Option<MediaSessionGrant>,
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct PageLayer {
+    pub id: String,
+    pub z: u32,
+    pub living_session: LivingSession,
+    pub region: CompositionRegion,
+    pub background: CompositionBackground,
+    pub opacity: f64,
+    pub input: Vec<LivingInputKind>,
+}
+#[derive(Clone, Debug, PartialEq)]
+pub enum VideoLayer {
+    Base(BaseLayer),
+    Page(PageLayer),
+}
+/// One validated composition. Unknown top-level fields are kept in `extra`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CallVideoComposition {
+    pub composition_id: String,
+    pub call_id: String,
+    pub revision: u64,
+    pub status: CompositionStatus,
+    pub output: CompositionOutput,
+    pub layers: Vec<VideoLayer>,
+    pub error_code: Option<String>,
+    pub extra: serde_json::Map<String, Value>,
+}
+
+/// Explicit, versioned `video_composition` capability. Never inferred from custom video or living services.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VideoCompositionCapability {
+    pub version: u8,
+    pub supported: bool,
+    pub max_layers: u32,
+    pub bases: Vec<CompositionBaseKind>,
+    pub page_alpha: bool,
+    pub regions: bool,
+    pub max_width: u32,
+    pub max_height: u32,
+    pub max_fps: u32,
+}
+
+/// Parses `video_composition`. Absent, malformed, unknown-version or unsupported input is `None`.
+/// Unknown bases are ignored and larger limits clamp to SDK v1 bounds.
+pub fn parse_video_composition(value: &Value) -> Option<VideoCompositionCapability> {
+    if value.get("version").and_then(Value::as_f64) != Some(1.0)
+        || value.get("supported") != Some(&Value::Bool(true))
+    {
+        return None;
+    }
+    let bases = value.get("bases")?.as_array()?;
+    let positive = |key: &str, cap: f64| -> Option<u32> {
+        let n = value.get(key)?.as_f64()?;
+        (n.fract() == 0.0 && n > 0.0).then(|| n.min(cap) as u32)
+    };
+    let mut kinds = Vec::new();
+    for base in bases {
+        let kind = match base.as_str() {
+            Some("camera") => CompositionBaseKind::Camera,
+            Some("managed") => CompositionBaseKind::Managed,
+            _ => continue,
+        };
+        if !kinds.contains(&kind) {
+            kinds.push(kind);
+        }
+    }
+    Some(VideoCompositionCapability {
+        version: 1,
+        supported: true,
+        max_layers: positive("max_layers", COMPOSITION_MAX_LAYERS as f64)?,
+        bases: kinds,
+        page_alpha: value.get("page_alpha") == Some(&Value::Bool(true)),
+        regions: value.get("regions") == Some(&Value::Bool(true)),
+        max_width: positive("max_width", 1920.0)?,
+        max_height: positive("max_height", 1080.0)?,
+        max_fps: positive("max_fps", 30.0)?,
+    })
+}
+
+fn layer_id(id: &str) -> bool {
+    let b = id.as_bytes();
+    (1..=32).contains(&b.len())
+        && b[0].is_ascii_lowercase()
+        && b[1..]
+            .iter()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, b'_' | b'-'))
+}
+fn unit(n: f64) -> bool {
+    n.is_finite() && (0.0..=1.0).contains(&n)
+}
+fn region_ok(r: &CompositionRegion) -> bool {
+    const EPS: f64 = 1e-9;
+    unit(r.x)
+        && unit(r.y)
+        && unit(r.width)
+        && unit(r.height)
+        && r.width > 0.0
+        && r.height > 0.0
+        && r.x + r.width <= 1.0 + EPS
+        && r.y + r.height <= 1.0 + EPS
+}
+fn inputs_ok(kinds: &[LivingInputKind]) -> bool {
+    kinds
+        .iter()
+        .enumerate()
+        .all(|(i, kind)| !kinds[..i].contains(kind))
+}
+/// Plain JSON within `max` nodes, depth 64 and `max` serialized bytes.
+fn plain_json(value: &Value, max: usize) -> bool {
+    fn walk(value: &Value, depth: usize, nodes: &mut usize, max: usize) -> bool {
+        *nodes += 1;
+        depth <= 64
+            && *nodes <= max
+            && match value {
+                Value::Array(items) => items.iter().all(|v| walk(v, depth + 1, nodes, max)),
+                Value::Object(map) => map.values().all(|v| walk(v, depth + 1, nodes, max)),
+                _ => true,
+            }
+    }
+    walk(value, 0, &mut 0, max) && serde_json::to_vec(value).is_ok_and(|b| b.len() <= max)
+}
+/// A ready deployment ID. URL pages are rejected: native SDKs cannot deploy them.
+fn deployment_id(id: &str) -> bool {
+    (1..=128).contains(&id.encode_utf16().count()) && !id.contains("://")
+}
+/// Integral values serialize as JSON integers, as `JSON.stringify` does.
+fn number(n: f64) -> Value {
+    if n.fract() == 0.0 && n.abs() <= MAX_SAFE_INTEGER as f64 {
+        Value::from(n as i64)
+    } else {
+        Value::from(n)
+    }
+}
+
+/// Validates locally and returns the PUT body, or `None` when the input breaks the contract.
+pub(crate) fn call_video_body(input: &SetCallVideo) -> Option<Value> {
+    let shortcut;
+    let (layers, revision): (&[VideoLayerInput], Option<u64>) = match input {
+        SetCallVideo::Page {
+            deployment_id,
+            input,
+            initial_state,
+            revision,
+        } => {
+            shortcut = [VideoLayerInput::Page(PageLayerInput {
+                input: input.clone(),
+                initial_state: initial_state.clone(),
+                ..PageLayerInput::new("page", 1, deployment_id.clone())
+            })];
+            (&shortcut, *revision)
+        }
+        SetCallVideo::Layers { layers, revision } => (layers, *revision),
+    };
+    if layers.is_empty()
+        || layers.len() > COMPOSITION_MAX_LAYERS
+        || revision.is_some_and(|r| r > MAX_SAFE_INTEGER)
+    {
+        return None;
+    }
+    let (mut ids, mut zs, mut bases, mut out) = (Vec::new(), Vec::new(), 0, Vec::new());
+    let mut bottom: Option<(u32, CompositionRegion, CompositionBackground, f64)> = None;
+    for layer in layers {
+        let id = match layer {
+            VideoLayerInput::Base(base) => &base.id,
+            VideoLayerInput::Page(page) => &page.id,
+        };
+        if !layer_id(id) || ids.contains(&id) {
+            return None;
+        }
+        ids.push(id);
+        let page = match layer {
+            VideoLayerInput::Base(base) => {
+                bases += 1;
+                if bases > 1 {
+                    return None;
+                }
+                out.push(json!({"id": base.id, "z": 0, "source": {"kind": base.source}}));
+                continue;
+            }
+            VideoLayerInput::Page(page) => page,
+        };
+        if !(1..=64).contains(&page.z) || zs.contains(&page.z) {
+            return None;
+        }
+        zs.push(page.z);
+        let region = page.region.unwrap_or(CompositionRegion::FULL);
+        let background = page.background.unwrap_or_default();
+        let opacity = page.opacity.unwrap_or(1.0);
+        if !region_ok(&region)
+            || !unit(opacity)
+            || page.input.as_deref().is_some_and(|i| !inputs_ok(i))
+            || page
+                .initial_state
+                .as_ref()
+                .is_some_and(|s| !plain_json(s, 64 * 1024))
+            || !deployment_id(&page.deployment_id)
+        {
+            return None;
+        }
+        let mut body = json!({
+            "id": page.id, "z": page.z, "page": {"deployment_id": page.deployment_id},
+            "region": {"x": number(region.x), "y": number(region.y),
+                "width": number(region.width), "height": number(region.height)},
+            "background": background, "opacity": number(opacity),
+        });
+        if let Some(kinds) = &page.input {
+            body["input"] = json!(kinds);
+        }
+        if let Some(state) = &page.initial_state {
+            body["initial_state"] = state.clone();
+        }
+        if bottom.is_none_or(|(z, ..)| page.z < z) {
+            bottom = Some((page.z, region, background, opacity));
+        }
+        out.push(body);
+    }
+    if bases == 0 {
+        // Nothing below the bottom page: it must fill the frame without showing through.
+        let (_, region, background, opacity) = bottom?;
+        if region != CompositionRegion::FULL
+            || background != CompositionBackground::Opaque
+            || opacity != 1.0
+        {
+            return None;
+        }
+    }
+    let mut body = json!({ "layers": out });
+    if let Some(revision) = revision {
+        body["revision"] = json!(revision);
+    }
+    Some(body)
+}
+
+/// Non-negative safe JSON integer (integral floats included).
+fn safe_int(value: Option<&Value>) -> Option<u64> {
+    let value = value?;
+    if let Some(n) = value.as_u64() {
+        return (n <= MAX_SAFE_INTEGER).then_some(n);
+    }
+    let f = value.as_f64()?;
+    (f.fract() == 0.0 && f >= 0.0 && f <= MAX_SAFE_INTEGER as f64).then_some(f as u64)
+}
+fn bounded(value: Option<&Value>, min: u64, max: u64) -> Option<u32> {
+    safe_int(value)
+        .filter(|n| (min..=max).contains(n))
+        .map(|n| n as u32)
+}
+fn even(value: Option<&Value>, max: u64) -> Option<u32> {
+    bounded(value, 16, max).filter(|n| n % 2 == 0)
+}
+/// Absent or null is `None`; any other non-string is invalid.
+fn nullable_text(value: Option<&Value>) -> Option<Option<String>> {
+    match value {
+        None | Some(Value::Null) => Some(None),
+        Some(Value::String(s)) => Some(Some(s.clone())),
+        _ => None,
+    }
+}
+fn living_session(value: &Value) -> Option<LivingSession> {
+    let session_id = value
+        .get("session_id")?
+        .as_str()
+        .filter(|s| !s.is_empty())?;
+    let status = match value.get("status")?.as_str()? {
+        "starting" => LivingSessionStatus::Starting,
+        "ready" => LivingSessionStatus::Ready,
+        "live" => LivingSessionStatus::Live,
+        "stopping" => LivingSessionStatus::Stopping,
+        "stopped" => LivingSessionStatus::Stopped,
+        "failed" => LivingSessionStatus::Failed,
+        _ => return None,
+    };
+    let viewport = value.get("viewport").filter(|v| v.is_object())?;
+    Some(LivingSession {
+        session_id: session_id.into(),
+        call_id: value.get("call_id")?.as_str()?.into(),
+        deployment_id: value.get("deployment_id")?.as_str()?.into(),
+        status,
+        viewport: LivingViewport {
+            width: even(viewport.get("width"), 1920)?,
+            height: even(viewport.get("height"), 1080)?,
+        },
+        fps: bounded(value.get("fps"), 1, 30)?,
+        ready_at: nullable_text(value.get("ready_at"))?,
+        last_heartbeat_at: nullable_text(value.get("last_heartbeat_at"))?,
+        error_code: nullable_text(value.get("error_code"))?,
+    })
+}
+
+/// Validated composition, or `None` for any response outside the contract.
+pub(crate) fn parse_call_video(value: &Value) -> Option<CallVideoComposition> {
+    let map = value.as_object()?;
+    let text = |key: &str| map.get(key)?.as_str().filter(|s| !s.is_empty());
+    let (composition_id, call_id) = (text("composition_id")?, text("call_id")?);
+    let revision = safe_int(map.get("revision"))?;
+    let status = match map.get("status")?.as_str()? {
+        "starting" => CompositionStatus::Starting,
+        "live" => CompositionStatus::Live,
+        "stopping" => CompositionStatus::Stopping,
+        "stopped" => CompositionStatus::Stopped,
+        "failed" => CompositionStatus::Failed,
+        _ => return None,
+    };
+    let error_code = match map.get("error_code")? {
+        Value::Null => None,
+        Value::String(code) => Some(code.clone()),
+        _ => return None,
+    };
+    let output = map.get("output").filter(|o| o.is_object())?;
+    let output = CompositionOutput {
+        width: even(output.get("width"), 1920)?,
+        height: even(output.get("height"), 1080)?,
+        fps: bounded(output.get("fps"), 1, 30)?,
+    };
+    let raw = map.get("layers")?.as_array()?;
+    if raw.len() > COMPOSITION_MAX_LAYERS {
+        return None;
+    }
+    let (mut ids, mut zs, mut layers) = (Vec::new(), Vec::new(), Vec::new());
+    let mut has_base = false;
+    for layer in raw {
+        let id = layer.as_object()?.get("id")?.as_str()?;
+        let z = safe_int(layer.get("z"));
+        if ids.contains(&id) || z.is_some_and(|z| zs.contains(&z)) {
+            return None;
+        }
+        ids.push(id);
+        zs.extend(z);
+        if let Some(source) = layer.get("source") {
+            let source = match source.get("kind").and_then(Value::as_str) {
+                Some("camera") => CompositionBaseKind::Camera,
+                Some("managed") => CompositionBaseKind::Managed,
+                _ => return None,
+            };
+            if has_base || z != Some(0) {
+                return None;
+            }
+            has_base = true;
+            let publish = match layer.get("publish") {
+                None => None,
+                Some(grant) => {
+                    if source != CompositionBaseKind::Camera {
+                        return None;
+                    }
+                    let grant = parse_media_session_grant(
+                        grant,
+                        MediaDirection::Publish,
+                        None,
+                        Some(MediaSessionContent::Camera),
+                    )?;
+                    if output.fps > grant.limits.max_fps {
+                        return None;
+                    }
+                    Some(grant)
+                }
+            };
+            layers.push(VideoLayer::Base(BaseLayer {
+                id: id.into(),
+                source,
+                publish,
+            }));
+            continue;
+        }
+        let region = layer.get("region").filter(|r| r.is_object())?;
+        let coordinate = |key: &str| region.get(key)?.as_f64().filter(|n| unit(*n));
+        let region = CompositionRegion {
+            x: coordinate("x")?,
+            y: coordinate("y")?,
+            width: coordinate("width")?,
+            height: coordinate("height")?,
+        };
+        let background = match layer.get("background")?.as_str()? {
+            "opaque" => CompositionBackground::Opaque,
+            "transparent" => CompositionBackground::Transparent,
+            _ => return None,
+        };
+        let opacity = layer.get("opacity")?.as_f64().filter(|n| unit(*n))?;
+        let input = layer
+            .get("input")?
+            .as_array()?
+            .iter()
+            .map(|kind| match kind.as_str()? {
+                "pointer" => Some(LivingInputKind::Pointer),
+                "keyboard" => Some(LivingInputKind::Keyboard),
+                "text" => Some(LivingInputKind::Text),
+                _ => None,
+            })
+            .collect::<Option<Vec<_>>>()?;
+        let living_session = living_session(layer.get("living_session")?)?;
+        let z = z.filter(|z| (1..=u64::from(u32::MAX)).contains(z))? as u32;
+        if !region_ok(&region)
+            || !inputs_ok(&input)
+            || living_session.call_id != call_id
+            || living_session.fps > output.fps
+        {
+            return None;
+        }
+        layers.push(VideoLayer::Page(PageLayer {
+            id: id.into(),
+            z,
+            living_session,
+            region,
+            background,
+            opacity,
+            input,
+        }));
+    }
+    let known = [
+        "composition_id",
+        "call_id",
+        "revision",
+        "status",
+        "output",
+        "layers",
+        "error_code",
+    ];
+    Some(CallVideoComposition {
+        composition_id: composition_id.into(),
+        call_id: call_id.into(),
+        revision,
+        status,
+        output,
+        layers,
+        error_code,
+        extra: map
+            .iter()
+            .filter(|(k, _)| !known.contains(&k.as_str()))
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect(),
+    })
+}
+
+/// The topmost page layer accepting pointer input under an output-frame point (x, y normalized
+/// 0..1), or `None`. The backend maps output-frame coordinates into the page.
+pub fn composition_input_target(
+    composition: &CallVideoComposition,
+    x: f64,
+    y: f64,
+) -> Option<&PageLayer> {
+    if !unit(x) || !unit(y) {
+        return None;
+    }
+    composition
+        .layers
+        .iter()
+        .filter_map(|layer| match layer {
+            VideoLayer::Page(page) if page.input.contains(&LivingInputKind::Pointer) => Some(page),
+            _ => None,
+        })
+        .filter(|p| {
+            let r = p.region;
+            x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height
+        })
+        .max_by_key(|p| p.z)
 }

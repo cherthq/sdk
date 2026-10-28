@@ -127,6 +127,16 @@ class BillingStatus(TypedDict):
     dedicated_available: bool
 
 
+class BillingResult(TypedDict, total=False):
+    """`active` carries the entitlement; `requires_payment_method`/`requires_action` carry a Stripe-hosted URL.
+
+    `pending`: the provider accepted the operation but the entitlement is not committed yet; retry with the same key.
+    """
+    status: Literal["active", "pending", "requires_payment_method", "requires_action"]
+    entitlement: dict[str, Json]
+    url: str
+
+
 class CheckoutSession(TypedDict):
     url: str
 
@@ -242,6 +252,8 @@ CallEventType = Literal['incoming_registered', 'allocated', 'answer_requested', 
                         'active', 'ending', 'bridge_ready', 'agent_connected', 'remote_video_ready',
                         'remote_video_unavailable', 'caller_video_published', 'ended', 'failed',
                         'rejected', 'cleanup_complete',
+                        # Draft call video composition lifecycle. Payload-free.
+                        'call_video.live', 'call_video.updated', 'call_video.failed', 'call_video.stopped',
                         # Screen sharing. Payload-free: never screen content or coordinates.
                         'agent_screen_started', 'agent_screen_stopped', 'caller_screen_share_started',
                         'caller_screen_share_ended', 'screen_control_granted', 'screen_control_revoked', 'unknown']

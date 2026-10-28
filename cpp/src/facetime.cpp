@@ -3,6 +3,7 @@
 #include <array>
 #include <cctype>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <string_view>
 
@@ -280,6 +281,22 @@ MediaSessionGrant grant(const Json& value, MediaDirection direction, const std::
     result.limits = {*width, *height, *fps, *bytes};
     return result;
 }
+// Raw response data is never returned. Server error responses (parsed bodies) keep their
+// status and an allowlisted code, else request_failed; local failures keep their code.
+[[noreturn]] void sanitized(const ApiError& error) {
+    static constexpr std::array<std::string_view, 30> safe = {"unauthorized", "forbidden", "cli_scope_denied",
+        "billing_owner_required", "billing_unavailable", "project_required", "invalid_request", "cli_login_expired",
+        "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited", "cli_login_busy", "not_found",
+        "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "media_content_unsupported", "caller_screen_unsupported", "media_limit_exceeded", "call_not_active", "call_ended",
+        "call_not_found", "media_session_expired", "media_transport_unavailable", "video_composition_unsupported",
+        "composition_invalid", "composition_revision_conflict", "composition_base_unavailable"};
+    auto request_id = error.request_id;
+    if (error.data.is_object() && error.data.contains("request_id") && error.data["request_id"].is_string())
+        request_id = error.data["request_id"].get<std::string>();
+    const bool server = error.status >= 300 && !error.data.is_null();
+    const bool allowed = std::find(safe.begin(), safe.end(), error.code) != safe.end();
+    throw ApiError(error.status, server && !allowed ? "request_failed" : error.code, std::move(request_id));
+}
 } // namespace
 
 FaceTimeClient::FaceTimeClient(FaceTimeOptions options)
@@ -419,21 +436,7 @@ Result<MediaSessionGrant> FaceTimeClient::create_media_session(const std::string
     }
     detail::Response response;
     try { response = request_with_response("/calls/" + id + "/media-sessions", std::move(body), "POST"); }
-    catch (const ApiError& error) {
-        // Raw response data is never returned. Server error responses (parsed bodies) keep their
-        // status and an allowlisted code, else request_failed; local failures keep their code.
-        static constexpr std::array<std::string_view, 26> safe = {"unauthorized", "forbidden", "cli_scope_denied",
-            "billing_owner_required", "billing_unavailable", "project_required", "invalid_request", "cli_login_expired",
-            "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited", "cli_login_busy", "not_found",
-            "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "media_content_unsupported", "caller_screen_unsupported", "media_limit_exceeded", "call_not_active", "call_ended",
-            "call_not_found", "media_session_expired", "media_transport_unavailable"};
-        auto request_id = error.request_id;
-        if (error.data.is_object() && error.data.contains("request_id") && error.data["request_id"].is_string())
-            request_id = error.data["request_id"].get<std::string>();
-        const bool server = error.status >= 300 && !error.data.is_null();
-        const bool allowed = std::find(safe.begin(), safe.end(), error.code) != safe.end();
-        throw ApiError(error.status, server && !allowed ? "request_failed" : error.code, std::move(request_id));
-    }
+    catch (const ApiError& error) { sanitized(error); }
     auto request_id = response.request_id;
     try {
         // Same envelope rules as request(), plus the exact 201 status.
@@ -446,6 +449,281 @@ Result<MediaSessionGrant> FaceTimeClient::create_media_session(const std::string
         // Response data is withheld: an invalid grant may still carry a bearer token.
         throw ApiError(502, "invalid_response", request_id);
     }
+}
+
+namespace {
+constexpr std::int64_t max_safe_integer = 9007199254740991LL;
+bool unit(double n) { return std::isfinite(n) && n >= 0 && n <= 1; }
+bool region_ok(const CompositionRegion& r) {
+    return unit(r.x) && unit(r.y) && unit(r.width) && unit(r.height) && r.width > 0 && r.height > 0
+        && r.x + r.width <= 1 + 1e-9 && r.y + r.height <= 1 + 1e-9;
+}
+bool layer_id(const std::string& id) {
+    return !id.empty() && id.size() <= 32 && id[0] >= 'a' && id[0] <= 'z'
+        && std::all_of(id.begin() + 1, id.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-'; });
+}
+const char* input_wire(LivingInputKind kind) {
+    switch (kind) {
+        case LivingInputKind::pointer: return "pointer";
+        case LivingInputKind::keyboard: return "keyboard";
+        case LivingInputKind::text: return "text";
+    }
+    throw std::invalid_argument("input must be a unique subset of pointer, keyboard, text.");
+}
+bool inputs_ok(const std::vector<LivingInputKind>& kinds) {
+    for (std::size_t i = 0; i < kinds.size(); ++i) {
+        if (kinds[i] != LivingInputKind::pointer && kinds[i] != LivingInputKind::keyboard && kinds[i] != LivingInputKind::text) return false;
+        if (std::find(kinds.begin(), kinds.begin() + static_cast<std::ptrdiff_t>(i), kinds[i]) != kinds.begin() + static_cast<std::ptrdiff_t>(i)) return false;
+    }
+    return true;
+}
+// Plain JSON (finite numbers, no binary) within `max` nodes, depth 64 and `max` serialized bytes.
+void plain_json(const Json& value, std::size_t max) {
+    std::size_t nodes = 0;
+    const std::function<bool(const Json&, int)> walk = [&](const Json& v, int depth) {
+        if (depth > 64 || ++nodes > max) return false;
+        if (v.is_array() || v.is_object()) return std::all_of(v.begin(), v.end(), [&](const Json& x) { return walk(x, depth + 1); });
+        if (v.is_number_float()) return std::isfinite(v.get<double>());
+        return v.is_null() || v.is_boolean() || v.is_number() || v.is_string();
+    };
+    bool ok = walk(value, 0);
+    if (ok) {
+        try { ok = value.dump().size() <= max; } catch (const Json::exception&) { ok = false; }
+    }
+    if (!ok) throw std::invalid_argument("initial_state must be plain JSON up to 64 KiB.");
+}
+// Integral values serialize as JSON integers, as JSON.stringify does.
+Json number(double n) {
+    return std::trunc(n) == n && std::fabs(n) <= static_cast<double>(max_safe_integer) ? Json(static_cast<std::int64_t>(n)) : Json(n);
+}
+Json call_video_body(const SetCallVideo& input) {
+    const auto fail = [](const char* message) { throw std::invalid_argument(message); };
+    std::vector<VideoLayerInput> shortcut;
+    if (input.deployment_id && !input.layers)
+        shortcut.emplace_back(PageLayerInput{"page", 1, *input.deployment_id, std::nullopt, std::nullopt, std::nullopt, input.input, input.initial_state});
+    if (!input.deployment_id && !input.layers) fail("set_call_video needs a deployment ID or layers.");
+    const auto& layers = input.layers ? *input.layers : shortcut;
+    if (layers.empty() || layers.size() > composition_max_layers) fail("A composition has 1-2 layers.");
+    if (input.revision && (*input.revision < 0 || *input.revision > max_safe_integer)) fail("revision must be a non-negative integer.");
+    std::vector<std::string> ids;
+    std::vector<int> zs;
+    int bases = 0;
+    Json out = Json::array();
+    const PageLayerInput* bottom = nullptr;
+    CompositionRegion bottom_region;
+    CompositionBackground bottom_background = CompositionBackground::opaque;
+    double bottom_opacity = 1;
+    for (const auto& layer : layers) {
+        const std::string id = std::visit([](const auto& l) { return l.id; }, layer);
+        if (!layer_id(id) || std::find(ids.begin(), ids.end(), id) != ids.end())
+            fail("Layer ids are unique, 1-32 chars: lowercase letter, then [a-z0-9_-].");
+        ids.push_back(id);
+        if (const auto* base = std::get_if<BaseLayerInput>(&layer)) {
+            if (++bases > 1) fail("At most one base layer, always at z 0.");
+            if (base->source != CompositionBaseKind::camera && base->source != CompositionBaseKind::managed) fail("A base source is camera or managed.");
+            out.push_back({{"id", base->id}, {"z", 0}, {"source", {{"kind", base->source == CompositionBaseKind::camera ? "camera" : "managed"}}}});
+            continue;
+        }
+        const auto& page = std::get<PageLayerInput>(layer);
+        if (page.z < 1 || page.z > 64 || std::find(zs.begin(), zs.end(), page.z) != zs.end()) fail("Page layer z values are unique integers 1..64.");
+        zs.push_back(page.z);
+        const auto region = page.region.value_or(CompositionRegion{});
+        if (!region_ok(region)) fail("region is normalized 0..1 and must stay inside the frame.");
+        const auto background = page.background.value_or(CompositionBackground::opaque);
+        if (background != CompositionBackground::opaque && background != CompositionBackground::transparent) fail("background is opaque or transparent.");
+        const auto opacity = page.opacity.value_or(1.0);
+        if (!unit(opacity)) fail("opacity must be 0..1.");
+        if (page.input && !inputs_ok(*page.input)) fail("input must be a unique subset of pointer, keyboard, text.");
+        if (page.initial_state) plain_json(*page.initial_state, 64 * 1024);
+        if (page.deployment_id.empty() || page.deployment_id.size() > 128 || page.deployment_id.find("://") != std::string::npos)
+            fail("Pages must be a ready deployment ID; native SDKs cannot deploy URL pages (deploy with the TypeScript SDK).");
+        text(page.deployment_id, 128);
+        Json body{{"id", page.id}, {"z", page.z}, {"page", {{"deployment_id", page.deployment_id}}},
+            {"region", {{"x", number(region.x)}, {"y", number(region.y)}, {"width", number(region.width)}, {"height", number(region.height)}}},
+            {"background", background == CompositionBackground::opaque ? "opaque" : "transparent"}, {"opacity", number(opacity)}};
+        if (page.input) {
+            body["input"] = Json::array();
+            for (const auto kind : *page.input) body["input"].push_back(input_wire(kind));
+        }
+        if (page.initial_state) body["initial_state"] = *page.initial_state;
+        if (!bottom || page.z < bottom->z) {
+            bottom = &page;
+            bottom_region = region;
+            bottom_background = background;
+            bottom_opacity = opacity;
+        }
+        out.push_back(std::move(body));
+    }
+    // Nothing below the bottom page: it must fill the frame without showing through.
+    if (bases == 0 && (!(bottom_region == CompositionRegion{}) || bottom_background != CompositionBackground::opaque || bottom_opacity != 1))
+        fail("Without a base, the bottom page layer must be opaque, full frame and opacity 1.");
+    Json result{{"layers", std::move(out)}};
+    if (input.revision) result["revision"] = *input.revision;
+    return result;
+}
+
+// JavaScript Number.isInteger(v) && min <= v <= max, safe integers only.
+std::optional<std::int64_t> js_int(const Json& owner, const char* field, std::int64_t min, std::int64_t max) {
+    if (!owner.is_object() || !owner.contains(field) || !owner.at(field).is_number()) return std::nullopt;
+    const auto n = owner.at(field).get<double>();
+    if (!std::isfinite(n) || std::trunc(n) != n || n < static_cast<double>(min) || n > static_cast<double>(max)) return std::nullopt;
+    return static_cast<std::int64_t>(n);
+}
+int even(const Json& owner, const char* field, int max) {
+    const auto n = js_int(owner, field, 16, max);
+    require(n && *n % 2 == 0);
+    return static_cast<int>(*n);
+}
+int fps(const Json& owner) {
+    const auto n = js_int(owner, "fps", 1, 30);
+    require(n.has_value());
+    return static_cast<int>(*n);
+}
+double unit_number(const Json& owner, const char* field) {
+    require(owner.at(field).is_number());
+    const auto n = owner.at(field).get<double>();
+    require(unit(n));
+    return n;
+}
+// Absent or null is nullopt; any other non-string is invalid.
+std::optional<std::string> optional_string(const Json& owner, const char* field) {
+    if (!owner.contains(field) || owner.at(field).is_null()) return std::nullopt;
+    return owner.at(field).get<std::string>();
+}
+LivingSession living_session(const Json& s) {
+    require(s.is_object() && s.at("viewport").is_object());
+    const auto status = string(s, "status");
+    static constexpr std::array<std::string_view, 6> statuses = {"starting", "ready", "live", "stopping", "stopped", "failed"};
+    const auto found = std::find(statuses.begin(), statuses.end(), status);
+    require(found != statuses.end());
+    LivingSession result{string(s, "session_id"), string(s, "call_id"), string(s, "deployment_id"),
+        static_cast<LivingSessionStatus>(found - statuses.begin()), {even(s.at("viewport"), "width", 1920), even(s.at("viewport"), "height", 1080)},
+        fps(s), optional_string(s, "ready_at"), optional_string(s, "last_heartbeat_at"), optional_string(s, "error_code")};
+    require(!result.session_id.empty());
+    return result;
+}
+CallVideoComposition composition(const Json& c) {
+    require(c.is_object());
+    static constexpr std::array<std::string_view, 5> statuses = {"starting", "live", "stopping", "stopped", "failed"};
+    const auto status = std::find(statuses.begin(), statuses.end(), string(c, "status"));
+    const auto revision = js_int(c, "revision", 0, max_safe_integer);
+    require(status != statuses.end() && revision && (c.at("error_code").is_null() || c.at("error_code").is_string()) && c.at("output").is_object());
+    const auto& o = c.at("output");
+    CallVideoComposition result{string(c, "composition_id"), string(c, "call_id"), *revision,
+        static_cast<CompositionStatus>(status - statuses.begin()), {even(o, "width", 1920), even(o, "height", 1080), fps(o)}, {},
+        nullable_string(c, "error_code")};
+    require(!result.composition_id.empty() && !result.call_id.empty());
+    const auto& layers = c.at("layers");
+    require(layers.is_array() && layers.size() <= composition_max_layers);
+    std::vector<std::string> ids;
+    std::vector<std::int64_t> zs;
+    bool has_base = false;
+    for (const auto& layer : layers) {
+        require(layer.is_object());
+        const auto id = string(layer, "id");
+        const auto z = js_int(layer, "z", 0, max_safe_integer);
+        require(std::find(ids.begin(), ids.end(), id) == ids.end() && (!z || std::find(zs.begin(), zs.end(), *z) == zs.end()));
+        ids.push_back(id);
+        if (z) zs.push_back(*z);
+        if (layer.contains("source")) {
+            const auto& source = layer.at("source");
+            const auto kind = source.is_object() && source.contains("kind") && source.at("kind").is_string() ? source.at("kind").get<std::string>() : std::string();
+            require((kind == "camera" || kind == "managed") && !has_base && z == 0);
+            has_base = true;
+            BaseLayer base{id, kind == "camera" ? CompositionBaseKind::camera : CompositionBaseKind::managed, std::nullopt};
+            if (layer.contains("publish")) {
+                require(base.source == CompositionBaseKind::camera);
+                base.publish = grant(layer.at("publish"), MediaDirection::publish, std::nullopt, MediaSessionContent::camera);
+                require(result.output.fps <= base.publish->limits.max_fps);
+            }
+            result.layers.emplace_back(std::move(base));
+            continue;
+        }
+        require(z && *z >= 1 && *z <= std::numeric_limits<int>::max() && layer.at("region").is_object() && layer.at("input").is_array());
+        const auto& r = layer.at("region");
+        const CompositionRegion region{unit_number(r, "x"), unit_number(r, "y"), unit_number(r, "width"), unit_number(r, "height")};
+        const auto background = string(layer, "background");
+        require(region_ok(region) && (background == "opaque" || background == "transparent"));
+        const auto opacity = unit_number(layer, "opacity");
+        std::vector<LivingInputKind> input;
+        for (const auto& item : layer.at("input")) {
+            const auto kind = item.get<std::string>();
+            require(kind == "pointer" || kind == "keyboard" || kind == "text");
+            input.push_back(kind == "pointer" ? LivingInputKind::pointer : kind == "keyboard" ? LivingInputKind::keyboard : LivingInputKind::text);
+        }
+        require(inputs_ok(input));
+        auto session = living_session(layer.at("living_session"));
+        require(session.call_id == result.call_id && session.fps <= result.output.fps);
+        result.layers.emplace_back(PageLayer{id, static_cast<int>(*z), std::move(session), region,
+            background == "opaque" ? CompositionBackground::opaque : CompositionBackground::transparent, opacity, std::move(input)});
+    }
+    return result;
+}
+} // namespace
+
+Result<CallVideoComposition> FaceTimeClient::set_call_video(const std::string& call_id, const SetCallVideo& input,
+                                                            const std::string& idempotency_key) const {
+    auto body = call_video_body(input);
+    key(idempotency_key);
+    return call_video(call_id, std::move(body), "PUT", idempotency_key);
+}
+Result<CallVideoComposition> FaceTimeClient::get_call_video(const std::string& call_id) const {
+    return call_video(call_id, std::nullopt, "GET", std::nullopt);
+}
+Result<CallVideoComposition> FaceTimeClient::clear_call_video(const std::string& call_id) const {
+    return call_video(call_id, std::nullopt, "DELETE", std::nullopt);
+}
+Result<CallVideoComposition> FaceTimeClient::call_video(const std::string& call_id, std::optional<Json> body,
+                                                        std::string method, std::optional<std::string> idempotency_key) const {
+    const auto id = uuid(call_id);
+    detail::Response response;
+    try { response = request_with_response("/calls/" + id + "/video", std::move(body), std::move(method), std::move(idempotency_key)); }
+    catch (const ApiError& error) { sanitized(error); }
+    auto request_id = response.request_id;
+    try {
+        // Same envelope rules as request().
+        const auto& envelope = response.data;
+        require(envelope && envelope->is_object() && envelope->contains("data") && !envelope->contains("error"));
+        request_id = envelope->at("request_id").get<std::string>();
+        require(!request_id.empty());
+        return {composition(envelope->at("data")), request_id, response.status};
+    } catch (const std::exception&) {
+        // Response data is withheld: an invalid composition may still carry a bearer token.
+        throw ApiError(502, "invalid_response", request_id);
+    }
+}
+
+std::optional<VideoCompositionCapability> parse_video_composition(const Json& input) {
+    if (!input.is_object() || !input.contains("version") || !input.at("version").is_number() || input.at("version").get<double>() != 1
+        || !input.contains("supported") || input.at("supported") != true || !input.contains("bases") || !input.at("bases").is_array()) return std::nullopt;
+    const auto positive = [&](const char* field, double cap) -> std::optional<int> {
+        if (!input.contains(field) || !input.at(field).is_number()) return std::nullopt;
+        const auto n = input.at(field).get<double>();
+        if (!std::isfinite(n) || n <= 0 || std::trunc(n) != n) return std::nullopt;
+        return static_cast<int>(std::min(n, cap));
+    };
+    const auto layers = positive("max_layers", composition_max_layers), width = positive("max_width", 1920),
+        height = positive("max_height", 1080), rate = positive("max_fps", 30);
+    if (!layers || !width || !height || !rate) return std::nullopt;
+    std::vector<CompositionBaseKind> bases;
+    for (const auto& item : input.at("bases")) {
+        if (!item.is_string() || (item != "camera" && item != "managed")) continue;
+        const auto kind = item == "camera" ? CompositionBaseKind::camera : CompositionBaseKind::managed;
+        if (std::find(bases.begin(), bases.end(), kind) == bases.end()) bases.push_back(kind);
+    }
+    const auto flag = [&](const char* field) { return input.contains(field) && input.at(field) == true; };
+    return VideoCompositionCapability{1, true, *layers, std::move(bases), flag("page_alpha"), flag("regions"), *width, *height, *rate};
+}
+const PageLayer* composition_input_target(const CallVideoComposition& composition, double x, double y) {
+    if (!unit(x) || !unit(y)) return nullptr;
+    const PageLayer* top = nullptr;
+    for (const auto& layer : composition.layers) {
+        const auto* page = std::get_if<PageLayer>(&layer);
+        if (!page || std::find(page->input.begin(), page->input.end(), LivingInputKind::pointer) == page->input.end()) continue;
+        const auto& r = page->region;
+        if (x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height && (!top || page->z > top->z)) top = page;
+    }
+    return top;
 }
 
 namespace {

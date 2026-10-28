@@ -10,6 +10,8 @@ from .control_plane import ChertControlPlane, ChertControlPlaneError, DEFAULT_FA
 from .media import (MediaCapabilities, CustomVideoCapability, InboundCallerVideoCapability, MediaSessionGrant,
                     MediaSessionLimits, IceServer, MediaFrameError, VideoFrame, VideoPlane,
                     copy_video_frame, parse_media_capabilities)
+from .composition import (COMPOSITION_MAX_LAYERS, CallVideoComposition, VideoCompositionCapability,
+                          composition_input_target, parse_video_composition)
 from .session import UnsupportedUnifiedBackend, UNIFIED_CONTRACT, UNIFIED_SCOPES, discover, _ContractOpener
 
 
@@ -60,4 +62,6 @@ __all__ = ["Chert", "IMessageConfig", "FaceTimeConfig", "ChertClient", "ChertAPI
            "DeletedWebhookSubscription", "verify_webhook",
            "MediaCapabilities", "CustomVideoCapability", "InboundCallerVideoCapability", "MediaSessionGrant",
            "MediaSessionLimits", "IceServer", "MediaFrameError", "VideoFrame", "VideoPlane",
-           "copy_video_frame", "parse_media_capabilities"]
+           "copy_video_frame", "parse_media_capabilities",
+           "COMPOSITION_MAX_LAYERS", "CallVideoComposition", "VideoCompositionCapability",
+           "composition_input_target", "parse_video_composition"]

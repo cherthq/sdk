@@ -212,6 +212,28 @@ test('LiveKit adapter: optional, structural, repacks strided planes and maps for
   expect([...frame.data.subarray(16, 20)]).toEqual([0, 1, 2, 3]);    // row 1 starts at packed offset 16, not stride 20
 });
 
+test('LiveKit track frames: packed buffers split into exact planes, rotation mapped, other types converted to I420', async () => {
+  const { liveKitTrackFrames } = await import('./livekit');
+  const rtc = { VideoFrame: class {}, VideoBufferType: { RGBA: 0, BGRA: 3, I420: 5, NV12: 10 },
+    VideoRotation: { VIDEO_ROTATION_0: 0, VIDEO_ROTATION_90: 1, VIDEO_ROTATION_180: 2, VIDEO_ROTATION_270: 3 } } as never;
+  const i420 = new Uint8Array(16 * 16 + 2 * 8 * 8).map((_, i) => i < 256 ? 1 : i < 320 ? 2 : 3);
+  const argb = { data: new Uint8Array(16 * 16 * 4), width: 16, height: 16, type: 1, convert: (type: number) => ({ data: i420, width: 16, height: 16, type }) };
+  async function* stream() {
+    yield { frame: { data: i420, width: 16, height: 16, type: 5 }, timestampUs: 40n, rotation: 1 };
+    yield { frame: argb, timestampUs: 80n, rotation: 0 };
+  }
+  const frames = [];
+  for await (const frame of liveKitTrackFrames(rtc, stream())) frames.push(frame);
+  expect(frames.map(f => [f.format, f.timestampUs, f.rotation, f.planes.map(p => [p.stride, p.data.byteLength, p.data[0]])])).toEqual([
+    ['i420', 40n, 90, [[16, 256, 1], [8, 64, 2], [8, 64, 3]]], ['i420', 80n, 0, [[16, 256, 1], [8, 64, 2], [8, 64, 3]]]]);
+  const source = new ChertVideoSource({ transport: { kind: 'test', accepts: ['video'], async connect() {}, async send() {}, async close() {} } as never, width: 16, height: 16, maxFps: 30 });
+  await source.start();
+  expect(source.pushFrame(frames[0]!)).toBeDefined();   // accepted by the source's own validation
+  await source.stop();
+  async function* unknown() { yield { frame: { data: new Uint8Array(4), width: 16, height: 16, type: 99 }, timestampUs: 0n, rotation: 0 }; }
+  await expect((async () => { for await (const _ of liveKitTrackFrames(rtc, unknown())) { /* drain */ } })()).rejects.toBeInstanceOf(TypeError);
+});
+
 test('source: stop during an in-flight send is clean, and a late connect after stop is closed', async () => {
   let reject!: (e: Error) => void; let closes = 0;
   const closing: MediaTransport = { kind: 'closing', accepts: ['video'], async connect() {},

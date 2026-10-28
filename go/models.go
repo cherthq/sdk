@@ -50,6 +50,8 @@ type Line struct {
 	SupportsVideo  bool    `json:"supports_video"`
 	// MediaCapabilities is raw; parse it with ParseMediaCapabilities. Absent means unsupported.
 	MediaCapabilities json.RawMessage `json:"media_capabilities,omitempty"`
+	// VideoComposition is raw; parse it with ParseVideoComposition. Absent means unsupported.
+	VideoComposition json.RawMessage `json:"video_composition,omitempty"`
 }
 
 // Worker is public inventory, not an administrator diagnostic result.

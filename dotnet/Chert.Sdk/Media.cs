@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace TryChert;
@@ -290,5 +291,298 @@ public sealed class VideoFrame
         }
         var yuv = input.Format is PixelFormat.I420 or PixelFormat.Nv12;
         return new(input, copied, input.ColorSpace ?? (yuv ? ColorSpace.Bt709Limited : ColorSpace.SrgbFull));
+    }
+}
+
+// Call video composition (draft, unreleased): the call's video as up to two layers, composed server-side and published
+// through the call's single publish slot. A base layer (z 0) carries camera frames over a publish grant or a
+// backend-managed source; page layers (z >= 1) are living sessions of ready deployments. Native SDKs do not deploy
+// pages or drive page state, events or input.
+
+/// <summary><c>Camera</c>: the response carries a publish grant for WHIP frames. <c>Managed</c>: a backend-provided source,
+/// only where the <c>video_composition</c> capability lists it.</summary>
+public enum CompositionBaseKind { Camera, Managed }
+/// <summary><c>Transparent</c> renders the page with alpha (premultiplied source-over).</summary>
+public enum CompositionBackground { Opaque, Transparent }
+public enum LivingInputKind { Pointer, Keyboard, Text }
+public enum CompositionStatus { Starting, Live, Stopping, Stopped, Failed }
+public enum LivingSessionStatus { Starting, Ready, Live, Stopping, Stopped, Failed }
+
+/// <summary>Normalized to the output frame: 0..1, width/height &gt; 0, and x+width, y+height &lt;= 1.</summary>
+public sealed record CompositionRegion(double X, double Y, double Width, double Height)
+{
+    public static CompositionRegion Full { get; } = new(0, 0, 1, 1);
+}
+
+public abstract record VideoLayerInput(string Id);
+public sealed record BaseLayerInput(string Id, CompositionBaseKind Source) : VideoLayerInput(Id);
+/// <summary>
+/// A page layer. <see cref="DeploymentId"/> names a ready living-service deployment: the call-video resource never loads a
+/// URL, and native SDKs cannot deploy one (deploy with the TypeScript SDK).
+/// </summary>
+public sealed record PageLayerInput(string Id, int Z, string DeploymentId) : VideoLayerInput(Id)
+{
+    /// <summary>Default: full frame.</summary>
+    public CompositionRegion? Region { get; init; }
+    /// <summary>Default: opaque.</summary>
+    public CompositionBackground? Background { get; init; }
+    /// <summary>Layer multiplier 0..1. Default 1.</summary>
+    public double? Opacity { get; init; }
+    /// <summary>Agent-relayed input kinds; null for a non-interactive layer.</summary>
+    public IReadOnlyList<LivingInputKind>? Input { get; init; }
+    /// <summary>Plain JSON up to 64 KiB.</summary>
+    public JsonElement? InitialState { get; init; }
+}
+
+/// <summary>
+/// Set either <see cref="DeploymentId"/> (the page shortcut: one opaque full-frame page layer, id <c>page</c>, z 1) or
+/// <see cref="Layers"/>. <see cref="Revision"/> makes the PUT compare-and-set; it must equal the current revision.
+/// </summary>
+public sealed class SetCallVideo
+{
+    /// <summary>A ready deployment ID. URL pages are not accepted: deploy them with the TypeScript SDK first.</summary>
+    public string? DeploymentId { get; init; }
+    public IReadOnlyList<LivingInputKind>? Input { get; init; }
+    public JsonElement? InitialState { get; init; }
+    public IReadOnlyList<VideoLayerInput>? Layers { get; init; }
+    public long? Revision { get; init; }
+}
+
+public sealed record LivingViewport(int Width, int Height);
+/// <summary>The living session rendering a page layer; effective viewport and fps.</summary>
+public sealed record LivingSession(string SessionId, string CallId, string DeploymentId, LivingSessionStatus Status, LivingViewport Viewport,
+    int Fps, string? ReadyAt, string? LastHeartbeatAt, string? ErrorCode);
+/// <summary>Effective output: fps = min(base fps, grant limit); page layers render at or below it.</summary>
+public sealed record CompositionOutput(int Width, int Height, int Fps);
+public abstract record VideoLayer(string Id, int Z);
+/// <summary>The base layer, always at z 0. <see cref="Publish"/> is a camera publish grant when the backend issues one.</summary>
+public sealed record BaseLayer(string Id, CompositionBaseKind Source, MediaSessionGrant? Publish) : VideoLayer(Id, 0);
+public sealed record PageLayer(string Id, int Z, LivingSession LivingSession, CompositionRegion Region, CompositionBackground Background,
+    double Opacity, IReadOnlyList<LivingInputKind> Input) : VideoLayer(Id, Z);
+
+/// <summary>One validated composition. Formatting is redacted because a base layer may carry a publish grant.</summary>
+public sealed class CallVideoComposition
+{
+    /// <summary>SDK v1 layer bound. The capability's <c>max_layers</c> is the backend's real limit.</summary>
+    public const int MaxLayers = 2;
+    public required string CompositionId { get; init; }
+    public required string CallId { get; init; }
+    public required long Revision { get; init; }
+    public required CompositionStatus Status { get; init; }
+    public required CompositionOutput Output { get; init; }
+    public required IReadOnlyList<VideoLayer> Layers { get; init; }
+    public string? ErrorCode { get; init; }
+    public override string ToString() => "CallVideoComposition { redacted }";
+
+    private const long MaxSafeInteger = 9_007_199_254_740_991;
+    private static readonly Regex LayerId = new(@"\A[a-z][a-z0-9_-]{0,31}\z", RegexOptions.CultureInvariant);
+    // initial_state may nest 64 levels below the body's own nesting.
+    internal static readonly JsonSerializerOptions Deep = new() { MaxDepth = 256 };
+    private static readonly JsonSerializerOptions Compact = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, MaxDepth = 256 };
+    private static bool Unit(double n) => double.IsFinite(n) && n >= 0 && n <= 1;
+    private static bool RegionOk(CompositionRegion? r) => r is not null && Unit(r.X) && Unit(r.Y) && Unit(r.Width) && Unit(r.Height)
+        && r.Width > 0 && r.Height > 0 && r.X + r.Width <= 1 + 1e-9 && r.Y + r.Height <= 1 + 1e-9;
+    private static bool InputsOk(IReadOnlyList<LivingInputKind> kinds) => kinds.All(Enum.IsDefined) && kinds.Distinct().Count() == kinds.Count;
+    private static string Wire(LivingInputKind kind) => kind.ToString().ToLowerInvariant();
+    private static void PlainJson(JsonElement value, int max)
+    {
+        var nodes = 0;
+        bool Walk(JsonElement v, int depth) => depth <= 64 && ++nodes <= max && v.ValueKind switch
+        {
+            JsonValueKind.Array => v.EnumerateArray().All(x => Walk(x, depth + 1)),
+            JsonValueKind.Object => v.EnumerateObject().All(p => Walk(p.Value, depth + 1)),
+            JsonValueKind.Undefined => false,
+            _ => true
+        };
+        if (!Walk(value, 0)) throw new ArgumentException("initial_state must be plain JSON.");
+        if (JsonSerializer.SerializeToUtf8Bytes(value, Compact).Length > max) throw new ArgumentException($"initial_state exceeds {max} bytes.");
+    }
+
+    /// <summary>Validates locally and returns the PUT body. Throws <see cref="ArgumentException"/> before any request.</summary>
+    internal static JsonObject Body(SetCallVideo input)
+    {
+        if (input is null) throw new ArgumentException("SetCallVideo needs a deployment ID or layers.");
+        var layers = input.DeploymentId is not null && input.Layers is null
+            ? new VideoLayerInput[] { new PageLayerInput("page", 1, input.DeploymentId) { Input = input.Input, InitialState = input.InitialState } }
+            : input.Layers;
+        if (layers is null || layers.Count is < 1 or > MaxLayers) throw new ArgumentException($"A composition has 1-{MaxLayers} layers.");
+        if (input.Revision is < 0 or > MaxSafeInteger) throw new ArgumentException("revision must be a non-negative integer.");
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        var zs = new HashSet<int>();
+        var bases = 0;
+        var output = new JsonArray();
+        PageLayerInput? bottom = null;
+        foreach (var layer in layers)
+        {
+            if (layer?.Id is null || !LayerId.IsMatch(layer.Id) || !ids.Add(layer.Id))
+                throw new ArgumentException("Layer ids are unique, 1-32 chars: lowercase letter, then [a-z0-9_-].");
+            if (layer is BaseLayerInput b)
+            {
+                if (++bases > 1) throw new ArgumentException("At most one base layer, always at z 0.");
+                if (b.Source is not (CompositionBaseKind.Camera or CompositionBaseKind.Managed)) throw new ArgumentException("A base source is camera or managed.");
+                output.Add(new JsonObject { ["id"] = b.Id, ["z"] = 0, ["source"] = new JsonObject { ["kind"] = b.Source == CompositionBaseKind.Camera ? "camera" : "managed" } });
+                continue;
+            }
+            if (layer is not PageLayerInput p) throw new ArgumentException("Layers are BaseLayerInput or PageLayerInput.");
+            if (p.Z is < 1 or > 64 || !zs.Add(p.Z)) throw new ArgumentException("Page layer z values are unique integers 1..64.");
+            var region = p.Region ?? CompositionRegion.Full;
+            if (!RegionOk(region)) throw new ArgumentException("region is normalized 0..1 and must stay inside the frame.");
+            var background = p.Background ?? CompositionBackground.Opaque;
+            if (background is not (CompositionBackground.Opaque or CompositionBackground.Transparent)) throw new ArgumentException("background is opaque or transparent.");
+            var opacity = p.Opacity ?? 1;
+            if (!Unit(opacity)) throw new ArgumentException("opacity must be 0..1.");
+            if (p.Input is not null && !InputsOk(p.Input)) throw new ArgumentException("input must be a unique subset of pointer, keyboard, text.");
+            if (p.InitialState is { } state) PlainJson(state, 64 * 1024);
+            if (p.DeploymentId is null || p.DeploymentId.Length is < 1 or > 128 || p.DeploymentId.Contains("://", StringComparison.Ordinal))
+                throw new ArgumentException("Pages must be a ready deployment ID; native SDKs cannot deploy URL pages (deploy with the TypeScript SDK).");
+            var body = new JsonObject
+            {
+                ["id"] = p.Id, ["z"] = p.Z, ["page"] = new JsonObject { ["deployment_id"] = p.DeploymentId },
+                ["region"] = new JsonObject { ["x"] = region.X, ["y"] = region.Y, ["width"] = region.Width, ["height"] = region.Height },
+                ["background"] = background == CompositionBackground.Opaque ? "opaque" : "transparent", ["opacity"] = opacity
+            };
+            if (p.Input is not null) body["input"] = new JsonArray(p.Input.Select(k => (JsonNode)Wire(k)).ToArray());
+            if (p.InitialState is { } initial) body["initial_state"] = JsonNode.Parse(initial.GetRawText(), documentOptions: new() { MaxDepth = 256 });
+            if (bottom is null || p.Z < bottom.Z) bottom = p with { Region = region, Background = background, Opacity = opacity };
+            output.Add(body);
+        }
+        // Nothing below the bottom page: it must fill the frame without showing through.
+        if (bases == 0 && (bottom!.Region != CompositionRegion.Full || bottom.Background != CompositionBackground.Opaque || bottom.Opacity != 1))
+            throw new ArgumentException("Without a base, the bottom page layer must be opaque, full frame and opacity 1.");
+        var result = new JsonObject();
+        if (input.Revision is { } revision) result["revision"] = revision;
+        result["layers"] = output;
+        return result;
+    }
+
+    // JavaScript Number.isInteger(v) && min <= v <= max (safe integers only).
+    private static long? Int(JsonElement owner, string name, long min, long max)
+        => owner.ValueKind == JsonValueKind.Object && owner.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number
+            && value.TryGetDouble(out var n) && Math.Truncate(n) == n && n >= min && n <= max ? (long)n : null;
+    private static int Even(JsonElement owner, string name, int max)
+        => Int(owner, name, 16, max) is { } n && n % 2 == 0 ? (int)n : throw new JsonException();
+    private static string? NullableText(JsonElement owner, string name)
+        => !owner.TryGetProperty(name, out var v) || v.ValueKind == JsonValueKind.Null ? null
+            : v.ValueKind == JsonValueKind.String ? v.GetString() : throw new JsonException();
+    private static string Text(JsonElement owner, string name)
+        => owner.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : throw new JsonException();
+    private static double UnitNumber(JsonElement owner, string name)
+        => owner.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetDouble(out var n) && Unit(n) ? n : throw new JsonException();
+    private static LivingSession Session(JsonElement s)
+    {
+        if (s.ValueKind != JsonValueKind.Object || !s.TryGetProperty("viewport", out var viewport) || viewport.ValueKind != JsonValueKind.Object) throw new JsonException();
+        var id = Text(s, "session_id");
+        if (id.Length == 0) throw new JsonException();
+        var status = Text(s, "status") switch
+        {
+            "starting" => LivingSessionStatus.Starting, "ready" => LivingSessionStatus.Ready, "live" => LivingSessionStatus.Live,
+            "stopping" => LivingSessionStatus.Stopping, "stopped" => LivingSessionStatus.Stopped, "failed" => LivingSessionStatus.Failed,
+            _ => throw new JsonException()
+        };
+        return new(id, Text(s, "call_id"), Text(s, "deployment_id"), status, new(Even(viewport, "width", 1920), Even(viewport, "height", 1080)),
+            (int)(Int(s, "fps", 1, 30) ?? throw new JsonException()), NullableText(s, "ready_at"), NullableText(s, "last_heartbeat_at"), NullableText(s, "error_code"));
+    }
+
+    /// <summary>Throws <see cref="JsonException"/> for any response outside the contract.</summary>
+    internal static CallVideoComposition Parse(JsonElement c)
+    {
+        if (c.ValueKind != JsonValueKind.Object) throw new JsonException();
+        var compositionId = Text(c, "composition_id");
+        var callId = Text(c, "call_id");
+        if (compositionId.Length == 0 || callId.Length == 0) throw new JsonException();
+        var revision = Int(c, "revision", 0, MaxSafeInteger) ?? throw new JsonException();
+        var status = Text(c, "status") switch
+        {
+            "starting" => CompositionStatus.Starting, "live" => CompositionStatus.Live, "stopping" => CompositionStatus.Stopping,
+            "stopped" => CompositionStatus.Stopped, "failed" => CompositionStatus.Failed, _ => throw new JsonException()
+        };
+        if (!c.TryGetProperty("error_code", out var errorCode) || errorCode.ValueKind is not (JsonValueKind.Null or JsonValueKind.String)) throw new JsonException();
+        if (!c.TryGetProperty("output", out var o) || o.ValueKind != JsonValueKind.Object) throw new JsonException();
+        var output = new CompositionOutput(Even(o, "width", 1920), Even(o, "height", 1080), (int)(Int(o, "fps", 1, 30) ?? throw new JsonException()));
+        if (!c.TryGetProperty("layers", out var raw) || raw.ValueKind != JsonValueKind.Array || raw.GetArrayLength() > MaxLayers) throw new JsonException();
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        var zs = new HashSet<long>();
+        var layers = new List<VideoLayer>();
+        var hasBase = false;
+        foreach (var layer in raw.EnumerateArray())
+        {
+            if (layer.ValueKind != JsonValueKind.Object) throw new JsonException();
+            var id = Text(layer, "id");
+            var z = Int(layer, "z", 0, MaxSafeInteger);
+            if (!ids.Add(id) || (z is { } zv && !zs.Add(zv))) throw new JsonException();
+            if (layer.TryGetProperty("source", out var source))
+            {
+                var kind = source.ValueKind == JsonValueKind.Object && source.TryGetProperty("kind", out var k) && k.ValueKind == JsonValueKind.String
+                    ? k.GetString() switch { "camera" => CompositionBaseKind.Camera, "managed" => CompositionBaseKind.Managed, _ => throw new JsonException() }
+                    : throw new JsonException();
+                if (hasBase || z != 0) throw new JsonException();
+                hasBase = true;
+                MediaSessionGrant? publish = null;
+                if (layer.TryGetProperty("publish", out var grant))
+                {
+                    if (kind != CompositionBaseKind.Camera) throw new JsonException();
+                    publish = MediaSessionGrant.Parse(grant, MediaDirection.Publish, null, MediaSessionContent.Camera);
+                    if (output.Fps > publish.Limits.MaxFps) throw new JsonException();
+                }
+                layers.Add(new BaseLayer(id, kind, publish));
+                continue;
+            }
+            if (z is not { } pz || pz < 1 || pz > int.MaxValue || !layer.TryGetProperty("region", out var r) || r.ValueKind != JsonValueKind.Object) throw new JsonException();
+            var region = new CompositionRegion(UnitNumber(r, "x"), UnitNumber(r, "y"), UnitNumber(r, "width"), UnitNumber(r, "height"));
+            var background = Text(layer, "background") switch
+            {
+                "opaque" => CompositionBackground.Opaque, "transparent" => CompositionBackground.Transparent, _ => throw new JsonException()
+            };
+            var opacity = UnitNumber(layer, "opacity");
+            if (!layer.TryGetProperty("input", out var kinds) || kinds.ValueKind != JsonValueKind.Array) throw new JsonException();
+            var input = kinds.EnumerateArray().Select(i => i.ValueKind != JsonValueKind.String ? throw new JsonException() : i.GetString() switch
+            {
+                "pointer" => LivingInputKind.Pointer, "keyboard" => LivingInputKind.Keyboard, "text" => LivingInputKind.Text, _ => throw new JsonException()
+            }).ToList();
+            if (!RegionOk(region) || !InputsOk(input) || !layer.TryGetProperty("living_session", out var ls)) throw new JsonException();
+            var session = Session(ls);
+            if (session.CallId != callId || session.Fps > output.Fps) throw new JsonException();
+            layers.Add(new PageLayer(id, (int)pz, session, region, background, opacity, input));
+        }
+        return new()
+        {
+            CompositionId = compositionId, CallId = callId, Revision = revision, Status = status, Output = output, Layers = layers,
+            ErrorCode = errorCode.ValueKind == JsonValueKind.String ? errorCode.GetString() : null
+        };
+    }
+
+    /// <summary>
+    /// The topmost page layer accepting pointer input under an output-frame point (x, y normalized 0..1), or null.
+    /// The backend maps output-frame coordinates into the page.
+    /// </summary>
+    public PageLayer? InputTarget(double x, double y)
+        => !Unit(x) || !Unit(y) ? null : Layers.OfType<PageLayer>().Where(p => p.Input.Contains(LivingInputKind.Pointer)).OrderByDescending(p => p.Z)
+            .FirstOrDefault(p => x >= p.Region.X && x <= p.Region.X + p.Region.Width && y >= p.Region.Y && y <= p.Region.Y + p.Region.Height);
+}
+
+/// <summary>Explicit, versioned <c>video_composition</c> capability. Never inferred from custom video or living services.</summary>
+public sealed record VideoCompositionCapability(int MaxLayers, IReadOnlyList<CompositionBaseKind> Bases, bool PageAlpha, bool Regions,
+    int MaxWidth, int MaxHeight, int MaxFps)
+{
+    public int Version => 1;
+    public bool Supported => true;
+
+    /// <summary>Absent, malformed, unknown-version or unsupported input returns null. Unknown bases are ignored and larger
+    /// limits clamp to SDK v1 bounds.</summary>
+    public static VideoCompositionCapability? Parse(JsonElement? input)
+    {
+        if (input is not { ValueKind: JsonValueKind.Object } raw || !raw.TryGetProperty("version", out var version) || version.ValueKind != JsonValueKind.Number
+            || !version.TryGetDouble(out var v) || v != 1 || !raw.TryGetProperty("supported", out var supported) || supported.ValueKind != JsonValueKind.True
+            || !raw.TryGetProperty("bases", out var bases) || bases.ValueKind != JsonValueKind.Array) return null;
+        int? Positive(string name, int cap) => raw.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var n)
+            && n > 0 && Math.Truncate(n) == n ? (int)Math.Min(n, cap) : null;
+        if (Positive("max_layers", CallVideoComposition.MaxLayers) is not { } layers || Positive("max_width", 1920) is not { } width
+            || Positive("max_height", 1080) is not { } height || Positive("max_fps", 30) is not { } fps) return null;
+        var kinds = new List<CompositionBaseKind>();
+        foreach (var item in bases.EnumerateArray())
+            if (item.ValueKind == JsonValueKind.String && item.GetString() switch { "camera" => CompositionBaseKind.Camera, "managed" => CompositionBaseKind.Managed, _ => (CompositionBaseKind?)null } is { } kind
+                && !kinds.Contains(kind)) kinds.Add(kind);
+        bool Flag(string name) => raw.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;
+        return new(layers, kinds, Flag("page_alpha"), Flag("regions"), width, height, fps);
     }
 }

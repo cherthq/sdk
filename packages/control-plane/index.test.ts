@@ -59,6 +59,29 @@ describe('control-plane wire contracts',()=>{
 describe('safe failures',()=>{
  it('bounds response bytes and attaches a request deadline',async()=>{let signal:AbortSignal|undefined;const client=new ChertControlPlane({fetch:(async(_url: Parameters<typeof fetch>[0],init?: RequestInit)=>{signal=init?.signal??undefined;return new Response('x'.repeat(1_048_577));}) as typeof fetch});await expect(client.beginLogin({device_name:'Test'})).rejects.toMatchObject({code:'invalid_response'});expect(signal).toBeInstanceOf(AbortSignal);});
  it('preserves permission failures without retry or leaking server data',async()=>{let calls=0;const client=new ChertControlPlane({token:'private',projectId:project,fetch:(async()=>{calls++;return Response.json({error:{code:'forbidden',message:'private token',details:{secret:'bad'}}},{status:403});}) as unknown as typeof fetch});try{await client.createCheckout({plan:'shared'},'stable-key');throw Error('expected');}catch(error){expect(error).toBeInstanceOf(ChertApiError);expect((error as ChertApiError).code).toBe('forbidden');expect(String(error)).not.toContain('private');expect(JSON.stringify(error)).not.toContain('secret');}expect(calls).toBe(1);});
+ it('terminal billing: purchase, change_plan and payment_method send keyed actions and accept only Stripe-hosted URLs',async()=>{
+  const seen:{body:unknown;key:string|null}[]=[];let reply:unknown;
+  const client=new ChertControlPlane({token:'user',projectId:'p',fetch:(async(_u:unknown,init?:RequestInit)=>{seen.push({body:JSON.parse(String(init?.body)),key:new Headers(init?.headers).get('idempotency-key')});return Response.json({data:reply});}) as unknown as typeof fetch});
+  const entitlement={plan:'dedicated',status:'active',valid_until:'2026-12-01T00:00:00Z',fulfillment_status:'pending'};
+  reply={status:'active',entitlement};
+  expect(await client.purchase({plan:'shared'},'buy-key-01')).toEqual({status:'active',entitlement:entitlement as never});
+  reply={status:'requires_action',url:'https://hooks.stripe.com/3d_secure_2/authenticate/x'};
+  expect(await client.changePlan({plan:'dedicated'},'switch-key-1')).toEqual({status:'requires_action',url:'https://hooks.stripe.com/3d_secure_2/authenticate/x'});
+  reply={status:'pending',url:'https://ignored.example/'};
+  expect(await client.purchase({plan:'shared'},'buy-key-01')).toEqual({status:'pending'});   // retry with the same key
+  reply={status:'requires_payment_method',url:'https://checkout.stripe.com/c/pay/cs_x'};
+  expect((await client.paymentMethodSetup('card-key-01')).url).toBe('https://checkout.stripe.com/c/pay/cs_x');
+  expect(seen).toEqual([{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'change_plan',plan:'dedicated'},key:'switch-key-1'},{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'payment_method'},key:'card-key-01'}]);
+  for(const bad of [{status:'requires_action',url:'http://hooks.stripe.com/x'},{status:'requires_action',url:'https://stripe.com.evil.example/x'},{status:'requires_action',url:'https://u:p@checkout.stripe.com/x'},{status:'requires_action',url:'https://evil.com\\.stripe.com/x'},{status:'requires_action',url:'https://checkout.stripe.com:8443/x'},
+    {status:'requires_payment_method'},{status:'active'},{status:'active',entitlement:{plan:'gold'}},{status:'processing'},null]){
+    reply=bad;await expect(client.purchase({plan:'shared'},'buy-key-02')).rejects.toMatchObject({code:'invalid_response'});
+  }
+  reply={status:'active',entitlement};await expect(client.paymentMethodSetup('card-key-02')).rejects.toMatchObject({code:'invalid_response'});
+  const before=seen.length;
+  await expect(client.purchase({plan:'gold' as never},'buy-key-03')).rejects.toBeInstanceOf(TypeError);
+  await expect(client.changePlan({plan:'shared'},'short')).rejects.toBeInstanceOf(TypeError);
+  expect(seen.length).toBe(before);
+});
  it('surfaces billing refusals by code so callers can tell them apart',async()=>{for(const [status,code] of [[409,'billing_sales_disabled'],[409,'billing_subscription_exists'],[409,'billing_dedicated_no_inventory'],[409,'shared_no_capacity'],[503,'billing_unconfigured'],[409,'billing_secret_reason']] as const){const client=new ChertControlPlane({token:'user',projectId:'p',fetch:(async()=>Response.json({error:{code,message:'internal detail'}},{status})) as unknown as typeof fetch});const error=await client.createCheckout({plan:'dedicated'},'checkout-key-1').catch(e=>e);expect([error.status,error.code,String(error).includes('internal detail')]).toEqual([status,code==='billing_secret_reason'?'request_failed':code,false]);}});
  it('reports an HTML 404 as endpoint_unavailable, not a protocol error',async()=>{const client=new ChertControlPlane({token:'k',projectId:'p',fetch:(async()=>new Response('<!DOCTYPE html><html>Not found</html>',{status:404,headers:{'content-type':'text/html'}})) as unknown as typeof fetch});for(const call of [()=>client.createMediaSession('call',{direction:'publish'}),()=>client.getLivingSession('call','s')])await expect(call()).rejects.toMatchObject({status:404,code:'endpoint_unavailable'});const json=new ChertControlPlane({token:'k',projectId:'p',fetch:(async()=>Response.json({error:{code:'call_not_found'}},{status:404})) as unknown as typeof fetch});await expect(json.getCall('c')).rejects.toMatchObject({status:404,code:'call_not_found'});const html502=new ChertControlPlane({token:'k',projectId:'p',fetch:(async()=>new Response('<html>bad gateway</html>',{status:502})) as unknown as typeof fetch});await expect(html502.getCall('c')).rejects.toMatchObject({status:502,code:'invalid_response'});});
  it('rejects invalid JSON and missing envelopes',async()=>{for(const response of [new Response('private HTML'),Response.json({hello:'world'})]){const client=new ChertControlPlane({fetch:(async()=>response) as unknown as typeof fetch});await expect(client.beginLogin({device_name:'Test'})).rejects.toMatchObject({code:'invalid_response'});}});

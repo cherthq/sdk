@@ -145,12 +145,27 @@ before production use. Default-origin reaction support is not yet verified.
 No endpoint fallback or automatic retries are performed; a queued receipt is
 not proof of delivery. Package publication and backend availability are separate.
 
-Billing uses a signed-in user session and project UUID, not a CLI/project key.
+Billing uses a signed-in user session and project UUID. Only the terminal-billing
+draft below also accepts a CLI credential with the `billing` scope (owner/admin).
 Use `billingStatus()` to inspect entitlement and availability. Refusals keep their code,
 for example `billing_sales_disabled`, `billing_subscription_exists`,
 `billing_dedicated_no_inventory` or `shared_no_capacity`. The 0.2.0 preview
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
+
+**Terminal billing (draft, unreleased; the backend does not serve it yet).**
+`purchase({ plan }, key)` and `changePlan({ plan }, key)` charge the saved card;
+`paymentMethodSetup(key)` returns `{ status: 'requires_payment_method', url }` for
+adding or replacing it. Purchases and plan changes return `{ status: 'active',
+entitlement }`, `{ status: 'pending' }` (the payment was accepted but the
+entitlement is not committed yet: retry with the same idempotency key), or
+`{ status: 'requires_payment_method' | 'requires_action', url }`, where `url` is a
+Stripe-hosted page for card entry or authentication: card details are never
+entered in the terminal. The CLI equivalents are
+`chert-sdk billing status | card | buy --plan P | switch --plan P | cancel`;
+mutations need `--idempotency-key` and `--confirm`. The CLI credential needs the
+`billing` scope and an owner/admin role. Dedicated purchases stay unavailable
+(`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
 
 ```sh
 bunx --package @trychert/sdk@0.2.2 chert-sdk context
@@ -200,9 +215,8 @@ does not deprecate any registry package; registry actions require separate appro
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
 `adopt` and `context`. Since 0.2.1, unknown commands and subcommands exit with
 `unknown_command` before any credential lookup. Published 0.1.0, 0.2.0, 0.2.1 and 0.2.2
-do not include `login`, `onboard`, `new`, `doctor` or `dev`. The preview CLI/onboarding work remains in
-[draft #5](https://github.com/cherthq/sdk/pull/5) and its integration branch in
-[draft #6](https://github.com/cherthq/sdk/pull/6).
+do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
+agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
 
 ### Custom video sources (source preview, unreleased)
 
@@ -212,8 +226,8 @@ works without a network connection and has no dependencies: frame validation,
 a bounded video source, capability parsing and WHIP/WHEP signaling.
 
 Until the hosted backend serves these routes, the control-plane calls for
-custom video, living services and screen sharing fail with
-`ChertApiError` status 404, code `endpoint_unavailable`, and
+custom video, living services, screen sharing and call video composition fail
+with `ChertApiError` status 404, code `endpoint_unavailable`, and
 `startScreenStream` fails with `capability_missing`. Check capabilities first.
 
 - **Capabilities are explicit.** Read `media_capabilities` from a line, call or
@@ -226,8 +240,8 @@ custom video, living services and screen sharing fail with
   returns an experimental WHEP
   ([draft-ietf-wish-whep-05](https://datatracker.ietf.org/doc/draft-ietf-wish-whep/05/))
   endpoint. Treat `endpoint` and `token` as opaque secrets.
-- **One publish slot per call.** Custom camera video, a living surface and a
-  screen share are mutually exclusive. Requesting a second publish while one is
+- **One publish slot per call.** Custom camera video, a living surface, a
+  screen share and a call video composition are mutually exclusive. Requesting a second publish while one is
   active returns `media_session_conflict`.
 - **Signaling.** `publishWhip`/`receiveWhep` take any spec-compliant
   `RTCPeerConnection` (the browser's built-in one, or a Node/Bun/Deno WebRTC
@@ -333,8 +347,8 @@ video. There is no second transport.
   callId, { width, height, createTransport })` checks the capability, mints the
   grant and starts a `ChertVideoSource` at no more than the grant's fps. Give the
   WebRTC track `contentHint = 'detail'`. Stopping sends the WHIP `DELETE`.
-- **One publish slot per call.** Camera video, a screen and a living surface are
-  mutually exclusive. A second active publish fails with `media_session_conflict`
+- **One publish slot per call.** Camera video, a screen, a living surface and a
+  call video composition are mutually exclusive. A second active publish fails with `media_session_conflict`
   (`session_conflict` from signaling).
 - **Agent tools.** `SCREEN_SHARE_TOOLS` defines `share_screen` and
   `stop_screen_share` with JSON Schema parameters, usable as MCP `inputSchema` or
@@ -364,6 +378,58 @@ video. There is no second transport.
   screen-control operations.
 
 See [`packages/media/examples/screen-share.ts`](packages/media/examples/screen-share.ts).
+
+### Call video composition (draft, unreleased)
+
+Not in any published package version, and not served by the backend yet. The
+call's video can be a page, or a page layered over live video, composed
+server-side into the one track the caller sees.
+
+```ts
+// The call video is this page. The SDK deploys the URL, waits for it to be ready,
+// then sets the call video to that immutable deployment.
+await client.setCallVideo(callId, { page: 'https://agent.example/live.html' }, 'video-1-call-7');
+
+// Captions over the agent's camera.
+const video = await client.setCallVideo(callId, { layers: [
+  { id: 'base', source: { kind: 'camera' } },
+  { id: 'captions', z: 1, page: { deployment_id }, region: { x: 0, y: 0.75, width: 1, height: 0.25 },
+    background: 'transparent', opacity: 0.9, input: ['pointer'] },
+] }, 'video-2-call-7');
+// Publish base frames over video.layers[0].publish with ChertVideoSource + WHIP, as for custom video.
+```
+
+- **Layers.** v1 allows two: an optional base at z 0 (`camera`, or `managed`
+  where `video_composition.bases` lists it) and a page layer at z ≥ 1. Each page
+  layer is a living session, so `setLivingState`, `sendLivingEvent` and
+  `sendLivingInput` take its `living_session.session_id`. Without a base, the page
+  must be opaque, full frame and at opacity 1.
+- **Placement and alpha.** `region` is normalized to the output frame.
+  `background: 'transparent'` will be blended (premultiplied source-over) with
+  `opacity` by the server compositor, and is accepted only where the capability
+  reports `page_alpha`.
+- **Pages.** The backend only accepts deployment IDs. URL pages are deployed by
+  the SDK first (`living_deployment_not_ready` if the deployment fails or is not
+  ready within 60 s); to reuse a page across calls, deploy it once.
+- **Frame rate.** Output fps is the lowest of the base fps, the grant limit and
+  the capability's measured `max_fps`; page layers render at or below it.
+- **One publish slot.** A composition occupies the call's single publish slot. Its
+  camera grant and page sessions belong to it; standalone camera, living and
+  screen sessions conflict with it (`media_session_conflict`,
+  `living_surface_conflict`). A live standalone camera session cannot be adopted
+  as the base: republish to the composition's grant.
+- **LiveKit base.** Chert never joins your LiveKit room. Feed a subscribed track
+  through the camera grant with `liveKitTrackFrames(rtc, new rtc.VideoStream(track))`
+  from `@trychert/sdk/media/livekit`.
+- **Input.** Only agent-relayed input, with pointer coordinates normalized to the
+  output frame; `compositionInputTarget(video, x, y)` finds the layer under a point.
+  The caller cannot click the page.
+- **Capability and errors.** `parseVideoComposition(line.video_composition)`.
+  Errors: `video_composition_unsupported`, `composition_invalid`,
+  `composition_revision_conflict`, `composition_base_unavailable`. Timeline events
+  `call_video.live | updated | failed | stopped` carry no payload.
+
+Contract: [`docs/proposals/CALL_VIDEO_COMPOSITION.md`](docs/proposals/CALL_VIDEO_COMPOSITION.md).
 
 ### iMessage events and webhooks (source preview)
 

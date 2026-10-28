@@ -121,7 +121,7 @@ the FaceTime control-plane API with Python snake_case methods:
 | Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)` |
 | User (bearer only) | `inspect_login(user_code)`, `approve_login(user_code, project_id)`, `logout()` |
 | Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)` |
-| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)` |
+| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)`; draft, not served yet: `purchase(plan=..., idempotency_key=...)`, `change_plan(plan=..., idempotency_key=...)`, `payment_method_setup(idempotency_key=...)` |
 
 Pagination parameters and checkout arguments are keyword-only. Enrollment uses
 a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
@@ -282,6 +282,41 @@ be reused. Failures raise `MediaFrameError` (a `ValueError`) with `code`
 
 Limitations: no audio, no built-in media engine or WebRTC stack (bring your own,
 e.g. aiortc), and no guarantee that keyframe requests (PLI/FIR) are delivered.
+
+### Call video composition (draft, unreleased)
+
+A call's video can be a stack of layers that the backend composes server-side and
+publishes through the call's single publish slot (so it conflicts with other publish
+sessions: `media_session_conflict`). Check `parse_video_composition(line.get("video_composition"))`
+first; it returns `None` unless the explicit, versioned capability is present.
+
+```python
+sdk.facetime.set_call_video(call["id"], {"page": {"deployment_id": "dep_123"}}, idempotency_key="video-1")
+video = sdk.facetime.set_call_video(call["id"], {"layers": [
+    {"id": "base", "source": {"kind": "camera"}},
+    {"id": "captions", "z": 1, "page": {"deployment_id": "dep_123"},
+     "region": {"x": 0, "y": 0.75, "width": 1, "height": 0.25}, "background": "transparent", "input": ["pointer"]},
+]}, idempotency_key="video-2")
+grant = video["layers"][0].get("publish")  # MediaSessionGrant for a camera base: push frames over WHIP
+```
+
+`set_call_video(call_id, composition, *, idempotency_key)` PUTs `/api/v1/calls/{id}/video`;
+`get_call_video(call_id)` and `clear_call_video(call_id)` read and stop it. v1 allows at
+most two layers: one base (`camera` or `managed`) at z 0 and page layers at z ≥ 1 with a
+normalized `region` (default full frame), `background` (`opaque` default or
+`transparent`), `opacity` (0–1, default 1), optional `input` (`pointer`, `keyboard`,
+`text`) and `initial_state`. Optional `revision` makes the PUT compare-and-set.
+`composition_input_target(video, x, y)` returns the topmost pointer-accepting page layer
+under an output-frame point. Invalid compositions raise `ValueError` before any request;
+responses outside the contract raise `ChertControlPlaneError(200, 'invalid_response')`.
+Server codes `video_composition_unsupported`, `composition_invalid`,
+`composition_revision_conflict` and `composition_base_unavailable` surface without
+server text; lifecycle events are `call_video.live`, `call_video.updated`,
+`call_video.failed` and `call_video.stopped`.
+
+Pages must be ready deployment IDs: URL pages raise `ValueError`. This SDK cannot deploy
+pages or drive page state, events or input; those living-service operations are
+TypeScript SDK only.
 
 ## Existing iMessage transport
 

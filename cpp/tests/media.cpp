@@ -1,5 +1,9 @@
+// Call-video tests use designated initializers that intentionally omit optional fields.
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <trychert/client.hpp>
+#include <cmath>
 #include <cstdint>
+#include <limits>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -157,7 +161,115 @@ void screen_sessions(const std::function<trychert::FaceTimeClient(const std::str
     }
 }
 
-void sessions(const std::string& origin, int bad_cases, int error_cases, int accept_cases, int screen_bad_cases) {
+void call_video(const std::function<trychert::FaceTimeClient(const std::string&)>& client, const std::string& call,
+                int bad_cases, int error_cases) {
+    using namespace trychert;
+    const auto page = client("video-page").set_call_video(call, {.deployment_id = "dep-url"}, "video-key-1");
+    check(page.request_id == "trace" && page.data.output.fps == 30 && page.data.layers.size() == 1, "page shortcut");
+    PageLayerInput captions{"captions", 1, "dep", CompositionRegion{0, 0.75, 1, 0.25}, CompositionBackground::transparent, 0.8,
+        std::vector{LivingInputKind::pointer}, Json{{"lang", "en"}}};
+    const auto layered = client("video-layered").set_call_video(call,
+        {.layers = std::vector<VideoLayerInput>{BaseLayerInput{"base", CompositionBaseKind::camera}, captions}, .revision = 2}, "video-key-2").data;
+    const auto* base = std::get_if<BaseLayer>(&layered.layers[0]);
+    check(base && base->publish && base->publish->token == "session-bearer" && base->publish->limits.max_fps == 24, "camera base grant");
+    static_cast<void>(client("video-get").get_call_video(call));
+    static_cast<void>(client("video-clear").clear_call_video(call));
+    // Input targets use output-frame coordinates; only the overlay's region accepts pointer input.
+    const auto* target = composition_input_target(layered, 0.5, 0.9);
+    check(target && target->id == "captions" && !composition_input_target(layered, 0.5, 0.74)
+        && !composition_input_target(page.data, 0.5, 0.5), "input target");
+
+    // Local rejections throw before any request (the fixture counts requests).
+    // Unrepresentable here: z 1.5 (int) and a base at z != 0 (no z on BaseLayerInput).
+    const auto local = client("local");
+    const BaseLayerInput b{"base", CompositionBaseKind::camera};
+    const PageLayerInput p{.id = "p", .z = 1, .deployment_id = "dep"};
+    const auto with = [&](const std::function<void(PageLayerInput&)>& edit) { auto copy = p; edit(copy); return copy; };
+    Json deep = 0;
+    for (int i = 0; i < 70; ++i) deep = Json::array({deep});
+    const auto layers = [](std::vector<VideoLayerInput> items) { return SetCallVideo{.layers = std::move(items)}; };
+    const std::vector<SetCallVideo> cases = {
+        layers({}), layers({b, p, with([](auto& l) { l.id = "q"; l.z = 2; })}),
+        layers({b, BaseLayerInput{"b2", CompositionBaseKind::managed}}), layers({b, with([](auto& l) { l.id = "base"; })}),
+        layers({b, with([](auto& l) { l.z = 0; })}), layers({b, with([](auto& l) { l.z = 65; })}),
+        layers({b, with([](auto& l) { l.region = CompositionRegion{0.5, 0, 0.6, 1}; })}),
+        layers({b, with([](auto& l) { l.region = CompositionRegion{0, 0, 0, 1}; })}),
+        layers({b, with([](auto& l) { l.region = CompositionRegion{std::nan(""), 0, 1, 1}; })}),
+        layers({b, with([](auto& l) { l.opacity = 1.2; })}),
+        layers({b, with([](auto& l) { l.background = static_cast<CompositionBackground>(7); })}),
+        layers({with([](auto& l) { l.background = CompositionBackground::transparent; })}), layers({with([](auto& l) { l.opacity = 0.5; })}),
+        layers({with([](auto& l) { l.region = CompositionRegion{0, 0, 0.5, 1}; })}),
+        layers({b, with([](auto& l) { l.input = std::vector{LivingInputKind::pointer, LivingInputKind::pointer}; })}),
+        layers({b, with([](auto& l) { l.input = std::vector{static_cast<LivingInputKind>(9)}; })}),
+        layers({BaseLayerInput{"base", static_cast<CompositionBaseKind>(5)}}), layers({with([](auto& l) { l.id = "Upper"; })}),
+        layers({with([](auto& l) { l.deployment_id = ""; })}), layers({with([](auto& l) { l.deployment_id = std::string(129, 'd'); })}),
+        layers({b, with([](auto& l) { l.initial_state = Json{{"blob", std::string(64 * 1024, 'x')}}; })}),
+        layers({b, with([](auto& l) { l.initial_state = Json(std::numeric_limits<double>::infinity()); })}),
+        SetCallVideo{.deployment_id = "dep", .initial_state = deep}, SetCallVideo{.deployment_id = "dep", .revision = -1},
+        SetCallVideo{.deployment_id = ""}, SetCallVideo{},
+        // URL pages need a deployment created with the TypeScript SDK first.
+        SetCallVideo{.deployment_id = "https://agent.example/p"},
+        layers({b, with([](auto& l) { l.deployment_id = "https://agent.example/p"; })})};
+    for (std::size_t i = 0; i < cases.size(); ++i) {
+        try {
+            static_cast<void>(local.set_call_video(call, cases[i], "video-key-1"));
+            check(false, "accepted invalid composition " + std::to_string(i));
+        } catch (const std::invalid_argument& error) {
+            if (i >= cases.size() - 2) check(std::string(error.what()).find("TypeScript SDK") != std::string::npos, "URL page message");
+        }
+    }
+    invalid([&] { static_cast<void>(local.set_call_video(call, {.deployment_id = "dep"}, "short")); });
+    invalid([&] { static_cast<void>(local.set_call_video("call", {.deployment_id = "dep"}, "video-key-1")); });
+    static_cast<void>(client("video-edge").set_call_video(call,
+        layers({b, with([](auto& l) { l.region = CompositionRegion{0.75, 0.75, 0.25, 0.25}; })}), "video-key-1"));
+
+    for (int i = 0; i < bad_cases; ++i) {
+        try {
+            static_cast<void>(client("video-bad-" + std::to_string(i)).get_call_video(call));
+            check(false, "accepted invalid composition response " + std::to_string(i));
+        } catch (const ApiError& error) {
+            check(error.code == "invalid_response" && error.data.is_null(), "composition code " + std::to_string(i));
+        }
+    }
+    const auto managed = client("video-managed").get_call_video(call).data;
+    check(std::get<BaseLayer>(managed.layers[0]).source == CompositionBaseKind::managed && !std::get<BaseLayer>(managed.layers[0]).publish, "managed base");
+
+    const std::vector<std::pair<long, std::string>> expected = {{409, "video_composition_unsupported"}, {422, "composition_invalid"},
+        {409, "composition_revision_conflict"}, {409, "composition_base_unavailable"}, {409, "media_session_conflict"},
+        {409, "request_failed"}}; // unknown server code
+    check(static_cast<int>(expected.size()) == error_cases, "composition error case count");
+    for (int i = 0; i < error_cases; ++i) {
+        try {
+            static_cast<void>(client("video-error-" + std::to_string(i)).set_call_video(call, {.deployment_id = "dep"}, "video-key-1"));
+            check(false, "accepted composition error");
+        } catch (const ApiError& error) {
+            check(error.status == expected[i].first && error.code == expected[i].second && error.data.is_null() && error.request_id == "r"
+                && std::string(error.what()).find("192.0.2.5") == std::string::npos, "composition error " + expected[i].second);
+        }
+    }
+}
+
+void composition_capability() {
+    using trychert::CompositionBaseKind;
+    const auto cap = trychert::Json::parse(R"({"version":1,"supported":true,"max_layers":4,"bases":["camera","hologram","managed","camera",3],"page_alpha":true,"regions":true,"max_width":3840,"max_height":1080,"max_fps":60})");
+    const auto parsed = trychert::parse_video_composition(cap);
+    check(parsed && parsed->version == 1 && parsed->supported && parsed->max_layers == 2 && parsed->page_alpha && parsed->regions
+        && parsed->bases == std::vector{CompositionBaseKind::camera, CompositionBaseKind::managed}
+        && parsed->max_width == 1920 && parsed->max_height == 1080 && parsed->max_fps == 30, "composition capability");
+    auto alpha = cap;
+    alpha["page_alpha"] = "yes";
+    check(!trychert::parse_video_composition(alpha)->page_alpha, "page_alpha strict");
+    check(!trychert::parse_video_composition(trychert::Json()), "absent capability");
+    for (const auto& [field, value] : std::vector<std::pair<const char*, trychert::Json>>{{"version", 2}, {"supported", false},
+             {"max_layers", 0}, {"max_fps", 1.5}, {"bases", "camera"}}) {
+        auto bad = cap;
+        bad[field] = value;
+        check(!trychert::parse_video_composition(bad), field);
+    }
+}
+
+void sessions(const std::string& origin, int bad_cases, int error_cases, int accept_cases, int screen_bad_cases,
+              int video_bad_cases, int video_error_cases) {
     const std::string project = "11111111-1111-4111-8111-111111111111", call = "22222222-2222-4222-8222-222222222222";
     const auto client = [&](const std::string& name) { return trychert::FaceTimeClient({origin + "/case/" + name, "ft-secret", project}); };
     using trychert::MediaDirection;
@@ -212,16 +324,18 @@ void sessions(const std::string& origin, int bad_cases, int error_cases, int acc
         }
     }
     screen_sessions(client, call, screen_bad_cases);
+    call_video(client, call, video_bad_cases, video_error_cases);
 }
 } // namespace
 
 int main(int argc, char** argv) {
     try {
-        check(argc == 6);
+        check(argc == 8);
         capabilities();
+        composition_capability();
         frames();
-        sessions(argv[1], std::stoi(argv[2]), std::stoi(argv[3]), std::stoi(argv[4]), std::stoi(argv[5]));
-        std::cout << "Media capabilities, frames, session minting and grant validation passed\n";
+        sessions(argv[1], std::stoi(argv[2]), std::stoi(argv[3]), std::stoi(argv[4]), std::stoi(argv[5]), std::stoi(argv[6]), std::stoi(argv[7]));
+        std::cout << "Media capabilities, frames, session minting, grant validation and call video passed\n";
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

@@ -2,6 +2,7 @@
 #include <trychert/transport.hpp>
 #include <cstdint>
 #include <span>
+#include <variant>
 #include <vector>
 
 namespace trychert {
@@ -143,6 +144,93 @@ struct MediaCapabilities {
 // unknown-version input is unsupported; a malformed section disables only itself.
 [[nodiscard]] MediaCapabilities parse_media_capabilities(const Json& input);
 
+// Call video composition (draft, unreleased): the call's video as up to two layers, composed
+// server-side and published through the call's single publish slot. A base layer (z 0) carries
+// camera frames over a publish grant or a backend-managed source; page layers (z >= 1) are living
+// sessions of ready deployments. Native SDKs do not deploy pages or drive page state/events/input.
+inline constexpr std::size_t composition_max_layers = 2; // SDK v1 bound; the capability's max_layers is the backend limit
+// camera: the response carries a publish grant for WHIP frames. managed: a backend-provided source,
+// only where the video_composition capability lists it.
+enum class CompositionBaseKind { camera, managed };
+enum class CompositionBackground { opaque, transparent }; // transparent: premultiplied source-over
+enum class LivingInputKind { pointer, keyboard, text };
+enum class CompositionStatus { starting, live, stopping, stopped, failed };
+enum class LivingSessionStatus { starting, ready, live, stopping, stopped, failed };
+// Normalized to the output frame: 0..1, width/height > 0, and x+width, y+height <= 1.
+struct CompositionRegion {
+    double x = 0, y = 0, width = 1, height = 1;
+    bool operator==(const CompositionRegion&) const = default;
+};
+struct BaseLayerInput { std::string id; CompositionBaseKind source = CompositionBaseKind::camera; };
+// deployment_id names a ready living-service deployment: the call-video resource never loads a
+// URL, and native SDKs cannot deploy one (deploy with the TypeScript SDK).
+struct PageLayerInput {
+    std::string id;
+    int z = 1; // unique, 1..64; paints in ascending order above the base
+    std::string deployment_id;
+    std::optional<CompositionRegion> region;         // default: full frame
+    std::optional<CompositionBackground> background; // default: opaque
+    std::optional<double> opacity;                   // 0..1, default 1
+    std::optional<std::vector<LivingInputKind>> input; // nullopt: non-interactive
+    std::optional<Json> initial_state;               // plain JSON up to 64 KiB
+};
+using VideoLayerInput = std::variant<BaseLayerInput, PageLayerInput>;
+// Set deployment_id (page shortcut: one opaque full-frame page layer, id "page", z 1) or layers.
+// revision makes the PUT compare-and-set; it must equal the current revision.
+struct SetCallVideo {
+    std::optional<std::string> deployment_id;
+    std::optional<std::vector<LivingInputKind>> input;
+    std::optional<Json> initial_state;
+    std::optional<std::vector<VideoLayerInput>> layers;
+    std::optional<std::int64_t> revision;
+};
+struct LivingViewport { int width, height; };
+// The living session rendering a page layer; effective viewport and fps.
+struct LivingSession {
+    std::string session_id, call_id, deployment_id;
+    LivingSessionStatus status;
+    LivingViewport viewport;
+    int fps;
+    std::optional<std::string> ready_at, last_heartbeat_at, error_code;
+};
+// Effective output: fps = min(base fps, grant limit); page layers render at or below it.
+struct CompositionOutput { int width, height, fps; };
+// Always at z 0. publish is a camera publish grant when the backend issues one; never log its token.
+struct BaseLayer { std::string id; CompositionBaseKind source; std::optional<MediaSessionGrant> publish; };
+struct PageLayer {
+    std::string id;
+    int z;
+    LivingSession living_session;
+    CompositionRegion region;
+    CompositionBackground background;
+    double opacity;
+    std::vector<LivingInputKind> input;
+};
+using VideoLayer = std::variant<BaseLayer, PageLayer>;
+struct CallVideoComposition {
+    std::string composition_id, call_id;
+    std::int64_t revision;
+    CompositionStatus status;
+    CompositionOutput output;
+    std::vector<VideoLayer> layers;
+    std::optional<std::string> error_code;
+};
+// Explicit, versioned video_composition capability. Never inferred from custom video or living services.
+struct VideoCompositionCapability {
+    int version = 1;
+    bool supported = true;
+    int max_layers;
+    std::vector<CompositionBaseKind> bases;
+    bool page_alpha, regions;
+    int max_width, max_height, max_fps;
+};
+// Absent, malformed, unknown-version or unsupported input is nullopt. Unknown bases are ignored
+// and larger limits clamp to SDK v1 bounds.
+[[nodiscard]] std::optional<VideoCompositionCapability> parse_video_composition(const Json& input);
+// The topmost page layer accepting pointer input under an output-frame point (x, y normalized
+// 0..1), or nullptr. The backend maps output-frame coordinates into the page.
+[[nodiscard]] const PageLayer* composition_input_target(const CallVideoComposition& composition, double x, double y);
+
 enum class PixelFormat { i420, nv12, rgba, bgra };
 enum class ColorSpace { bt709_limited, bt601_limited, srgb_full };
 struct PlaneView { std::span<const std::uint8_t> data; int stride; };
@@ -199,7 +287,17 @@ public:
     // active call. Single attempt; an invalid grant throws ApiError "invalid_response".
     [[nodiscard]] Result<MediaSessionGrant> create_media_session(const std::string& call_id,
         const CreateMediaSession& input) const;
+    // Draft, unreleased: replaces the call's video with a server-side composition (PUT /calls/{id}/video).
+    // Invalid input throws std::invalid_argument before any request; an invalid response throws
+    // ApiError "invalid_response". Single attempt; never retried.
+    [[nodiscard]] Result<CallVideoComposition> set_call_video(const std::string& call_id, const SetCallVideo& input,
+        const std::string& idempotency_key) const;
+    [[nodiscard]] Result<CallVideoComposition> get_call_video(const std::string& call_id) const;
+    // Stops the composition and frees the publish slot.
+    [[nodiscard]] Result<CallVideoComposition> clear_call_video(const std::string& call_id) const;
 private:
+    [[nodiscard]] Result<CallVideoComposition> call_video(const std::string& call_id, std::optional<Json> body,
+        std::string method, std::optional<std::string> idempotency_key) const;
     std::string project_id_;
 };
 } // namespace trychert
