@@ -67,7 +67,10 @@ pub struct ChertClient {
     unified_contract: bool,
 }
 
-/// Verified queue acceptance only; this is not sent or delivery evidence.
+/// Verified CRM acceptance only. `status` is `queued`, `sent` (the CRM dispatched
+/// it to a line) or `duplicate` (the line's duplicate check already had this message;
+/// `message_id` is a new record); none is delivery proof.
+/// `success` is the SDK's acceptance flag, not a server field.
 pub struct QueuedTextReceipt {
     pub success: bool,
     pub message_id: String,
@@ -105,14 +108,15 @@ impl fmt::Debug for ChertClient {
 fn clean(value: &str) -> bool {
     !value.chars().any(|c| c.is_control() || c.is_whitespace())
 }
-fn blank_text(text: &str) -> bool {
+fn js_space(c: char) -> bool {
     // Match the cloud's String.trim; Rust Unicode whitespace differs at BOM/NEL.
-    text.chars().all(|c| {
-        matches!(c,
-        '\u{0009}'..='\u{000d}' | '\u{0020}' | '\u{00a0}' | '\u{1680}'
-        | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}'
-        | '\u{205f}' | '\u{3000}' | '\u{feff}')
-    })
+    matches!(c,
+    '\u{0009}'..='\u{000d}' | '\u{0020}' | '\u{00a0}' | '\u{1680}'
+    | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}'
+    | '\u{205f}' | '\u{3000}' | '\u{feff}')
+}
+fn blank_text(text: &str) -> bool {
+    text.chars().all(js_space)
 }
 fn safe_path(path: &str) -> bool {
     if !path.starts_with('/')
@@ -311,8 +315,14 @@ impl ChertClient {
             || blank_text(text)
             || text.len() > 16384
             || text.contains('\0')
-            || idempotency_key
-                .is_some_and(|key| key.is_empty() || key.len() > 200 || key.contains('\0'))
+            || idempotency_key.is_some_and(|key| {
+                key.is_empty()
+                    || key.len() > 200
+                    || key.contains('\0')
+                    // The CRM trims keys; surrounding whitespace would change or drop them.
+                    || key.starts_with(js_space)
+                    || key.ends_with(js_space)
+            })
         {
             return Err(ChertError::new(None, "invalid_text_request"));
         }
@@ -321,7 +331,7 @@ impl ChertClient {
             body["idempotency_key"] = Value::String(key.into());
         }
         let response = self
-            .request_json("/text-operations/v1", Method::POST, Some(&body))
+            .request_json("/send", Method::POST, Some(&body))
             .await?;
         let value = &response.value;
         let message_id = value
@@ -329,19 +339,20 @@ impl ChertClient {
             .and_then(Value::as_str)
             .unwrap_or("");
         let chat_id = value.get("chat_id").and_then(Value::as_str).unwrap_or("");
-        if response.status != 202
-            || value.as_object().is_none_or(|row| row.len() != 4)
-            || value.get("success") != Some(&Value::Bool(true))
-            || value.get("status").and_then(Value::as_str) != Some("queued")
-            || message_id.len() != 32
-            || !message_id
-                .bytes()
-                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            || chat_id.is_empty()
-            || chat_id.len() > 160
-            || !chat_id
-                .bytes()
-                .all(|b| b.is_ascii_alphanumeric() || b":_-".contains(&b))
+        let status = value.get("status").and_then(Value::as_str).unwrap_or("");
+        let valid_id = |id: &str| {
+            (1..=160).contains(&id.len())
+                && id
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b":_-".contains(&b))
+        };
+        if !value.is_object()
+            || !matches!(
+                (response.status, status),
+                (202, "queued") | (200, "sent" | "duplicate")
+            )
+            || !valid_id(message_id)
+            || !valid_id(chat_id)
         {
             return Err(ChertError {
                 status: Some(502),
@@ -354,7 +365,7 @@ impl ChertClient {
             success: true,
             message_id: message_id.into(),
             chat_id: chat_id.into(),
-            status: "queued".into(),
+            status: status.into(),
         })
     }
 

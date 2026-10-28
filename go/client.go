@@ -286,7 +286,10 @@ type TextRequest struct {
 	IdempotencyKey *string `json:"idempotency_key,omitempty"`
 }
 
-// QueuedTextReceipt is queue acceptance only.
+// QueuedTextReceipt is CRM acceptance only: Success is the SDK's acceptance flag,
+// Status is queued, sent (dispatched to a line) or duplicate (the line's duplicate
+// check already had this message; MessageID is a new record).
+// None of these is delivery proof.
 type QueuedTextReceipt struct {
 	Success   bool   `json:"success"`
 	MessageID string `json:"message_id"`
@@ -294,16 +297,18 @@ type QueuedTextReceipt struct {
 	Status    string `json:"status"`
 }
 
+// ecmaSpace is the ECMAScript whitespace and line-terminator set used by String.prototype.trim.
+func ecmaSpace(r rune) bool {
+	return r >= 9 && r <= 13 || r == 32 || r == 0xa0 || r == 0x1680 || r >= 0x2000 && r <= 0x200a || r == 0x2028 || r == 0x2029 || r == 0x202f || r == 0x205f || r == 0x3000 || r == 0xfeff
+}
 func blank(s string) bool {
-	return strings.TrimFunc(s, func(r rune) bool {
-		return r >= 9 && r <= 13 || r == 32 || r == 0xa0 || r == 0x1680 || r >= 0x2000 && r <= 0x200a || r == 0x2028 || r == 0x2029 || r == 0x202f || r == 0x205f || r == 0x3000 || r == 0xfeff
-	}) == ""
+	return strings.TrimFunc(s, ecmaSpace) == ""
 }
 func validText(s string) bool {
 	return utf8.ValidString(s) && len(s) <= 16384 && !strings.ContainsRune(s, 0) && !blank(s)
 }
 func validBodyKey(s string) bool {
-	return s != "" && len(s) <= 200 && utf8.ValidString(s) && !strings.ContainsRune(s, 0)
+	return s != "" && len(s) <= 200 && utf8.ValidString(s) && !strings.ContainsRune(s, 0) && strings.TrimFunc(s, ecmaSpace) == s
 }
 func unconfirmed(r Response, code string) error {
 	return &APIError{Status: 502, Code: code, RequestID: r.RequestID, Data: r.Data}
@@ -314,7 +319,7 @@ func receiptObject(r Response, err error, code string) (map[string]any, error) {
 	}
 	v, e := decodeJSON(r.Data)
 	obj, ok := v.(map[string]any)
-	if err != nil || e != nil || !ok || r.Status != 202 || len(obj) != 4 {
+	if err != nil || e != nil || !ok {
 		failure := unconfirmed(r, code).(*APIError)
 		if errors.Is(err, context.Canceled) {
 			failure.cause = context.Canceled
@@ -333,17 +338,19 @@ func (c *Client) SendText(ctx context.Context, input TextRequest) (QueuedTextRec
 	if !phonePattern.MatchString(input.Phone) || !validText(input.Body) || input.IdempotencyKey != nil && !validBodyKey(*input.IdempotencyKey) {
 		return out, invalid()
 	}
-	r, err := c.request(ctx, "POST", "/text-operations/v1", input, "")
+	r, err := c.request(ctx, "POST", "/send", input, "")
 	obj, err := receiptObject(r, err, "unconfirmed_text_outcome")
 	if err != nil {
 		return out, err
 	}
 	id, _ := obj["message_id"].(string)
 	chat, _ := obj["chat_id"].(string)
-	if obj["success"] != true || obj["status"] != "queued" || !publicPattern.MatchString(id) || !chatPattern.MatchString(chat) {
+	status, _ := obj["status"].(string)
+	accepted := r.Status == 202 && status == "queued" || r.Status == 200 && (status == "sent" || status == "duplicate")
+	if !accepted || !chatPattern.MatchString(id) || !chatPattern.MatchString(chat) {
 		return out, unconfirmed(r, "unconfirmed_text_outcome")
 	}
-	return QueuedTextReceipt{true, id, chat, "queued"}, nil
+	return QueuedTextReceipt{true, id, chat, status}, nil
 }
 
 // ReactionRequest targets part zero using one of six standard names.
@@ -384,7 +391,7 @@ func (c *Client) SendReaction(ctx context.Context, chat, message string, input R
 		return out, err
 	}
 	id, _ := obj["operation_id"].(string)
-	if !publicPattern.MatchString(id) || obj["chat_id"] != chat || obj["message_id"] != message || obj["status"] != "acknowledged" {
+	if r.Status != 202 || len(obj) != 4 || !publicPattern.MatchString(id) || obj["chat_id"] != chat || obj["message_id"] != message || obj["status"] != "acknowledged" {
 		return out, unconfirmed(r, "unconfirmed_reaction_outcome")
 	}
 	return ReactionReceipt{id, chat, message, "acknowledged"}, nil

@@ -12,7 +12,7 @@ nonempty `request_id`; modeled fields are decoded, unknown fields retained raw.
 
 | Go methods | Route and success status | Credential / limit |
 | --- | --- | --- |
-| SendText | POST text-operations/v1, 202 | Legacy iMessage key + optional tenant, or unified session with imessage:messages:send and contract echo; exact queued receipt; body key |
+| SendText | POST send, 202 queued or 200 sent/duplicate (duplicate: the line's duplicate check already had this message; message_id is a new record) | Legacy iMessage key + optional tenant, or unified session with imessage:messages:send and contract echo; `message_id`/`chat_id` required, extra fields ignored; body key |
 | SendReaction | POST chats/:chat/messages/:message/reactions, 202 | iMessage key + optional tenant; exact acknowledged receipt; header key; part zero |
 | ListEvents, GetEvent | GET events, events/:rowID | iMessage key + optional tenant; list limit 1–200; webhook delivery status |
 | ListWebhookSubscriptions, GetWebhookSubscription | GET webhook-subscriptions, webhook-subscriptions/:id | iMessage key + optional tenant |

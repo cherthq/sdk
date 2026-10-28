@@ -38,12 +38,13 @@ class Handler(BaseHTTPRequestHandler):
             if raw:
                 assert self.headers.get("Content-Type") == "application/json"
             if self.server.channel == "imessage":
-                assert self.path in ("/api/v1/text-operations/v1", "/custom/api/v1/text-operations/v1") and self.command == "POST"
+                assert self.path in ("/api/v1/send", "/custom/api/v1/send") and self.command == "POST"
                 assert self.headers.get("Authorization") == "Bearer im-secret"
                 assert self.headers.get("X-Chert-Tenant") == "im-tenant"
                 assert self.headers.get("X-Chert-Project-Id") is None
                 assert body == {"phone": "+15550000002", "body": "separate transport", "idempotency_key": "text-key"}
-                self.reply(202, {"success": True, "message_id": "a" * 32, "chat_id": "chat-1", "status": "queued"})
+                self.reply(200, {"status": "sent", "message_id": "550e8400-e29b-41d4-a716-446655440000", "chat_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                                 "lead_id": "6f1c2a5e-9b0d-4c3e-8a7f-1d2e3f4a5b6c", "lead_created": False, "convo_id": "convo-0001", "phone_line_id": "line-0001"})
                 return
             assert self.headers.get("Authorization") == "Bearer ft-secret"
             assert self.headers.get("X-Chert-Project-Id") == PROJECT
@@ -162,8 +163,8 @@ try:
     group["recipients"] = [{"type": "email", "value": "a@example.test"}, {"type": "phone_number", "value": "+15550000002"}]
     assert creates[3] == ("group-key", group)
     assert creates[4] == ("link-key", {**managed, "destination": "https://facetime.apple.com/join#a", "destination_type": "facetime_link"})
-    expected = {("imessage", "POST", "/api/v1/text-operations/v1"): 5,
-                ("imessage", "POST", "/custom/api/v1/text-operations/v1"): 1,
+    expected = {("imessage", "POST", "/api/v1/send"): 5,
+                ("imessage", "POST", "/custom/api/v1/send"): 1,
                 ("facetime", "GET", "/api/v1/lines?limit=1&offset=9"): 4,
                 ("facetime", "GET", "/custom/api/v1/lines?limit=1&offset=9"): 1}
     normal = [("GET", "/calls?limit=2&offset=7"), ("GET", f"/calls/{CALL}"), ("GET", "/lines?limit=1&offset=9"),

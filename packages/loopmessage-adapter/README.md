@@ -26,9 +26,10 @@ webhooks and idempotency headers are unsupported before any Chert request.
 Only authorization/content-type/accept input headers are allowed; input vendor
 credentials never replace configured Chert credentials.
 
-The sole dispatch is `/text-operations/v1`. Exact Chert 202 queued acceptance maps
-to HTTP 200 `{message_id,contact,text}` using the actual Chert public ID. This is
-queue acceptance, never sent/delivery evidence. The endpoint-specific official
+The sole dispatch is Chert `POST /send` through `ChertClient.sendText`. A confirmed
+Chert receipt (202 `queued`, or 200 `sent`/`duplicate`) maps to HTTP 200
+`{message_id,contact,text}` using the actual Chert message ID. This is acceptance,
+never delivery evidence. The endpoint-specific official
 example uses `contact`; a generic example on the same page inconsistently uses
 `recipient`. This adapter pins the endpoint-specific shape and does not emit both.
 
@@ -36,8 +37,8 @@ Errors use the documented generic `{success:false,code:100,message}` shape with
 sanitized static text; HTTP 501 identifies unsupported subsets. Provider-specific
 billing, retry advice and lifecycle error codes are not fabricated. Unknown
 outcomes must be reconciled, never automatically resent. For an actual Chert 4103
-nonretryable 502 carrying validated public IDs, response headers
-`x-chert-message-id` and `x-chert-chat-id` preserve reconciliation identity. These
+nonretryable 502 carrying a validated message ID, `x-chert-message-id` (and
+`x-chert-chat-id` when Chert returns one) preserve reconciliation identity. These
 are Chert-only diagnostics, not vendor fields. Abort signals propagate; malformed
 success responses fail 502 after exactly one attempt.
 

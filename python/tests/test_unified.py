@@ -405,14 +405,21 @@ class UnifiedTests(unittest.TestCase):
         self.server.status = 200
         self.server.payload = {'data': {'status': 'active', 'entitlement': entitlement}}
         self.assertEqual(self.client.purchase(plan='shared', idempotency_key='buy-key-01'), {'status': 'active', 'entitlement': entitlement})
+        # Plan switching is fail-closed on the backend; the SDK surfaces the refusal code.
+        self.server.status = 409
+        self.server.payload = {'error': {'code': 'billing_plan_change_unavailable', 'message': PRIVATE}}
+        with self.assertRaises(ChertControlPlaneError) as caught:
+            self.client.change_plan(plan='dedicated', idempotency_key='switch-key-1')
+        self.assertEqual((caught.exception.status, caught.exception.code), (409, 'billing_plan_change_unavailable'))
+        self.server.status = 200
         self.server.payload = {'data': {'status': 'requires_action', 'url': 'https://hooks.stripe.com/3d_secure_2/x'}}
-        self.assertEqual(self.client.change_plan(plan='dedicated', idempotency_key='switch-key-1')['status'], 'requires_action')
+        self.assertEqual(self.client.purchase(plan='shared', idempotency_key='buy-key-01')['status'], 'requires_action')
         self.server.payload = {'data': {'status': 'pending'}}
         self.assertEqual(self.client.purchase(plan='shared', idempotency_key='buy-key-01'), {'status': 'pending'})
         self.server.payload = {'data': {'status': 'requires_payment_method', 'url': 'https://checkout.stripe.com/c/pay/cs_x'}}
         self.assertEqual(self.client.payment_method_setup(idempotency_key='card-key-01')['url'], 'https://checkout.stripe.com/c/pay/cs_x')
-        bodies = [call[3] for call in self.server.calls[-4:]]
-        self.assertEqual(bodies, [{'action': 'purchase', 'plan': 'shared'}, {'action': 'change_plan', 'plan': 'dedicated'}, {'action': 'purchase', 'plan': 'shared'}, {'action': 'payment_method'}])
+        bodies = [call[3] for call in self.server.calls[-5:]]
+        self.assertEqual(bodies, [{'action': 'purchase', 'plan': 'shared'}, {'action': 'change_plan', 'plan': 'dedicated'}, {'action': 'purchase', 'plan': 'shared'}, {'action': 'purchase', 'plan': 'shared'}, {'action': 'payment_method'}])
         for bad in ({'status': 'requires_action', 'url': 'http://hooks.stripe.com/x'}, {'status': 'requires_action', 'url': 'https://stripe.com.evil.example/x'},
                     {'status': 'requires_action', 'url': 'https://u:p@checkout.stripe.com/x'},
                     {'status': 'requires_action', 'url': 'https://evil.com\\.stripe.com/x'}, {'status': 'requires_action', 'url': 'https://evil.com\t.stripe.com/'},
@@ -436,6 +443,13 @@ class UnifiedTests(unittest.TestCase):
                 self.client.create_checkout(plan='dedicated', idempotency_key='stable-key')
             expected = 'request_failed' if code == 'billing_secret_reason' else code
             self.assertEqual((caught.exception.status, caught.exception.code), (status, expected))
+            self.assertNotIn(PRIVATE, str(caught.exception))
+        for status in (409, 400):
+            self.server.status = status
+            self.server.payload = {'error': {'code': 'billing_plan_change_unavailable', 'message': PRIVATE}}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.change_plan(plan='dedicated', idempotency_key='switch-key-2')
+            self.assertEqual((caught.exception.status, caught.exception.code), (status, 'billing_plan_change_unavailable'))
             self.assertNotIn(PRIVATE, str(caught.exception))
 
     def test_invalid_input_rejected_before_network(self):

@@ -95,8 +95,8 @@ responses fail with `unsupported_unified_backend`; malformed credentials fail
 with `invalid_unified_session`. Redirects and ambient proxies remain disabled.
 
 `imessage:messages:send` authorizes the existing strict
-`POST /api/v1/text-operations/v1` route. `send_text` retains its request body and
-exact HTTP 202 queue-acceptance receipt contract; no route remapping occurs.
+`POST /api/v1/send` route. `send_text` retains its request body and
+acceptance receipt contract; no route remapping occurs.
 Successful discovery is not proof of live message delivery. Logout remains POST
 and is CLI-owned, like the device-login lifecycle.
 
@@ -272,17 +272,21 @@ use trychert_sdk::{ChertClient, IMessageConfig};
 let client = ChertClient::from_config(IMessageConfig::new("explicit-key"))?;
 let receipt = client.send_text("+15550000001", "hello",
     Some("caller-stable-key")).await?;
-assert_eq!(receipt.status, "queued");
+assert!(matches!(receipt.status.as_str(), "queued" | "sent" | "duplicate"));
 # Ok(()) }
 ```
 
-`send_text(phone, text, key)` makes one request to `/text-operations/v1` and
-requires actual HTTP 202 with exactly `success:true`, a 32-character lowercase
-hex public `message_id`, a validated `chat_id` and `status:"queued"`. Its
-`QueuedTextReceipt` preserves those four fields; it establishes no delivery or
-read state. Invalid input fails before HTTP. Text and
-an optional caller key are preserved exactly (lossless UTF8, no NUL, text at
-most 16KiB, key at most 200 bytes). No key is generated automatically.
+`send_text(phone, text, key)` makes one request to `/send` and requires a JSON
+object with HTTP 202 and `status:"queued"`, or HTTP 200 and `status:"sent"` or
+`"duplicate"`, plus `message_id` and `chat_id` matching `[A-Za-z0-9:_-]{1,160}`;
+extra fields are ignored. `QueuedTextReceipt` returns `success:true` (set by the
+SDK), `message_id`, `chat_id` and `status`. It is acceptance only: `sent` means
+the CRM dispatched it to a line, `duplicate` means the line's duplicate check
+already had this message; `message_id` is a new record. None is delivery or read
+proof. Invalid input fails before HTTP. Text and an optional caller key are
+preserved exactly (lossless UTF8, no NUL, text at most 16KiB, key at most 200
+bytes). Keys with leading or trailing whitespace are rejected because the CRM
+trims them; internal whitespace is allowed. No key is generated automatically.
 Unexpected success statuses or receipt shapes fail with
 `unconfirmed_text_outcome`; reconcile the explicit error data before retrying.
 Non-2xx Chert error codes and raw data remain available without automatic retry.

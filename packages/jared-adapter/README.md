@@ -23,7 +23,7 @@ adapter does not guess.
 
 | Operation | Status |
 | --- | --- |
-| `POST /message` text to a phone | Supported subset: exactly `{body:{message},recipient:{handle}}` with an E.164 phone `handle` and lossless nonblank text ≤16 KiB, no NUL. Calls Chert recipient-only `POST /text-operations/v1` once (owned line policy, existing Apple DM). Exact HTTP 202 queued receipt → empty HTTP 200, matching upstream "parsed and handed to the sender". |
+| `POST /message` text to a phone | Supported subset: exactly `{body:{message},recipient:{handle}}` with an E.164 phone `handle` and lossless nonblank text ≤16 KiB, no NUL. Calls Chert recipient-only `POST /send` via `ChertClient.sendText` once (owned line policy, existing Apple DM). Confirmed receipt (202 `queued` or 200 `sent`/`duplicate`) → empty HTTP 200, matching upstream "parsed and handed to the sender". |
 | Email handles, group GUID handles (`iMessage;+;chat…`) | Unsupported (501). |
 | `attachments` (local file paths) | Unsupported (501). |
 | Extra `recipient` fields (`givenName`, …) | Unsupported (501). |
@@ -32,8 +32,8 @@ adapter does not guess.
 Upstream returns plain-text 400 for undecodable bodies; this adapter does the same
 for invalid JSON/text and adds plain-text 501 (unsupported) and 502 (unconfirmed;
 reconcile, do not retry). For an actual Chert 4103 nonretryable 502 with
-validated IDs, `X-Chert-Message-Id` / `X-Chert-Chat-Id` headers carry
-reconciliation identity. Chert sends from an owned line, not the Jared Mac's
+a validated message ID, `X-Chert-Message-Id` (and `X-Chert-Chat-Id` when Chert
+returns one) carry reconciliation identity. Chert sends from an owned line, not the Jared Mac's
 signed-in Apple ID.
 
 Source: Jared commit `969f145` (2023-01-02) [JaredWebServer.swift](https://github.com/ZekeSnider/Jared/blob/969f145321deacfc41401fb7728053f240dad465/Jared/JaredWebServer.swift)

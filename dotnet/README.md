@@ -103,8 +103,8 @@ body bounds, no ambient proxy/cookies, and request deadlines remain in force.
 This is a **proposed version-1 contract**, not a statement of deployed support.
 No SDK login, token conversion, permission elevation, or route remapping occurs.
 `imessage:messages:send` authorizes the existing strict
-`POST /api/v1/text-operations/v1` used by `SendTextAsync`, with its unchanged JSON
-body and HTTP 202 queued receipt validation. `LogoutAsync` remains
+`POST /api/v1/send` used by `SendTextAsync`, with its unchanged JSON body and
+strict acceptance receipt validation. `LogoutAsync` remains
 `POST /api/v1/cli/logout`. Neither operation implies recipient delivery or a
 guarantee of deployed contract availability.
 
@@ -132,16 +132,20 @@ var queued = await chert.IMessage!.SendTextAsync(
     cancellationToken: cancellation);
 ```
 
-This makes one POST to `/text-operations/v1` with `phone`, `body` and optional
+This makes one POST to `/send` with `phone`, `body` and optional
 JSON `idempotency_key`. It validates canonical E.164, nonblank lossless UTF-8 text
 up to 16 KiB without NUL, and an optional nonempty lossless UTF-8 key up to 200
-bytes without NUL. Text and key bytes are preserved. Blankness follows the cloud's
+bytes without NUL or leading/trailing ECMAScript whitespace (the CRM trims keys).
+Text and key bytes are preserved. Blankness follows the cloud's
 ECMAScript whitespace set, including BOM; NEL and U+001C are nonblank.
 
-Only HTTP 202 with exactly `success:true`, a lowercase 32-hex public `message_id`,
-a safe public `chat_id`, and `status:"queued"` produces `QueuedTextReceipt`.
-Queued identifies a cloud reservation. It does not assert a native GUID, service,
-sent/delivered/read state or occurrence time.
+Only a JSON object with HTTP 202 and `status:"queued"`, or HTTP 200 and
+`status:"sent"` or `"duplicate"`, plus safe `message_id` and `chat_id` strings
+(`[A-Za-z0-9:_-]{1,160}`) produces `QueuedTextReceipt`; extra fields are ignored.
+Anything else raises `unconfirmed_text_outcome` (502) without retry. `Success` is
+the SDK's acceptance flag. The receipt is CRM acceptance only: `sent` means the
+CRM dispatched it to a line and `duplicate` means the line's duplicate check
+already had this message; `message_id` is a new record. None is delivery proof.
 
 ## Standard reaction acknowledgement
 

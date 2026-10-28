@@ -19,7 +19,7 @@ await contiguityFetch('https://api.contiguity.com/send/imessage', {
 
 | Operation | Status |
 | --- | --- |
-| `POST /send/imessage` | Partial: keys limited to `{to,from?,message}`. E.164 phone `to`; `from` E.164 or omitted/`null`; lossless nonblank text ≤16 KiB, no NUL. With `from`: Chert explicit-sender `POST /chats`. Without: Chert recipient-only `POST /text-operations/v1` (owned line policy, existing Apple DM). Exact HTTP 202 queued receipt → HTTP 200 envelope `{id,timestamp,api_version,object:'response',data:{message_id}}`. |
+| `POST /send/imessage` | Partial: keys limited to `{to,from?,message}`. E.164 phone `to`; `from` E.164 or omitted/`null`; lossless nonblank text ≤16 KiB, no NUL. With `from`: Chert explicit-sender `POST /chats`. Without: Chert recipient-only `POST /send` via `ChertClient.sendText` (owned line policy, existing Apple DM). Confirmed receipt (202 `queued` or 200 `sent`/`duplicate`) → HTTP 200 envelope `{id,timestamp,api_version,object:'response',data:{message_id}}`. |
 | `fallback`, `attachments`, `effect`, `fast_track` | Unsupported (501), including explicit `null`. Chert never falls back to SMS/RCS. |
 | iCloud email `to` | Rejected (400). |
 | Markdown-style formatting | Text matching `**…**`, `__…__`, `~~…~~`, `*…*` or `_…_` is rejected (501): Contiguity renders it, Chert would deliver it literally. This is deliberately conservative (e.g. `snake_case_name` matches). |
@@ -34,8 +34,8 @@ actual 32-hex Chert public ID, not `imsg_…`, and means queue acceptance only.
 Errors use the documented `{…,object:'error',data:{error,status}}` envelope with
 sanitized text; 501 marks unsupported subsets and 502 an unconfirmed outcome that
 must be reconciled, not retried. For an actual Chert 4103 nonretryable 502 with
-validated IDs, `X-Chert-Message-Id` / `X-Chert-Chat-Id` headers carry
-reconciliation identity.
+a validated message ID, `X-Chert-Message-Id` (and `X-Chert-Chat-Id` when Chert
+returns one) carry reconciliation identity.
 
 Sources: [Send iMessage](https://docs.contiguity.com/api-reference/product/imessage/send),
 [typing](https://docs.contiguity.com/api-reference/product/imessage/typing),

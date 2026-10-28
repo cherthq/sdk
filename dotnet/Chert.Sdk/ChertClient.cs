@@ -19,10 +19,11 @@ public sealed class ChertApiException : Exception
     public override string ToString() => $"Chert request failed ({Status}); reconcile uncertain operations before retrying";
 }
 
-/// <summary>Cloud reservation only; never physical sent/delivered/read proof.</summary>
+/// <summary>CRM acceptance only. Status is queued, sent (dispatched to a line) or duplicate (the line's duplicate
+/// check already had this message; message_id is a new record); none is delivery proof. Success is the SDK's acceptance flag.</summary>
 public sealed record QueuedTextReceipt(bool Success, string MessageId, string ChatId, string Status)
 {
-    public override string ToString() => "QueuedTextReceipt { queued }";
+    public override string ToString() => "QueuedTextReceipt { accepted }";
 }
 /// <summary>Dispatch acknowledgement, not applied or current reaction state.</summary>
 public sealed record ReactionReceipt(string OperationId, string ChatId, string MessageId, string Status)
@@ -90,17 +91,18 @@ internal sealed partial class ChannelTransport : IDisposable
         if (!Exact(phone, @"\+[1-9][0-9]{1,14}") || !ValidUnicode(text) || text.Contains('\0')
             || StrictUtf8.GetByteCount(text) > 16384 || text.All(EcmaWhitespace)) throw new ArgumentException("Invalid strict plaintext");
         if (idempotencyKey is not null && (!ValidUnicode(idempotencyKey) || idempotencyKey.Length == 0
-            || idempotencyKey.Contains('\0') || StrictUtf8.GetByteCount(idempotencyKey) > 200)) throw new ArgumentException("Invalid idempotency key");
+            || idempotencyKey.Contains('\0') || StrictUtf8.GetByteCount(idempotencyKey) > 200
+            || EcmaWhitespace(idempotencyKey[0]) || EcmaWhitespace(idempotencyKey[^1]))) throw new ArgumentException("Invalid idempotency key");
         var payload = new Dictionary<string, object?> { ["phone"] = phone, ["body"] = text };
         if (idempotencyKey is not null) payload["idempotency_key"] = idempotencyKey;
-        var response = await RequestWithResponseAsync("/text-operations/v1", JsonSerializer.SerializeToElement(payload), HttpMethod.Post, null, cancellationToken).ConfigureAwait(false);
+        var response = await RequestWithResponseAsync("/send", JsonSerializer.SerializeToElement(payload), HttpMethod.Post, null, cancellationToken).ConfigureAwait(false);
         var value = response.Value;
-        if (response.Status != 202 || !Fields(value, "success", "message_id", "chat_id", "status")
-            || value!.Value.GetProperty("success").ValueKind != JsonValueKind.True
-            || String(value, "status") != "queued" || !Exact(String(value, "message_id"), "[a-f0-9]{32}")
+        var status = String(value, "status");
+        if (!((response.Status == 202 && status == "queued") || (response.Status == 200 && status is "sent" or "duplicate"))
+            || !Exact(String(value, "message_id"), "[A-Za-z0-9:_-]{1,160}")
             || !Exact(String(value, "chat_id"), "[A-Za-z0-9:_-]{1,160}"))
             throw new ChertApiException(502, "unconfirmed_text_outcome", response.RequestId, value);
-        return new(true, String(value, "message_id")!, String(value, "chat_id")!, "queued");
+        return new(true, String(value, "message_id")!, String(value, "chat_id")!, status!);
     }
 
     public async Task<ReactionReceipt> SendReactionAsync(string chatId, string messageId, string reaction, bool remove = false,

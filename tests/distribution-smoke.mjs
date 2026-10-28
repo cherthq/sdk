@@ -175,7 +175,7 @@ const chert = { baseURL: 'https://chert.example', apiKey: 'chert-only', fetch: a
     expires_at: new Date(Date.now()+900000).toISOString(), http_method: 'PUT',
     required_headers: {authorization:'Bearer <your-signing-secret>', 'content-type':'image/png'},
   });
-  if (request.url.endsWith('/text-operations/v1')) return Response.json({success:true,message_id:'a'.repeat(32),chat_id:'chat-id',status:'queued'},{status:202});
+  if (request.url.endsWith('/api/v1/send')) return Response.json({status:'queued',message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'chat-id',lead_id:'chat-id',lead_created:false,convo_id:'convo-1',phone_line_id:'line-1'},{status:202});
   if (request.url.endsWith('/whoami')) return Response.json({ is_active: identityActive, plan: 'starter', api_key: 'must-not-return', devices: ['must-not-return'] });
   if (request.url.endsWith('/phone-numbers')) return Response.json({ phone_numbers: [{ id: '21000000-0000-4000-8000-000000000011', phone_number: '+15551234567', capabilities: ['imessage'], api_key: 'must-not-return' }] });
   if (request.method === 'GET' && request.url.endsWith('/chats/chat-id')) return Response.json({chat:{id:'chat-id',display_name:'Recorded contact',is_group:false,handles:[{address:'+15557654321',service:'unknown'}],service:'unknown',health_score:99}});
@@ -198,7 +198,7 @@ const linq = new Linq({ chert });
 assert.equal((await linq.chats.messages.send('chat-id', { message: { parts: [{ type: 'text', value: 'hello' }] } })).message.delivery_status, 'queued');
 assert.equal((await new Sendblue({ chert }).messages.send({ from_number: '+15551234567', number: '+15557654321', content: 'hello' })).status, 'QUEUED');
 assert.equal((await new Blooio({ chert }).messages.send({ to: '+15557654321', text: 'hello' })).status, 'queued');
-assert.deepEqual(calls.map(call => call.url), ['https://chert.example/api/v1/chats/chat-id/messages', 'https://chert.example/api/v1/chats', 'https://chert.example/api/v1/text-operations/v1']);
+assert.deepEqual(calls.map(call => call.url), ['https://chert.example/api/v1/chats/chat-id/messages', 'https://chert.example/api/v1/chats', 'https://chert.example/api/v1/send']);
 assert.ok(calls.every(call => call.key === 'Bearer chert-only'));
 console.log('Built ESM packages: core and three real upstream SDK adapters passed synthetic transport checks.');
 
@@ -499,7 +499,7 @@ const loop=createLoopMessageFetch({chert});
 const loopBefore=calls.length;
 const loopResponse=await loop('https://a.loopmessage.com/api/v1/message/send/',{method:'POST',headers:{authorization:'vendor-only','content-type':'application/json'},body:JSON.stringify({contact:'+15557654321',text:'hello',channel:'imessage'})});
 assert.equal(loopResponse.status,200);
-assert.deepEqual(await loopResponse.json(),{message_id:'a'.repeat(32),contact:'+15557654321',text:'hello'});
+assert.deepEqual(await loopResponse.json(),{message_id:'550e8400-e29b-41d4-a716-446655440000',contact:'+15557654321',text:'hello'});
 assert.equal(calls.length,loopBefore+1);
 assert.equal(calls.at(-1).key,'Bearer chert-only');
 const loopRejected=await loop('https://a.loopmessage.com/api/v1/message/send/',{method:'POST',body:JSON.stringify({contact:'+15557654321',text:'hello',channel:'imessage',sender:'unmapped'})});
@@ -529,25 +529,26 @@ console.log('Built LoopMessage status requires actual iMessage delivery evidence
 
 // Built core typed operation: injected HTTP only, never a live endpoint.
 const coreTextCalls = [];
-const coreQueued = {success:true,message_id:'a'.repeat(32),chat_id:'chat-core',status:'queued'};
+const coreWire = {status:'queued',message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'chat-core',lead_id:'chat-core',lead_created:false,convo_id:'convo-1',phone_line_id:'line-1'};
+const coreQueued = {success:true,message_id:coreWire.message_id,chat_id:'chat-core',status:'queued'};
 let coreTextMode = 'queued';
 const coreText = new ChertClient({baseURL:'https://chert.example',apiKey:'core-only-key',tenant:'core-fixture',fetch:async(input,init)=>{
   const request=new Request(input,init);
-  assert.equal(request.url,'https://chert.example/api/v1/text-operations/v1');
+  assert.equal(request.url,'https://chert.example/api/v1/send');
   assert.equal(request.method,'POST');assert.equal(init.redirect,'error');
   assert.equal(request.headers.get('authorization'),'Bearer core-only-key');
   assert.equal(request.headers.get('x-chert-tenant'),'core-fixture');
   coreTextCalls.push(await request.json());
   if(coreTextMode==='error4103')return Response.json({error:{code:4103,message:'private-core-error',retryable:false},message_id:'b'.repeat(32),chat_id:'chat-core'},{status:502,headers:{'x-trace-id':'core-trace'}});
-  if(coreTextMode==='native-uuid')return Response.json({...coreQueued,message_id:'550e8400-e29b-41d4-a716-446655440000'},{status:202});
-  if(coreTextMode==='extra-field')return Response.json({...coreQueued,service:'imessage'},{status:202});
-  if(coreTextMode==='wrong-status')return Response.json(coreQueued,{status:200});
-  return Response.json(coreQueued,{status:202});
+  if(coreTextMode==='bad-id')return Response.json({...coreWire,message_id:'bad id'},{status:202});
+  if(coreTextMode==='sent-202')return Response.json({...coreWire,status:'sent'},{status:202});
+  if(coreTextMode==='wrong-status')return Response.json(coreWire,{status:200});
+  return Response.json(coreWire,{status:202});
 }});
-const coreInput={phone:'+15550000002',body:'  exact / core text 🌙\n',idempotency_key:' core-key/🌙\n'};
+const coreInput={phone:'+15550000002',body:'  exact / core text 🌙\n',idempotency_key:'core-key/🌙 x'};
 assert.deepEqual(await coreText.sendText(coreInput),coreQueued);
 assert.deepEqual(coreTextCalls,[coreInput]);
-for(const mode of ['native-uuid','extra-field','wrong-status']){
+for(const mode of ['bad-id','sent-202','wrong-status']){
   coreTextMode=mode;const before=coreTextCalls.length;
   await assert.rejects(coreText.sendText(coreInput),error=>error instanceof ChertAPIError&&error.status===502&&error.code==='unconfirmed_text_outcome');
   assert.equal(coreTextCalls.length,before+1,'invalid receipt must not retry');
@@ -729,14 +730,14 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   let posts = 0;
   const transport = createContiguityFetch({chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async (input, init) => {
     posts++; const request = new Request(input, init);
-    assert.equal(request.url, 'https://chert.example/api/v1/text-operations/v1');
-    return Response.json({success: true, message_id: 'a'.repeat(32), chat_id: 'chat-a', status: 'queued'}, {status: 202});
+    assert.equal(request.url, 'https://chert.example/api/v1/send');
+    return Response.json({status:'queued',message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'chat-a',lead_id:'chat-a',lead_created:false,convo_id:'convo-1',phone_line_id:'line-1'}, {status: 202});
   }}});
   const rejected = await transport('https://api.contiguity.com/send/imessage', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', message: 'x', fallback: {when: ['imessage_fails']}})});
   assert.equal(rejected.status, 501);
   const accepted = await transport('https://api.contiguity.com/send/imessage', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({to: '+14155551234', message: 'x'})});
   assert.equal(accepted.status, 200);
-  assert.deepEqual((await accepted.json()).data, {message_id: 'a'.repeat(32)});
+  assert.deepEqual((await accepted.json()).data, {message_id: '550e8400-e29b-41d4-a716-446655440000'});
   assert.equal(posts, 1);
   console.log('Built Contiguity adapter refuses SMS fallback before HTTP and maps strict queue acceptance.');
 }
@@ -757,7 +758,7 @@ console.log('Built core sendText validates exact queued202 receipts, preserves e
   assert.throws(() => createJaredFetch({origin: 'http://example.com:3005', chert: {baseURL: 'https://chert.example', apiKey: 'k'}}), TypeError);
   let posts = 0;
   const transport = createJaredFetch({origin: 'http://localhost:3005', chert: {baseURL: 'https://chert.example', apiKey: 'distribution-only', fetch: async () => {
-    posts++; return Response.json({success: true, message_id: 'a'.repeat(32), chat_id: 'chat-a', status: 'queued'}, {status: 202});
+    posts++; return Response.json({status:'queued',message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'chat-a',lead_id:'chat-a',lead_created:false,convo_id:'convo-1',phone_line_id:'line-1'}, {status: 202});
   }}});
   const ok = await transport('http://localhost:3005/message', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({body: {message: 'x'}, recipient: {handle: '+14155551234'}})});
   assert.equal(ok.status, 200);

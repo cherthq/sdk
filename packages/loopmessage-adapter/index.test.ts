@@ -2,14 +2,15 @@ import {test,expect} from 'bun:test';
 import {createLoopMessageFetch} from './index';
 const endpoint='https://a.loopmessage.com/api/v1/message/send/';
 const valid={contact:'+15550000002',text:'hello',channel:'imessage'};
-function fixture(result:unknown={success:true,message_id:'a'.repeat(32),chat_id:'chat-a',status:'queued'},status=202){
+const wire={status:'queued',message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'chat-a',lead_id:'chat-a',lead_created:false,convo_id:'convo-1',phone_line_id:'line-1'};
+function fixture(result:unknown=wire,status=202){
  const calls:Request[]=[];
  const transport=createLoopMessageFetch({chert:{baseURL:'https://chert.test',apiKey:'owned-key',tenant:'owned-tenant',fetch:async(input,init)=>{calls.push(new Request(input,init));return Response.json(result,{status});}}});
  return {calls,transport};
 }
 const post=(transport:ReturnType<typeof createLoopMessageFetch>,body:unknown,headers:Record<string,string>={})=>transport(endpoint,{method:'POST',headers:{'content-type':'application/json',authorization:'vendor-not-forwarded',...headers},body:JSON.stringify(body)});
 test('real queue receipt maps endpoint-specific contact shape and isolates credentials',async()=>{
- const {calls,transport}=fixture();const response=await post(transport,valid);expect(response.status).toBe(200);expect(await response.json()).toEqual({message_id:'a'.repeat(32),contact:valid.contact,text:'hello'});expect(calls.length).toBe(1);expect(calls[0]!.url).toBe('https://chert.test/api/v1/text-operations/v1');expect(await calls[0]!.json()).toEqual({phone:valid.contact,body:'hello'});expect(calls[0]!.headers.get('authorization')).toBe('Bearer owned-key');expect(calls[0]!.headers.get('x-chert-tenant')).toBe('owned-tenant');
+ const {calls,transport}=fixture();const response=await post(transport,valid);expect(response.status).toBe(200);expect(await response.json()).toEqual({message_id:wire.message_id,contact:valid.contact,text:'hello'});expect(calls.length).toBe(1);expect(calls[0]!.url).toBe('https://chert.test/api/v1/send');expect(await calls[0]!.json()).toEqual({phone:valid.contact,body:'hello'});expect(calls[0]!.headers.get('authorization')).toBe('Bearer owned-key');expect(calls[0]!.headers.get('x-chert-tenant')).toBe('owned-tenant');
 });
 test('unsupported options, channels, malformed Unicode and routing reject before effects',async()=>{
  for(const body of [{...valid,sender:'sender-id'},{...valid,channel:'sms'},{...valid,attachments:[]},{contact:valid.contact,text:'hello'},{...valid,text:'\ud800'},{...valid,text:'bad\0text'},{...valid,text:'x'.repeat(16385)},{...valid,text:'x'.repeat(10000)},{...valid,contact:valid.contact+'\n'},{...valid,text:''}]){const {calls,transport}=fixture();expect((await post(transport,body)).status).toBe(501);expect(calls.length).toBe(0);}
@@ -17,10 +18,12 @@ test('unsupported options, channels, malformed Unicode and routing reject before
  const {calls,transport}=fixture();expect((await transport(endpoint+'?x=1',{method:'POST'})).status).toBe(501);expect((await transport(endpoint)).status).toBe(501);expect(calls.length).toBe(0);
 });
 test('incompatible successes never invent lifecycle or retry',async()=>{
- for(const [body,status]of [[{success:true,message_id:'a'.repeat(32),chat_id:'chat-a',status:'sent'},202],[{success:true,message_id:'a'.repeat(32),chat_id:'chat-a',status:'queued',extra:true},202],[{success:true,message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'chat-a',status:'queued'},202],[{},200]] as const){const {calls,transport}=fixture(body,status);expect((await post(transport,valid)).status).toBe(502);expect(calls.length).toBe(1);}
+ for(const [body,status]of [[{...wire,status:'sent'},202],[wire,200],[{...wire,message_id:'bad id'},202],[{...wire,status:'failed'},200],[{},200]] as const){const {calls,transport}=fixture(body,status);expect((await post(transport,valid)).status).toBe(502);expect(calls.length).toBe(1);}
 });
 test('uncertain outcomes expose only both validated Chert reconciliation headers',async()=>{
  for(const bad of [false,true]){const {calls,transport}=fixture({message_id:bad?'native_bad':'a'.repeat(32),chat_id:'chat-a',error:{code:4103,message:'private-secret',retryable:false}},502);const response=await post(transport,valid);expect(response.status).toBe(502);expect(await response.json()).toEqual({success:false,code:100,message:'Send request did not complete; reconcile before retrying.'});expect(response.headers.get('x-chert-message-id')).toBe(bad?null:'a'.repeat(32));expect(response.headers.get('x-chert-chat-id')).toBe(bad?null:'chat-a');expect(calls.length).toBe(1);}
+ const flat=await post(fixture({status: 'failed', error: 'send_failed', code: 4103, message: 'private detail', retryable: false, message_id: '550e8400-e29b-41d4-a716-446655440000'},502).transport,valid);// CRM /send failure body
+ expect([flat.status,flat.headers.get('x-chert-message-id'),flat.headers.get('x-chert-chat-id')]).toEqual([502,'550e8400-e29b-41d4-a716-446655440000',null]);
 });
 test('already cancelled input has zero requests',async()=>{const {calls,transport}=fixture();const abort=new AbortController();abort.abort();await expect(transport(endpoint,{method:'POST',body:JSON.stringify(valid),signal:abort.signal})).rejects.toThrow();expect(calls.length).toBe(0);});
 
@@ -62,7 +65,7 @@ test('delivery rejects explicit failure and contradictory read evidence without 
 
 test('queued and uncertainty receipts reject non-contract chat identities',async()=>{
  for(const chat_id of ['chat.dot','chat@account','chat🚫']){
-  const queued=fixture({success:true,message_id:'a'.repeat(32),chat_id,status:'queued'},202);
+  const queued=fixture({...wire,chat_id},202);
   expect((await post(queued.transport,valid)).status).toBe(502);expect(queued.calls.length).toBe(1);
   const unknown=fixture({message_id:'a'.repeat(32),chat_id,error:{code:4103,retryable:false}},502);
   const response=await post(unknown.transport,valid);expect(response.headers.get('x-chert-chat-id')).toBeNull();expect(unknown.calls.length).toBe(1);

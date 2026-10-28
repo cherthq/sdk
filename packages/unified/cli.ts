@@ -12,7 +12,7 @@ const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk facetime status | lines | workers
   chert-sdk billing status (draft)
   chert-sdk billing card | cancel --idempotency-key KEY --confirm (draft)
-  chert-sdk billing buy | switch --plan shared|dedicated --idempotency-key KEY --confirm (draft)
+  chert-sdk billing buy --plan shared|dedicated --idempotency-key KEY --confirm (draft)
   chert-sdk adopt [path] [--write] [--install] [--json]
   chert-sdk context [--offline]
 
@@ -25,20 +25,24 @@ For browser login and putting a LiveKit voice or video agent on a FaceTime line,
 use the separate @trychert/facetime CLI (chert).
 
 FaceTime requires CHERT_PROJECT_ID; iMessage only reports it as context.
-Set CHERT_API_KEY for iMessage; CHERT_FACETIME_TOKEN for FaceTime.
+Credentials by surface (service-specific, not interchangeable):
+  imessage send            CHERT_API_KEY (iMessage API key)
+  facetime status          CHERT_FACETIME_TOKEN = CLI login (ftu_, from chert login)
+  facetime lines, workers  CHERT_FACETIME_TOKEN = project API key (ftk_) or CLI login
+  billing (draft)          CHERT_FACETIME_TOKEN = CLI login with the billing scope,
+                           held by a current project owner; not a project API key
 iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.
 FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionally
-overrides the origin. Credentials are service-specific, not interchangeable.
-facetime status needs a signed-in CLI login; a project API key (ftk_) can run
-facetime lines and workers when its scopes allow.
+overrides the origin.
 FaceTime commands inspect existing access/lines; no calls, media relay,
 concierge onboarding or automatic shared-line allocation is implemented.
-Billing (draft backend contract) needs a CLI credential with the billing scope in
-CHERT_FACETIME_TOKEN, not a project API key (ftk_).
-The backend refuses CLI credentials for billing until it ships.
-buy/switch charge the saved card; when a card or authentication is needed the
-output carries a Stripe-hosted url to open, then rerun billing status. A pending
-status means rerun the same command with the same idempotency key.
+Billing is a draft backend contract: today billing only works from a signed-in
+browser session, and the backend refuses CLI credentials until it ships.
+buy charges the saved card and is refused while a subscription is live; when a
+card or authentication is needed the output carries a Stripe-hosted url to open,
+then rerun billing status. A pending status means rerun the same command with
+the same idempotency key. Switching plans is not available (the backend returns
+billing_plan_change_unavailable); there is no switch command.
 Use --help on any channel without credentials. iMessage send requires an
 explicit --confirm and a caller-supplied stable idempotency key. Output is JSON.`;
 
@@ -56,7 +60,7 @@ async function main() {
   const unknown = channel === 'context' ? (command !== undefined && command !== '--offline') || args.length > 0
     : channel === 'imessage' ? command !== 'send'
     : channel === 'facetime' ? args.length > 0 || !['status', 'lines', 'workers'].includes(command!)
-    : channel === 'billing' ? !['status', 'card', 'buy', 'switch', 'cancel'].includes(command!) || (command === 'status' && args.length > 0)
+    : channel === 'billing' ? !['status', 'card', 'buy', 'cancel'].includes(command!) || (command === 'status' && args.length > 0)
     : true;
   if (unknown) throw Object.assign(new Error(), { code: 'unknown_command' });
   const env = process.env;
@@ -83,7 +87,7 @@ async function main() {
     const { values } = parseArgs({ args, options: { plan: { type: 'string' }, 'idempotency-key': { type: 'string' }, confirm: { type: 'boolean' } } });
     const mutation = command !== 'status';
     if (mutation) {
-      if ((command === 'buy' || command === 'switch') !== (values.plan !== undefined) || (values.plan !== undefined && !['shared', 'dedicated'].includes(values.plan)))
+      if ((command === 'buy') !== (values.plan !== undefined) || (values.plan !== undefined && !['shared', 'dedicated'].includes(values.plan)))
         throw Object.assign(new Error(), { code: 'invalid_request' });
       if (values['idempotency-key'] === undefined) throw Object.assign(new Error(), { code: 'idempotency_key_required' });
       if (!/^[\x21-\x7e]{8,200}$/.test(values['idempotency-key'])) throw Object.assign(new Error(), { code: 'invalid_idempotency_key' });
@@ -94,7 +98,6 @@ async function main() {
     result = command === 'status' ? await client.billingStatus()
       : command === 'card' ? await client.paymentMethodSetup(key)
       : command === 'buy' ? await client.purchase({ plan }, key)
-      : command === 'switch' ? await client.changePlan({ plan }, key)
       : await client.cancelSubscription(key);
   } else {
     const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId: required('CHERT_PROJECT_ID') });
@@ -135,7 +138,7 @@ async function context(env: NodeJS.ProcessEnv, offline: boolean) {
     },
     missing: ['CHERT_PROJECT_ID', 'CHERT_API_KEY', 'CHERT_FACETIME_TOKEN'].filter(name => !set(name)),
     account: { facetime: offline ? 'skipped' : facetimeAccount ?? 'not_configured', imessage: 'not_inspected' },
-    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status (draft)', 'billing card (draft)', 'billing buy (draft)', 'billing switch (draft)', 'billing cancel (draft)', 'adopt', 'context'],
+    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status (draft)', 'billing card (draft)', 'billing buy (draft)', 'billing cancel (draft)', 'adopt', 'context'],
     docs: { setup: `${DOCS}/docs/SETUP.md`, llms: `${DOCS}/llms.txt`, ...(existsSync(llmsFile) ? { llmsFile } : {}), readme: `${DOCS}/README.md`,
       compatibility: `${DOCS}/COMPATIBILITY.md` },
     agentCli: { package: '@trychert/facetime', bin: 'chert', use: 'Browser login and putting a LiveKit voice or video agent on a FaceTime line' },

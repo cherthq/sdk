@@ -6,7 +6,7 @@ export const JARED_CONTRACT = Object.freeze({
 });
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const exact = (v: Record<string, unknown>, keys: string[]) => Object.keys(v).sort().join() === [...keys].sort().join();
-const publicId = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
+const sendId = (v: unknown): v is string => typeof v === 'string' && /^(?:[a-f0-9]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(v);
 const chatId = (v: unknown): v is string => typeof v === 'string' && /^[A-Za-z0-9:_-]{1,160}$/.test(v);
 const phone = (v: unknown): v is string => typeof v === 'string' && /^\+[1-9][0-9]{7,14}$/.test(v);
 const plain = (status: number, message: string) => new Response(message, {status, headers: {'content-type': 'text/plain; charset=utf-8'}});
@@ -43,20 +43,18 @@ export function createJaredFetch(options: {chert: ChertClientOptions; origin: st
     if (!phone(handle)) return unsupported();
     if (!text(message)) return plain(400, 'A lossless nonblank text body within 16384 UTF-8 bytes is required.');
     try {
-      const result = await client.requestWithResponse<unknown>('/text-operations/v1', {method: 'POST', signal: request.signal, body: {phone: handle, body: message}});
-      const data = result.data;
-      if (result.status !== 202 || !record(data) || !exact(data, ['success', 'message_id', 'chat_id', 'status']) || data.success !== true
-        || data.status !== 'queued' || !publicId(data.message_id) || !chatId(data.chat_id))
-        return plain(502, 'Send outcome unconfirmed; reconcile before retrying.');
+      await client.sendText({phone: handle, body: message}, {signal: request.signal});
       return new Response(null, {status: 200});
     } catch (error) {
       request.signal.throwIfAborted();
       if (error instanceof ChertAPIError && (error.status === 400 || error.status === 422)) return plain(400, 'The request was rejected before sending.');
+      if (error instanceof ChertAPIError && error.code === 'unconfirmed_text_outcome') return plain(502, 'Send outcome unconfirmed; reconcile before retrying.');
       const response = plain(502, 'Send request did not complete; reconcile before retrying.');
       if (error instanceof ChertAPIError && error.status === 502 && error.code === '4103' && record(error.data)
-        && publicId(error.data.message_id) && chatId(error.data.chat_id)) {
+        && sendId(error.data.message_id)) {
+        // CRM's flat /send failure body carries message_id only; chat_id when present.
         response.headers.set('X-Chert-Message-Id', error.data.message_id);
-        response.headers.set('X-Chert-Chat-Id', error.data.chat_id);
+        if (chatId(error.data.chat_id)) response.headers.set('X-Chert-Chat-Id', error.data.chat_id);
       }
       return response;
     }

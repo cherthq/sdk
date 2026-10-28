@@ -166,7 +166,7 @@ func TestUnifiedBothChannelsAndStreamEcho(t *testing.T) {
 						w.Header().Set("Content-Type", "text/event-stream")
 						body = "event: close\ndata: {}\r\n\r\n"
 					}
-					if r.URL.Path == "/api/v1/text-operations/v1" {
+					if r.URL.Path == "/api/v1/send" {
 						if isFT || r.Method != "POST" || r.Header.Get("Idempotency-Key") != "" {
 							t.Error("text route or idempotency scope changed")
 						}
@@ -178,7 +178,7 @@ func TestUnifiedBothChannelsAndStreamEcho(t *testing.T) {
 							t.Errorf("text body changed: %v", input)
 						}
 						w.WriteHeader(http.StatusAccepted)
-						body = `{"success":true,"message_id":"0123456789abcdef0123456789abcdef","chat_id":"chat-1","status":"queued"}`
+						body = `{"status":"queued","message_id":"6f1c2b9e-3d4a-4f5b-9c8d-7e6f5a4b3c2d","chat_id":"chat-1","lead_id":"0b7e2c1d-9a8f-4e3d-8c2b-1a0f9e8d7c6b","lead_created":true,"convo_id":"convo-1","phone_line_id":"line-1"}`
 					}
 					if _, err := io.WriteString(w, body); err != nil {
 						t.Error(err)
@@ -201,7 +201,7 @@ func TestUnifiedBothChannelsAndStreamEcho(t *testing.T) {
 			streamErr := sdk.IMessage.StreamEvents(context.Background(), chert.StreamEventsOptions{Since: "opaque +/=雪"}, func(chert.MessagingStreamFrame) error { frames++; return nil })
 			key := "caller-owned-key"
 			receipt, sendErr := sdk.IMessage.SendText(context.Background(), chert.TextRequest{Phone: "+15550000002", Body: "Exact plaintext 雪", IdempotencyKey: &key})
-			if echo == chert.UnifiedContract && (!receipt.Success || receipt.MessageID != "0123456789abcdef0123456789abcdef" || receipt.ChatID != "chat-1" || receipt.Status != "queued") {
+			if echo == chert.UnifiedContract && (!receipt.Success || receipt.MessageID != "6f1c2b9e-3d4a-4f5b-9c8d-7e6f5a4b3c2d" || receipt.ChatID != "chat-1" || receipt.Status != "queued") {
 				t.Fatal("queued receipt changed")
 			}
 			for _, err := range []error{imErr, ftErr, streamErr, sendErr} {

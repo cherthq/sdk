@@ -15,6 +15,8 @@ import (
 
 const chatID = "A0000000-0000-4000-8000-000000000001"
 const publicID = "1234567890abcdef1234567890abcdef"
+const msgUUID = "6f1c2b9e-3d4a-4f5b-9c8d-7e6f5a4b3c2d"
+const leadUUID = "0b7e2c1d-9a8f-4e3d-8c2b-1a0f9e8d7c6b"
 
 func client(t *testing.T, s *httptest.Server, limit int64, timeout time.Duration) *Client {
 	t.Helper()
@@ -36,11 +38,11 @@ func TestTypedRequests(t *testing.T) {
 			t.Error(e)
 		}
 		w.WriteHeader(202)
-		if r.URL.Path == "/api/v1/text-operations/v1" {
-			if len(body) != 3 || body["body"] != "  Café 🌅 /\r\n  " || body["idempotency_key"] != " body key " {
+		if r.URL.Path == "/api/v1/send" {
+			if r.Method != "POST" || len(body) != 3 || body["body"] != "  Café 🌅 /\r\n  " || body["idempotency_key"] != "body \t key" {
 				t.Error("changed text")
 			}
-			fmt.Fprintf(w, `{"success":true,"message_id":%q,"chat_id":%q,"status":"queued"}`, publicID, strings.ToLower(chatID))
+			fmt.Fprintf(w, `{"status":"queued","message_id":%q,"chat_id":%q,"lead_id":%q,"lead_created":true,"convo_id":"convo-1","phone_line_id":"line-1"}`, msgUUID, strings.ToLower(chatID), leadUUID)
 			return
 		}
 		if r.URL.EscapedPath() != "/api/v1/chats/"+strings.ToLower(chatID)+"/messages/ABC%3A_.-/reactions" || r.Header.Get("Idempotency-Key") != "key  internal" || len(body) != 3 || body["reaction"] != "like" || body["remove"] != true || body["part_index"] != float64(0) {
@@ -50,10 +52,10 @@ func TestTypedRequests(t *testing.T) {
 	}))
 	defer s.Close()
 	c := client(t, s, 0, 0)
-	key := " body key "
+	key := "body \t key"
 	out, e := c.SendText(context.Background(), TextRequest{Phone: "+15550000002", Body: "  Café 🌅 /\r\n  ", IdempotencyKey: &key})
-	if e != nil || out.MessageID != publicID {
-		t.Fatalf("text %v", e)
+	if e != nil || out != (QueuedTextReceipt{true, msgUUID, strings.ToLower(chatID), "queued"}) {
+		t.Fatalf("text %v %+v", e, out)
 	}
 	key = "key  internal"
 	reaction, e := c.SendReaction(context.Background(), chatID, "ABC:_.-", ReactionRequest{Reaction: "like", Remove: true, IdempotencyKey: &key})
@@ -74,9 +76,10 @@ func TestInvalidInputsZeroRequests(t *testing.T) {
 			t.Error("invalid text accepted")
 		}
 	}
-	for _, v := range []string{"", strings.Repeat("x", 201), "a\x00b", string([]byte{255})} {
-		if _, e := c.SendText(context.Background(), TextRequest{Phone: "+15550000002", Body: "x", IdempotencyKey: &v}); e == nil {
-			t.Error("invalid key accepted")
+	for _, v := range []string{"", strings.Repeat("x", 201), "a\x00b", string([]byte{255}), " key", "key\n", " \t\u3000\ufeff", " body key ", "key\u00a0"} {
+		var api *APIError
+		if _, e := c.SendText(context.Background(), TextRequest{Phone: "+15550000002", Body: "x", IdempotencyKey: &v}); !errors.As(e, &api) || api.Code != "invalid_request" {
+			t.Errorf("invalid key %q accepted", v)
 		}
 	}
 	for _, id := range []string{".", "..", "a/b", "abc\n", strings.Repeat("x", 161)} {
@@ -124,11 +127,36 @@ func TestConfiguration(t *testing.T) {
 		}
 	}
 }
+func TestSentAndDuplicateReceipts(t *testing.T) {
+	for _, status := range []string{"sent", "duplicate"} {
+		s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != "POST" || r.URL.Path != "/api/v1/send" {
+				t.Errorf("text target %s %s", r.Method, r.URL.Path)
+			}
+			fmt.Fprintf(w, `{"status":%q,"message_id":%q,"chat_id":%q,"lead_id":%q,"lead_created":false,"convo_id":"convo-1","phone_line_id":"line-1","service":"iMessage","delivered":false}`, status, msgUUID, chatID, leadUUID)
+		}))
+		out, e := client(t, s, 0, 0).SendText(context.Background(), TextRequest{Phone: "+15550000002", Body: "x"})
+		s.Close()
+		if e != nil || out != (QueuedTextReceipt{true, msgUUID, chatID, status}) {
+			t.Fatalf("%s receipt %v %+v", status, e, out)
+		}
+	}
+}
 func TestUnconfirmedReceipts(t *testing.T) {
 	for _, tc := range []struct {
 		name, body string
 		status     int
-	}{{"status", `{"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 200}, {"extra", `{"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued","secret":"private-key"}`, 202}, {"invalidMessageID", `{"success":true,"message_id":"` + chatID + `","chat_id":"chat","status":"queued"}`, 202}, {"false", `{"success":false,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 202}, {"malformed", "private-key", 202}, {"array", "[]", 202}, {"duplicate", `{"success":true,"success":true,"message_id":"` + publicID + `","chat_id":"chat","status":"queued"}`, 202}} {
+	}{
+		{"queuedAs200", `{"status":"queued","message_id":"` + msgUUID + `","chat_id":"` + chatID + `","lead_id":"` + leadUUID + `","secret":"private-key"}`, 200},
+		{"sentAs202", `{"status":"sent","message_id":"` + msgUUID + `","chat_id":"` + chatID + `"}`, 202},
+		{"otherStatus", `{"status":"queued","message_id":"` + msgUUID + `","chat_id":"` + chatID + `"}`, 201},
+		{"unknownStatus", `{"status":"delivered","message_id":"` + msgUUID + `","chat_id":"` + chatID + `"}`, 200},
+		{"nullMessageID", `{"status":"queued","message_id":null,"chat_id":"` + chatID + `"}`, 202},
+		{"missingChatID", `{"status":"queued","message_id":"` + msgUUID + `"}`, 202},
+		{"invalidMessageID", `{"status":"queued","message_id":"bad id","chat_id":"` + chatID + `"}`, 202},
+		{"malformed", "private-key", 202}, {"array", "[]", 202},
+		{"duplicate", `{"status":"queued","status":"queued","message_id":"` + msgUUID + `","chat_id":"` + chatID + `"}`, 202},
+	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var n atomic.Int32
 			s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -247,7 +275,7 @@ func TestConcurrentClient(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		n.Add(1)
 		w.WriteHeader(202)
-		fmt.Fprintf(w, `{"success":true,"message_id":%q,"chat_id":"chat","status":"queued"}`, publicID)
+		fmt.Fprintf(w, `{"status":"queued","message_id":%q,"chat_id":"chat"}`, msgUUID)
 	}))
 	defer s.Close()
 	c := client(t, s, 0, 0)

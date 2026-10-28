@@ -104,8 +104,8 @@ socket timeouts still apply after discovery.
 
 The CLI owns device login; this factory does not start it. The unified
 `imessage:messages:send` scope authorizes the existing `sdk.imessage.send_text`
-operation: POST `/api/v1/text-operations/v1` with `phone`, `body`, and optional
-`idempotency_key`. There is no route remapping: the exact HTTP 202 queued receipt
+operation: POST `/api/v1/send` with `phone`, `body`, and optional
+`idempotency_key`. There is no route remapping: the acceptance receipt
 and strict validation described below are unchanged, with the unified token and
 contract-header guard added by the factory. FaceTime `logout()` remains POST
 `/api/v1/cli/logout`. Advertising a scope does not establish that a particular
@@ -121,7 +121,7 @@ the FaceTime control-plane API with Python snake_case methods:
 | Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)` |
 | User (bearer only) | `inspect_login(user_code)`, `approve_login(user_code, project_id)`, `logout()` |
 | Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)` |
-| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)`; draft, not served yet: `purchase(plan=..., idempotency_key=...)`, `change_plan(plan=..., idempotency_key=...)`, `payment_method_setup(idempotency_key=...)` |
+| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)`; draft, not served yet: `purchase(plan=..., idempotency_key=...)`, `payment_method_setup(idempotency_key=...)`; unavailable: `change_plan(plan=..., idempotency_key=...)` always fails with `billing_plan_change_unavailable` |
 
 Pagination parameters and checkout arguments are keyword-only. Enrollment uses
 a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
@@ -197,6 +197,9 @@ is optional. Additional server-returned fields are preserved unchanged.
 The server determines coupon eligibility; no coupon is promised by the SDK.
 Cancellation returns `BillingCancellation` with `status='cancellation_requested'`
 and `message`, not proof of completed cancellation. Refresh status to confirm.
+Switching plans is unavailable: `change_plan()` currently fails with
+`billing_plan_change_unavailable`, and a same-project `purchase()` is rejected
+while a live subscription exists, until a plan-change policy is specified.
 `BillingStatus` contains nullable `entitlement`, `needs_reconciliation`, nullable
 `sales_enabled`, `shared_available`, and `dedicated_available`. The entitlement
 is preserved as an extensible JSON object, not modeled as a checkout record.
@@ -358,18 +361,22 @@ and status lookup depend on the service's supported contract.
 receipt = client.send_text(
     "+15550000002", "Exact plaintext", idempotency_key="unique-operation-key"
 )
-# QueuedTextReceipt: success, message_id, chat_id, status="queued".
+# QueuedTextReceipt: success, message_id, chat_id, status="queued"|"sent"|"duplicate".
 ```
 
 `send_text(phone, text, *, idempotency_key=None)` sends one POST to
-`/text-operations/v1` through the same pinned transport. It requires canonical
+`/send` through the same pinned transport. It requires canonical
 E.164, nonblank lossless UTF-8 text of at most 16 KiB without NUL, and an optional
-nonempty lossless UTF-8 key of at most 200 bytes without NUL. Text and keys are
-not trimmed or normalized. Blankness matches ECMAScript `String.trim`, including
-BOM; U+0085 and U+001C remain valid nonblank text. It accepts only HTTP 202 with exactly the four
-receipt fields, a lowercase 32-hex public message ID, a bounded safe chat ID,
-and strict `success=True`/`status="queued"`. No native GUID, service,
-sent/delivered/read state or timestamps are invented.
+nonempty lossless UTF-8 key of at most 200 bytes without NUL and without leading or
+trailing ECMAScript whitespace (the CRM trims keys, so such keys are rejected before
+any request; internal whitespace is allowed). Text and keys are not trimmed or normalized. Blankness matches ECMAScript `String.trim`, including
+BOM; U+0085 and U+001C remain valid nonblank text. It accepts only a JSON object with
+HTTP 202 and `status="queued"`, or HTTP 200 and `status="sent"`/`"duplicate"`, plus
+`message_id` and `chat_id` matching `[A-Za-z0-9:_-]{1,160}`; extra fields are ignored.
+The receipt has those three fields and SDK-set `success=True`. This is acceptance
+only: `sent` means the CRM dispatched it to a line, `duplicate` means the line's
+duplicate check already had this message and `message_id` is a new record; none is
+delivery proof.
 
 `QueuedTextReceipt` is exported as a `TypedDict`; the wheel includes `py.typed`.
 An unexpected successful status or receipt raises sanitized

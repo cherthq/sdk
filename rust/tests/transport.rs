@@ -315,22 +315,29 @@ async fn response_shape_failures_normalize_only_successful_http_statuses() {
 }
 
 #[tokio::test]
-async fn strict_text_preserves_tuple_and_requires_exact_queue_receipt() {
-    let id = "a".repeat(32);
-    let reply = json!({"success":true,"message_id":id,"chat_id":"chat-a","status":"queued"});
-    for key in [None, Some(" exact-key ")] {
-        let (url, rx, h) = serve("202 Accepted", &reply.to_string(), "", Duration::ZERO);
+async fn strict_text_preserves_tuple_and_requires_crm_send_receipt() {
+    let id = "550e8400-e29b-41d4-a716-446655440000";
+    let chat = "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f";
+    for (http, status, key) in [
+        ("202 Accepted", "queued", None),
+        ("200 OK", "sent", Some("exact key")),
+        ("200 OK", "duplicate", Some("exact key")),
+    ] {
+        let reply = json!({"status":status,"message_id":id,"chat_id":chat,
+            "lead_id":"9b2f7c1e-3d4a-4e5f-8a6b-7c8d9e0f1a2b","lead_created":false,
+            "convo_id":"convo-1","phone_line_id":"line-1"});
+        let (url, rx, h) = serve(http, &reply.to_string(), "", Duration::ZERO);
         let result = client(&url)
             .send_text("+15550000002", "  exact / text 😀  ", key)
             .await
             .unwrap();
         assert!(result.success);
         assert_eq!(result.message_id, id);
-        assert_eq!(result.chat_id, "chat-a");
-        assert_eq!(result.status, "queued");
-        assert!(!format!("{result:?}").contains(&id));
+        assert_eq!(result.chat_id, chat);
+        assert_eq!(result.status, status);
+        assert!(!format!("{result:?}").contains(id));
         let wire = rx.recv().unwrap();
-        assert!(wire.starts_with("POST /api/v1/text-operations/v1 HTTP/1.1"));
+        assert!(wire.starts_with("POST /api/v1/send HTTP/1.1"));
         let body: Value = serde_json::from_str(wire.split_once("\r\n\r\n").unwrap().1).unwrap();
         let mut expected = json!({"phone":"+15550000002","body":"  exact / text 😀  "});
         if let Some(key) = key {
@@ -346,19 +353,26 @@ async fn strict_text_preserves_tuple_and_requires_exact_queue_receipt() {
 
 #[tokio::test]
 async fn strict_text_wrong_status_or_receipt_remains_unknown_after_one_request() {
-    let valid =
-        json!({"success":true,"message_id":"a".repeat(32),"chat_id":"chat-a","status":"queued"});
+    let valid = json!({"status":"queued","message_id":"550e8400-e29b-41d4-a716-446655440000",
+        "chat_id":"chat-a","lead_id":"lead-a","lead_created":true});
+    let mut sent = valid.clone();
+    sent["status"] = json!("sent");
     let mut cases = vec![
         ("200 OK", valid.clone()),
         ("201 Created", valid.clone()),
+        ("201 Created", sent.clone()),
+        ("202 Accepted", sent),
         ("204 No Content", Value::Null),
+        ("202 Accepted", json!([valid.clone()])),
     ];
     for (key, value) in [
-        ("success", json!(false)),
-        ("status", json!("sent")),
-        ("message_id", json!("550e8400-e29b-41d4-a716-446655440000")),
+        ("status", json!("delivered")),
+        ("status", Value::Null),
+        ("message_id", Value::Null),
+        ("message_id", json!("")),
+        ("message_id", json!("a".repeat(161))),
+        ("message_id", json!("bad id")),
         ("chat_id", json!("foreign/path")),
-        ("extra", json!(true)),
     ] {
         let mut row = valid.clone();
         row[key] = value;
@@ -382,10 +396,7 @@ async fn strict_text_wrong_status_or_receipt_remains_unknown_after_one_request()
         ));
         assert_eq!(error.request_id.as_deref(), Some("private-request"));
         assert!(!format!("{error:?} {error}").contains("private-request"));
-        assert!(rx
-            .recv()
-            .unwrap()
-            .starts_with("POST /api/v1/text-operations/v1 "));
+        assert!(rx.recv().unwrap().starts_with("POST /api/v1/send "));
         h.join().unwrap();
     }
     let data = json!({"error":{"code":4103,"retryable":false},"message_id":"a".repeat(32),"chat_id":"chat-a"});
@@ -425,7 +436,15 @@ async fn strict_text_invalid_input_never_connects_and_cancellation_never_resends
             "invalid_text_request"
         );
     }
-    for key in ["".to_owned(), "bad\0key".to_owned(), "é".repeat(101)] {
+    for key in [
+        "".to_owned(),
+        "bad\0key".to_owned(),
+        "é".repeat(101),
+        " exact-key".to_owned(),
+        "exact-key\n".to_owned(),
+        " \t\u{feff}".to_owned(),
+        "exact-key\u{3000}".to_owned(),
+    ] {
         assert_eq!(
             c.send_text("+15550000002", "hello", Some(&key))
                 .await
@@ -451,7 +470,7 @@ async fn strict_text_invalid_input_never_connects_and_cancellation_never_resends
     .unwrap();
     task.abort();
     assert!(task.await.unwrap_err().is_cancelled());
-    assert!(wire.starts_with("POST /api/v1/text-operations/v1 "));
+    assert!(wire.starts_with("POST /api/v1/send "));
     h.join().unwrap();
 }
 

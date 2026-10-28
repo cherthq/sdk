@@ -97,8 +97,8 @@ not proof a mutation had no effect. Public/user FaceTime authentication scopes
 still omit credentials/project headers as documented for those scopes.
 
 The unified `imessage:messages:send` scope authorizes the existing
-`POST /api/v1/text-operations/v1` route. `SendText` is not remapped: its body remains
-`{phone,body,idempotency_key?}` and its exact HTTP 202 queued receipt is unchanged.
+`POST /api/v1/send` route. `SendText` is not remapped: its body remains
+`{phone,body,idempotency_key?}` and its receipt check is the same as for key clients.
 `Logout` remains `POST /api/v1/cli/logout`. These are source contracts; no live
 sending or deployed cross-service authorization was verified.
 
@@ -122,11 +122,16 @@ escape the configured prefix; authentication and tenant headers cannot be
 overridden. JSON responses reject invalid UTF-8, duplicate keys, trailing data
 and nesting beyond 128 levels. Empty 204/HEAD responses are supported.
 
-`SendText(ctx, TextRequest)` calls only `/text-operations/v1`. It preserves exact
+`SendText(ctx, TextRequest)` calls only `/send`. It preserves exact
 lossless UTF-8 text (nonblank under the cloud's ECMAScript whitespace policy,
 no NUL, at most 16 KiB). Optional text keys are nonempty, lossless UTF-8, no NUL,
-at most 200 bytes, preserved in the JSON body. Only an exact four-field HTTP 202
-queued receipt is accepted. **Queued is not sent or delivered.**
+at most 200 bytes, without leading/trailing ECMAScript whitespace (the CRM trims
+keys), preserved in the JSON body. Accepted receipts are HTTP 202
+`queued` or HTTP 200 `sent`/`duplicate` JSON objects with `message_id` and
+`chat_id` (`[A-Za-z0-9:_-]{1,160}`); extra fields are ignored and anything else
+is `unconfirmed_text_outcome` (502, never retried). `sent` means dispatched to a
+line, `duplicate` means the line's duplicate check already had this message;
+`message_id` is a new record. **None of these is delivery proof.**
 
 `SendReaction(ctx, chatID, messageID, ReactionRequest)` calls the nested reaction
 operation route with exact `{reaction,remove,part_index:0}`. Standard reactions:

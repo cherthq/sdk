@@ -20,7 +20,7 @@ from .composition import CallVideoComposition, _composition_body, _validate_comp
 
 DEFAULT_FACETIME_URL = 'https://facetime.trychert.com'
 _UNSET = object()
-_SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable billing_binding_mismatch billing_checkout_exists billing_coupon_unavailable billing_dedicated_no_inventory billing_dedicated_unqualified billing_idempotency_conflict billing_invalid billing_no_subscription billing_paid_period_required billing_price_mismatch billing_provider_mismatch billing_provider_unavailable billing_reservation_expired billing_reservation_not_found billing_reservation_pending billing_sales_disabled billing_subscription_conflict billing_subscription_exists billing_payment_failed billing_plan_unchanged billing_unconfigured shared_no_capacity project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
+_SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable billing_binding_mismatch billing_checkout_exists billing_coupon_unavailable billing_dedicated_no_inventory billing_dedicated_unqualified billing_idempotency_conflict billing_invalid billing_no_subscription billing_paid_period_required billing_price_mismatch billing_provider_mismatch billing_provider_unavailable billing_reservation_expired billing_reservation_not_found billing_reservation_pending billing_sales_disabled billing_subscription_conflict billing_subscription_exists billing_payment_failed billing_plan_unchanged billing_plan_change_unavailable billing_unconfigured shared_no_capacity project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
                          "media_capability_unsupported media_session_conflict caller_screen_not_shared media_content_unsupported caller_screen_unsupported media_limit_exceeded call_not_active call_ended call_not_found "
                          "media_session_expired media_transport_unavailable "
                          "video_composition_unsupported composition_invalid composition_revision_conflict composition_base_unavailable".split())
@@ -316,7 +316,12 @@ class ChertControlPlane:
         return self._billing_result('purchase', plan, idempotency_key)
 
     def change_plan(self, *, plan: Literal['shared', 'dedicated'], idempotency_key: str) -> BillingResult:
-        """Switch the current subscription to another plan with proration (draft backend contract)."""
+        """Plan switching is unavailable: the backend fails closed with ``billing_plan_change_unavailable``.
+
+        It stays unavailable until a product policy for timing, proration, refunds, payment
+        failure and fulfilment is specified; same-project purchases are also rejected while a
+        live subscription exists.
+        """
         return self._billing_result('change_plan', plan, idempotency_key)
 
     def payment_method_setup(self, *, idempotency_key: str) -> BillingResult:

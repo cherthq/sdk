@@ -8,7 +8,7 @@ import json
 import math
 import re
 import sys
-from typing import Any, Generator, Literal, TypedDict, cast
+from typing import Any, Generator, Literal, TypedDict
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, unquote, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
@@ -39,11 +39,13 @@ _ECMASCRIPT_WHITESPACE = frozenset("\t\n\v\f\r \u00a0\u1680\u2028\u2029\u202f\u2
 
 
 class QueuedTextReceipt(TypedDict):
-    """Validated cloud reservation identity; never native send/delivery proof."""
+    """CRM acceptance only, never delivery proof. ``success`` is the SDK's acceptance flag;
+    ``sent`` means the CRM dispatched it to a line, ``duplicate`` means the line's duplicate check already had this message;
+    ``message_id`` is a new record."""
     success: Literal[True]
     message_id: str
     chat_id: str
-    status: Literal["queued"]
+    status: Literal["queued", "sent", "duplicate"]
 
 
 @dataclass(frozen=True)
@@ -143,7 +145,7 @@ class ChertClient:
                         else build_opener(ProxyHandler({}), _NoRedirect()))
 
     def send_text(self, phone: str, text: str, *, idempotency_key: str | None = None) -> QueuedTextReceipt:
-        """One strict plaintext attempt; a queued receipt is not delivery proof."""
+        """One strict plaintext attempt; an acceptance receipt is not delivery proof."""
         if not isinstance(phone, str) or not re.fullmatch(r"\+[1-9][0-9]{1,14}", phone):
             raise ValueError("Invalid canonical phone")
         valid_text = False
@@ -155,7 +157,10 @@ class ChertClient:
         if not valid_text:
             raise ValueError("Invalid strict plaintext")
         valid_key = idempotency_key is None
-        if isinstance(idempotency_key, str) and idempotency_key and "\0" not in idempotency_key:
+        # CRM trims keys (ECMAScript String.trim), so surrounding whitespace would change or drop them.
+        if (isinstance(idempotency_key, str) and idempotency_key and "\0" not in idempotency_key
+                and idempotency_key[0] not in _ECMASCRIPT_WHITESPACE
+                and idempotency_key[-1] not in _ECMASCRIPT_WHITESPACE):
             try:
                 valid_key = len(idempotency_key.encode("utf-8", errors="strict")) <= 200
             except UnicodeError:
@@ -165,16 +170,17 @@ class ChertClient:
         payload = {"phone": phone, "body": text}
         if idempotency_key is not None:
             payload["idempotency_key"] = idempotency_key
-        status, request_id, result = self._request_with_response("/text-operations/v1", method="POST", body=payload)
-        if (status != 202 or not isinstance(result, dict)
-                or set(result) != {"success", "message_id", "chat_id", "status"}
-                or result["success"] is not True or result["status"] != "queued"
-                or not isinstance(result["message_id"], str)
-                or not re.fullmatch(r"[a-f0-9]{32}", result["message_id"])
-                or not isinstance(result["chat_id"], str)
+        status, request_id, result = self._request_with_response("/send", method="POST", body=payload)
+        if (not isinstance(result, dict)
+                or not ((status == 202 and result.get("status") == "queued")
+                        or (status == 200 and result.get("status") in ("sent", "duplicate")))
+                or not isinstance(result.get("message_id"), str)
+                or not re.fullmatch(r"[A-Za-z0-9:_-]{1,160}", result["message_id"])
+                or not isinstance(result.get("chat_id"), str)
                 or not re.fullmatch(r"[A-Za-z0-9:_-]{1,160}", result["chat_id"])):
             raise ChertAPIError(502, "unconfirmed_text_outcome", request_id, result)
-        return cast(QueuedTextReceipt, result)
+        return QueuedTextReceipt(success=True, message_id=result["message_id"],
+                                 chat_id=result["chat_id"], status=result["status"])
 
     def send_reaction(self, chat_id: str, message_id: str, reaction: str, *,
                       remove: bool = False, idempotency_key: str | None = None) -> ReactionReceipt:

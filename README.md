@@ -126,8 +126,8 @@ separate permissions. BYOR still uses separate customer LiveKit credentials.
 The existing `new ChertSDK({projectId,imessage,facetime})` constructor and
 standalone clients retain their explicit, separate-credential behavior.
 
-Channel commands require `CHERT_PROJECT_ID` as application context and only their
-own channel credentials. Help, `context` and `adopt` need neither. iMessage uses `CHERT_API_KEY`
+FaceTime and billing commands require `CHERT_PROJECT_ID`; each channel uses only
+its own credentials (`chert-sdk --help` lists which credential each command takes). Help, `context` and `adopt` need neither. iMessage uses `CHERT_API_KEY`
 and optional `CHERT_TENANT`, defaulting to `https://console.trychert.com`.
 `CHERT_BASE_URL` optionally overrides it: root origins get `/api/v1`, while
 explicit deployment prefixes (including `/api/v1`) are preserved without duplication.
@@ -145,8 +145,18 @@ before production use. Default-origin reaction support is not yet verified.
 No endpoint fallback or automatic retries are performed; a queued receipt is
 not proof of delivery. Package publication and backend availability are separate.
 
+`sendText` makes one `POST /api/v1/send` (all six SDKs). The receipt is
+`{ success: true, message_id, chat_id, status }`, where `status` is `queued`
+(HTTP 202), `sent` (dispatched to a line) or `duplicate` (the line's duplicate
+check already had this message; `message_id` is a new record), both HTTP 200.
+Idempotency keys with leading or trailing whitespace are rejected before sending,
+because Chert trims them. Any other success response raises
+`unconfirmed_text_outcome`: reconcile before sending again. Releases up to 0.2.2
+posted to a route production does not serve, so text sends failed there.
+
 Billing uses a signed-in user session and project UUID. Only the terminal-billing
-draft below also accepts a CLI credential with the `billing` scope (owner/admin).
+draft below also accepts a CLI login with the `billing` scope held by a current
+project owner; a project API key (`ftk_`) is never accepted.
 Use `billingStatus()` to inspect entitlement and availability. Refusals keep their code,
 for example `billing_sales_disabled`, `billing_subscription_exists`,
 `billing_dedicated_no_inventory` or `shared_no_capacity`. The 0.2.0 preview
@@ -154,18 +164,20 @@ removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
 **Terminal billing (draft, unreleased; the backend does not serve it yet).**
-`purchase({ plan }, key)` and `changePlan({ plan }, key)` charge the saved card;
+`purchase({ plan }, key)` charges the saved card and is refused while the project
+already has a live subscription; the plan is granted by the payment webhook.
 `paymentMethodSetup(key)` returns `{ status: 'requires_payment_method', url }` for
-adding or replacing it. Purchases and plan changes return `{ status: 'active',
+adding or replacing it. Purchases return `{ status: 'active',
 entitlement }`, `{ status: 'pending' }` (the payment was accepted but the
 entitlement is not committed yet: retry with the same idempotency key), or
 `{ status: 'requires_payment_method' | 'requires_action', url }`, where `url` is a
 Stripe-hosted page for card entry or authentication: card details are never
 entered in the terminal. The CLI equivalents are
-`chert-sdk billing status | card | buy --plan P | switch --plan P | cancel`;
-mutations need `--idempotency-key` and `--confirm`. The CLI credential needs the
-`billing` scope and an owner/admin role. Dedicated purchases stay unavailable
-(`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
+`chert-sdk billing status | card | buy --plan P | cancel`; mutations need
+`--idempotency-key` and `--confirm`. **Switching plans is not available:**
+once served, `changePlan` fails with `billing_plan_change_unavailable` until a
+plan-change policy exists, and the CLI has no `switch` command. Dedicated purchases stay
+unavailable (`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
 
 ```sh
 bunx --package @trychert/sdk@0.2.2 chert-sdk context

@@ -211,7 +211,7 @@ async fn explicit_overrides_preserve_prefixes_and_channel_credentials() {
 
 #[tokio::test]
 async fn independent_channels_send_only_their_own_credentials_and_scope() {
-    let (im, im_wire) = server(202, json!({"success":true,"message_id":"0123456789abcdef0123456789abcdef","chat_id":"chat-1","status":"queued"}).to_string(), "", Duration::ZERO);
+    let (im, im_wire) = server(202, json!({"status":"queued","message_id":"550e8400-e29b-41d4-a716-446655440000","chat_id":"chat-1","lead_id":"lead-1","lead_created":true}).to_string(), "", Duration::ZERO);
     let (ft, ft_wire) = ok(200, call());
     let sdk = ChertSdk::new(
         Some(IMessageConfig {

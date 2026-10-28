@@ -44,8 +44,8 @@ test('omitted or null from uses Chert line policy through strict text', async ()
     const {calls, transport} = fixture(contract.send.chertTextQueued);
     const response = await post(transport, send, body);
     expect(response.status).toBe(200);
-    expect((await response.json() as Envelope).data).toEqual(contract.send.responseData);
-    expect(calls[0]!.url).toBe('https://chert.test/api/v1/text-operations/v1');
+    expect((await response.json() as Envelope).data).toEqual({message_id: contract.send.chertTextQueued.message_id});
+    expect(calls[0]!.url).toBe('https://chert.test/api/v1/send');
     expect(await calls[0]!.json()).toEqual({phone: '+14155551234', body: 'Hello, world!'});
   }
 });
@@ -101,7 +101,7 @@ test('malformed Chert receipts are unconfirmed, never accepted', async () => {
     [{...chat, message: {...chat.message, service: 'imessage'}}, contract.send.explicit, 202],
     [{...chat, chat: {...chat.chat, handles: [{address: '+19999999999'}]}}, contract.send.explicit, 202],
     [chat, contract.send.explicit, 200],
-    [{...text, status: 'sent'}, contract.send.implicit, 202], [{...text, extra: 1}, contract.send.implicit, 202], [text, contract.send.implicit, 200],
+    [{...text, status: 'sent'}, contract.send.implicit, 202], [{...text, message_id: 'bad id'}, contract.send.implicit, 202], [text, contract.send.implicit, 200],
   ] as const) {
     const {calls, transport} = fixture(body, status);
     const response = await post(transport, send, req);
@@ -124,6 +124,8 @@ test('Chert errors are sanitized; 4103 keeps validated reconciliation headers', 
   expect(response.headers.get('x-chert-message-id')).toBe('f'.repeat(32));
   expect(response.headers.get('x-chert-chat-id')).toBe('chat-a');
   expect(calls.length).toBe(1);
+  const flat = await post(fixture({status: 'failed', error: 'send_failed', code: 4103, message: 'private detail', retryable: false, message_id: '550e8400-e29b-41d4-a716-446655440000'}, 502).transport, send, contract.send.implicit); // CRM /send failure body
+  expect([flat.status, flat.headers.get('x-chert-message-id'), flat.headers.get('x-chert-chat-id')]).toEqual([502, '550e8400-e29b-41d4-a716-446655440000', null]);
 });
 
 test('typing start/stop with explicit from maps to Chert typing', async () => {

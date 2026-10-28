@@ -12,7 +12,9 @@ static partial class Program
     const string Chat = "11aa0000-0000-4000-8000-000000000001";
     static int cases;
     static JsonElement Json(object? value) => JsonSerializer.SerializeToElement(value);
-    static string TextReceipt(string status = "queued") => JsonSerializer.Serialize(new { success = true, message_id = PublicId, chat_id = Chat, status });
+    const string TextMessageId = "7f3c2a10-5b4e-4d6f-9a81-2c3d4e5f6a7b";
+    static string TextReceipt(string status = "queued", string? messageId = TextMessageId) => JsonSerializer.Serialize(new { status, message_id = messageId, chat_id = Chat,
+        lead_id = "3e1d9c22-8f4a-4b7e-a6c5-1d2e3f4a5b6c", lead_created = false, convo_id = "c0ffee00-1234-4abc-8def-0123456789ab", phone_line_id = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d" });
     static string ReactionReceipt(string message = "Observed:Ab.C-1", string chat = Chat) => JsonSerializer.Serialize(new { operation_id = PublicId, chat_id = chat, message_id = message, status = "acknowledged" });
     static void Check(bool ok, string label = "assertion") { if (!ok) throw new Exception(label); }
     static async Task<T> Throws<T>(Func<Task> body) where T : Exception
@@ -41,12 +43,16 @@ static partial class Program
             server.Handler = _ => Task.FromResult(new Reply(204, "")); Check(await client.RequestAsync("/empty") is null);
             server.Handler = _ => Task.FromResult(new Reply(200, "")); Check(await client.RequestAsync("/head", method: HttpMethod.Head) is null);
         });
-        await Run("strict text keeps lossless whitespace Unicode key and exact queued receipt", async () =>
+        await Run("strict text rejects outer-whitespace key, keeps lossless Unicode key and exact queued receipt", async () =>
         {
             server.Handler = _ => Task.FromResult(new Reply(202, TextReceipt()));
-            const string text = "  Café / 🌅\r\n  "; const string key = " raw-key-🌅 ";
-            var receipt = await client.SendTextAsync("+15550000002", text, key); Check(receipt.MessageId == PublicId && receipt.Status == "queued");
-            var wire = server.Requests.Last(); Check(wire.Target == "/api/v1/text-operations/v1" && wire.Method == "POST");
+            const string text = "  Café / 🌅\r\n  ";
+            var rejectedBefore = server.Requests.Count;
+            await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", text, " raw-key-🌅 "));
+            Check(server.Requests.Count == rejectedBefore);
+            const string key = "raw key-🌅\tinner";
+            var receipt = await client.SendTextAsync("+15550000002", text, key); Check(receipt.Success && receipt.MessageId == TextMessageId && receipt.ChatId == Chat && receipt.Status == "queued");
+            var wire = server.Requests.Last(); Check(wire.Target == "/api/v1/send" && wire.Method == "POST");
             using var payload = JsonDocument.Parse(wire.Body); var p = payload.RootElement;
             Check(p.EnumerateObject().Count() == 3 && p.GetProperty("phone").GetString() == "+15550000002" && p.GetProperty("body").GetString() == text && p.GetProperty("idempotency_key").GetString() == key);
             Check(!wire.Headers.ContainsKey("idempotency-key"));
@@ -57,7 +63,7 @@ static partial class Program
             foreach (var text in new[] { "", " \ufeff\r\n", "a\0b", "\ud800", new string('x', 16385) })
                 await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", text));
             foreach (var phone in new[] { "15550000002", "+05550000002", "+15550000002\n" }) await Throws<ArgumentException>(() => client.SendTextAsync(phone, "x"));
-            foreach (var key in new[] { "", "\ud800", "a\0b", new string('x', 201) }) await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", "x", key));
+            foreach (var key in new[] { "", "\ud800", "a\0b", new string('x', 201), " key", "key\n", " \t\ufeff\u3000" }) await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", "x", key));
             Check(server.Requests.Count == before);
         });
         await Run("ECMAScript blankness keeps NEL and separator as nonblank", async () =>
@@ -65,9 +71,20 @@ static partial class Program
             server.Handler = _ => Task.FromResult(new Reply(202, TextReceipt()));
             await client.SendTextAsync("+15550000002", "\u0085"); await client.SendTextAsync("+15550000002", "\u001c");
         });
+        await Run("200 sent and duplicate text receipts are accepted with extra fields", async () =>
+        {
+            foreach (var status in new[] { "sent", "duplicate" })
+            {
+                server.Handler = _ => Task.FromResult(new Reply(200, TextReceipt(status)[..^1] + ",\"service\":\"iMessage\",\"delivered\":false}"));
+                var receipt = await client.SendTextAsync("+15550000002", "x");
+                Check(receipt.Success && receipt.Status == status && receipt.MessageId == TextMessageId && receipt.ChatId == Chat);
+                Check(server.Requests.Last().Target == "/api/v1/send");
+            }
+        });
         await Run("malformed or wrong-status text acceptance stays unknown without retry", async () =>
         {
-            foreach (var reply in new[] { new Reply(200, TextReceipt()), new Reply(202, TextReceipt("sent")), new Reply(202, TextReceipt().Replace(PublicId, PublicId.ToUpperInvariant())), new Reply(202, "{}"), new Reply(202, TextReceipt().Replace("\"success\":true", "\"success\":1")), new Reply(202, TextReceipt()[..^1] + ",\"native_guid\":\"private\"}") })
+            foreach (var reply in new[] { new Reply(200, TextReceipt()), new Reply(202, TextReceipt("sent")), new Reply(202, TextReceipt("duplicate")), new Reply(201, TextReceipt()), new Reply(200, TextReceipt("delivered")),
+                new Reply(202, TextReceipt(messageId: null)), new Reply(202, TextReceipt().Replace(TextMessageId, "bad id")), new Reply(202, TextReceipt().Replace(Chat, "")), new Reply(202, "{}"), new Reply(202, "[]") })
             {
                 server.Handler = _ => Task.FromResult(reply); var before = server.Requests.Count;
                 var error = await Throws<ChertApiException>(() => client.SendTextAsync("+15550000002", "x"));

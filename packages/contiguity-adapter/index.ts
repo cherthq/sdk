@@ -9,6 +9,7 @@ const record = (v: unknown): v is Record<string, unknown> => typeof v === 'objec
 const exact = (v: Record<string, unknown>, keys: string[]) => Object.keys(v).sort().join() === [...keys].sort().join();
 const uuid = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v);
 const publicId = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
+const sendId = (v: unknown): v is string => typeof v === 'string' && /^(?:[a-f0-9]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(v);
 const chatId = (v: unknown): v is string => typeof v === 'string' && /^[A-Za-z0-9:_-]{1,160}$/.test(v);
 const phone = (v: unknown): v is string => typeof v === 'string' && /^\+[1-9][0-9]{7,14}$/.test(v);
 const timestamp = (v: unknown): v is string => typeof v === 'string'
@@ -42,11 +43,6 @@ function chatQueued(value: unknown, to: string, body: string): string | null {
     || !record(c.handles[0]) || c.handles[0].address !== to) return null;
   return m.id;
 }
-function textQueued(value: unknown): string | null {
-  if (!record(value) || !exact(value, ['success', 'message_id', 'chat_id', 'status']) || value.success !== true
-    || value.status !== 'queued' || !publicId(value.message_id) || !chatId(value.chat_id)) return null;
-  return value.message_id;
-}
 function fromError(error: unknown): Response {
   if (error instanceof ChertAPIError) {
     if (error.status === 400 || error.status === 422) return failure(400, 'Bad Request');
@@ -56,9 +52,10 @@ function fromError(error: unknown): Response {
   }
   const response = unknown();
   if (error instanceof ChertAPIError && error.status === 502 && error.code === '4103'
-    && record(error.data) && publicId(error.data.message_id) && chatId(error.data.chat_id)) {
+    && record(error.data) && sendId(error.data.message_id)) {
+    // CRM's flat /send failure body carries message_id only; chat_id when present.
     response.headers.set('X-Chert-Message-Id', error.data.message_id);
-    response.headers.set('X-Chert-Chat-Id', error.data.chat_id);
+    if (chatId(error.data.chat_id)) response.headers.set('X-Chert-Chat-Id', error.data.chat_id);
   }
   return response;
 }
@@ -86,8 +83,8 @@ export function createContiguityFetch(options: {chert: ChertClientOptions}): Che
       try {
         let id: string | null;
         if (from === null) {
-          const result = await client.requestWithResponse<unknown>('/text-operations/v1', {method: 'POST', signal: request.signal, body: {phone: to, body: message}});
-          id = result.status === 202 ? textQueued(result.data) : null;
+          try { id = (await client.sendText({phone: to, body: message}, {signal: request.signal})).message_id; }
+          catch (error) { if (error instanceof ChertAPIError && error.code === 'unconfirmed_text_outcome') id = null; else throw error; }
         } else {
           const result = await client.requestWithResponse<unknown>('/chats', {method: 'POST', signal: request.signal,
             body: {from, to: [to], message: {parts: [{type: 'text', value: message}]}}});
