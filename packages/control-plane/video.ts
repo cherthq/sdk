@@ -46,6 +46,8 @@ export type CallEventType = 'incoming_registered' | 'allocated' | 'answer_reques
   | 'remote_video_ready' | 'remote_video_unavailable' | 'caller_video_published' | 'ended' | 'failed' | 'rejected' | 'cleanup_complete'
   /** Draft living-services lifecycle events. Payload-free; page messages arrive by signed webhook. */
   | 'living_service.ready' | 'living_service.failed' | 'living_service.stopped'
+  /** Draft call video composition lifecycle. Payload-free. */
+  | 'call_video.live' | 'call_video.updated' | 'call_video.failed' | 'call_video.stopped'
   /** Screen sharing. Payload-free: they report that something happened, never screen content or coordinates. */
   | 'agent_screen_started' | 'agent_screen_stopped' | 'caller_screen_share_started' | 'caller_screen_share_ended'
   | 'screen_control_granted' | 'screen_control_revoked' | 'unknown';

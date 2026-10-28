@@ -3,7 +3,7 @@
  * that the caller created and published. The SDK has no LiveKit dependency: pass the module in.
  */
 import type { MediaTransport } from './source';
-import type { PixelFormat, Rotation, VideoFrame } from './frames';
+import type { PixelFormat, Rotation, VideoFrame, VideoFrameInit } from './frames';
 
 /** Structural subset of `@livekit/rtc-node` used by the adapter. */
 export interface LiveKitRtcModule {
@@ -44,4 +44,40 @@ export function liveKitVideoTransport(rtc: LiveKitRtcModule, source: LiveKitVide
     },
     async close() { /* The caller owns track unpublication and room disconnect. */ },
   };
+}
+
+/** Structural subset of an `@livekit/rtc-node` VideoFrame. */
+export interface LiveKitVideoFrameLike {
+  data: Uint8Array; width: number; height: number; type: number;
+  convert?(type: number): LiveKitVideoFrameLike;
+}
+/** Structural subset of `@livekit/rtc-node` VideoStream events. */
+export interface LiveKitVideoFrameEvent { frame: LiveKitVideoFrameLike; timestampUs: bigint; rotation: number }
+
+/**
+ * Turns a subscribed LiveKit track into SDK frames, so a customer's LiveKit video can be the `camera` base of a call
+ * video composition: `for await (const f of liveKitTrackFrames(rtc, new rtc.VideoStream(track))) source.pushFrame(f)`.
+ * Chert never joins the customer's room. Frames in other buffer types are converted to I420 when the frame allows it.
+ */
+export async function* liveKitTrackFrames(rtc: LiveKitRtcModule, stream: AsyncIterable<LiveKitVideoFrameEvent>): AsyncGenerator<VideoFrameInit> {
+  const formats = new Map<number, PixelFormat>([[rtc.VideoBufferType.RGBA, 'rgba'], [rtc.VideoBufferType.BGRA, 'bgra'],
+    [rtc.VideoBufferType.I420, 'i420'], [rtc.VideoBufferType.NV12, 'nv12']]);
+  const rotations = new Map<number, Rotation>([[rtc.VideoRotation.VIDEO_ROTATION_0, 0], [rtc.VideoRotation.VIDEO_ROTATION_90, 90],
+    [rtc.VideoRotation.VIDEO_ROTATION_180, 180], [rtc.VideoRotation.VIDEO_ROTATION_270, 270]]);
+  for await (const event of stream) {
+    let frame = event.frame;
+    if (!formats.has(frame.type)) {
+      if (!frame.convert) throw new TypeError('Unsupported LiveKit buffer type.');
+      frame = frame.convert(rtc.VideoBufferType.I420);
+    }
+    const format = formats.get(frame.type);
+    if (!format) throw new TypeError('Unsupported LiveKit buffer type.');
+    const { width: w, height: h, data } = frame;
+    // LiveKit buffers are tightly packed; split them into planes with exact strides.
+    const layout: [number, number][] = format === 'i420' ? [[w, h], [w / 2, h / 2], [w / 2, h / 2]]
+      : format === 'nv12' ? [[w, h], [w, h / 2]] : [[w * 4, h]];
+    let offset = 0;
+    const planes = layout.map(([stride, rows]) => { const plane = { data: data.subarray(offset, offset + stride * rows), stride }; offset += stride * rows; return plane; });
+    yield { format, width: w, height: h, planes, timestampUs: event.timestampUs, rotation: rotations.get(event.rotation) ?? 0 };
+  }
 }
