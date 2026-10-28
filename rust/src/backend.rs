@@ -121,12 +121,14 @@ mod workers {
         headers: Headers,
         body: Body,
         deadline: u64,
-        abort: Option<AbortController>,
+        _abort: Abort,
     }
 
-    impl Drop for Reply {
+    struct Abort(Option<AbortController>);
+
+    impl Drop for Abort {
         fn drop(&mut self) {
-            if let Some(abort) = self.abort.take() {
+            if let Some(abort) = self.0.take() {
                 abort.abort();
             }
         }
@@ -183,15 +185,13 @@ mod workers {
             let deadline = Date::now()
                 .as_millis()
                 .saturating_add(self.timeout.as_millis() as u64);
-            let abort = AbortController::default();
-            let signal = abort.signal();
+            let controller = AbortController::default();
+            let signal = controller.signal();
+            let abort = Abort(Some(controller));
             let fetch = Fetch::Request(request);
             let response = match within(deadline, fetch.send_with_signal(&signal)).await {
                 Ok(Ok(response)) => response,
-                _ => {
-                    abort.abort();
-                    return Err(());
-                }
+                _ => return Err(()),
             };
             let mut response = response;
             let body = if matches!(response.body(), ResponseBody::Stream(_)) {
@@ -206,7 +206,7 @@ mod workers {
                 headers: response.headers().clone(),
                 body,
                 deadline,
-                abort: Some(abort),
+                _abort: abort,
             })
         }
     }
