@@ -155,8 +155,9 @@ signed-in browser session: buy on the Billing page at https://facetime.trychert.
 where checkout opens a Stripe-hosted page. `billingStatus()` and `createCheckout`
 accept only that browser session's token, not a project API key or a CLI login,
 and the SDK does not allocate lines. Other `chert-sdk` commands only inspect
-access. Terminal billing (`chert-sdk billing buy|switch|card|cancel`, `purchase`,
-`changePlan`) is a draft the backend does not serve yet; it will charge a saved
+access. Terminal billing (`chert-sdk billing status|buy|switch|card|cancel`,
+`purchase`, `changePlan`) is a draft in the source tree only: it is not in a
+published version and the backend does not serve it yet. It will charge a saved
 card and return a Stripe-hosted URL whenever card entry or authentication is
 needed, and will accept a CLI credential only with the `billing` scope and an
 owner/admin role. The `chert` agent CLI's `chert dev` claims your project's line
@@ -183,9 +184,10 @@ validation, a bounded video source and signaling for your own WebRTC peer
 connection), web frontends rendered as call video, and screen sharing (an agent
 streaming its screen into a call, and receiving the caller's shared screen) and
 call video composition (a page as the call video, or layered over live video) are
-unreleased drafts. Their code ships in `@trychert/sdk`, but the hosted backend
-does not serve them yet: calls fail with `404 endpoint_unavailable`, so do not
-build on them
+unreleased drafts, so do not build on them. Custom video, living services and
+screen sharing ship in `@trychert/sdk` 0.2.2, but the hosted backend does not
+serve them yet: calls fail with `404 endpoint_unavailable`. Call video
+composition is in the source tree only, not in any published version
 ([#17](https://github.com/cherthq/sdk/pull/17),
 [#18](https://github.com/cherthq/sdk/pull/18),
 [#25](https://github.com/cherthq/sdk/pull/25),
