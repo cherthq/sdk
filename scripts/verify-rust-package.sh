@@ -11,7 +11,8 @@ trap 'rm -rf "$scratch"' EXIT
 cargo fmt --manifest-path "$manifest" --check
 cargo test --offline --locked --manifest-path "$manifest" --all-targets
 cargo test --offline --locked --manifest-path "$manifest" --doc
-cargo clippy --offline --locked --manifest-path "$manifest" --all-targets --all-features -- -D warnings
+cargo clippy --offline --locked --manifest-path "$manifest" --all-targets -- -D warnings
+cargo clippy --offline --locked --manifest-path "$manifest" --lib --no-default-features --features worker -- -D warnings
 RUSTDOCFLAGS='-D warnings' cargo doc --offline --locked --no-deps --manifest-path "$manifest"
 CARGO_TARGET_DIR="$scratch/build" cargo package --offline --locked --allow-dirty --manifest-path "$manifest"
 archive="$scratch/build/package/chert-sdk-0.1.0.crate"

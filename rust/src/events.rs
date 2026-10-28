@@ -267,42 +267,35 @@ impl ChertClient {
         if !safe_request(&path) {
             return Err(ChertError::new(None, "invalid_path"));
         }
+        let mut headers = http::HeaderMap::new();
+        self.guard_request(&mut headers);
+        headers.insert(
+            http::header::ACCEPT,
+            http::HeaderValue::from_static("text/event-stream"),
+        );
         let mut response = self
-            .guard_request(self.http.get(url))
-            .header("accept", "text/event-stream")
-            .send()
+            .http
+            .send(HttpMethod::GET, url, headers, None)
             .await
             .map_err(|_| ChertError::new(None, "stream_unavailable"))?;
         self.check_contract(&response)?;
         let status = response.status();
-        let request_id = response
-            .headers()
-            .get("x-trace-id")
-            .or_else(|| response.headers().get("x-request-id"))
-            .and_then(|v| v.to_str().ok())
-            .map(str::to_owned);
+        let success = (200..300).contains(&status);
+        let request_id = response.request_id();
         let failure = |code: &str| ChertError {
-            status: Some(if status.is_success() {
-                502
-            } else {
-                status.as_u16()
-            }),
+            status: Some(if success { 502 } else { status }),
             code: code.into(),
             request_id: request_id.clone(),
             data: None,
         };
-        if !status.is_success()
-            || !response
-                .headers()
-                .get("content-type")
-                .and_then(|v| v.to_str().ok())
-                .is_some_and(|v| {
-                    v.split(';')
-                        .next()
-                        .unwrap_or("")
-                        .trim()
-                        .eq_ignore_ascii_case("text/event-stream")
-                })
+        if !success
+            || !response.header("content-type").is_some_and(|v| {
+                v.split(';')
+                    .next()
+                    .unwrap_or("")
+                    .trim()
+                    .eq_ignore_ascii_case("text/event-stream")
+            })
         {
             return Err(failure("stream_unavailable"));
         }
@@ -312,7 +305,7 @@ impl ChertClient {
             .await
             .map_err(|_| failure("invalid_event_stream"))?
         {
-            for byte in chunk {
+            for &byte in chunk.iter() {
                 if let Some(frame) = decoder
                     .push(byte)
                     .map_err(|_| failure("invalid_event_stream"))?

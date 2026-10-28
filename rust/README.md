@@ -5,7 +5,7 @@ The library import remains `trychert_sdk` for preview source compatibility.
 This untagged source preview is **unpublished** and retains
 `publish = false` until exact archive review and separate publication authorization.
 Use a path dependency (`chert-sdk = { path = "../sdk/rust" }`) while reviewing.
-Requires Rust 1.88+ and a Tokio runtime. No device installation is required for this client.
+Requires Rust 1.88+ and, with the default `reqwest` feature, a Tokio runtime. No device installation is required for this client.
 
 **Publication hold:** the confirmed production defaults are `https://console.trychert.com`
 for iMessage and `https://facetime.trychert.com` for FaceTime, with `/api/v1` once.
@@ -245,6 +245,22 @@ and `CHERT_FACETIME_PROJECT_ID`. `CHERT_IMESSAGE_URL` and `CHERT_FACETIME_URL`
 are optional overrides; present empty/invalid values reject rather than select defaults.
 It prints counts/status only, not credentials or customer content.
 
+## Cloudflare Workers
+
+The default `reqwest` feature uses reqwest with rustls. For `wasm32-unknown-unknown` inside
+Cloudflare Workers, disable defaults and enable `worker`, which sends requests with the
+`worker` crate's Fetch. The public API, validation, limits and errors are unchanged:
+
+```toml
+chert-sdk = { git = "https://github.com/cherthq/sdk", rev = "<commit>", default-features = false, features = ["worker"] }
+```
+
+Under `worker`, redirects are returned rather than followed, nothing retries, and the
+configured timeout aborts the fetch and any unread body. Futures are not `Send`; await them
+in the request handler. Timeouts must fit in `i32` milliseconds. Pass the current Unix time
+to `verify_messaging_signature` explicitly. When both features are enabled, `worker` is used.
+Check the build with `cargo check --target wasm32-unknown-unknown --no-default-features --features worker`.
+
 ## iMessage acceptance contract
 
 Messaging `request<T>` decodes the actual response without unwrapping envelopes.
@@ -404,11 +420,12 @@ delivered. Invalid streams fail with sanitized errors. Return `ControlFlow::Brea
 or drop the consumption future to release resources; callbacks must not block.
 An EOF does not establish delivery or durable resume position.
 
-No webhook signature verifier is included: existing direct dependencies do not
-provide an HMAC API and no crypto dependency was added. Before parsing webhook
-JSON, use a vetted HMAC-SHA256 implementation to verify `v1,timestamp,hex` against
-the exact `timestamp + "." + raw_body` bytes, with constant-time verification and
-a timestamp within ±300 seconds. Reject malformed signatures and empty secrets.
+Verify webhook deliveries before parsing JSON. `webhook::verify_messaging_signature`
+accepts `v1,timestamp,hex` or `t=timestamp,v1=hex`, checks HMAC-SHA256 over the exact
+`timestamp + "." + raw_body` bytes in constant time, and requires the timestamp within
+±300 seconds of the `now_unix_secs` you pass. `webhook::verify_facetime_signature`
+checks `sha256=hex` over the raw body; that scheme has no timestamp, so deduplicate on
+`event_id`. Malformed signatures and empty secrets are rejected. No replay store is implied.
 
 FaceTime `call_events` and `transcript` remain HTTP snapshots. Live call media and
 realtime room events belong to LiveKit, not this iMessage SSE stream; this crate

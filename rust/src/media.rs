@@ -1,10 +1,10 @@
 //! Custom media v1 (video-only): explicit capabilities, session grants and raw frame validation.
 //! There is no media engine here: pass a grant's `endpoint` and `token` to a standard WHIP
 //! (RFC 9725) client to publish, or a WHEP (draft-ietf-wish-whep-05, experimental) client to subscribe.
-use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::fmt;
+use url::Url;
 
 /// Upper bound for one raw frame's required plane bytes and for grant `max_frame_bytes`.
 pub const MAX_FRAME_BYTES: usize = 8 * 1024 * 1024;
