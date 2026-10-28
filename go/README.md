@@ -291,6 +291,39 @@ Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC
 stack; keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send
 periodic keyframes.
 
+### Call video composition (draft, unreleased)
+
+A call's video can be a stack of layers that the backend composes server-side and
+publishes through the call's single publish slot (so it conflicts with other publish
+sessions: `media_session_conflict`). Check `chert.ParseVideoComposition(line.VideoComposition)`
+first; it returns nil unless the explicit, versioned capability is present.
+
+```go
+video, err := sdk.FaceTime.SetCallVideo(ctx, callID, chert.SetCallVideoRequest{Layers: []chert.VideoLayerInput{
+    {ID: "base", Source: &chert.CompositionBase{Kind: chert.CompositionCamera}},
+    {ID: "captions", Z: 1, Page: chert.CompositionPage{DeploymentID: "dep_123"},
+        Region: &chert.CompositionRegion{X: 0, Y: 0.75, Width: 1, Height: 0.25}, Background: chert.CompositionTransparent},
+}}, "video-key-1")
+// video.Data.Layers[0].Publish is a camera base's publish grant: push frames over WHIP.
+```
+
+`SetCallVideo` PUTs `/api/v1/calls/{id}/video` (the page shortcut is
+`SetCallVideoRequest{Page: &chert.CompositionPage{DeploymentID: ...}}`); `GetCallVideo` and
+`ClearCallVideo` read and stop it. v1 allows at most two layers: one base (`camera` or
+`managed`) at z 0 and page layers at z ≥ 1 with a normalized `Region` (default full
+frame), `Background` (opaque default or transparent), `Opacity` (0–1, default 1),
+optional `Input` (pointer, keyboard, text) and `InitialState`. A non-nil `Revision` makes
+the PUT compare-and-set. `CompositionInputTarget` returns the topmost pointer-accepting
+page layer under an output-frame point. Invalid compositions fail with `invalid_request`
+before any request; responses outside the contract fail with `invalid_response`. Server
+codes `video_composition_unsupported`, `composition_invalid`,
+`composition_revision_conflict` and `composition_base_unavailable` surface without
+server text.
+
+Pages are ready deployment IDs only; URL pages cannot be expressed. This SDK cannot
+deploy pages or drive page state, events or input; those living-service operations are
+TypeScript SDK only.
+
 ## Raw access and failures
 
 `RequestWithOptions` adds an optional iMessage header idempotency key for uncovered

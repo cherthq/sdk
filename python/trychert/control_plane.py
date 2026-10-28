@@ -12,12 +12,14 @@ from .models import (BillingStatus, CheckoutSession, BillingCancellation, Coupon
                      Credentials, DeviceLoginStart, Identity, Json, LinePage, LoginApproval,
                      LoginInspection, LoginResult, Revoked, WorkerPage)
 from .media import MediaDirection, MediaSessionContent, MediaSessionGrant, VideoCodec, _parse_media_session_grant
+from .composition import CallVideoComposition, _composition_body, _validate_composition
 
 DEFAULT_FACETIME_URL = 'https://facetime.trychert.com'
 _UNSET = object()
 _SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
                          "media_capability_unsupported media_session_conflict caller_screen_not_shared media_content_unsupported caller_screen_unsupported media_limit_exceeded call_not_active call_ended call_not_found "
-                         "media_session_expired media_transport_unavailable".split())
+                         "media_session_expired media_transport_unavailable "
+                         "video_composition_unsupported composition_invalid composition_revision_conflict composition_base_unavailable".split())
 
 
 class ChertControlPlaneError(Exception):
@@ -37,6 +39,13 @@ class _NoRedirect(HTTPRedirectHandler):
 def _header(value: str) -> str:
     if not isinstance(value, str) or not value or any(ord(c) < 32 or ord(c) > 126 for c in value):
         raise ValueError("Invalid header value")
+    return value
+
+
+def _idempotency_key(value: str) -> str:
+    if (not isinstance(value, str) or not 8 <= len(value) <= 200
+            or any(ord(char) < 33 or ord(char) > 126 for char in value)):
+        raise ValueError('Use a stable 8–200 character printable non-space ASCII idempotency key')
     return value
 
 
@@ -211,11 +220,32 @@ class ChertControlPlane:
             raise ChertControlPlaneError(201, 'invalid_response')
         return grant
 
+    def set_call_video(self, call_id: str, composition: dict[str, Any], *, idempotency_key: str) -> CallVideoComposition:
+        """Replace the call's video with ``{"page": {"deployment_id": ...}}`` or ``{"layers": [...]}`` (draft, unreleased).
+
+        At most two layers: one base (camera or managed) at z 0 and page layers at z >= 1. Pages must be ready
+        deployments; deploy URL pages with the TypeScript SDK. The composition holds the call's single publish slot."""
+        path = 'calls/' + self._call_id(call_id) + '/video'
+        body = _composition_body(composition)
+        _idempotency_key(idempotency_key)
+        return self._composition(self._request(path, 'PUT', body, idempotency_key=idempotency_key))
+
+    def get_call_video(self, call_id: str) -> CallVideoComposition:
+        return self._composition(self._request('calls/' + self._call_id(call_id) + '/video'))
+
+    def clear_call_video(self, call_id: str) -> CallVideoComposition:
+        """Stop the composition and free the publish slot."""
+        return self._composition(self._request('calls/' + self._call_id(call_id) + '/video', 'DELETE'))
+
+    @staticmethod
+    def _composition(data: Any) -> CallVideoComposition:
+        composition = _validate_composition(data)
+        if composition is None:
+            raise ChertControlPlaneError(200, 'invalid_response')
+        return composition
+
     def _call_mutation(self, path: str, body: Any, idempotency_key: str) -> CallDetail:
-        if (not isinstance(idempotency_key, str) or not 8 <= len(idempotency_key) <= 200
-                or any(ord(char) < 33 or ord(char) > 126 for char in idempotency_key)):
-            raise ValueError('Use a stable 8–200 character printable non-space ASCII idempotency key')
-        return self._request(path, 'POST', body, idempotency_key=idempotency_key)
+        return self._request(path, 'POST', body, idempotency_key=_idempotency_key(idempotency_key))
 
     def create_call(self, body: CreateCall, *, idempotency_key: str) -> CallDetail:
         """One explicit attempt; acceptance does not prove connection or media success."""

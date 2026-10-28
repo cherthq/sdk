@@ -274,6 +274,41 @@ be reused. Failures raise `MediaFrameError` (a `ValueError`) with `code`
 Limitations: no audio, no built-in media engine or WebRTC stack (bring your own,
 e.g. aiortc), and no guarantee that keyframe requests (PLI/FIR) are delivered.
 
+### Call video composition (draft, unreleased)
+
+A call's video can be a stack of layers that the backend composes server-side and
+publishes through the call's single publish slot (so it conflicts with other publish
+sessions: `media_session_conflict`). Check `parse_video_composition(line.get("video_composition"))`
+first; it returns `None` unless the explicit, versioned capability is present.
+
+```python
+sdk.facetime.set_call_video(call["id"], {"page": {"deployment_id": "dep_123"}}, idempotency_key="video-1")
+video = sdk.facetime.set_call_video(call["id"], {"layers": [
+    {"id": "base", "source": {"kind": "camera"}},
+    {"id": "captions", "z": 1, "page": {"deployment_id": "dep_123"},
+     "region": {"x": 0, "y": 0.75, "width": 1, "height": 0.25}, "background": "transparent", "input": ["pointer"]},
+]}, idempotency_key="video-2")
+grant = video["layers"][0].get("publish")  # MediaSessionGrant for a camera base: push frames over WHIP
+```
+
+`set_call_video(call_id, composition, *, idempotency_key)` PUTs `/api/v1/calls/{id}/video`;
+`get_call_video(call_id)` and `clear_call_video(call_id)` read and stop it. v1 allows at
+most two layers: one base (`camera` or `managed`) at z 0 and page layers at z ≥ 1 with a
+normalized `region` (default full frame), `background` (`opaque` default or
+`transparent`), `opacity` (0–1, default 1), optional `input` (`pointer`, `keyboard`,
+`text`) and `initial_state`. Optional `revision` makes the PUT compare-and-set.
+`composition_input_target(video, x, y)` returns the topmost pointer-accepting page layer
+under an output-frame point. Invalid compositions raise `ValueError` before any request;
+responses outside the contract raise `ChertControlPlaneError(200, 'invalid_response')`.
+Server codes `video_composition_unsupported`, `composition_invalid`,
+`composition_revision_conflict` and `composition_base_unavailable` surface without
+server text; lifecycle events are `call_video.live`, `call_video.updated`,
+`call_video.failed` and `call_video.stopped`.
+
+Pages must be ready deployment IDs: URL pages raise `ValueError`. This SDK cannot deploy
+pages or drive page state, events or input; those living-service operations are
+TypeScript SDK only.
+
 ## Existing iMessage transport
 
 The generic `request` operation matches the JavaScript core's raw Chert API

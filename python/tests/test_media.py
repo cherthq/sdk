@@ -7,7 +7,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from trychert import (ChertControlPlane, ChertControlPlaneError, MediaCapabilities, MediaFrameError,
-                      MediaSessionGrant, VideoPlane, copy_video_frame, parse_media_capabilities)
+                      MediaSessionGrant, VideoCompositionCapability, VideoPlane, composition_input_target,
+                      copy_video_frame, parse_media_capabilities, parse_video_composition)
 
 SECRET = 'facetime-media-key'
 GRANT_TOKEN = 'session-bearer-secret'
@@ -39,6 +40,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+
+    do_PUT = do_GET = do_DELETE = do_POST
 
 
 class MediaSessionTests(unittest.TestCase):
@@ -213,6 +216,158 @@ class MediaSessionTests(unittest.TestCase):
                 self.client.create_media_session('call-1', direction='publish', content='screen')
             self.assertEqual((caught.exception.status, caught.exception.code), (status, code))
             self.assertNotIn(PRIVATE, str(caught.exception))
+
+
+def living_session(fps, call='call'):
+    return {'session_id': 'ls', 'call_id': call, 'deployment_id': 'dep', 'status': 'starting',
+            'viewport': {'width': 1920, 'height': 270}, 'fps': fps, 'ready_at': None, 'last_heartbeat_at': None,
+            'error_code': None}
+
+
+CAMERA_GRANT = grant(content='camera', codecs=['h264'],
+                     limits={'max_width': 1920, 'max_height': 1080, 'max_fps': 24, 'max_frame_bytes': 8388608})
+CAPTIONS = {'id': 'captions', 'z': 1, 'living_session': living_session(12),
+            'region': {'x': 0, 'y': 0.75, 'width': 1, 'height': 0.25}, 'background': 'transparent', 'opacity': 0.8,
+            'input': ['pointer']}
+CAMERA_BASE = {'id': 'base', 'z': 0, 'source': {'kind': 'camera'}, 'publish': CAMERA_GRANT}
+LAYERED = {'composition_id': 'cmp', 'call_id': 'call', 'revision': 3, 'status': 'starting',
+           'output': {'width': 1920, 'height': 1080, 'fps': 24}, 'error_code': None, 'layers': [CAMERA_BASE, CAPTIONS]}
+PAGE_ONLY = {**LAYERED, 'output': {'width': 1280, 'height': 720, 'fps': 30},
+             'layers': [{'id': 'page', 'z': 1, 'living_session': living_session(30),
+                         'region': {'x': 0, 'y': 0, 'width': 1, 'height': 1}, 'background': 'opaque', 'opacity': 1,
+                         'input': []}]}
+
+
+class CallVideoTests(unittest.TestCase):
+    setUpClass = MediaSessionTests.__dict__['setUpClass']
+    tearDownClass = MediaSessionTests.__dict__['tearDownClass']
+
+    def setUp(self):
+        self.server.calls = []
+        self.server.status = 200
+        self.server.payload = {'data': LAYERED}
+
+    def wire(self):
+        return [(method, path, body, headers.get('Idempotency-Key')) for method, path, headers, body in self.server.calls]
+
+    def test_page_shortcut_layered_get_and_clear(self):
+        self.server.payload = {'data': PAGE_ONLY}
+        self.assertEqual(self.client.set_call_video('call', {'page': {'deployment_id': 'dep-1'}},
+                                                    idempotency_key='video-key-1'), PAGE_ONLY)
+        self.server.payload = {'data': LAYERED}
+        result = self.client.set_call_video('call', {'revision': 2, 'layers': [
+            {'id': 'base', 'source': {'kind': 'camera'}},
+            {'id': 'captions', 'z': 1, 'page': {'deployment_id': 'dep'}, 'region': {'x': 0, 'y': 0.75, 'width': 1, 'height': 0.25},
+             'background': 'transparent', 'opacity': 0.8, 'input': ['pointer'], 'initial_state': {'lang': 'en'}}]},
+            idempotency_key='video-key-2')
+        publish = result['layers'][0]['publish']
+        self.assertIsInstance(publish, MediaSessionGrant)
+        self.assertEqual((publish.token, publish.content, publish.limits.max_fps), (GRANT_TOKEN, 'camera', 24))
+        self.assertNotIn(GRANT_TOKEN, repr(result))
+        self.assertEqual(result['layers'][1], CAPTIONS)
+        self.client.get_call_video('call')
+        self.client.clear_call_video('call')
+        self.assertEqual(self.wire(), [
+            ('PUT', '/api/v1/calls/call/video', {'layers': [{'id': 'page', 'z': 1, 'page': {'deployment_id': 'dep-1'},
+             'region': {'x': 0, 'y': 0, 'width': 1, 'height': 1}, 'background': 'opaque', 'opacity': 1}]}, 'video-key-1'),
+            ('PUT', '/api/v1/calls/call/video', {'revision': 2, 'layers': [{'id': 'base', 'z': 0, 'source': {'kind': 'camera'}},
+             {'id': 'captions', 'z': 1, 'page': {'deployment_id': 'dep'}, 'region': {'x': 0, 'y': 0.75, 'width': 1, 'height': 0.25},
+              'background': 'transparent', 'opacity': 0.8, 'input': ['pointer'], 'initial_state': {'lang': 'en'}}]}, 'video-key-2'),
+            ('GET', '/api/v1/calls/call/video', None, None),
+            ('DELETE', '/api/v1/calls/call/video', None, None)])
+        # Exact key order and defaults, as the reference SDK serializes them.
+        self.assertEqual(self.server.calls[0][2]['Content-Type'], 'application/json')
+        self.assertEqual(list(self.server.calls[1][3]), ['revision', 'layers'])
+        self.assertEqual(list(self.server.calls[1][3]['layers'][1]),
+                         ['id', 'z', 'page', 'region', 'background', 'opacity', 'input', 'initial_state'])
+        # Input targets use output-frame coordinates; only the overlay's region accepts pointer input.
+        self.assertEqual(composition_input_target(result, 0.5, 0.9)['id'], 'captions')
+        self.assertIsNone(composition_input_target(result, 0.5, 0.74))
+        self.assertIsNone(composition_input_target(PAGE_ONLY, 0.5, 0.5))  # declares no input
+        self.assertIsNone(composition_input_target(result, 1.5, 0.9))
+
+    def test_invalid_compositions_are_rejected_locally(self):
+        page = {'id': 'p', 'z': 1, 'page': {'deployment_id': 'dep'}}
+        base = {'id': 'base', 'source': {'kind': 'camera'}}
+        for value in (
+                {'layers': []}, {'layers': [base, page, {**page, 'id': 'q', 'z': 2}]},  # 0 and 3 layers
+                {'layers': [base, {**base, 'id': 'b2'}]}, {'layers': [base, {**page, 'id': 'base'}]},  # two bases; duplicate id
+                {'layers': [base, {**page, 'z': 0}]}, {'layers': [base, {**page, 'z': 1.5}]},
+                {'layers': [base, {**page, 'region': {'x': 0.5, 'y': 0, 'width': 0.6, 'height': 1}}]},  # leaves the frame
+                {'layers': [base, {**page, 'region': {'x': 0, 'y': 0, 'width': 0, 'height': 1}}]},
+                {'layers': [base, {**page, 'opacity': 1.2}]}, {'layers': [base, {**page, 'background': 'blurred'}]},
+                {'layers': [{**page, 'background': 'transparent'}]}, {'layers': [{**page, 'opacity': 0.5}]},  # nothing below
+                {'layers': [{**page, 'region': {'x': 0, 'y': 0, 'width': 0.5, 'height': 1}}]},
+                {'layers': [base, {**page, 'input': ['pointer', 'pointer']}]}, {'layers': [{'id': 'base', 'source': {'kind': 'screen'}}]},
+                {'page': {'deployment_id': ''}}, {'page': {'deployment_id': 'dep'}, 'revision': -1},
+                {'layers': [{**page, 'id': 'Upper'}]}, {'layers': [base, {**page, 'initial_state': float('nan')}]},
+                {'layers': [base, {**base, 'id': 'b0', 'z': 1}]}, None, {},
+                # URL pages are never sent: native SDKs need a ready deployment ID.
+                {'page': 'https://agent.example/p'}, {'page': {'url': 'https://agent.example/p'}},
+                {'layers': [base, {**page, 'page': 'https://agent.example/p'}]}):
+            with self.assertRaises(ValueError):
+                self.client.set_call_video('call', value, idempotency_key='video-key-1')
+        for key in ('short', 'has space-key', 'x' * 201, None):
+            with self.assertRaises(ValueError):
+                self.client.set_call_video('call', {'page': {'deployment_id': 'dep'}}, idempotency_key=key)
+        for call_id in ('', '.', '..', None):
+            with self.assertRaises(ValueError):
+                self.client.set_call_video(call_id, {'page': {'deployment_id': 'dep'}}, idempotency_key='video-key-1')
+        with self.assertRaises(ValueError) as caught:
+            self.client.set_call_video('call', {'page': 'https://agent.example/p'}, idempotency_key='video-key-1')
+        self.assertIn('TypeScript SDK', str(caught.exception))
+        self.assertEqual(self.server.calls, [])
+        # A region touching the frame edge is inside it.
+        self.client.set_call_video('call', {'layers': [base, {**page, 'region': {'x': 0.75, 'y': 0.75, 'width': 0.25, 'height': 0.25}}]},
+                                   idempotency_key='video-key-1')
+        self.assertEqual(len(self.server.calls), 1)
+
+    def test_responses_outside_the_contract_are_invalid_response(self):
+        def with_layers(layers, **extra):
+            return {**LAYERED, **extra, 'layers': layers}
+        for bad in (
+                with_layers([CAMERA_BASE, {**CAPTIONS, 'living_session': living_session(30)}]),  # page fps above output
+                with_layers([CAMERA_BASE, CAPTIONS], output={'width': 1920, 'height': 1080, 'fps': 30}),  # above grant
+                with_layers([{'id': 'base', 'z': 0, 'source': {'kind': 'managed'}, 'publish': CAMERA_GRANT}, CAPTIONS]),
+                with_layers([{**CAMERA_BASE, 'publish': {**CAMERA_GRANT, 'content': 'screen'}}, CAPTIONS]),
+                with_layers([CAMERA_BASE, CAPTIONS, {**CAPTIONS, 'id': 'more', 'z': 2}]),
+                with_layers([CAMERA_BASE, {**CAPTIONS, 'living_session': living_session(12, 'other')}]),
+                with_layers([CAMERA_BASE, {**CAPTIONS, 'region': {'x': 0.5, 'y': 0, 'width': 0.6, 'height': 1}}]),
+                with_layers([CAMERA_BASE, {**CAPTIONS, 'z': 0}]),
+                {**LAYERED, 'status': 'paused'}, {**LAYERED, 'output': {'width': 1921, 'height': 1080, 'fps': 24}},
+                with_layers([CAMERA_BASE, {**CAPTIONS, 'living_session': {**living_session(12), 'status': 'paused'}}]),
+                with_layers([CAMERA_BASE, {**CAPTIONS, 'living_session': {**living_session(12), 'viewport': {'width': 15, 'height': 270}}}]),
+                with_layers([CAMERA_BASE, {**CAPTIONS, 'living_session': {**living_session(12), 'session_id': ''}}]),
+                {k: v for k, v in LAYERED.items() if k != 'error_code'}, None, []):
+            self.server.payload = {'data': bad}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.get_call_video('call')
+            self.assertEqual((caught.exception.status, caught.exception.code), (200, 'invalid_response'))
+            self.assertNotIn(GRANT_TOKEN, str(caught.exception))
+        self.server.payload = {'data': with_layers([{'id': 'base', 'z': 0, 'source': {'kind': 'managed'}}, CAPTIONS])}
+        self.assertEqual(self.client.get_call_video('call')['layers'][0]['source'], {'kind': 'managed'})
+
+    def test_error_codes_survive_sanitization_without_server_text(self):
+        cases = [(409, 'video_composition_unsupported'), (422, 'composition_invalid'), (409, 'composition_revision_conflict'),
+                 (409, 'composition_base_unavailable'), (409, 'media_session_conflict'), (409, 'composition_secret')]
+        for status, code in cases:
+            self.server.status = status
+            self.server.payload = {'error': {'code': code, 'message': PRIVATE}}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.set_call_video('call', {'page': {'deployment_id': 'dep'}}, idempotency_key='video-key-1')
+            expected = 'request_failed' if code == 'composition_secret' else code
+            self.assertEqual((caught.exception.status, caught.exception.code), (status, expected))
+            self.assertNotIn(PRIVATE, str(caught.exception) + repr(caught.exception))
+
+    def test_video_composition_capability(self):
+        cap = {'version': 1, 'supported': True, 'max_layers': 4, 'bases': ['camera', 'hologram', 'managed', 'camera'],
+               'page_alpha': True, 'regions': True, 'max_width': 3840, 'max_height': 1080, 'max_fps': 60}
+        self.assertEqual(parse_video_composition(cap), VideoCompositionCapability(
+            1, True, 2, ('camera', 'managed'), True, True, 1920, 1080, 30))
+        self.assertFalse(parse_video_composition({**cap, 'page_alpha': 'yes'}).page_alpha)
+        for bad in (None, 'v1', {**cap, 'version': 2}, {**cap, 'version': True}, {**cap, 'supported': False},
+                    {**cap, 'max_layers': 0}, {**cap, 'bases': 'camera'}, {**cap, 'max_fps': 1.5}):
+            self.assertIsNone(parse_video_composition(bad))
 
 
 def caps(**overrides):
