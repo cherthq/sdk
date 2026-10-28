@@ -5,7 +5,7 @@ The library import remains `trychert_sdk` for preview source compatibility.
 This untagged source preview is **unpublished** and retains
 `publish = false` until exact archive review and separate publication authorization.
 Use a path dependency (`chert-sdk = { path = "../sdk/rust" }`) while reviewing.
-Requires Rust 1.88+ and a Tokio runtime. No device installation is required for this client.
+Requires Rust 1.88+ and, with the default `reqwest` feature, a Tokio runtime. No device installation is required for this client.
 
 **Publication hold:** the confirmed production defaults are `https://console.trychert.com`
 for iMessage and `https://facetime.trychert.com` for FaceTime, with `/api/v1` once.
@@ -163,6 +163,22 @@ server permissions. No browser authentication or elevated scope is invented.
 and `CHERT_FACETIME_PROJECT_ID`. `CHERT_IMESSAGE_URL` and `CHERT_FACETIME_URL`
 are optional overrides; present empty/invalid values reject rather than select defaults.
 It prints counts/status only, not credentials or customer content.
+
+## Cloudflare Workers
+
+The default `reqwest` feature uses reqwest with rustls. For `wasm32-unknown-unknown` inside
+Cloudflare Workers, disable defaults and enable `worker`, which sends requests with the
+`worker` crate's Fetch. The public API, validation, limits and errors are unchanged:
+
+```toml
+chert-sdk = { git = "https://github.com/cherthq/sdk", rev = "<commit>", default-features = false, features = ["worker"] }
+```
+
+Under `worker`, redirects are returned rather than followed, nothing retries, and the
+configured timeout aborts the fetch and any unread body. Futures are not `Send`; await them
+in the request handler. Timeouts must fit in `i32` milliseconds. Pass the current Unix time
+to `verify_messaging_signature` explicitly. When both features are enabled, `worker` is used.
+Check the build with `cargo check --target wasm32-unknown-unknown --no-default-features --features worker`.
 
 ## iMessage acceptance contract
 
