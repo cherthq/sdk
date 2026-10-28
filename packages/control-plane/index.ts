@@ -3,9 +3,17 @@ import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistan
 export * from './video';
 export type MediaSessionCodec = 'h264' | 'vp8';
 export type MediaDirection = 'publish' | 'subscribe';
-export interface CreateMediaSession { direction: MediaDirection; codecs?: MediaSessionCodec[] }
+/**
+ * What a session carries. Publish: `camera` (default) or `screen` (an agent's screen, capped at 15 fps).
+ * Subscribe: omit for the caller's video, or `caller_screen` for the caller's shared screen (only while sharing).
+ * A call has one publish slot: camera, screen and living surfaces are mutually exclusive (`media_session_conflict`).
+ */
+export type MediaSessionContent = 'camera' | 'screen' | 'caller_screen';
+export interface CreateMediaSession { direction: MediaDirection; codecs?: MediaSessionCodec[]; content?: MediaSessionContent }
 export interface MediaSessionGrant {
   session_id: string; direction: MediaDirection;
+  /** The resolved content: `camera` when the request omitted it. Older backends may omit it. */
+  content?: MediaSessionContent;
   /** Opaque absolute HTTPS signaling URL (WHIP for publish, experimental WHEP for subscribe). */
   endpoint: string;
   /** Session-bound bearer; never log it. */
@@ -25,21 +33,24 @@ const iceServer = (s: unknown): boolean => {
     && (username === undefined || typeof username === 'string') && (credential === undefined || typeof credential === 'string')
     && (credentialType === undefined || credentialType === 'password');
 };
-function validateGrant(grant: MediaSessionGrant, direction: MediaDirection, requested?: readonly MediaSessionCodec[]): MediaSessionGrant {
+function validateGrant(grant: MediaSessionGrant, direction: MediaDirection, requested?: readonly MediaSessionCodec[], content?: MediaSessionContent): MediaSessionGrant {
   const g = grant as unknown as Record<string, unknown>, limits = g?.limits as Record<string, unknown> | undefined;
   let endpoint: URL;
   try { endpoint = new URL(String(g?.endpoint)); } catch { throw invalidGrant(); }
   const local = endpoint.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(endpoint.hostname);
   const cap = direction === 'publish' ? [1920, 1080] : [1280, 720];
   const int = (v: unknown, max: number) => Number.isInteger(v) && (v as number) > 0 && (v as number) <= max;
-  if (g?.direction !== direction || typeof g.session_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(g.session_id)
+  // A requested content must be echoed exactly; a default request accepts no echo or the resolved 'camera'.
+  const contentOk = content ? g?.content === content : g?.content === undefined || g?.content === 'camera';
+  const maxFps = (content ?? g?.content) === 'screen' ? 15 : 30;
+  if (!contentOk || g?.direction !== direction || typeof g.session_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(g.session_id)
     || (endpoint.protocol !== 'https:' && !local) || endpoint.username || endpoint.password || endpoint.hash
     || typeof g.token !== 'string' || !g.token || /[\r\n]/.test(g.token)
     || !rfc3339(g.connect_by) || !rfc3339(g.expires_at) || Date.parse(g.connect_by) > Date.parse(g.expires_at)
     || !Array.isArray(g.ice_servers) || !g.ice_servers.every(iceServer)
     || !Array.isArray(g.codecs) || !g.codecs.length || new Set(g.codecs).size !== g.codecs.length
     || !g.codecs.every(c => (c === 'h264' || c === 'vp8') && (!requested || requested.includes(c)))
-    || !limits || !int(limits.max_width, cap[0]!) || !int(limits.max_height, cap[1]!) || !int(limits.max_fps, 30) || !int(limits.max_frame_bytes, 8_388_608))
+    || !limits || !int(limits.max_width, cap[0]!) || !int(limits.max_height, cap[1]!) || !int(limits.max_fps, maxFps) || !int(limits.max_frame_bytes, 8_388_608))
     throw invalidGrant();
   return grant;
 }
@@ -64,7 +75,7 @@ export interface BillingCancellation {status:'cancellation_requested';message:st
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
-const safeCodes = new Set(['media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
+const safeCodes = new Set(['media_capability_unsupported','media_session_conflict','caller_screen_not_shared','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -121,8 +132,10 @@ export class ChertControlPlane {
   async createMediaSession(callId:string,input:CreateMediaSession):Promise<MediaSessionGrant>{
     if(!input||(input.direction!=='publish'&&input.direction!=='subscribe'))throw new TypeError('direction must be publish or subscribe.');
     if(input.codecs!==undefined&&(!Array.isArray(input.codecs)||!input.codecs.length||input.codecs.some(c=>c!=='h264'&&c!=='vp8')||new Set(input.codecs).size!==input.codecs.length))throw new TypeError('codecs must be a non-empty ordered subset of h264, vp8.');
-    const grant=await this.request<MediaSessionGrant>(`calls/${this.resourceId(callId)}/media-sessions`,'POST',{direction:input.direction,...(input.codecs?{codecs:input.codecs}:{})});
-    return validateGrant(grant,input.direction,input.codecs);
+    const content=input.content;
+    if(content!==undefined&&!(input.direction==='publish'?content==='camera'||content==='screen':content==='caller_screen'))throw new TypeError('content must be camera or screen for publish, or caller_screen for subscribe.');
+    const grant=await this.request<MediaSessionGrant>(`calls/${this.resourceId(callId)}/media-sessions`,'POST',{direction:input.direction,...(input.codecs?{codecs:input.codecs}:{}),...(content?{content}:{})});
+    return validateGrant(grant,input.direction,input.codecs,content);
   }
   getCallEvents(id:string){return this.request<{call_id:string;events:CallEvent[]}>(`calls/${this.resourceId(id)}/events`);}
   /** Acceptance is not connection/media success. Reconcile uncertain outcomes; never retry automatically. */

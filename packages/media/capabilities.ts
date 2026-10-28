@@ -3,11 +3,18 @@ import type { VideoCodec } from './frames';
 /** Explicit, versioned media capabilities reported by the service. Never inferred from generic video flags. */
 export interface MediaCapabilities {
   version: 1;
+  /** `contents` lists what may be published; `screen` means an agent can stream a screen (capped at 15 fps). */
   custom_video: { supported: boolean; transports: ('whip' | 'livekit')[]; codecs: VideoCodec[];
-    max_width: number; max_height: number; max_fps: number } | null;
+    max_width: number; max_height: number; max_fps: number; contents: MediaContent[] } | null;
+  /** `screen` means the caller's shared screen is available as its own `caller_screen` subscription. */
   inbound_caller_video: { supported: boolean; transports: ('whep' | 'livekit')[];
-    max_width: number; max_height: number; max_fps: number } | null;
+    max_width: number; max_height: number; max_fps: number; contents: MediaContent[] } | null;
 }
+
+export type MediaContent = 'camera' | 'screen';
+/** Absent, non-list or empty means camera only. Unknown entries are ignored, so an explicit list of only unknown contents supports none of ours. */
+const contents = (v: unknown): MediaContent[] => !Array.isArray(v) || !v.length ? ['camera']
+  : [...new Set(v.filter((x): x is MediaContent => x === 'camera' || x === 'screen'))];
 
 export const UNSUPPORTED: Readonly<MediaCapabilities> = Object.freeze({ version: 1, custom_video: null, inbound_caller_video: null });
 
@@ -29,13 +36,13 @@ export function parseMediaCapabilities(input: unknown): MediaCapabilities {
   if (cv && cv.supported === true) {
     const transports = list(cv.transports, ['whip', 'livekit'] as const), codecs = list(cv.codecs, ['h264', 'vp8'] as const);
     if (transports?.length && codecs?.length && positive(cv.max_width, 1920) && positive(cv.max_height, 1080) && positive(cv.max_fps, 30))
-      out.custom_video = { supported: true, transports, codecs, max_width: cv.max_width, max_height: cv.max_height, max_fps: cv.max_fps };
+      out.custom_video = { supported: true, transports, codecs, max_width: cv.max_width, max_height: cv.max_height, max_fps: cv.max_fps, contents: contents(cv.contents) };
   }
   const iv = record(raw.inbound_caller_video);
   if (iv && iv.supported === true) {
     const transports = list(iv.transports, ['whep', 'livekit'] as const);
     if (transports?.length && positive(iv.max_width, 1280) && positive(iv.max_height, 720) && positive(iv.max_fps, 30))
-      out.inbound_caller_video = { supported: true, transports, max_width: iv.max_width, max_height: iv.max_height, max_fps: iv.max_fps };
+      out.inbound_caller_video = { supported: true, transports, max_width: iv.max_width, max_height: iv.max_height, max_fps: iv.max_fps, contents: contents(iv.contents) };
   }
   return out;
 }
