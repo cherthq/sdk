@@ -51,6 +51,8 @@ struct Call {
     Media media;
     std::optional<std::string> line_id, worker_id, assistant_id, terminal_reason;
     Json fields; // Exact additional fields, including media_status and lifecycle evidence.
+    // Read-only screen-control consent state ("none" | "requested" | "granted"); there are no control operations.
+    std::optional<std::string> screen_control;
 };
 struct CallEvent {
     std::string id, type, at, source;
@@ -88,10 +90,18 @@ struct UpdateLine {
 // standard WHIP (RFC 9725) or experimental WHEP client; reuse the bearer on PATCH/DELETE.
 enum class MediaDirection { publish, subscribe };
 enum class VideoCodec { h264, vp8 };
+// What a capability section can carry. `screen` on custom video means an agent can stream a
+// screen (15 fps cap); on inbound caller video it means a `caller_screen` subscription is available.
+enum class MediaContent { camera, screen };
+// What a session carries. Publish: camera (default) or screen (capped at 15 fps). Subscribe:
+// omit for the caller's video, or caller_screen for the caller's shared screen (only while sharing).
+enum class MediaSessionContent { camera, screen, caller_screen };
 struct CreateMediaSession {
     MediaDirection direction = MediaDirection::publish;
     // nullopt omits codecs; otherwise a non-empty ordered unique list.
     std::optional<std::vector<VideoCodec>> codecs;
+    // nullopt omits content; publish allows camera/screen, subscribe allows only caller_screen.
+    std::optional<MediaSessionContent> content = std::nullopt;
 };
 struct IceServer {
     std::vector<std::string> urls;
@@ -107,17 +117,20 @@ struct MediaSessionGrant {
     std::vector<IceServer> ice_servers;
     std::vector<VideoCodec> codecs;
     MediaLimits limits;
+    std::optional<MediaSessionContent> content; // echo of the requested content; nullopt when absent
 };
 struct CustomVideoCapability {
     bool supported = true;
     std::vector<std::string> transports; // "whip" | "livekit"
     std::vector<VideoCodec> codecs;
     int max_width, max_height, max_fps;
+    std::vector<MediaContent> contents{MediaContent::camera}; // what may be published; never empty
 };
 struct InboundCallerVideoCapability {
     bool supported = true;
     std::vector<std::string> transports; // "whep" | "livekit"
     int max_width, max_height, max_fps;
+    std::vector<MediaContent> contents{MediaContent::camera}; // what may be received; never empty
 };
 // Absent sections are unsupported. Never infer support from supports_video.
 struct MediaCapabilities {

@@ -195,8 +195,19 @@ the same `Authorization: Bearer <token>` on the POST and on PATCH/DELETE to the 
 `Location`. No stream operator prints the grant; never log `token`. A malformed grant
 throws `ApiError` with code `invalid_response` (raw data withheld); server codes
 (`unauthorized`, `call_not_found`, `media_capability_unsupported`,
-`media_session_conflict`, `call_not_active`, `call_ended`, `media_session_expired`,
-`media_transport_unavailable`) surface without server text. Requests are never retried.
+`media_session_conflict`, `caller_screen_not_shared`, `call_not_active`, `call_ended`,
+`media_session_expired`, `media_transport_unavailable`) surface without server text.
+Requests are never retried.
+
+Screen sharing: set `content = MediaSessionContent::screen` on a publish request to
+stream an agent's screen (the grant echoes `content` and caps `limits.max_fps` at 15),
+or `MediaSessionContent::caller_screen` on a subscribe request to receive the caller's
+shared screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations throw `std::invalid_argument` before any request. Capability sections
+expose `contents` (`camera`, `screen`; unknown entries ignored, default `camera`).
+`Call::screen_control` is read-only consent state (`none`/`requested`/`granted`); screen
+event types such as `agent_screen_started` are payload-free. There are no control
+operations.
 
 `copy_video_frame` validates a raw i420/nv12/rgba/bgra frame (even sizes from 16x16 to
 1920x1080, per-plane strides, 8 MiB total) and copies only the required bytes so

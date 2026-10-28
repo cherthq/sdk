@@ -45,6 +45,27 @@ ACCEPT = [(["vp8", "h264"], dict(codecs=["h264"])),
 ERRORS = [(401, "unauthorized"), (401, "media_session_expired"), (404, "call_not_found"),
           (409, "media_capability_unsupported"), (409, "media_session_conflict"), (409, "call_not_active"),
           (410, "call_ended"), (503, "media_transport_unavailable"), (418, "internal_detail")]
+SCREEN = {**GRANT, "content": "screen", "limits": {**LIMITS, "max_fps": 15}}
+CALLER_SCREEN = {**GRANT, "direction": "subscribe", "content": "caller_screen",
+                 "limits": {**LIMITS, "max_width": 1280, "max_height": 720}}
+SCREEN_NO_ECHO = {k: v for k, v in SCREEN.items() if k != "content"}
+# (request body, grant) pairs that violate the content contract: screen above 15 fps, missing or
+# different echo, and a non-camera echo on a default request.
+SCREEN_BAD = [(dict(direction="publish", content="screen"), {**SCREEN, "limits": LIMITS}),
+              (dict(direction="publish", content="screen"), SCREEN_NO_ECHO),
+              (dict(direction="publish", content="screen"), {**SCREEN, "content": "camera"}),
+              (dict(direction="publish"), SCREEN),
+              (dict(direction="subscribe"), CALLER_SCREEN)]
+# Named content cases: (expected body, status, envelope).
+SCREEN_CASES = {
+    "screen": (dict(direction="publish", content="screen"), 201, dict(data=SCREEN)),
+    "caller-screen": (dict(direction="subscribe", content="caller_screen"), 201, dict(data=CALLER_SCREEN)),
+    # The backend echoes the resolved camera content on default requests in both directions.
+    "camera-echo-publish": (dict(direction="publish"), 201, dict(data={**GRANT, "content": "camera"})),
+    "camera-echo-subscribe": (dict(direction="subscribe"), 201, dict(data={**CALLER_SCREEN, "content": "camera"})),
+    "not-shared": (dict(direction="subscribe", content="caller_screen"), 409,
+                   dict(error=dict(code="caller_screen_not_shared", message="internal host 10.0.0.5"), request_id="r")),
+}
 requests, errors = [], []
 
 
@@ -80,6 +101,13 @@ class Handler(BaseHTTPRequestHandler):
             elif name.startswith("bad-"):
                 direction, status, envelope = BAD[int(name[4:])]
                 assert body == dict(direction=direction), body
+            elif name in SCREEN_CASES:
+                expected, status, envelope = SCREEN_CASES[name]
+                assert body == expected, body
+            elif name.startswith("screen-bad-"):
+                expected, data = SCREEN_BAD[int(name[11:])]
+                assert body == expected, body
+                envelope = dict(data=data)
             elif name.startswith("error-"):
                 status, code = ERRORS[int(name[6:])]
                 envelope = dict(error=dict(code=code, message="internal host 192.0.2.5"), request_id="r")
@@ -104,9 +132,10 @@ class Handler(BaseHTTPRequestHandler):
 with ThreadingHTTPServer(("127.0.0.1", 0), Handler) as server:
     threading.Thread(target=server.serve_forever, daemon=True).start()
     origin = f"http://127.0.0.1:{server.server_port}"
-    result = subprocess.run([sys.argv[1], origin, str(len(BAD)), str(len(ERRORS)), str(len(ACCEPT))], timeout=60)
+    result = subprocess.run([sys.argv[1], origin, str(len(BAD)), str(len(ERRORS)), str(len(ACCEPT)), str(len(SCREEN_BAD))],
+                            timeout=60)
     server.shutdown()
 assert not errors, errors
 assert result.returncode == 0, result.returncode
 # Local validation never reaches the network: exactly one request per remote case.
-assert len(requests) == 4 + len(BAD) + len(ERRORS) + len(ACCEPT), requests
+assert len(requests) == 4 + len(BAD) + len(ERRORS) + len(ACCEPT) + len(SCREEN_CASES) + len(SCREEN_BAD), requests
