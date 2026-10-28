@@ -127,7 +127,8 @@ class ChertControlPlane:
         except (ValueError, UnicodeError, RecursionError):
             pass
         if not isinstance(envelope, dict):
-            raise ChertControlPlaneError(status, 'invalid_response')
+            # A non-JSON 404 means the backend does not serve this route (e.g. an undeployed draft surface).
+            raise ChertControlPlaneError(status, 'endpoint_unavailable' if status == 404 else 'invalid_response')
         if not 200 <= status < 300:
             error = envelope.get('error')
             code = error.get('code') if isinstance(error, dict) else None

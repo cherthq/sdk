@@ -111,7 +111,10 @@ export class ChertControlPlane {
       while(true){const part=await reader.read();if(part.done)break;length+=part.value.byteLength;if(length>1_048_576){await reader.cancel();throw new Error();}chunks.push(part.value);}
       const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
       envelope=JSON.parse(new TextDecoder().decode(bytes));
-    }catch{throw new ChertApiError(response.status,'invalid_response');}
+    }catch{
+      // A non-JSON 404 means the backend does not serve this route (for example a draft surface it has not deployed).
+      throw new ChertApiError(response.status,response.status===404?'endpoint_unavailable':'invalid_response');
+    }
     if(!envelope||typeof envelope!=='object')throw new ChertApiError(response.status,'invalid_response');
     if(!response.ok){const error=(envelope as {error?:unknown}).error;const code=error&&typeof error==='object'?(error as {code?:unknown}).code:undefined;throw new ChertApiError(response.status,typeof code==='string'&&safeCodes.has(code)?code:'request_failed');}
     if(!Object.hasOwn(envelope,'data'))throw new ChertApiError(response.status,'invalid_response');
