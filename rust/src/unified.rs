@@ -143,7 +143,7 @@ impl ChertSdk {
                 options.limits.timeout,
                 options.limits.max_response_bytes,
             )?;
-            let url = reqwest::Url::parse(base)
+            let url = url::Url::parse(base)
                 .map_err(|_| ChertError::new(None, "invalid_configuration"))?;
             if url.path() != "/" {
                 return Err(ChertError::new(None, "invalid_configuration"));
@@ -153,20 +153,23 @@ impl ChertSdk {
         let imessage = origin(options.imessage_base_url)?;
         let facetime = origin(options.facetime_base_url)?;
         let unsupported = || ChertError::new(None, "unsupported_unified_backend");
-        let discovery = reqwest::Client::builder()
-            .timeout(options.limits.timeout.min(Duration::from_secs(15)))
-            .no_proxy()
-            .redirect(reqwest::redirect::Policy::none())
-            .retry(reqwest::retry::never())
-            .build()
+        let discovery = crate::backend::Http::new(
+            http::HeaderMap::new(),
+            options.limits.timeout.min(Duration::from_secs(15)),
+        )
+        .map_err(|_| unsupported())?;
+        let mut accept = http::HeaderMap::new();
+        accept.insert(
+            http::header::ACCEPT,
+            http::HeaderValue::from_static("application/json"),
+        );
+        let capabilities = url::Url::parse(&format!("{imessage}/api/v1/sdk/capabilities"))
             .map_err(|_| unsupported())?;
         let mut response = discovery
-            .get(format!("{imessage}/api/v1/sdk/capabilities"))
-            .header("accept", "application/json")
-            .send()
+            .send(http::Method::GET, capabilities, accept, None)
             .await
             .map_err(|_| unsupported())?;
-        if !response.status().is_success() {
+        if !(200..300).contains(&response.status()) {
             return Err(unsupported());
         }
         let mut bytes = Vec::new();

@@ -1,4 +1,5 @@
 #![doc = include_str!("../README.md")]
+mod backend;
 pub mod events;
 pub mod facetime;
 mod unified;
@@ -9,13 +10,14 @@ pub use unified::{
 /// Explicit name for the messaging client; `ChertClient` remains its compatibility name.
 pub type IMessageClient = ChertClient;
 
-use reqwest::{
+use http::{
     header::{HeaderMap, HeaderValue, ACCEPT, AUTHORIZATION},
-    Method, Url,
+    Method,
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::{fmt, time::Duration};
+use url::Url;
 
 /// Raw response metadata is explicit opt-in data; formatting never exposes it.
 pub struct ChertError {
@@ -54,7 +56,7 @@ impl std::error::Error for ChertError {}
 #[derive(Clone)]
 pub struct ChertClient {
     base: Url,
-    http: reqwest::Client,
+    http: backend::Http,
     max_response_bytes: usize,
     unified_contract: bool,
 }
@@ -206,7 +208,7 @@ impl ChertClient {
         if !clean(base)
             || base.contains('\\')
             || timeout.is_zero()
-            || std::time::Instant::now().checked_add(timeout).is_none()
+            || !backend::timeout_ok(timeout)
             || max_response_bytes == 0
             || api_key.trim().is_empty()
             || api_key.chars().any(char::is_control)
@@ -247,14 +249,7 @@ impl ChertClient {
         if let Some((name, value)) = scope {
             headers.insert(name, HeaderValue::from_str(value).map_err(|_| invalid())?);
         }
-        let http = reqwest::Client::builder()
-            .default_headers(headers)
-            .timeout(timeout)
-            .redirect(reqwest::redirect::Policy::none())
-            .retry(reqwest::retry::never())
-            .no_proxy()
-            .build()
-            .map_err(|_| invalid())?;
+        let http = backend::Http::new(headers, timeout).map_err(|_| invalid())?;
         Ok(Self {
             base: url,
             http,
@@ -262,18 +257,17 @@ impl ChertClient {
             unified_contract: false,
         })
     }
-    fn guard_request(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+    fn guard_request(&self, headers: &mut HeaderMap) {
         if self.unified_contract {
-            request.header("x-chert-contract", unified::CONTRACT)
-        } else {
-            request
+            headers.insert(
+                "x-chert-contract",
+                HeaderValue::from_static(unified::CONTRACT),
+            );
         }
     }
-    fn check_contract(&self, response: &reqwest::Response) -> Result<(), ChertError> {
-        let mut echoes = response.headers().get_all("x-chert-contract").iter();
+    fn check_contract(&self, response: &backend::Reply) -> Result<(), ChertError> {
         if self.unified_contract
-            && (echoes.next().and_then(|v| v.to_str().ok()) != Some(unified::CONTRACT)
-                || echoes.next().is_some())
+            && response.single_header("x-chert-contract").as_deref() != Some(unified::CONTRACT)
         {
             return Err(ChertError::new(None, "unsupported_unified_backend"));
         }
@@ -462,31 +456,26 @@ impl ChertClient {
         if url.origin() != self.base.origin() || !url.path().starts_with(self.base.path()) {
             return Err(ChertError::new(None, "invalid_path"));
         }
-        let mut request = self.guard_request(self.http.request(method, url));
-        if let Some(body) = body {
-            request = request.json(body);
-        }
+        let mut headers = HeaderMap::new();
+        self.guard_request(&mut headers);
         if let Some(key) = idempotency_key {
             let mut header = HeaderValue::from_str(key)
                 .map_err(|_| ChertError::new(None, "invalid_reaction_request"))?;
             header.set_sensitive(true);
-            request = request.header("idempotency-key", header);
+            headers.insert("idempotency-key", header);
         }
-        let mut response = request
-            .send()
+        let mut response = self
+            .http
+            .send(method, url, headers, body)
             .await
             .map_err(|_| ChertError::new(None, "outcome_unknown"))?;
         self.check_contract(&response)?;
         let status = response.status();
-        let request_id = response
-            .headers()
-            .get("x-trace-id")
-            .or_else(|| response.headers().get("x-request-id"))
-            .and_then(|v| v.to_str().ok())
-            .map(str::to_owned);
+        let success = (200..300).contains(&status);
+        let request_id = response.request_id();
         let failure = |code: &str, data: Option<Value>| ChertError {
             status: Some(
-                if status.is_success()
+                if success
                     && matches!(
                         code,
                         "invalid_response" | "invalid_response_type" | "response_too_large"
@@ -494,14 +483,14 @@ impl ChertClient {
                 {
                     502
                 } else {
-                    status.as_u16()
+                    status
                 },
             ),
             code: code.into(),
             request_id: request_id.clone(),
             data,
         };
-        if status.as_u16() == 204 {
+        if status == 204 {
             return Ok(JsonResponse {
                 status: 204,
                 request_id,
@@ -521,7 +510,7 @@ impl ChertClient {
         }
         let value: Value =
             serde_json::from_slice(&bytes).map_err(|_| failure("invalid_response", None))?;
-        if !status.is_success() || value.get("success") == Some(&Value::Bool(false)) {
+        if !success || value.get("success") == Some(&Value::Bool(false)) {
             let error = value
                 .get("error")
                 .filter(|v| v.is_object())
@@ -532,21 +521,17 @@ impl ChertClient {
                 _ => "request_failed".into(),
             };
             return Err(ChertError {
-                status: Some(if status.is_success() {
-                    502
-                } else {
-                    status.as_u16()
-                }),
+                status: Some(if success { 502 } else { status }),
                 code,
                 request_id,
                 data: Some(value),
             });
         }
         Ok(JsonResponse {
-            status: status.as_u16(),
+            status,
             request_id,
             value,
         })
     }
 }
-pub use reqwest::Method as HttpMethod;
+pub use http::Method as HttpMethod;
