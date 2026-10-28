@@ -67,11 +67,13 @@ describe('safe failures',()=>{
   expect(await client.purchase({plan:'shared'},'buy-key-01')).toEqual({status:'active',entitlement:entitlement as never});
   reply={status:'requires_action',url:'https://hooks.stripe.com/3d_secure_2/authenticate/x'};
   expect(await client.changePlan({plan:'dedicated'},'switch-key-1')).toEqual({status:'requires_action',url:'https://hooks.stripe.com/3d_secure_2/authenticate/x'});
+  reply={status:'pending',url:'https://ignored.example/'};
+  expect(await client.purchase({plan:'shared'},'buy-key-01')).toEqual({status:'pending'});   // retry with the same key
   reply={status:'requires_payment_method',url:'https://checkout.stripe.com/c/pay/cs_x'};
   expect((await client.paymentMethodSetup('card-key-01')).url).toBe('https://checkout.stripe.com/c/pay/cs_x');
-  expect(seen).toEqual([{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'change_plan',plan:'dedicated'},key:'switch-key-1'},{body:{action:'payment_method'},key:'card-key-01'}]);
+  expect(seen).toEqual([{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'change_plan',plan:'dedicated'},key:'switch-key-1'},{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'payment_method'},key:'card-key-01'}]);
   for(const bad of [{status:'requires_action',url:'http://hooks.stripe.com/x'},{status:'requires_action',url:'https://stripe.com.evil.example/x'},{status:'requires_action',url:'https://u:p@checkout.stripe.com/x'},
-    {status:'requires_payment_method'},{status:'active'},{status:'active',entitlement:{plan:'gold'}},{status:'pending'},null]){
+    {status:'requires_payment_method'},{status:'active'},{status:'active',entitlement:{plan:'gold'}},{status:'processing'},null]){
     reply=bad;await expect(client.purchase({plan:'shared'},'buy-key-02')).rejects.toMatchObject({code:'invalid_response'});
   }
   reply={status:'active',entitlement};await expect(client.paymentMethodSetup('card-key-02')).rejects.toMatchObject({code:'invalid_response'});

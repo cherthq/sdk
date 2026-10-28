@@ -316,6 +316,8 @@ def _billing_result(value: Any) -> BillingResult:
         if not isinstance(entitlement, dict) or entitlement.get('plan') not in ('shared', 'dedicated'):
             raise bad
         return {'status': 'active', 'entitlement': entitlement}
+    if status == 'pending':
+        return {'status': 'pending'}
     if status not in ('requires_payment_method', 'requires_action') or not isinstance(value.get('url'), str):
         raise bad
     try:

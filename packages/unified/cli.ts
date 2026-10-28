@@ -32,7 +32,8 @@ FaceTime commands inspect existing access/lines; no calls, media relay,
 concierge onboarding or automatic shared-line allocation is implemented.
 Billing (draft backend contract) uses CHERT_FACETIME_TOKEN with the billing scope.
 buy/switch charge the saved card; when a card or authentication is needed the
-output carries a Stripe-hosted url to open, then rerun billing status.
+output carries a Stripe-hosted url to open, then rerun billing status. A pending
+status means rerun the same command with the same idempotency key.
 Use --help on any channel without credentials. iMessage send requires an
 explicit --confirm and a caller-supplied stable idempotency key. Output is JSON.`;
 

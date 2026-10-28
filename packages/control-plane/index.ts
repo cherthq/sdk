@@ -30,6 +30,7 @@ const invalidGrant = () => new ChertApiError(201, 'invalid_response');
 function checkBillingResult(r:BillingResult):BillingResult{
   const bad=()=>new ChertApiError(200,'invalid_response');
   if(r?.status==='active'){if(!r.entitlement||typeof r.entitlement!=='object'||!['shared','dedicated'].includes(r.entitlement.plan))throw bad();return {status:'active',entitlement:r.entitlement};}
+  if(r?.status==='pending')return {status:'pending'};
   if(r?.status!=='requires_payment_method'&&r?.status!=='requires_action')throw bad();
   let url:URL;try{url=new URL(r.url);}catch{throw bad();}
   if(url.protocol!=='https:'||url.username||url.password||!(url.hostname==='stripe.com'||url.hostname.endsWith('.stripe.com')))throw bad();
@@ -86,9 +87,10 @@ export interface BillingStatus {entitlement:BillingEntitlement|null;needs_reconc
 /**
  * Outcome of a terminal purchase or plan change. `active` needs nothing more. `requires_payment_method` and
  * `requires_action` carry a short-lived Stripe-hosted URL (card entry or authentication): open it, then refresh
- * `billingStatus()`. Card entry is never collected by the SDK.
+ * `billingStatus()`. `pending` means the payment provider accepted the operation but the entitlement is not committed
+ * yet: retry with the same idempotency key until `active`. Card entry is never collected by the SDK.
  */
-export type BillingResult = {status:'active';entitlement:BillingEntitlement} | {status:'requires_payment_method'|'requires_action';url:string};
+export type BillingResult = {status:'active';entitlement:BillingEntitlement} | {status:'pending'} | {status:'requires_payment_method'|'requires_action';url:string};
 export interface Checkout {url:string}
 export interface CheckoutInput {plan:BillingPlan;coupon_code?:string}
 export interface BillingCancellation {status:'cancellation_requested';message:string}

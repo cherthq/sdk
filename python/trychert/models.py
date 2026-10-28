@@ -128,8 +128,11 @@ class BillingStatus(TypedDict):
 
 
 class BillingResult(TypedDict, total=False):
-    """`active` carries the entitlement; `requires_payment_method`/`requires_action` carry a Stripe-hosted URL."""
-    status: Literal["active", "requires_payment_method", "requires_action"]
+    """`active` carries the entitlement; `requires_payment_method`/`requires_action` carry a Stripe-hosted URL.
+
+    `pending`: the provider accepted the operation but the entitlement is not committed yet; retry with the same key.
+    """
+    status: Literal["active", "pending", "requires_payment_method", "requires_action"]
     entitlement: dict[str, Json]
     url: str
 
