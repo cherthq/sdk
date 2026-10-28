@@ -254,6 +254,44 @@ guaranteed to arrive, and the SDK does not promise any bitrate. Caller video is
 capped at 1280×720 and 30 fps. These APIs require a backend that reports these
 capabilities, and they are not in any published package version yet.
 
+### Screen sharing (draft, unreleased)
+
+Screen sharing uses the same media sessions and WHIP/WHEP signaling as custom
+video. There is no second transport.
+
+- **Agent screen into the call.** `createMediaSession(callId, { direction:
+  'publish', content: 'screen' })` mints a WHIP session whose grant echoes
+  `content: 'screen'` and caps `limits.max_fps` at 15. `startScreenStream(client,
+  callId, { width, height, createTransport })` checks the capability, mints the
+  grant and starts a `ChertVideoSource` at no more than the grant's fps. Give the
+  WebRTC track `contentHint = 'detail'`. Stopping sends the WHIP `DELETE`.
+- **One publish slot per call.** Camera video, a screen and a living surface are
+  mutually exclusive. A second active publish fails with `media_session_conflict`
+  (`session_conflict` from signaling).
+- **Agent tools.** `SCREEN_SHARE_TOOLS` defines `share_screen` and
+  `stop_screen_share` with JSON Schema parameters, usable as MCP `inputSchema` or
+  a function tool. `new ScreenShareController(() => startScreenStream(...))`
+  runs them: one stream at a time, repeated starts reuse it, stop is idempotent,
+  and results carry only stable codes.
+- **Caller's shared screen as context.** `createMediaSession(callId, { direction:
+  'subscribe', content: 'caller_screen' })` returns a WHEP session for the
+  caller's shared screen as its own track, never composited into caller video.
+  It is issued only while the caller is sharing; otherwise it fails with
+  `409 caller_screen_not_shared`.
+- **Capabilities.** `custom_video.contents` lists `screen` when an agent may
+  stream a screen; `inbound_caller_video.contents` lists `screen` when the
+  caller's shared screen is available as a separate track. Absent means camera
+  only. A line whose FaceTime source cannot provide a separate screen track does
+  not advertise it.
+- **Events and consent.** Call events `agent_screen_started`,
+  `agent_screen_stopped`, `caller_screen_share_started`,
+  `caller_screen_share_ended`, `screen_control_granted` and
+  `screen_control_revoked` carry no payload. `call.screen_control` (`none`,
+  `requested`, `granted`) is read-only consent state. The public API has no
+  screen-control operations.
+
+See [`packages/media/examples/screen-share.ts`](packages/media/examples/screen-share.ts).
+
 ### iMessage events and webhooks (source preview)
 
 The 0.2.0 preview adds `listEvents`, `getEvent`, `streamEvents`, and
