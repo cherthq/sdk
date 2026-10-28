@@ -180,3 +180,15 @@ test('living session responses must carry a valid effective viewport and fps', a
   session = { ...session, status: 'live' };
   expect((await client.getLivingSession('call', 'ls')).viewport).toEqual({ width: 1280, height: 720 });
 });
+
+test('living error codes survive sanitization without server text; unknown living_ codes do not', async () => {
+  let reply = () => Response.json({});
+  const client = new ChertControlPlane({ token: 'k', projectId: 'p', fetch: (async () => reply()) as unknown as typeof fetch });
+  for (const [status, code] of [[409, 'living_surface_conflict'], [409, 'living_state_conflict'], [409, 'living_capability_unsupported'],
+    [409, 'living_deployment_not_ready'], [422, 'living_input_not_allowed'], [404, 'living_session_not_found'], [418, 'living_secret_route']] as const) {
+    reply = () => Response.json({ error: { code, message: 'internal host 192.0.2.5' } }, { status });
+    const error = await client.setLivingState('call', 'ls', 1, null).catch(e => e);
+    expect([error.status, error.code, error.message.includes('192.0.2.5')])
+      .toEqual([status, code === 'living_secret_route' ? 'request_failed' : code, false]);
+  }
+});

@@ -270,9 +270,11 @@ through the API. Everything the page renders is visible to the caller.
   Viewport sizes are even, up to 1920×1080; fps is 1–30. `input` is any of
   `pointer`, `keyboard` and `text`.
 - `attachLivingService(callId, { deployment_id, initial_state, viewport?, fps? }, idempotencyKey)`
-  returns the effective viewport and fps, which are min(requested, manifest, call limits). If you already hold a publish media
-  session on that call, it fails with `living_surface_conflict`. While a surface is
-  attached, `createMediaSession(publish)` fails with `media_session_conflict`.
+  returns the effective viewport and fps, which are min(requested, manifest, grant limits).
+  A living surface uses the call's single publish slot, shared with custom camera
+  video and screen sharing. If another publish is active on that call, attach fails
+  with `living_surface_conflict`. While a surface is attached,
+  `createMediaSession(publish)` fails with `media_session_conflict`.
 - `getLivingSession` returns lifecycle and health: `starting | ready | live |
   stopping | stopped | failed`, plus a sanitized `error_code`.
 - `setLivingState` takes revisions that must strictly increase (stale:

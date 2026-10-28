@@ -28,13 +28,13 @@ export interface LivingDeployment {
 }
 export interface AttachLivingService {
   deployment_id: string; initial_state?: LivingJson;
-  /** Optional request; the effective value is min(requested, manifest, call limits). */
+  /** Optional request; the effective value is min(requested, manifest, grant limits). */
   viewport?: LivingViewport; fps?: number;
 }
 export type LivingSessionStatus = 'starting' | 'ready' | 'live' | 'stopping' | 'stopped' | 'failed';
 export interface LivingSession {
   session_id: string; call_id: string; deployment_id: string; status: LivingSessionStatus;
-  /** Effective values: min(requested, manifest, call limits), even and aspect-preserving. */
+  /** Effective values: min(requested, manifest, grant limits), even and aspect-preserving. */
   viewport: LivingViewport; fps: number;
   ready_at: string | null; last_heartbeat_at: string | null; error_code: string | null; [key: string]: unknown;
 }
