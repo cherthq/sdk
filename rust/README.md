@@ -323,11 +323,12 @@ delivered. Invalid streams fail with sanitized errors. Return `ControlFlow::Brea
 or drop the consumption future to release resources; callbacks must not block.
 An EOF does not establish delivery or durable resume position.
 
-No webhook signature verifier is included: existing direct dependencies do not
-provide an HMAC API and no crypto dependency was added. Before parsing webhook
-JSON, use a vetted HMAC-SHA256 implementation to verify `v1,timestamp,hex` against
-the exact `timestamp + "." + raw_body` bytes, with constant-time verification and
-a timestamp within ±300 seconds. Reject malformed signatures and empty secrets.
+Verify webhook deliveries before parsing JSON. `webhook::verify_messaging_signature`
+accepts `v1,timestamp,hex` or `t=timestamp,v1=hex`, checks HMAC-SHA256 over the exact
+`timestamp + "." + raw_body` bytes in constant time, and requires the timestamp within
+±300 seconds of the `now_unix_secs` you pass. `webhook::verify_facetime_signature`
+checks `sha256=hex` over the raw body; that scheme has no timestamp, so deduplicate on
+`event_id`. Malformed signatures and empty secrets are rejected. No replay store is implied.
 
 FaceTime `call_events` and `transcript` remain HTTP snapshots. Live call media and
 realtime room events belong to LiveKit, not this iMessage SSE stream; this crate

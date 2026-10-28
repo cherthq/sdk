@@ -2,6 +2,7 @@
 pub mod events;
 pub mod facetime;
 mod unified;
+pub mod webhook;
 pub use unified::{
     ChertSdk, FaceTimeConfig, IMessageConfig, TransportLimits, UnifiedSessionOptions,
 };
