@@ -222,6 +222,10 @@ that a connector is provisioned or a call succeeded.
 
 ## Custom video sessions (v1, video-only; source preview, unreleased)
 
+Until the hosted backend serves these routes, `create_media_session` fails with
+`ChertControlPlaneError` status 404, code `endpoint_unavailable`. Check
+`media_capabilities` first.
+
 Lines, calls and line/call-scoped workers may report `media_capabilities`. Parse it
 with `parse_media_capabilities(...)`; absent, malformed or unknown-version input is
 unsupported (`custom_video` and `inbound_caller_video` are `None`). Support is never
