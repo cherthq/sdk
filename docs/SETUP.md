@@ -28,11 +28,13 @@ npm install @trychert/sdk
 # or: bun add @trychert/sdk
 ```
 
-Python 3.10+:
+Python 3.10+. Install into a virtual environment: system and Homebrew Pythons
+refuse a global `pip install` (PEP 668), and macOS has `python3` but no `python`.
 
 ```sh
+python3 -m venv .venv && . .venv/bin/activate
 python -m pip install chert-sdk
-# or: uv add chert-sdk
+# or, in a uv project: uv add chert-sdk
 ```
 
 Rust, .NET, C++ and Go clients are source previews; build them from this
@@ -44,10 +46,20 @@ Credentials are per service and are not interchangeable.
 
 | Variable | Service | Where it comes from |
 | --- | --- | --- |
-| `CHERT_API_KEY` | iMessage | Your Chert messaging console |
-| `CHERT_TENANT` | iMessage, optional | Your messaging console, when your account has tenants |
-| `CHERT_FACETIME_TOKEN` | FaceTime | A project token from your Chert FaceTime project |
-| `CHERT_PROJECT_ID` | FaceTime (required), iMessage (context only) | The project UUID shown with your FaceTime project |
+| `CHERT_API_KEY` | iMessage | Your messaging console at https://console.trychert.com |
+| `CHERT_TENANT` | iMessage, optional | The same console, when your account has tenants |
+| `CHERT_FACETIME_TOKEN` | FaceTime | A project API key (`ftk_…`): sign in at https://facetime.trychert.com, open **Developer**, then **Project API keys** → **Create API key** (project owners and admins). The key is shown once. |
+| `CHERT_PROJECT_ID` | FaceTime (required), iMessage (context only) | Your project UUID. The dashboard does not display it yet: install the agent CLI (`npm install -g @trychert/facetime@beta`), run `chert login`, then `chert whoami --json` and copy `project_id`. |
+
+Both credentials need an account with Chert. A browser is required once, to
+sign in and create the key; nothing in this guide can create an account or a key
+from the terminal.
+
+A project API key works for lines, workers, calls and assistants within the
+scopes you give it. It is not a person, so it cannot read a signed-in identity:
+with a key, `chert-sdk facetime status` stops with `status_requires_cli_login`
+and `chert-sdk context` reports `requires_cli_login` for identity. Use
+`chert-sdk facetime lines`, or `chert whoami` from the agent CLI, instead.
 
 Keep these out of source control and logs. Defaults are
 `https://console.trychert.com` (iMessage) and `https://facetime.trychert.com`
@@ -65,12 +77,32 @@ npx --package=@trychert/sdk chert-sdk context
 # or: bunx --package @trychert/sdk chert-sdk context
 ```
 
+This works before you have any credentials: `missing` lists what is not set yet.
 `context` prints JSON and exits 0 even when an account lookup fails (that
 lookup reports an error code instead). It includes the SDK version, which variables are set (never their
 values), your FaceTime identity and lines when a token and project are set, and
 links to these docs. Add `--offline` to skip every request.
 
 ## 4. First requests
+
+Each service has its own client; use only the ones you have credentials for.
+Save the TypeScript as `first.ts` and run it with `bun first.ts`, `node first.ts`
+(Node 22.18+ runs TypeScript directly; run `npm pkg set type=module` once to
+silence its module-type warning) or `deno run --allow-env --allow-net first.ts`.
+
+FaceTime only:
+
+```ts
+import { ChertControlPlane } from '@trychert/sdk/facetime';
+
+const facetime = new ChertControlPlane({
+  token: process.env.CHERT_FACETIME_TOKEN!,
+  projectId: process.env.CHERT_PROJECT_ID!,
+});
+console.log(await facetime.listLines()); // Read-only: your assigned lines.
+```
+
+Both services, through one object (`ChertSDK` requires both credentials):
 
 ```ts
 import { ChertSDK } from '@trychert/sdk';
@@ -80,22 +112,21 @@ const sdk = new ChertSDK({
   imessage: { apiKey: process.env.CHERT_API_KEY! },
   facetime: { token: process.env.CHERT_FACETIME_TOKEN! },
 });
-
-const lines = await sdk.facetime.listLines(); // Read-only: your assigned lines.
+console.log(await sdk.facetime.listLines());
 // Send only to recipients who agreed to hear from you:
 // await sdk.imessage.sendText({ phone: '+15555550123', body: 'Hello' });
 ```
 
+Python (pass only the services you use):
+
 ```python
 import os
-from trychert import Chert, IMessageConfig, FaceTimeConfig
+from trychert import Chert, FaceTimeConfig
 
-sdk = Chert(
-    imessage=IMessageConfig(api_key=os.environ["CHERT_API_KEY"]),
-    facetime=FaceTimeConfig(token=os.environ["CHERT_FACETIME_TOKEN"],
-                            project_id=os.environ["CHERT_PROJECT_ID"]),
-)
-identity = sdk.facetime.whoami()
+sdk = Chert(facetime=FaceTimeConfig(token=os.environ["CHERT_FACETIME_TOKEN"],
+                                    project_id=os.environ["CHERT_PROJECT_ID"]))
+print(sdk.facetime.list_lines())
+# Add imessage=IMessageConfig(api_key=os.environ["CHERT_API_KEY"]) for iMessage.
 ```
 
 From the terminal:
@@ -118,9 +149,11 @@ retry cannot send twice. A queued receipt means accepted, not delivered or read.
   gets shared access, and when, is decided by Chert, not by the SDK. The SDK can
   show an assigned shared line but does not allocate one.
 
-The SDK can read `billingStatus()` and start a checkout (`createCheckout`) with a
-signed-in user session, but it does not allocate lines. `chert-sdk` commands only
-inspect access. The `chert` agent CLI's `chert dev` claims your project's line
+**Buying a plan or a line cannot be done from this guide.** Billing needs a
+signed-in browser session: buy on the Billing page at https://facetime.trychert.com,
+where checkout opens a Stripe-hosted page. `billingStatus()` and `createCheckout`
+accept only that browser session's token, not a project API key or a CLI login,
+and the SDK does not allocate lines. `chert-sdk` commands only inspect access. The `chert` agent CLI's `chert dev` claims your project's line
 while it runs and can end at a time slot you set.
 
 ## Voice and video
@@ -143,8 +176,10 @@ LiveKit. Custom video sources over WHIP/WHEP (`@trychert/sdk/media`: frame
 validation, a bounded video source and signaling for your own WebRTC peer
 connection), web frontends rendered as call video, and screen sharing (an agent
 streaming its screen into a call, and receiving the caller's shared screen) are
-in draft and not released: they are in the source tree but not in any published
-package ([#17](https://github.com/cherthq/sdk/pull/17),
+unreleased drafts. Their code ships in `@trychert/sdk` 0.2.2, but the hosted
+backend does not serve them yet: calls fail with `404 endpoint_unavailable`, so
+do not build on them
+([#17](https://github.com/cherthq/sdk/pull/17),
 [#18](https://github.com/cherthq/sdk/pull/18),
 [#25](https://github.com/cherthq/sdk/pull/25)).
 
@@ -155,6 +190,7 @@ Use the `chert` CLI from `@trychert/facetime` (currently a beta):
 ```sh
 npm install -g @trychert/facetime@beta
 chert login              # browser sign-in; chert login --device on a remote shell
+chert whoami --json      # shows your project_id
 chert new my-agent       # or --video for the video starter
 # fill my-agent/.env.local with your LiveKit values and model key, then start the agent
 chert doctor             # checks sign-in, LiveKit keys and line access

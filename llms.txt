@@ -10,7 +10,8 @@ Rules for coding agents:
 - Nothing retries automatically. A queued receipt is not delivery; an accepted call is not a connected call. Reconcile before retrying.
 - The SDK does not allocate lines. It can read billing status and start a checkout only with a signed-in user session and explicit user intent.
 - FaceTime calls can carry audio and video (calls can also be audio-only). Video needs a line with `supports_video`, a FaceTime Video call, and an agent that publishes a camera track.
-- Custom video (WHIP/WHEP), living services and screen sharing are unreleased drafts (PRs #17, #18, #25); do not use them from a published package.
+- Custom video (WHIP/WHEP), living services and screen sharing are unreleased drafts (PRs #17, #18, #25). Their code ships in 0.2.2, but the hosted backend does not serve them yet (`404 endpoint_unavailable`); do not build on them.
+- Credentials need a browser once: a FaceTime project API key comes from the dashboard's Developer tab, the project UUID from `chert whoami --json`, and billing only works in the browser.
 - `chert-sdk` has no `login`, `onboard`, `new` or `dev` command; those belong to the `chert` CLI from `@trychert/facetime`.
 
 ## Docs

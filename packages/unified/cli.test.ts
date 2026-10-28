@@ -121,3 +121,34 @@ test('context reports account and docs context without exposing credential value
     expect(bare.json.account.facetime).toBe('not_configured');
   } finally { server.stop(true); }
 }, 20_000);
+
+test('setup walkthrough: iMessage needs no project ID, and project API keys get a clear identity answer', async () => {
+  const paths: string[] = [];
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
+    const path = new URL(request.url).pathname; paths.push(path);
+    if (path === '/api/v1/lines') return Response.json({ data: { items: [], total: 0, limit: 50, offset: 0 } });
+    if (path.startsWith('/api/v1/text-operations')) return Response.json({ success: true, message_id: 'a'.repeat(32), chat_id: 'test_chat', status: 'queued' }, { status: 202 });
+    return Response.json({ error: { code: 'unauthorized' } }, { status: 401 });
+  } });
+  const cli = resolve(import.meta.dir, '../../dist/unified/cli.js');
+  const run = async (args: string[], env: Record<string, string>) => {
+    const child = Bun.spawn(['node', cli, ...args], { env: { PATH: process.env.PATH!, ...env }, stdout: 'pipe', stderr: 'pipe' });
+    const [code, out, err] = [await child.exited, await new Response(child.stdout).text(), await new Response(child.stderr).text()];
+    return { code, json: JSON.parse(out || err) };
+  };
+  try {
+    const sent = await run(['imessage', 'send', '--phone', '+61412345678', '--body', 'hi', '--idempotency-key', 'stable-key', '--confirm'], { CHERT_BASE_URL: server.url.origin, CHERT_API_KEY: 'imessage-key' });
+    expect([sent.code, sent.json.projectId]).toEqual([0, null]);
+    const ft = { CHERT_PROJECT_ID: '22000000-0000-4000-8000-000000000002', CHERT_FACETIME_TOKEN: 'ftk_project_api_key', CHERT_FACETIME_URL: server.url.origin };
+    paths.length = 0;
+    const status = await run(['facetime', 'status'], ft);
+    expect([status.code, status.json.code]).toEqual([1, 'status_requires_cli_login']);
+    expect(paths).toEqual([]);
+    const lines = await run(['facetime', 'lines'], ft);
+    expect([lines.code, lines.json.data.total]).toEqual([0, 0]);
+    const context = await run(['context'], ft);
+    expect(context.json.account.facetime.identity).toEqual({ error: 'requires_cli_login' });
+    expect(context.json.account.facetime.lines.data.total).toBe(0);
+    expect(paths).not.toContain('/api/v1/cli/whoami');
+  } finally { server.stop(true); }
+}, 30_000);
