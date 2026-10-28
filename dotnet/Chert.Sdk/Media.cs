@@ -7,6 +7,15 @@ namespace TryChert;
 public enum MediaDirection { Publish, Subscribe }
 /// <summary>v1 custom-video codecs. H.264 uses Annex B byte streams.</summary>
 public enum VideoCodec { H264, Vp8 }
+/// <summary>What a capability section can carry. <c>Screen</c> on custom video means an agent can stream a screen (15 fps cap);
+/// on inbound caller video it means the caller's shared screen is available as a <c>CallerScreen</c> subscription.</summary>
+public enum MediaContent { Camera, Screen }
+/// <summary>
+/// What a session carries. Publish: <c>Camera</c> (default) or <c>Screen</c> (an agent's screen, capped at 15 fps).
+/// Subscribe: omit for the caller's video, or <c>CallerScreen</c> for the caller's shared screen (only while sharing).
+/// A call has one publish slot (<c>media_session_conflict</c>).
+/// </summary>
+public enum MediaSessionContent { Camera, Screen, CallerScreen }
 
 public sealed record MediaLimits(int MaxWidth, int MaxHeight, int MaxFps, int MaxFrameBytes);
 
@@ -36,7 +45,14 @@ public sealed class MediaSessionGrant
     public required IReadOnlyList<MediaIceServer> IceServers { get; init; }
     public required IReadOnlyList<VideoCodec> Codecs { get; init; }
     public required MediaLimits Limits { get; init; }
+    /// <summary>Echo of the requested content; null on grants for the default content.</summary>
+    public MediaSessionContent? Content { get; init; }
     public override string ToString() => "MediaSessionGrant { redacted }";
+    internal static string Wire(MediaSessionContent content) => content switch
+    {
+        MediaSessionContent.Camera => "camera", MediaSessionContent.Screen => "screen", MediaSessionContent.CallerScreen => "caller_screen",
+        _ => throw new ArgumentOutOfRangeException(nameof(content))
+    };
 
     // Case-insensitive T/Z as in the reference SDK.
     private static readonly Regex Rfc3339 = new(@"\A([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})\z",
@@ -59,9 +75,16 @@ public sealed class MediaSessionGrant
         return uri.Scheme == "https" || (uri.Scheme == "http" && uri.Host is "localhost" or "127.0.0.1" or "[::1]");
     }
     /// <summary>Throws <see cref="JsonException"/> for any contract violation.</summary>
-    internal static MediaSessionGrant Parse(JsonElement grant, MediaDirection direction, IReadOnlyList<VideoCodec>? requested)
+    internal static MediaSessionGrant Parse(JsonElement grant, MediaDirection direction, IReadOnlyList<VideoCodec>? requested,
+        MediaSessionContent? content = null)
     {
         if (grant.ValueKind != JsonValueKind.Object) throw new JsonException();
+        // A requested content must be echoed exactly; a default request accepts no echo or camera (either direction).
+        var echoed = grant.TryGetProperty("content", out var echo);
+        var echoText = echoed && echo.ValueKind == JsonValueKind.String ? echo.GetString() : null;
+        if (content is { } wanted ? echoText != Wire(wanted) : echoed && echoText != "camera") throw new JsonException();
+        MediaSessionContent? granted = echoed ? content ?? MediaSessionContent.Camera : null;
+        var maxFps = granted == MediaSessionContent.Screen ? 15 : 30;
         var wire = direction == MediaDirection.Publish ? "publish" : "subscribe";
         var id = Text(grant, "session_id");
         var endpoint = Text(grant, "endpoint");
@@ -97,8 +120,8 @@ public sealed class MediaSessionGrant
         return new()
         {
             SessionId = id, Direction = direction, Endpoint = endpoint, Token = token, ConnectBy = connectBy, ExpiresAt = expiresAt,
-            IceServers = ice, Codecs = codecList,
-            Limits = new(Limit("max_width", maxWidth), Limit("max_height", maxHeight), Limit("max_fps", 30), Limit("max_frame_bytes", VideoFrame.MaxFrameBytes))
+            IceServers = ice, Codecs = codecList, Content = granted,
+            Limits = new(Limit("max_width", maxWidth), Limit("max_height", maxHeight), Limit("max_fps", maxFps), Limit("max_frame_bytes", VideoFrame.MaxFrameBytes))
         };
     }
 }
@@ -107,11 +130,15 @@ public sealed class MediaSessionGrant
 public sealed record CustomVideoCapability(IReadOnlyList<string> Transports, IReadOnlyList<VideoCodec> Codecs, int MaxWidth, int MaxHeight, int MaxFps)
 {
     public bool Supported => true;
+    /// <summary>What may be published; never empty.</summary>
+    public IReadOnlyList<MediaContent> Contents { get; init; } = [MediaContent.Camera];
 }
 /// <summary>Caller video delivered to the customer (WHEP or LiveKit).</summary>
 public sealed record InboundCallerVideoCapability(IReadOnlyList<string> Transports, int MaxWidth, int MaxHeight, int MaxFps)
 {
     public bool Supported => true;
+    /// <summary>What may be received; never empty.</summary>
+    public IReadOnlyList<MediaContent> Contents { get; init; } = [MediaContent.Camera];
 }
 
 /// <summary>Explicit, versioned media capabilities. A null section is unsupported; never infer from generic video flags.</summary>
@@ -135,6 +162,17 @@ public sealed record MediaCapabilities(CustomVideoCapability? CustomVideo, Inbou
         }
         return result;
     }
+    // Unknown entries are ignored for forward compatibility; absent or empty means camera only.
+    private static List<MediaContent> Contents(JsonElement owner)
+    {
+        var result = new List<MediaContent>();
+        if (owner.TryGetProperty("contents", out var value) && value.ValueKind == JsonValueKind.Array)
+            foreach (var item in value.EnumerateArray())
+                if (item.ValueKind == JsonValueKind.String && item.GetString() switch { "camera" => MediaContent.Camera, "screen" => MediaContent.Screen, _ => (MediaContent?)null } is { } c
+                    && !result.Contains(c)) result.Add(c);
+        if (result.Count == 0) result.Add(MediaContent.Camera);
+        return result;
+    }
     private static bool Enabled(JsonElement owner, string name, out JsonElement section)
         => owner.TryGetProperty(name, out section) && section.ValueKind == JsonValueKind.Object
             && section.TryGetProperty("supported", out var supported) && supported.ValueKind == JsonValueKind.True;
@@ -155,14 +193,14 @@ public sealed record MediaCapabilities(CustomVideoCapability? CustomVideo, Inbou
             var codecs = List(cv, "codecs", "h264", "vp8");
             if (transports is { Count: > 0 } && codecs is { Count: > 0 } && JsInteger(cv, "max_width", 1920) is int w
                 && JsInteger(cv, "max_height", 1080) is int h && JsInteger(cv, "max_fps", 30) is int f)
-                custom = new(transports, codecs.Select(c => c == "h264" ? VideoCodec.H264 : VideoCodec.Vp8).ToList(), w, h, f);
+                custom = new(transports, codecs.Select(c => c == "h264" ? VideoCodec.H264 : VideoCodec.Vp8).ToList(), w, h, f) { Contents = Contents(cv) };
         }
         if (Enabled(raw, "inbound_caller_video", out var iv))
         {
             var transports = List(iv, "transports", "whep", "livekit");
             if (transports is { Count: > 0 } && JsInteger(iv, "max_width", 1280) is int w
                 && JsInteger(iv, "max_height", 720) is int h && JsInteger(iv, "max_fps", 30) is int f)
-                inbound = new(transports, w, h, f);
+                inbound = new(transports, w, h, f) { Contents = Contents(iv) };
         }
         return new(custom, inbound);
     }

@@ -60,7 +60,9 @@ Call call(const Json& value) {
         string(value, "mode"), string(value, "status"),
         {value.at("media").at("audio").get<bool>(), value.at("media").at("video").get<bool>()},
         nullable_string(value, "line_id"), nullable_string(value, "worker_id"),
-        nullable_string(value, "assistant_id"), nullable_string(value, "terminal_reason"), value};
+        nullable_string(value, "assistant_id"), nullable_string(value, "terminal_reason"), value,
+        value.contains("screen_control") && value.at("screen_control").is_string()
+            ? std::optional(value.at("screen_control").get<std::string>()) : std::nullopt};
 }
 Line line(const Json& value) {
     return {uuid(string(value, "id")), string(value, "display_name"), string(value, "status"),
@@ -216,15 +218,29 @@ bool media_endpoint(std::string_view url) {
     std::transform(host.begin(), host.end(), host.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return scheme == "https" || (scheme == "http" && (host == "localhost" || host == "127.0.0.1" || host == "[::1]"));
 }
-MediaSessionGrant grant(const Json& value, MediaDirection direction, const std::optional<std::vector<VideoCodec>>& requested) {
+const char* content_wire(MediaSessionContent content) {
+    switch (content) {
+        case MediaSessionContent::camera: return "camera";
+        case MediaSessionContent::screen: return "screen";
+        case MediaSessionContent::caller_screen: return "caller_screen";
+    }
+    throw std::invalid_argument("Invalid media session content");
+}
+MediaSessionGrant grant(const Json& value, MediaDirection direction, const std::optional<std::vector<VideoCodec>>& requested,
+                        std::optional<MediaSessionContent> content) {
     require(value.is_object());
+    // A requested content must be echoed exactly; a default request accepts no echo or camera (either direction).
+    const bool echoed = value.contains("content");
+    const auto echo = echoed && value.at("content").is_string() ? value.at("content").get<std::string>() : std::string();
+    require(content ? echoed && echo == content_wire(*content) : !echoed || echo == "camera");
+    const auto granted = content ? content : echoed ? std::optional(MediaSessionContent::camera) : std::nullopt;
     const auto wire = direction == MediaDirection::publish ? "publish" : "subscribe";
     const auto id = string(value, "session_id");
     require(string(value, "direction") == wire && id.size() == 36);
     require(std::all_of(id.begin(), id.end(), [](char c) {
         return c == '-' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }));
     MediaSessionGrant result{id, direction, string(value, "endpoint"), string(value, "token"),
-        string(value, "connect_by"), string(value, "expires_at"), {}, {}, {}};
+        string(value, "connect_by"), string(value, "expires_at"), {}, {}, {}, granted};
     require(media_endpoint(result.endpoint) && !result.token.empty() && result.token.find_first_of("\r\n") == std::string::npos);
     const auto connect_by = rfc3339(result.connect_by), expires_at = rfc3339(result.expires_at);
     require(connect_by && expires_at && *connect_by <= *expires_at && value.at("ice_servers").is_array());
@@ -258,7 +274,7 @@ MediaSessionGrant grant(const Json& value, MediaDirection direction, const std::
     const auto& limits = value.at("limits");
     const auto width = js_integer(limits, "max_width", publish ? 1920 : 1280);
     const auto height = js_integer(limits, "max_height", publish ? 1080 : 720);
-    const auto fps = js_integer(limits, "max_fps", 30);
+    const auto fps = js_integer(limits, "max_fps", granted == MediaSessionContent::screen ? 15 : 30);
     const auto bytes = js_integer(limits, "max_frame_bytes", max_frame_bytes);
     require(width && height && fps && bytes);
     result.limits = {*width, *height, *fps, *bytes};
@@ -394,15 +410,22 @@ Result<MediaSessionGrant> FaceTimeClient::create_media_session(const std::string
             body["codecs"].push_back(name);
         }
     }
+    if (input.content) {
+        const auto content = *input.content;
+        if (input.direction == MediaDirection::publish ? content != MediaSessionContent::camera && content != MediaSessionContent::screen
+                                                       : content != MediaSessionContent::caller_screen)
+            throw std::invalid_argument("content must be camera or screen for publish, or caller_screen for subscribe");
+        body["content"] = content_wire(content);
+    }
     detail::Response response;
     try { response = request_with_response("/calls/" + id + "/media-sessions", std::move(body), "POST"); }
     catch (const ApiError& error) {
         // Raw response data is never returned. Server error responses (parsed bodies) keep their
         // status and an allowlisted code, else request_failed; local failures keep their code.
-        static constexpr std::array<std::string_view, 22> safe = {"unauthorized", "forbidden", "cli_scope_denied",
+        static constexpr std::array<std::string_view, 23> safe = {"unauthorized", "forbidden", "cli_scope_denied",
             "billing_owner_required", "billing_unavailable", "project_required", "invalid_request", "cli_login_expired",
             "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited", "cli_login_busy", "not_found",
-            "conflict", "media_capability_unsupported", "media_session_conflict", "call_not_active", "call_ended",
+            "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "call_not_active", "call_ended",
             "call_not_found", "media_session_expired", "media_transport_unavailable"};
         auto request_id = error.request_id;
         if (error.data.is_object() && error.data.contains("request_id") && error.data["request_id"].is_string())
@@ -418,12 +441,29 @@ Result<MediaSessionGrant> FaceTimeClient::create_media_session(const std::string
         require(response.status == 201 && envelope && envelope->is_object() && envelope->contains("data") && !envelope->contains("error"));
         request_id = envelope->at("request_id").get<std::string>();
         require(!request_id.empty());
-        return {grant(envelope->at("data"), input.direction, input.codecs), request_id, response.status};
+        return {grant(envelope->at("data"), input.direction, input.codecs, input.content), request_id, response.status};
     } catch (const std::exception&) {
         // Response data is withheld: an invalid grant may still carry a bearer token.
         throw ApiError(502, "invalid_response", request_id);
     }
 }
+
+namespace {
+// Unknown entries are ignored for forward compatibility; absent or empty means camera only.
+std::vector<MediaContent> contents(const Json& section) {
+    std::vector<MediaContent> result;
+    if (section.contains("contents") && section.at("contents").is_array())
+        for (const auto& item : section.at("contents")) {
+            if (!item.is_string()) continue;
+            const auto text = item.get<std::string>();
+            if (text != "camera" && text != "screen") continue;
+            const auto parsed = text == "camera" ? MediaContent::camera : MediaContent::screen;
+            if (std::find(result.begin(), result.end(), parsed) == result.end()) result.push_back(parsed);
+        }
+    if (result.empty()) result.push_back(MediaContent::camera);
+    return result;
+}
+} // namespace
 
 MediaCapabilities parse_media_capabilities(const Json& input) {
     MediaCapabilities result;
@@ -439,7 +479,7 @@ MediaCapabilities parse_media_capabilities(const Json& input) {
         const auto codecs = allowed_list(cv, "codecs", {"h264", "vp8"});
         const auto width = js_integer(cv, "max_width", 1920), height = js_integer(cv, "max_height", 1080), fps = js_integer(cv, "max_fps", 30);
         if (transports && !transports->empty() && codecs && !codecs->empty() && width && height && fps) {
-            CustomVideoCapability section{true, *transports, {}, *width, *height, *fps};
+            CustomVideoCapability section{true, *transports, {}, *width, *height, *fps, contents(cv)};
             for (const auto& item : *codecs) section.codecs.push_back(codec(item));
             result.custom_video = std::move(section);
         }
@@ -449,7 +489,7 @@ MediaCapabilities parse_media_capabilities(const Json& input) {
         const auto transports = allowed_list(iv, "transports", {"whep", "livekit"});
         const auto width = js_integer(iv, "max_width", 1280), height = js_integer(iv, "max_height", 720), fps = js_integer(iv, "max_fps", 30);
         if (transports && !transports->empty() && width && height && fps)
-            result.inbound_caller_video = InboundCallerVideoCapability{true, *transports, *width, *height, *fps};
+            result.inbound_caller_video = InboundCallerVideoCapability{true, *transports, *width, *height, *fps, contents(iv)};
     }
     return result;
 }

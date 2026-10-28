@@ -213,10 +213,102 @@ func TestCreateMediaSessionRequestAndGrant(t *testing.T) {
 	}
 }
 
+func TestScreenMediaSessions(t *testing.T) {
+	ctx := context.Background()
+	screen := patchGrant(t, `{"content":"screen","limits":{"max_width":1920,"max_height":1080,"max_fps":15,"max_frame_bytes":8388608}}`)
+	callerScreen := patchGrant(t, `{"direction":"subscribe","content":"caller_screen","limits":{"max_width":1280,"max_height":720,"max_fps":30,"max_frame_bytes":8388608}}`)
+	reply := func(data string) func() (int, string) {
+		return func() (int, string) { return 201, `{"data":` + data + `,"request_id":"trace"}` }
+	}
+	f := &mediaFixture{reply: reply(screen)}
+	c, done := mediaServer(t, f)
+	defer done()
+	r, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish, Content: MediaContentScreen})
+	if err != nil || r.Data.Content != MediaContentScreen || r.Data.Limits.MaxFPS != 15 {
+		t.Fatalf("screen: %v %v", err, r.Data.Content)
+	}
+	f.set(reply(callerScreen))
+	r, err = c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaSubscribe, Content: MediaContentCallerScreen})
+	if err != nil || r.Data.Content != MediaContentCallerScreen {
+		t.Fatalf("caller screen: %v", err)
+	}
+	if !reflect.DeepEqual(f.bodies, []string{`{"direction":"publish","content":"screen"}`, `{"direction":"subscribe","content":"caller_screen"}`}) {
+		t.Fatalf("bodies %q", f.bodies)
+	}
+
+	// Wrong combinations fail locally with no request.
+	for _, bad := range []CreateMediaSessionRequest{{Direction: MediaPublish, Content: MediaContentCallerScreen}, {Direction: MediaSubscribe, Content: MediaContentScreen}, {Direction: MediaSubscribe, Content: MediaContentCamera}, {Direction: MediaPublish, Content: "window"}} {
+		var api *APIError
+		if _, err := c.CreateMediaSession(ctx, "call-1", bad); !errors.As(err, &api) || api.Code != "invalid_request" {
+			t.Fatalf("accepted %v", bad)
+		}
+	}
+	if f.requests() != 2 {
+		t.Fatal("invalid content reached the network")
+	}
+
+	// A screen grant above 15 fps, a missing or different echo, or an echo on a default request is a contract violation.
+	var noEcho map[string]any
+	_ = json.Unmarshal([]byte(screen), &noEcho)
+	delete(noEcho, "content")
+	missing, _ := json.Marshal(noEcho)
+	for _, tc := range []struct {
+		input CreateMediaSessionRequest
+		data  string
+	}{
+		{CreateMediaSessionRequest{Direction: MediaPublish, Content: MediaContentScreen}, patchGrant(t, `{"content":"screen"}`)},
+		{CreateMediaSessionRequest{Direction: MediaPublish, Content: MediaContentScreen}, string(missing)},
+		{CreateMediaSessionRequest{Direction: MediaPublish, Content: MediaContentScreen}, patchGrant(t, `{"content":"camera","limits":{"max_width":1920,"max_height":1080,"max_fps":15,"max_frame_bytes":8388608}}`)},
+		{CreateMediaSessionRequest{Direction: MediaPublish}, screen},
+		{CreateMediaSessionRequest{Direction: MediaSubscribe}, callerScreen},
+	} {
+		f.set(reply(tc.data))
+		var api *APIError
+		if _, err := c.CreateMediaSession(ctx, "call-1", tc.input); !errors.As(err, &api) || api.Code != "invalid_response" {
+			t.Fatalf("accepted %v %s: %v", tc.input, tc.data, err)
+		}
+	}
+	// The backend echoes the resolved camera content on default requests in both directions.
+	f.set(reply(patchGrant(t, `{"content":"camera"}`)))
+	if r, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish}); err != nil || r.Data.Content != MediaContentCamera {
+		t.Fatalf("camera echo: %v", err)
+	}
+	f.set(reply(strings.Replace(callerScreen, `"content":"caller_screen"`, `"content":"camera"`, 1)))
+	if r, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaSubscribe}); err != nil || r.Data.Content != MediaContentCamera {
+		t.Fatalf("subscribe camera echo: %v", err)
+	}
+
+	f.set(func() (int, string) {
+		return 409, `{"error":{"code":"caller_screen_not_shared","message":"internal host 10.0.0.5"},"request_id":"trace"}`
+	})
+	_, err = c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaSubscribe, Content: MediaContentCallerScreen})
+	var api *APIError
+	if !errors.As(err, &api) || api.Status != 409 || api.Code != "caller_screen_not_shared" || strings.Contains(fmt.Sprintf("%+v", err), "10.0.0.5") {
+		t.Fatalf("caller_screen_not_shared: %v", err)
+	}
+}
+
+func TestMediaCapabilityContents(t *testing.T) {
+	parse := func(cvContents, ivContents string) MediaCapabilities {
+		return ParseMediaCapabilities(json.RawMessage(`{"version":1,"custom_video":{"supported":true,"transports":["whip"],"codecs":["h264"],"max_width":1920,"max_height":1080,"max_fps":30` + cvContents + `},"inbound_caller_video":{"supported":true,"transports":["whep"],"max_width":1280,"max_height":720,"max_fps":30` + ivContents + `}}`))
+	}
+	got := parse(`,"contents":["screen","window","camera","screen"]`, `,"contents":["screen"]`)
+	if !reflect.DeepEqual(got.CustomVideo.Contents, []MediaSessionContent{MediaContentScreen, MediaContentCamera}) || !reflect.DeepEqual(got.InboundCallerVideo.Contents, []MediaSessionContent{MediaContentScreen}) {
+		t.Fatalf("contents %v %v", got.CustomVideo.Contents, got.InboundCallerVideo.Contents)
+	}
+	for _, contents := range []string{``, `,"contents":[]`, `,"contents":["window"]`, `,"contents":"screen"`, `,"contents":null`, `,"contents":[7]`} {
+		got := parse(contents, contents)
+		camera := []MediaSessionContent{MediaContentCamera}
+		if !reflect.DeepEqual(got.CustomVideo.Contents, camera) || !reflect.DeepEqual(got.InboundCallerVideo.Contents, camera) {
+			t.Fatalf("%s: %v", contents, got.CustomVideo.Contents)
+		}
+	}
+}
+
 func TestParseMediaCapabilities(t *testing.T) {
 	full := `{"version":1,"custom_video":{"supported":true,"transports":["whip","livekit","whip"],"codecs":["vp8","h264","vp8"],"max_width":1920,"max_height":1080.0,"max_fps":30},"inbound_caller_video":{"supported":true,"transports":["whep"],"max_width":1280,"max_height":720,"max_fps":15}}`
 	got := ParseMediaCapabilities(json.RawMessage(full))
-	want := MediaCapabilities{1, &CustomVideoCapability{true, []string{"whip", "livekit"}, []VideoCodec{VP8, H264}, 1920, 1080, 30}, &InboundCallerVideoCapability{true, []string{"whep"}, 1280, 720, 15}}
+	want := MediaCapabilities{1, &CustomVideoCapability{true, []string{"whip", "livekit"}, []VideoCodec{VP8, H264}, 1920, 1080, 30, []MediaSessionContent{MediaContentCamera}}, &InboundCallerVideoCapability{true, []string{"whep"}, 1280, 720, 15, []MediaSessionContent{MediaContentCamera}}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("full %+v", got)
 	}

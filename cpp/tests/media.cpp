@@ -54,6 +54,20 @@ void capabilities() {
         const auto parsed = section(ok_cv, iv);
         check(parsed.custom_video && !parsed.inbound_caller_video, iv);
     }
+    // Contents: unknown entries ignored, duplicates removed in order, absent/empty/non-list means camera.
+    using trychert::MediaContent;
+    const auto with_contents = [&](const std::string& value) {
+        const auto cv = replace(ok_cv, "30}", "30" + value + "}"), iv = replace(ok_iv, "30}", "30" + value + "}");
+        return section(cv, iv);
+    };
+    const auto mixed = with_contents(R"(,"contents":["screen","window","camera","screen"])");
+    check(mixed.custom_video->contents == std::vector{MediaContent::screen, MediaContent::camera}, "contents order");
+    check(mixed.inbound_caller_video->contents == std::vector{MediaContent::screen, MediaContent::camera}, "inbound contents");
+    for (const std::string value : {"", R"(,"contents":[])", R"(,"contents":["window"])", R"(,"contents":"screen")", R"(,"contents":null)", R"(,"contents":[7])"}) {
+        const auto parsed = with_contents(value);
+        check(parsed.custom_video->contents == std::vector{MediaContent::camera}
+            && parsed.inbound_caller_video->contents == std::vector{MediaContent::camera}, "default contents " + value);
+    }
     // Generic video flags never imply support.
     const auto line = trychert::Json::parse(R"({"id":"l","supports_video":true})");
     check(!trychert::parse_media_capabilities(line.value("media_capabilities", trychert::Json())).custom_video);
@@ -94,7 +108,46 @@ void frames() {
     check(frame_code(max_stride) == "accepted", "max stride");
 }
 
-void sessions(const std::string& origin, int bad_cases, int error_cases, int accept_cases) {
+void screen_sessions(const std::function<trychert::FaceTimeClient(const std::string&)>& client, const std::string& call, int bad_cases) {
+    using trychert::MediaDirection;
+    using trychert::MediaSessionContent;
+    const auto screen = client("screen").create_media_session(call, {MediaDirection::publish, std::nullopt, MediaSessionContent::screen}).data;
+    check(screen.content == MediaSessionContent::screen && screen.limits.max_fps == 15, "screen grant");
+    const auto caller = client("caller-screen").create_media_session(call, {MediaDirection::subscribe, std::nullopt, MediaSessionContent::caller_screen}).data;
+    check(caller.content == MediaSessionContent::caller_screen, "caller screen grant");
+    check(client("camera-echo-publish").create_media_session(call, {MediaDirection::publish, std::nullopt}).data.content
+        == MediaSessionContent::camera, "publish camera echo");
+    check(client("camera-echo-subscribe").create_media_session(call, {MediaDirection::subscribe, std::nullopt}).data.content
+        == MediaSessionContent::camera, "subscribe camera echo");
+
+    // Wrong combinations throw before any request (the fixture counts requests).
+    const auto local = client("local");
+    for (const auto& [direction, content] : std::vector<std::pair<MediaDirection, MediaSessionContent>>{
+            {MediaDirection::publish, MediaSessionContent::caller_screen}, {MediaDirection::subscribe, MediaSessionContent::screen},
+            {MediaDirection::subscribe, MediaSessionContent::camera}, {MediaDirection::publish, static_cast<MediaSessionContent>(9)}})
+        invalid([&] { static_cast<void>(local.create_media_session(call, {direction, std::nullopt, content})); });
+
+    const std::vector<trychert::CreateMediaSession> requests = {
+        {MediaDirection::publish, std::nullopt, MediaSessionContent::screen}, {MediaDirection::publish, std::nullopt, MediaSessionContent::screen},
+        {MediaDirection::publish, std::nullopt, MediaSessionContent::screen}, {MediaDirection::publish, std::nullopt, std::nullopt},
+        {MediaDirection::subscribe, std::nullopt, std::nullopt}};
+    check(static_cast<int>(requests.size()) == bad_cases, "screen bad case count");
+    for (int i = 0; i < bad_cases; ++i) {
+        try {
+            static_cast<void>(client("screen-bad-" + std::to_string(i)).create_media_session(call, requests[i]));
+            check(false, "accepted invalid screen grant " + std::to_string(i));
+        } catch (const trychert::ApiError& error) { check(error.code == "invalid_response", "screen grant code " + std::to_string(i)); }
+    }
+    try {
+        static_cast<void>(client("not-shared").create_media_session(call, {MediaDirection::subscribe, std::nullopt, MediaSessionContent::caller_screen}));
+        check(false, "accepted caller_screen_not_shared");
+    } catch (const trychert::ApiError& error) {
+        check(error.status == 409 && error.code == "caller_screen_not_shared" && error.data.is_null()
+            && std::string(error.what()).find("10.0.0.5") == std::string::npos, "caller_screen_not_shared");
+    }
+}
+
+void sessions(const std::string& origin, int bad_cases, int error_cases, int accept_cases, int screen_bad_cases) {
     const std::string project = "11111111-1111-4111-8111-111111111111", call = "22222222-2222-4222-8222-222222222222";
     const auto client = [&](const std::string& name) { return trychert::FaceTimeClient({origin + "/case/" + name, "ft-secret", project}); };
     using trychert::MediaDirection;
@@ -148,15 +201,16 @@ void sessions(const std::string& origin, int bad_cases, int error_cases, int acc
                 && std::string(error.what()).find("192.0.2.5") == std::string::npos, "error " + expected[i].second);
         }
     }
+    screen_sessions(client, call, screen_bad_cases);
 }
 } // namespace
 
 int main(int argc, char** argv) {
     try {
-        check(argc == 5);
+        check(argc == 6);
         capabilities();
         frames();
-        sessions(argv[1], std::stoi(argv[2]), std::stoi(argv[3]), std::stoi(argv[4]));
+        sessions(argv[1], std::stoi(argv[2]), std::stoi(argv[3]), std::stoi(argv[4]), std::stoi(argv[5]));
         std::cout << "Media capabilities, frames, session minting and grant validation passed\n";
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

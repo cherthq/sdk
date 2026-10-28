@@ -28,11 +28,32 @@ const (
 	VP8  VideoCodec = "vp8"
 )
 
-// CreateMediaSessionRequest omits codecs when nil. A non-nil list must be a
-// non-empty ordered unique subset of h264 and vp8.
+// MediaSessionContent is what a session carries. Publish: camera (default) or
+// screen (an agent's screen, capped at 15 fps). Subscribe: empty for the
+// caller's video, or caller_screen for the caller's shared screen (only while
+// sharing). A call has one publish slot (media_session_conflict).
+type MediaSessionContent string
+
+const (
+	MediaContentCamera       MediaSessionContent = "camera"
+	MediaContentScreen       MediaSessionContent = "screen"
+	MediaContentCallerScreen MediaSessionContent = "caller_screen"
+)
+
+// CreateMediaSessionRequest omits codecs when nil and content when empty. A
+// non-nil codecs list must be a non-empty ordered unique subset of h264 and vp8.
+// Content must be camera or screen for publish, or caller_screen for subscribe.
 type CreateMediaSessionRequest struct {
-	Direction MediaDirection `json:"direction"`
-	Codecs    []VideoCodec   `json:"codecs,omitempty"`
+	Direction MediaDirection      `json:"direction"`
+	Codecs    []VideoCodec        `json:"codecs,omitempty"`
+	Content   MediaSessionContent `json:"content,omitempty"`
+}
+
+func validContent(direction MediaDirection, content MediaSessionContent) bool {
+	if direction == MediaPublish {
+		return content == "" || content == MediaContentCamera || content == MediaContentScreen
+	}
+	return content == "" || content == MediaContentCallerScreen
 }
 
 // ICEServer mirrors the WebRTC RTCIceServer shape. URLs has at least one entry
@@ -67,6 +88,8 @@ type MediaSessionGrant struct {
 	ICEServers []ICEServer
 	Codecs     []VideoCodec
 	Limits     MediaLimits
+	// Content echoes the requested content; empty on grants for the default content.
+	Content MediaSessionContent
 }
 
 func (g MediaSessionGrant) String() string             { return "MediaSessionGrant{redacted}" }
@@ -88,7 +111,7 @@ func validCodecs(codecs []VideoCodec) bool {
 // session for an active call. It is a single attempt and never retried.
 func (c *FaceTimeClient) CreateMediaSession(ctx context.Context, callID string, input CreateMediaSessionRequest) (Result[MediaSessionGrant], error) {
 	path := resource("calls", callID, "/media-sessions")
-	if path == "" || (input.Direction != MediaPublish && input.Direction != MediaSubscribe) || input.Codecs != nil && !validCodecs(input.Codecs) {
+	if path == "" || (input.Direction != MediaPublish && input.Direction != MediaSubscribe) || input.Codecs != nil && !validCodecs(input.Codecs) || !validContent(input.Direction, input.Content) {
 		return Result[MediaSessionGrant]{}, invalid()
 	}
 	r, err := c.Request(ctx, "POST", path, input, FaceTimeRequestOptions{Auth: ProjectAuth})
@@ -102,7 +125,7 @@ func (c *FaceTimeClient) CreateMediaSession(ctx context.Context, callID string, 
 	var grant MediaSessionGrant
 	ok := r.Status == 201 && json.Unmarshal(r.Data, &envelope) == nil && envelope.RequestID != ""
 	if ok {
-		grant, ok = parseGrant(envelope.Data, input.Direction, input.Codecs)
+		grant, ok = parseGrant(envelope.Data, input.Direction, input.Codecs, input.Content)
 	}
 	if !ok {
 		// Raw data is withheld: an invalid grant may still carry a bearer token.
@@ -116,7 +139,7 @@ var mediaSafeCodes = map[string]bool{
 	"unauthorized": true, "forbidden": true, "cli_scope_denied": true, "billing_owner_required": true, "billing_unavailable": true,
 	"project_required": true, "invalid_request": true, "cli_login_expired": true, "cli_login_not_found": true, "cli_login_forbidden": true,
 	"slow_down": true, "cli_login_rate_limited": true, "cli_login_busy": true, "not_found": true, "conflict": true,
-	"media_capability_unsupported": true, "media_session_conflict": true, "call_not_active": true, "call_ended": true,
+	"media_capability_unsupported": true, "media_session_conflict": true, "caller_screen_not_shared": true, "call_not_active": true, "call_ended": true,
 	"call_not_found": true, "media_session_expired": true, "media_transport_unavailable": true,
 }
 
@@ -172,11 +195,24 @@ func mediaEndpoint(s string) bool {
 	return u.Scheme == "https" || u.Scheme == "http" && (host == "localhost" || host == "127.0.0.1" || host == "::1")
 }
 
-func parseGrant(raw json.RawMessage, direction MediaDirection, requested []VideoCodec) (MediaSessionGrant, bool) {
+func parseGrant(raw json.RawMessage, direction MediaDirection, requested []VideoCodec, content MediaSessionContent) (MediaSessionGrant, bool) {
 	var g MediaSessionGrant
 	var o map[string]any
 	if json.Unmarshal(raw, &o) != nil || o == nil {
 		return g, false
+	}
+	// A requested content must be echoed exactly; a default request accepts no echo or camera (either direction).
+	echo, present := o["content"]
+	if content != "" && echo != string(content) ||
+		content == "" && present && echo != string(MediaContentCamera) {
+		return g, false
+	}
+	if present {
+		g.Content = MediaSessionContent(echo.(string))
+	}
+	maxFPS := 30.0
+	if g.Content == MediaContentScreen {
+		maxFPS = 15
 	}
 	endpoint, _ := o["endpoint"].(string)
 	token, _ := o["token"].(string)
@@ -250,7 +286,7 @@ func parseGrant(raw json.RawMessage, direction MediaDirection, requested []Video
 	var okW, okH, okF, okB bool
 	g.Limits.MaxWidth, okW = jsInteger(limits["max_width"], width)
 	g.Limits.MaxHeight, okH = jsInteger(limits["max_height"], height)
-	g.Limits.MaxFPS, okF = jsInteger(limits["max_fps"], 30)
+	g.Limits.MaxFPS, okF = jsInteger(limits["max_fps"], maxFPS)
 	g.Limits.MaxFrameBytes, okB = jsInteger(limits["max_frame_bytes"], MaxFrameBytes)
 	if !okW || !okH || !okF || !okB {
 		return g, false
@@ -278,6 +314,8 @@ type CustomVideoCapability struct {
 	MaxWidth   int          `json:"max_width"`
 	MaxHeight  int          `json:"max_height"`
 	MaxFPS     int          `json:"max_fps"`
+	// Contents lists what may be published (camera, screen); never empty.
+	Contents []MediaSessionContent `json:"contents"`
 }
 
 // InboundCallerVideoCapability describes caller video delivered to the customer (WHEP or LiveKit).
@@ -287,6 +325,9 @@ type InboundCallerVideoCapability struct {
 	MaxWidth   int      `json:"max_width"`
 	MaxHeight  int      `json:"max_height"`
 	MaxFPS     int      `json:"max_fps"`
+	// Contents lists what may be received (camera, screen); screen means a
+	// caller_screen subscription is available. Never empty.
+	Contents []MediaSessionContent `json:"contents"`
 }
 
 func allowedList(v any, allowed ...string) []string {
@@ -313,6 +354,23 @@ func allowedList(v any, allowed ...string) []string {
 	return out
 }
 
+// mediaContents ignores unknown entries for forward compatibility; absent or empty means camera only.
+func mediaContents(v any) []MediaSessionContent {
+	items, _ := v.([]any)
+	out := []MediaSessionContent{}
+	for _, item := range items {
+		s, _ := item.(string)
+		c := MediaSessionContent(s)
+		if (c == MediaContentCamera || c == MediaContentScreen) && !slices.Contains(out, c) {
+			out = append(out, c)
+		}
+	}
+	if len(out) == 0 {
+		out = append(out, MediaContentCamera)
+	}
+	return out
+}
+
 // ParseMediaCapabilities parses a raw media_capabilities value. Absent, malformed
 // or unknown-version input is unsupported; a malformed section disables only that
 // section. Bounds are capped at SDK v1 limits.
@@ -332,7 +390,7 @@ func ParseMediaCapabilities(raw json.RawMessage) MediaCapabilities {
 			for i, c := range codecs {
 				typed[i] = VideoCodec(c)
 			}
-			out.CustomVideo = &CustomVideoCapability{true, transports, typed, w, h, f}
+			out.CustomVideo = &CustomVideoCapability{true, transports, typed, w, h, f, mediaContents(cv["contents"])}
 		}
 	}
 	if iv, _ := o["inbound_caller_video"].(map[string]any); iv != nil && iv["supported"] == true {
@@ -341,7 +399,7 @@ func ParseMediaCapabilities(raw json.RawMessage) MediaCapabilities {
 		h, okH := jsInteger(iv["max_height"], 720)
 		f, okF := jsInteger(iv["max_fps"], 30)
 		if len(transports) > 0 && okW && okH && okF {
-			out.InboundCallerVideo = &InboundCallerVideoCapability{true, transports, w, h, f}
+			out.InboundCallerVideo = &InboundCallerVideoCapability{true, transports, w, h, f, mediaContents(iv["contents"])}
 		}
 	}
 	return out

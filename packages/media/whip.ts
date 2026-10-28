@@ -61,7 +61,7 @@ function endpointURL(raw: string): URL {
 const serviceCodes: Record<string, MediaErrorCode> = { media_session_expired: 'session_expired', unauthorized: 'credentials_rejected',
   media_session_conflict: 'session_conflict', call_not_active: 'call_not_active', call_ended: 'call_ended',
   media_capability_unsupported: 'capability_missing', invalid_sdp: 'invalid_signaling', invalid_ice_fragment: 'invalid_signaling',
-  media_transport_unavailable: 'transport_unavailable' };
+  media_transport_unavailable: 'transport_unavailable', caller_screen_not_shared: 'caller_screen_not_shared' };
 
 /** Maps a failed signaling response to a stable code using only the status and a bounded JSON `error.code`. */
 async function statusError(response: Response): Promise<MediaError> {

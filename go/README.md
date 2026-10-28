@@ -266,8 +266,20 @@ before `ConnectBy`, and send the same `Authorization: Bearer <Token>` on the POS
 on PATCH/DELETE to the returned `Location`. The grant prints as redacted; never log
 `Token`. A malformed grant fails with `invalid_response`; server error codes
 (`unauthorized`, `call_not_found`, `media_capability_unsupported`,
-`media_session_conflict`, `call_not_active`, `call_ended`, `media_session_expired`,
-`media_transport_unavailable`) surface without server text. Requests are never retried.
+`media_session_conflict`, `caller_screen_not_shared`, `call_not_active`, `call_ended`,
+`media_session_expired`, `media_transport_unavailable`) surface without server text.
+Requests are never retried.
+
+Screen sharing: set `Content: chert.MediaContentScreen` on a publish request to stream
+an agent's screen (the grant echoes `Content` and caps `Limits.MaxFPS` at 15), or
+`chert.MediaContentCallerScreen` on a subscribe request to receive the caller's shared
+screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations fail with `invalid_request` before any request; an empty `Content` is
+omitted from the body. Capability sections list `Contents` (`camera`, `screen`;
+unknown entries ignored, default `camera`). `Call.ScreenControl` is read-only
+consent state (`none`/`requested`/`granted`); screen events such as
+`agent_screen_started` and `caller_screen_share_started` are payload-free. There are
+no control operations.
 
 `CopyVideoFrame` validates a raw `i420`/`nv12`/`rgba`/`bgra` frame (even sizes from
 16x16 to 1920x1080, per-plane strides, 8 MiB total) and copies only the required

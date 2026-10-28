@@ -2,7 +2,8 @@ import { checkDimensions, copyEncodedChunk, copyVideoFrame, LIMITS, MediaFrameEr
   type EncodedVideoChunk, type VideoFrame, type VideoFrameInit } from './frames';
 
 export type MediaErrorCode = 'transport_unavailable' | 'credentials_rejected' | 'session_expired' | 'session_conflict'
-  | 'call_not_active' | 'call_ended' | 'invalid_signaling' | 'codec_unsupported' | 'capability_missing' | 'invalid_state' | 'aborted' | 'transport_failed';
+  | 'call_not_active' | 'call_ended' | 'invalid_signaling' | 'codec_unsupported' | 'capability_missing' | 'invalid_state' | 'aborted' | 'transport_failed'
+  | 'caller_screen_not_shared';
 /** Messages are fixed per code; tokens, endpoints, SDP and media bytes are never included. */
 export class MediaError extends Error {
   constructor(public readonly code: MediaErrorCode, message = `Media operation failed (${code}).`) { super(message); this.name = 'MediaError'; }

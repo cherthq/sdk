@@ -160,6 +160,7 @@ use trychert_sdk::{facetime::FaceTimeClient, CreateMediaSession, MediaDirection,
 let grant = facetime.create_media_session("call-id", CreateMediaSession {
     direction: MediaDirection::Publish,
     codecs: Some(vec![VideoCodec::H264]),
+    content: None,
 }).await?;
 // Pass grant.endpoint and grant.token to a WHIP client; Debug output redacts the token.
 # let _ = grant;
@@ -173,8 +174,20 @@ with `invalid_media_session_request` before any request; a grant that violates t
 contract fails with status 201 and `invalid_response`. Server error codes such as
 `unauthorized`, `media_session_expired`, `call_not_found`,
 `media_capability_unsupported`, `media_session_conflict`, `call_not_active`,
-`call_ended` and `media_transport_unavailable` surface verbatim; other codes become
-`request_failed`, and the error never carries server message text or raw data.
+`call_ended`, `media_transport_unavailable` and `caller_screen_not_shared` surface
+verbatim; other codes become `request_failed`, and the error never carries server
+message text or raw data.
+
+Screen sharing: set `content: Some(MediaSessionContent::Screen)` on a publish request
+to stream an agent's screen (the grant echoes `content` and caps `limits.max_fps` at
+15), or `Some(MediaSessionContent::CallerScreen)` on a subscribe request to receive
+the caller's shared screen (only while they share; otherwise
+`caller_screen_not_shared`). Other combinations fail with
+`invalid_media_session_request` before any request. Capability sections list
+`contents` (`Camera`, `Screen`; unknown entries ignored, default `[Camera]`). `Call`
+exposes read-only `screen_control` (`none`/`requested`/`granted`); screen event
+types (`agent_screen_started`, `caller_screen_share_started`, ...) are payload-free.
+There are no control operations.
 
 Treat `endpoint` as opaque: do not build paths from it. Pass `endpoint` and `token`
 to a standard WHIP (RFC 9725) client to publish, or a WHEP

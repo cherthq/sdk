@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
-import { ChertVideoSource, copyVideoFrame, MediaError, MediaFrameError, parseMediaCapabilities, parseIceServerLinks, publishWhip, receiveWhep,
-  type MediaTransport, type OutboundItem, type PeerConnectionLike, type VideoFrameInit } from './index';
+import { ChertVideoSource, copyVideoFrame, MediaError, SCREEN_SHARE_TOOLS, ScreenShareController, startScreenStream, MediaFrameError, parseMediaCapabilities, parseIceServerLinks, publishWhip, receiveWhep,
+  type MediaTransport, type OutboundItem, type PeerConnectionLike, type ScreenGrant, type ScreenStream, type VideoFrameInit } from './index';
 
 const i420 = (width: number, height: number, ts: bigint, stride = width): VideoFrameInit => ({ format: 'i420', width, height, timestampUs: ts,
   planes: [{ data: new Uint8Array(stride * height), stride }, { data: new Uint8Array((stride / 2) * (height / 2)), stride: stride / 2 },
@@ -31,7 +31,7 @@ test('capabilities: explicit v1 only; absent, unknown-version and malformed sect
   const caps = parseMediaCapabilities({ version: 1,
     custom_video: { supported: true, transports: ['whip', 'whip'], codecs: ['h264', 'vp8'], max_width: 1920, max_height: 1080, max_fps: 30 },
     inbound_caller_video: { supported: true, transports: ['whep'], max_width: 1920, max_height: 1080, max_fps: 30 } });
-  expect(caps.custom_video).toEqual({ supported: true, transports: ['whip'], codecs: ['h264', 'vp8'], max_width: 1920, max_height: 1080, max_fps: 30 });
+  expect(caps.custom_video).toEqual({ supported: true, transports: ['whip'], codecs: ['h264', 'vp8'], max_width: 1920, max_height: 1080, max_fps: 30, contents: ['camera'] });
   expect(caps.inbound_caller_video).toBeNull();   // caller return is capped at 1280x720
   expect(parseMediaCapabilities({ version: 1, custom_video: { supported: true, transports: ['rtmp'], codecs: ['h264'], max_width: 1280, max_height: 720, max_fps: 30 } }).custom_video).toBeNull();
   expect(parseMediaCapabilities({ version: 1, custom_video: { supported: false, transports: ['whip'], codecs: ['h264'], max_width: 1280, max_height: 720, max_fps: 30 } }).custom_video).toBeNull();
@@ -180,15 +180,15 @@ test('WHIP/WHEP: RFC 9725 exchange with the session bearer on every method, tric
     const failures: Record<string, string> = {};
     const cases = [['expired', 'ok', creds('whip', 'wrong')], ['conflict', '409:media_session_conflict', creds('whip')], ['inactive', '409:call_not_active', creds('whip')],
       ['ended', '410:call_ended', creds('whip')], ['capability', '409:media_capability_unsupported', creds('whip')], ['sdp', '400:invalid_sdp', creds('whip')],
-      ['unknown', '409:something_new', creds('whip')], ['foreign', 'foreign', creds('whip')], ['reject', 'reject', creds('whip')]] as const;
+      ['unknown', '409:something_new', creds('whip')], ['notShared', '409:caller_screen_not_shared', creds('whep')], ['foreign', 'foreign', creds('whip')], ['reject', 'reject', creds('whip')]] as const;
     for (const [label, setMode, c] of cases) {
-      mode = setMode; const error = await publishWhip(new FakePeer(), c).catch(e => e);
+      mode = setMode; const error = await (c.endpoint.endsWith('whep') ? receiveWhep : publishWhip)(new FakePeer(), c).catch(e => e);
       expect(String(error.message)).not.toContain('secret');
       failures[label] = error.code;
     }
     expect(failures).toEqual({ expired: 'session_expired', conflict: 'session_conflict', inactive: 'call_not_active', ended: 'call_ended', capability: 'capability_missing',
-      sdp: 'invalid_signaling', unknown: 'session_conflict', foreign: 'transport_unavailable', reject: 'codec_unsupported' });
-    expect(log.at(-1)).toMatchObject({ method: 'DELETE', path: '/sessions/whip' });     // rejected answer cleans up the resource
+      sdp: 'invalid_signaling', unknown: 'session_conflict', notShared: 'caller_screen_not_shared', foreign: 'transport_unavailable', reject: 'codec_unsupported' });
+    expect(log.filter(l => l.method === 'DELETE').at(-1)).toMatchObject({ path: '/sessions/whip' });     // rejected answer cleans up the resource
     await expect(publishWhip(new FakePeer(), { endpoint: 'http://media.example/whip', token: 't' })).rejects.toMatchObject({ code: 'transport_unavailable' });
     await expect(publishWhip(new FakePeer(), { ...creds('whip'), connectBy: '2000-01-01T00:00:00Z' })).rejects.toMatchObject({ code: 'session_expired' });
     expect(parseIceServerLinks('<turns:t.example>; rel=ice-server')).toEqual([{ urls: ['turns:t.example'] }]);
@@ -243,4 +243,101 @@ test('WHIP: a resource created by a 201 is released when the answer is unusable 
   body = 'abort';
   await expect(publishWhip(new FakePeer(), creds, { fetch: fetcher, signal: controller.signal })).rejects.toMatchObject({ code: 'aborted' });
   expect(deletes).toEqual(['https://signal.example/r/1', 'https://signal.example/r/1']);
+});
+
+test('capabilities: content lists are explicit, forward compatible and default to camera', () => {
+  const section = { supported: true, transports: ['whip'], codecs: ['h264'], max_width: 1280, max_height: 720, max_fps: 30 };
+  const inbound = { supported: true, transports: ['whep'], max_width: 1280, max_height: 720, max_fps: 30 };
+  expect(parseMediaCapabilities({ version: 1, custom_video: section, inbound_caller_video: inbound }).custom_video!.contents).toEqual(['camera']);
+  const caps = parseMediaCapabilities({ version: 1, custom_video: { ...section, contents: ['screen', 'hologram', 'screen'] }, inbound_caller_video: { ...inbound, contents: ['camera', 'screen'] } });
+  // An unknown future content is ignored rather than disabling custom video for older SDKs.
+  expect(caps.custom_video!.contents).toEqual(['screen']);
+  expect(caps.inbound_caller_video!.contents).toEqual(['camera', 'screen']);
+  expect(parseMediaCapabilities({ version: 1, custom_video: { ...section, contents: 'screen' } }).custom_video!.contents).toEqual(['camera']);
+  expect(parseMediaCapabilities({ version: 1, custom_video: { ...section, contents: [] } }).custom_video!.contents).toEqual(['camera']);
+  // An explicit list of only unknown contents is not read as camera support.
+  expect(parseMediaCapabilities({ version: 1, custom_video: { ...section, contents: ['hologram'] } }).custom_video!.contents).toEqual([]);
+});
+
+function screenClient(caps: unknown, fps = 15) {
+  const grants: unknown[] = [];
+  const grant: ScreenGrant = { endpoint: 'https://signal.example/opaque', token: 'session-bearer', connect_by: '2099-01-01T00:00:00Z', ice_servers: [], codecs: ['h264'],
+    limits: { max_width: 1920, max_height: 1080, max_fps: fps, max_frame_bytes: 8_388_608 } };
+  return { grants, client: { getCall: async () => ({ media_capabilities: caps }),
+    createMediaSession: async (_: string, input: unknown) => { grants.push(input); return grant; } } };
+}
+const screenCaps = (contents: string[]) => ({ version: 1, custom_video: { supported: true, transports: ['whip'], codecs: ['h264'], max_width: 1920, max_height: 1080, max_fps: 30, contents } });
+
+test('screen stream: capability-gated, uses the screen content and never exceeds 15 fps', async () => {
+  const t = gatedTransport(['video']); t.open();
+  // Without a screen capability nothing is minted.
+  const camOnly = screenClient(screenCaps(['camera']));
+  await expect(startScreenStream(camOnly.client, 'call', { width: 64, height: 32, createTransport: () => t.transport })).rejects.toMatchObject({ code: 'capability_missing' });
+  expect(camOnly.grants).toEqual([]);
+
+  const ok = screenClient(screenCaps(['camera', 'screen']), 10);
+  const stream = await startScreenStream(ok.client, 'call', { width: 64, height: 32, createTransport: grant => { expect(grant.limits.max_fps).toBe(10); return t.transport; } });
+  expect(ok.grants).toEqual([{ direction: 'publish', content: 'screen' }]);
+  expect(stream.source.state).toBe('live');
+  // The grant's 10 fps ceiling is enforced: a frame 70 ms later (about 14 fps, allowed at 15) is dropped, one 100 ms later is accepted.
+  expect(stream.source.pushFrame(i420(64, 32, 0n))).toBe('queued');
+  expect(stream.source.pushFrame(i420(64, 32, 70_000n))).toBe('dropped');
+  expect(stream.source.pushFrame(i420(64, 32, 100_000n))).toBe('queued');
+  await stream.stop(); await stream.stop();
+  expect(stream.source.state).toBe('stopped');
+  expect(t.closed).toBe(1);
+
+  // A caller cannot ask for more than the 15 fps screen cap even when the grant is larger.
+  const big = screenClient(screenCaps(['screen']), 15);
+  // Every local rejection happens before a session is minted, so no slot is held by a bad call.
+  for (const bad of [{ maxFps: 20 }, { maxFps: 0 }, { width: 4096 }, { width: 63 }, { height: 8 }])
+    await expect(startScreenStream(big.client, 'call', { width: 64, height: 32, ...bad, createTransport: () => t.transport })).rejects.toBeInstanceOf(TypeError);
+  const aborted = new AbortController(); aborted.abort();
+  await expect(startScreenStream(big.client, 'call', { width: 64, height: 32, signal: aborted.signal, createTransport: () => t.transport })).rejects.toMatchObject({ code: 'aborted' });
+  expect(big.grants).toEqual([]);
+});
+
+test('screen share tools: serialized, one stream, idempotent stop, recovers from failure, stable codes only', async () => {
+  expect(SCREEN_SHARE_TOOLS.map(tool => tool.name)).toEqual(['share_screen', 'stop_screen_share']);
+  for (const tool of SCREEN_SHARE_TOOLS) expect(tool.parameters).toEqual({ type: 'object', properties: {}, additionalProperties: false });
+
+  const streams: { state: string; stops: number }[] = [];
+  let release: (() => void) | undefined;
+  const controller = new ScreenShareController(async () => {
+    await new Promise<void>(r => { release = r; });
+    const record = { state: 'live', stops: 0 }; streams.push(record);
+    return { source: { get state() { return record.state; } } as never, stop: async () => { record.stops++; record.state = 'stopped'; } };
+  });
+  const until = async (n: number) => { while (streams.length < n) { release?.(); await tick(); } };
+
+  // Concurrent shares start one stream.
+  const a = controller.handleTool('share_screen'), b = controller.handleTool('share_screen');
+  await until(1);
+  expect(await Promise.all([a, b])).toEqual([{ status: 'sharing' }, { status: 'sharing' }]);
+  expect([streams.length, controller.active]).toEqual([1, true]);
+  expect(await controller.handleTool('stop_screen_share')).toEqual({ status: 'stopped' });
+  expect(await controller.handleTool('stop_screen_share')).toEqual({ status: 'stopped' });
+  expect([streams[0]!.stops, controller.active]).toEqual([1, false]);
+
+  // share -> stop -> share while the first is still starting: the final state matches the last result.
+  const s1 = controller.handleTool('share_screen'), stop = controller.handleTool('stop_screen_share'), s2 = controller.handleTool('share_screen');
+  await until(3);
+  expect(await Promise.all([s1, stop, s2])).toEqual([{ status: 'sharing' }, { status: 'stopped' }, { status: 'sharing' }]);
+  expect([streams[1]!.stops, streams[2]!.stops, controller.active]).toEqual([1, 0, true]);
+
+  // A stream that failed on its own is released and replaced on the next share.
+  streams[2]!.state = 'failed';
+  expect(controller.active).toBe(false);
+  const again = controller.handleTool('share_screen'); await until(4);
+  expect(await again).toEqual({ status: 'sharing' });
+  expect([streams[2]!.stops, controller.active]).toEqual([1, true]);
+  await controller.handleTool('stop_screen_share');
+
+  const conflict = new ScreenShareController(async () => { throw Object.assign(new Error('x'), { code: 'media_session_conflict' }); });
+  expect(await conflict.handleTool('share_screen')).toEqual({ status: 'error', code: 'session_conflict' });
+  const failing = new ScreenShareController(async () => { throw new MediaError('session_expired'); });
+  expect(await failing.handleTool('share_screen')).toEqual({ status: 'error', code: 'session_expired' });
+  const leaky = new ScreenShareController(async () => { throw new Error('token session-bearer leaked'); });
+  expect(await leaky.handleTool('share_screen')).toEqual({ status: 'error', code: 'screen_share_failed' });
+  expect(await controller.handleTool('click_at')).toEqual({ status: 'error', code: 'unknown_tool' });
 });

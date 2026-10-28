@@ -208,4 +208,45 @@ test('living_service.message webhooks verify sha256=<hex> over the exact raw bod
     expect(await verifyLivingServiceWebhook(raw, sig, key)).toBe(false);
   expect(['1', '2', '42'].map(livingSignatureVersion)).toEqual([1, 2, 42]);
   for (const bad of [null, '', '0', '-1', '01', '1.0', ' 1', '1\n', 'v1', '1e3', '99999999999999999']) expect(livingSignatureVersion(bad)).toBeNull();
+
+});
+
+test('screen media sessions: content is validated, echoed and screen grants are capped at 15 fps', async () => {
+  const base = { session_id: '3f2b8c1e-0d4a-4b7e-9c11-2a6f5e0d9b77', endpoint: 'https://signal.example/opaque/abc', token: 'session-bearer',
+    connect_by: '2026-10-25T00:05:00Z', expires_at: '2026-10-25T01:00:00Z', ice_servers: [], codecs: ['h264'] };
+  const screen = { ...base, direction: 'publish', content: 'screen', limits: { max_width: 1920, max_height: 1080, max_fps: 15, max_frame_bytes: 8_388_608 } };
+  const callerScreen = { ...base, direction: 'subscribe', content: 'caller_screen', limits: { max_width: 1280, max_height: 720, max_fps: 30, max_frame_bytes: 8_388_608 } };
+  const bodies: unknown[] = [];
+  let reply: () => Response = () => Response.json({ data: screen }, { status: 201 });
+  const client = new ChertControlPlane({ token: 'project-key', projectId: 'project', fetch: (async (_url, init) => { bodies.push(JSON.parse(String(init?.body))); return reply(); }) as typeof fetch });
+
+  expect(await client.createMediaSession('call', { direction: 'publish', content: 'screen' })).toEqual(screen as never);
+  reply = () => Response.json({ data: callerScreen }, { status: 201 });
+  expect(await client.createMediaSession('call', { direction: 'subscribe', content: 'caller_screen' })).toEqual(callerScreen as never);
+  expect(bodies).toEqual([{ direction: 'publish', content: 'screen' }, { direction: 'subscribe', content: 'caller_screen' }]);
+
+  // Wrong combinations fail locally with no request.
+  for (const bad of [{ direction: 'publish', content: 'caller_screen' }, { direction: 'subscribe', content: 'screen' }, { direction: 'subscribe', content: 'camera' }, { direction: 'publish', content: 'window' }])
+    await expect(client.createMediaSession('call', bad as never)).rejects.toBeInstanceOf(TypeError);
+  expect(bodies).toHaveLength(2);
+
+  // A screen grant above 15 fps, a missing or different echo, or a screen grant for a camera request is a contract violation.
+  for (const [request, data] of [
+    [{ direction: 'publish', content: 'screen' }, { ...screen, limits: { ...screen.limits, max_fps: 30 } }],
+    [{ direction: 'publish', content: 'screen' }, { ...screen, content: undefined }],
+    [{ direction: 'publish', content: 'screen' }, { ...screen, content: 'camera' }],
+    [{ direction: 'publish' }, screen],
+    [{ direction: 'subscribe' }, callerScreen],
+  ] as const) {
+    reply = () => Response.json({ data }, { status: 201 });
+    await expect(client.createMediaSession('call', request as never)).rejects.toMatchObject({ code: 'invalid_response' });
+  }
+  // The backend resolves an omitted content to 'camera' and echoes it, in both directions.
+  reply = () => Response.json({ data: { ...screen, content: 'camera', limits: { ...screen.limits, max_fps: 30 } } }, { status: 201 });
+  await expect(client.createMediaSession('call', { direction: 'publish' })).resolves.toMatchObject({ content: 'camera' });
+  reply = () => Response.json({ data: { ...callerScreen, content: 'camera' } }, { status: 201 });
+  await expect(client.createMediaSession('call', { direction: 'subscribe' })).resolves.toMatchObject({ content: 'camera' });
+
+  reply = () => Response.json({ error: { code: 'caller_screen_not_shared', message: 'internal detail' } }, { status: 409 });
+  await expect(client.createMediaSession('call', { direction: 'subscribe', content: 'caller_screen' })).rejects.toMatchObject({ status: 409, code: 'caller_screen_not_shared' });
 });

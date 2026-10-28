@@ -241,7 +241,10 @@ CallEventType = Literal['incoming_registered', 'allocated', 'answer_requested', 
                         'end_requested', 'agent_preparing', 'answered', 'dialing', 'connecting',
                         'active', 'ending', 'bridge_ready', 'agent_connected', 'remote_video_ready',
                         'remote_video_unavailable', 'caller_video_published', 'ended', 'failed',
-                        'rejected', 'cleanup_complete', 'unknown']
+                        'rejected', 'cleanup_complete',
+                        # Screen sharing. Payload-free: never screen content or coordinates.
+                        'agent_screen_started', 'agent_screen_stopped', 'caller_screen_share_started',
+                        'caller_screen_share_ended', 'screen_control_granted', 'screen_control_revoked', 'unknown']
 
 
 class CallAction(TypedDict, total=False):
@@ -274,6 +277,8 @@ class _CallOptional(TypedDict, total=False):
     video_framing: Literal['fit', 'fill']
     connecting_screen_dismissal: Literal['audio', 'video']
     has_transcript: bool
+    # Read-only consent state for screen control. The public API exposes no control operations.
+    screen_control: Literal['none', 'requested', 'granted']
 
 
 class Call(_CallOptional):
