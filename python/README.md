@@ -2,16 +2,21 @@
 
 Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
 The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
-[`chert-sdk` 0.1.1](https://pypi.org/project/chert-sdk/0.1.1/) is published on PyPI.
+[`chert-sdk` 0.2.2](https://pypi.org/project/chert-sdk/0.2.2/) is published on PyPI.
 The legacy `chert` import and explicit-URL constructor calls remain compatible.
 
 ```sh
-python -m pip install chert-sdk==0.1.1
-# or: uv add chert-sdk==0.1.1
+python -m pip install chert-sdk==0.2.2
+# or: uv add chert-sdk==0.2.2
 ```
 
-This guide matches the published 0.1.1 package, which was built from this source
-tree. 0.1.1 changes only package documentation from 0.1.0; the code is identical.
+This guide matches the published 0.2.2 package, which was built from this source
+tree. The version follows the npm `@trychert/sdk` 0.2.2 release. Since 0.1.1 it adds
+the custom video session and screen-share content contract (source preview,
+unreleased: the hosted backend does not serve them yet and they fail with
+`404 endpoint_unavailable`), the new allowlisted media error codes, billing
+refusals by code (such as `billing_sales_disabled` or `shared_no_capacity`)
+instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
 "Source preview" below means not production-verified, not absent from the package.
 
 ```python
