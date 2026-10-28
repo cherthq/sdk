@@ -139,10 +139,12 @@ FaceTime calls can carry audio and video; a call can also be audio-only.
   the call's `media_status`.
 
 The SDK is an HTTP client. It does not carry audio or video frames; media flows
-between FaceTime and LiveKit. Custom video sources over WHIP/WHEP and web
-frontends rendered as call video are in draft
+between FaceTime and LiveKit. Custom video sources over WHIP/WHEP, web
+frontends rendered as call video, and screen sharing (an agent streaming its
+screen into a call, and receiving the caller's shared screen) are in draft
 ([#17](https://github.com/cherthq/sdk/pull/17),
-[#18](https://github.com/cherthq/sdk/pull/18)) and are not released.
+[#18](https://github.com/cherthq/sdk/pull/18),
+[#25](https://github.com/cherthq/sdk/pull/25)) and are not released.
 
 ## Put a LiveKit agent on a FaceTime line
 
