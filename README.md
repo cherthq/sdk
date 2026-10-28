@@ -210,8 +210,8 @@ works without a network connection and has no dependencies: frame validation,
 a bounded video source, capability parsing and WHIP/WHEP signaling.
 
 Until the hosted backend serves these routes, the control-plane calls for
-custom video, living services and screen sharing fail with
-`ChertApiError` status 404, code `endpoint_unavailable`, and
+custom video, living services, screen sharing and call video composition fail
+with `ChertApiError` status 404, code `endpoint_unavailable`, and
 `startScreenStream` fails with `capability_missing`. Check capabilities first.
 
 - **Capabilities are explicit.** Read `media_capabilities` from a line, call or
