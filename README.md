@@ -346,7 +346,8 @@ video. There is no second transport.
 - **Denials.** Minting fails with `409 media_content_unsupported` when the line
   does not advertise the requested content, `409 caller_screen_unsupported` when
   the caller's screen is not available as a separate track, and
-  `422 media_limit_exceeded` when the request exceeds the line's media limits.
+  `422 media_limit_exceeded` when the backend rejects the session against the
+  line's media limits.
 - **Events and consent.** Call events `agent_screen_started`,
   `agent_screen_stopped`, `caller_screen_share_started`,
   `caller_screen_share_ended`, `screen_control_granted` and
