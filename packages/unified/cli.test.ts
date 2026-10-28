@@ -63,10 +63,61 @@ test('CLI preserves a safe SDK error code without exposing server text or respon
 });
 
 test('CLI reports unknown commands as such, even without credentials', async () => {
-  for (const command of [['login'], ['onboard'], ['facetim'], ['facetime', 'statsu'], ['facetime', 'lines', 'extra'], ['imessage', 'sned'], ['context', 'extra']]) {
+  for (const command of [['login'], ['onboard'], ['facetim'], ['facetime', 'statsu'], ['facetime', 'lines', 'extra'], ['imessage', 'sned'], ['context', 'extra'], ['context', '--offline', 'extra'], ['context', '--bogus']]) {
     const env = { ...process.env }; delete env.CHERT_PROJECT_ID;
     const child = Bun.spawn(['node', resolve(import.meta.dir, '../../dist/unified/cli.js'), ...command], { env, stdout: 'pipe', stderr: 'pipe' });
     expect(await child.exited).toBe(1);
     expect(JSON.parse(await new Response(child.stderr).text())).toEqual({ error: 'Unknown command. Use --help.', code: 'unknown_command' });
   }
-});
+}, 20_000);
+
+test('context reports account and docs context without exposing credential values', async () => {
+  const paths: string[] = [];
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
+    const path = new URL(request.url).pathname; paths.push(path);
+    if (request.headers.get('authorization') !== 'Bearer context-secret-token') return Response.json({ error: { code: 'unauthorized' } }, { status: 401 });
+    if (path === '/api/v1/cli/whoami') return Response.json({ data: { email: 'dev@example.test', project: { id: 'p', name: 'Demo' }, role: 'owner' }, request_id: 'r1' });
+    if (path === '/api/v1/lines') return Response.json({ data: { items: [{ id: 'l1', supports_video: true }], total: 1, limit: 50, offset: 0 }, request_id: 'r2' });
+    return Response.json({ error: { code: 'not_found' } }, { status: 404 });
+  } });
+  const cli = resolve(import.meta.dir, '../../dist/unified/cli.js');
+  const run = async (args: string[], env: Record<string, string | undefined>) => {
+    const child = Bun.spawn(['node', cli, 'context', ...args], { env: { PATH: process.env.PATH, ...env }, stdout: 'pipe', stderr: 'pipe' });
+    const [code, out] = [await child.exited, await new Response(child.stdout).text()];
+    return { code, out, json: JSON.parse(out) };
+  };
+  try {
+    const env = { CHERT_PROJECT_ID: '22000000-0000-4000-8000-000000000002', CHERT_FACETIME_TOKEN: 'context-secret-token', CHERT_FACETIME_URL: server.url.origin, CHERT_API_KEY: 'imessage-secret-key' };
+    const online = await run([], env);
+    expect(online.code).toBe(0);
+    expect(online.out).not.toContain('context-secret-token');
+    expect(online.out).not.toContain('imessage-secret-key');
+    expect(online.json.account.facetime.identity.data.email).toBe('dev@example.test');
+    expect(online.json.account.facetime.lines.data.items[0].supports_video).toBe(true);
+    expect(online.json.configured.imessage.CHERT_API_KEY).toBe(true);
+    expect(online.json.docs.setup).toEndWith('/docs/SETUP.md');
+    expect(online.json.channels).toEqual(['imessage', 'facetime']);
+    expect(paths.sort()).toEqual(['/api/v1/cli/whoami', '/api/v1/lines']);
+
+    paths.length = 0;
+    const offline = await run(['--offline'], env);
+    expect(offline.json.account.facetime).toBe('skipped');
+    expect(paths).toEqual([]);
+
+    const rejected = await run([], { ...env, CHERT_FACETIME_TOKEN: 'wrong-token' });
+    expect(rejected.code).toBe(0);
+    expect(rejected.json.account.facetime.identity).toEqual({ error: 'unauthorized' });
+
+    const leaky = await run(['--offline'], { CHERT_FACETIME_URL: 'https://user:hunter2@facetime.example/?token=abc', CHERT_BASE_URL: 'https://console.example/api/v1' });
+    expect(leaky.out).not.toContain('hunter2');
+    expect(leaky.out).not.toContain('token=abc');
+    expect(leaky.json.configured.facetime.origin).toBe('invalid');
+    expect(leaky.json.configured.imessage.origin).toBe('https://console.example');
+
+    const bare = await run([], {});
+    expect(bare.code).toBe(0);
+    expect(bare.json.projectId).toBeNull();
+    expect(bare.json.missing).toEqual(['CHERT_PROJECT_ID', 'CHERT_API_KEY', 'CHERT_FACETIME_TOKEN']);
+    expect(bare.json.account.facetime).toBe('not_configured');
+  } finally { server.stop(true); }
+}, 20_000);

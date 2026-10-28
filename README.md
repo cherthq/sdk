@@ -5,6 +5,9 @@ This repository contains JavaScript/TypeScript, Python, Rust, C#/.NET, C++ and G
 clients. **Language coverage and release status differ:** JavaScript is published;
 the other clients are source previews, with unified channel support under review.
 
+**New here? Start with the [setup guide](docs/SETUP.md).** Coding agents can read
+[`llms.txt`](llms.txt) or run `chert-sdk context`.
+
 ## Languages and release status
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
@@ -124,8 +127,7 @@ The existing `new ChertSDK({projectId,imessage,facetime})` constructor and
 standalone clients retain their explicit, separate-credential behavior.
 
 Channel commands require `CHERT_PROJECT_ID` as application context and only their
-own channel credentials. `context` needs only the project ID; help and `adopt`
-need neither project context nor channel credentials. iMessage uses `CHERT_API_KEY`
+own channel credentials. Help, `context` and `adopt` need neither. iMessage uses `CHERT_API_KEY`
 and optional `CHERT_TENANT`, defaulting to `https://console.trychert.com`.
 `CHERT_BASE_URL` optionally overrides it: root origins get `/api/v1`, while
 explicit deployment prefixes (including `/api/v1`) are preserved without duplication.
@@ -156,6 +158,14 @@ bunx --package @trychert/sdk@0.2.1 chert-sdk facetime workers
 bunx --package @trychert/sdk@0.2.1 chert-sdk adopt ./my-app          # Dry-run migration report
 bunx --package @trychert/sdk@0.2.1 chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
+
+`context` prints JSON with the SDK version, which credentials are set (never
+their values), your FaceTime identity and lines when `CHERT_FACETIME_TOKEN` and
+`CHERT_PROJECT_ID` are set, and docs links. It needs no variables; `--offline`
+skips every request. The `facetime` commands only inspect access. To sign in
+from a terminal and put a LiveKit voice or video agent on a FaceTime line, use
+the separate `chert` CLI from
+[`@trychert/facetime`](https://www.npmjs.com/package/@trychert/facetime).
 
 `adopt --install` additionally uses the target project's package manager.
 Replace legacy `@cherthq/sdk` imports with `@trychert/sdk` and
