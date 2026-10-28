@@ -85,7 +85,11 @@ pub fn verify_facetime_signature(
     raw_body: &[u8],
     secret: &str,
 ) -> Result<(), WebhookSignatureError> {
-    let Some(expected) = signature.trim().strip_prefix("sha256=").and_then(digest) else {
+    let Some(expected) = signature
+        .strip_prefix("sha256=")
+        .filter(|hex| hex.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')))
+        .and_then(digest)
+    else {
         return Err(WebhookSignatureError::Malformed);
     };
     if !matches(secret, &[raw_body], &expected) {

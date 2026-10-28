@@ -101,5 +101,15 @@ fn facetime_signatures_cover_the_raw_body() {
         verify_facetime_signature("md5=00", BODY, "fts_test"),
         Err(Malformed)
     );
+    for header in [
+        format!("sha256={}", FACETIME.to_uppercase()),
+        format!(" sha256={FACETIME}"),
+        format!("sha256={FACETIME}\n"),
+    ] {
+        assert_eq!(
+            verify_facetime_signature(&header, BODY, "fts_test"),
+            Err(Malformed)
+        );
+    }
     assert!(!format!("{:?}", Mismatch).contains("fts_test"));
 }
