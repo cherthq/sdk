@@ -1,3 +1,5 @@
+// Call-video tests use designated initializers that intentionally omit optional fields.
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <trychert/client.hpp>
 #include <cmath>
 #include <cstdint>
