@@ -70,7 +70,7 @@ async function main() {
     const client = new ChertClient({ baseURL: env.CHERT_BASE_URL, apiKey: required('CHERT_API_KEY'), ...(env.CHERT_TENANT ? { tenant: env.CHERT_TENANT } : {}) });
     result = await client.sendText({ phone: values.phone, body: values.body, idempotency_key: values['idempotency-key'] });
   } else {
-    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId });
+    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId: required('CHERT_PROJECT_ID') });
     result = command === 'lines' ? await client.listLines() : command === 'workers' ? await client.listWorkers() : await client.whoami();
   }
   console.log(JSON.stringify({ projectId, channel, data: result }));
