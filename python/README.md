@@ -14,7 +14,9 @@ This guide matches the published 0.2.2 package, which was built from this source
 tree. The version follows the npm `@trychert/sdk` 0.2.2 release. Since 0.1.1 it adds
 the custom video session and screen-share content contract (source preview,
 unreleased: the hosted backend does not serve them yet and they fail with
-`404 endpoint_unavailable`) and the new allowlisted media error codes.
+`404 endpoint_unavailable`), the new allowlisted media error codes, billing
+refusals by code (such as `billing_sales_disabled` or `shared_no_capacity`)
+instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
 "Source preview" below means not production-verified, not absent from the package.
 
 ```python
