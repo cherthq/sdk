@@ -12,8 +12,8 @@ the other clients are source previews, with unified channel support under review
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
-| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.2`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
-| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.2.2 on PyPI](https://pypi.org/project/chert-sdk/0.2.2/): `pip install chert-sdk==0.2.2` | [Python guide](python/README.md) |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.3`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.2.3 on PyPI](https://pypi.org/project/chert-sdk/0.2.3/): `pip install chert-sdk==0.2.3` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
@@ -44,22 +44,22 @@ build/test source; do not substitute a similarly named registry package.
 
 ## JavaScript / TypeScript
 
-The examples below target **`@trychert/sdk@0.2.2`**. The
+The examples below target **`@trychert/sdk@0.2.3`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
 
 ```sh
-npm install @trychert/sdk@0.2.2
+npm install @trychert/sdk@0.2.3
 # Alternatives:
-pnpm add @trychert/sdk@0.2.2
-bun add @trychert/sdk@0.2.2
+pnpm add @trychert/sdk@0.2.3
+bun add @trychert/sdk@0.2.3
 
-npx --package=@trychert/sdk@0.2.2 chert-sdk --help
-bunx --package @trychert/sdk@0.2.2 chert-sdk --help
+npx --package=@trychert/sdk@0.2.3 chert-sdk --help
+bunx --package @trychert/sdk@0.2.3 chert-sdk --help
 ```
 
 ESM and declarations are shipped for Node 22.12+, current Bun and Deno 2 with
-npm compatibility. Deno imports use `npm:@trychert/sdk@0.2.2` (append subpaths
+npm compatibility. Deno imports use `npm:@trychert/sdk@0.2.3` (append subpaths
 after the version). CommonJS `require()` is not a supported migration target.
 The npm package is `@trychert/sdk`; the CLI binary remains `chert-sdk`.
 
@@ -152,7 +152,8 @@ check already had this message; `message_id` is a new record), both HTTP 200.
 Idempotency keys with leading or trailing whitespace are rejected before sending,
 because Chert trims them. Any other success response raises
 `unconfirmed_text_outcome`: reconcile before sending again. Releases up to 0.2.2
-posted to a route production does not serve, so text sends failed there.
+posted to a route production does not serve, so text sends failed there; 0.2.3
+fixes this.
 
 Billing uses a signed-in user session and project UUID. Only the terminal-billing
 draft below also accepts a CLI login with the `billing` scope held by a current
@@ -163,7 +164,7 @@ for example `billing_sales_disabled`, `billing_subscription_exists`,
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
-**Terminal billing (draft, unreleased; the backend does not serve it yet).**
+**Terminal billing (draft; ships in 0.2.3, not served yet).**
 `purchase({ plan }, key)` charges the saved card and is refused while the project
 already has a live subscription; the plan is granted by the payment webhook.
 `paymentMethodSetup(key)` returns `{ status: 'requires_payment_method', url }` for
@@ -180,12 +181,12 @@ plan-change policy exists, and the CLI has no `switch` command. Dedicated purcha
 unavailable (`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
 
 ```sh
-bunx --package @trychert/sdk@0.2.2 chert-sdk context
-bunx --package @trychert/sdk@0.2.2 chert-sdk facetime status
-bunx --package @trychert/sdk@0.2.2 chert-sdk facetime lines
-bunx --package @trychert/sdk@0.2.2 chert-sdk facetime workers
-bunx --package @trychert/sdk@0.2.2 chert-sdk adopt ./my-app          # Dry-run migration report
-bunx --package @trychert/sdk@0.2.2 chert-sdk adopt ./my-app --write  # Applies supported rewrites
+bunx --package @trychert/sdk@0.2.3 chert-sdk context
+bunx --package @trychert/sdk@0.2.3 chert-sdk facetime status
+bunx --package @trychert/sdk@0.2.3 chert-sdk facetime lines
+bunx --package @trychert/sdk@0.2.3 chert-sdk facetime workers
+bunx --package @trychert/sdk@0.2.3 chert-sdk adopt ./my-app          # Dry-run migration report
+bunx --package @trychert/sdk@0.2.3 chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
 `context` prints JSON with the SDK version, which credentials are set (never
@@ -206,7 +207,7 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
-migration. To upgrade, update the dependency to `@trychert/sdk@0.2.2`
+migration. To upgrade, update the dependency to `@trychert/sdk@0.2.3`
 (published, `latest`), regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
 stay `@trychert/sdk/<subpath>`.
@@ -215,7 +216,7 @@ stay `@trychert/sdk/<subpath>`.
 
 The canonical npm package is `@trychert/sdk`, not `chert-sdk`. If you installed
 the accidental unscoped 0.1.0 package (since unpublished from npm), remove that
-dependency and install `@trychert/sdk@0.2.2`. Change root imports
+dependency and install `@trychert/sdk@0.2.3`. Change root imports
 from `chert-sdk` to `@trychert/sdk` and preserve subpath suffixes (for example,
 `chert-sdk/facetime` becomes `@trychert/sdk/facetime`). Regenerate your consumer
 lockfile and rerun tests. The identity correction does not change the default
@@ -225,8 +226,9 @@ usage; do not rely on it to rename existing SDK imports. This documentation
 does not deprecate any registry package; registry actions require separate approval.
 
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
-`adopt` and `context`. Since 0.2.1, unknown commands and subcommands exit with
-`unknown_command` before any credential lookup. Published 0.1.0, 0.2.0, 0.2.1 and 0.2.2
+`adopt` and `context`, and since 0.2.3 `billing status|card|buy|cancel` (draft;
+the backend does not serve it yet). Since 0.2.1, unknown commands and subcommands exit with
+`unknown_command` before any credential lookup. Published 0.1.0 through 0.2.3
 do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
 agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
 
@@ -285,7 +287,7 @@ Limitations: v1 is video only (audio stays on the existing call paths), and the
 SDK does not include a video encoder for Node. Remote keyframe requests are not
 guaranteed to arrive, and the SDK does not promise any bitrate. Caller video is
 capped at 1280×720 and 30 fps. These APIs require a backend that reports these
-capabilities. The code ships in 0.2.2, but the hosted backend does not serve
+capabilities. The code ships in 0.2.2 and later, but the hosted backend does not serve
 these routes yet: calls fail with `404 endpoint_unavailable`.
 
 ### Living services (draft, unreleased)
@@ -345,8 +347,8 @@ through the same bridge, without a call. Examples: a
 
 Limitations: these routes are a draft contract and require a backend that reports
 `living_services`. There is no audio from the page, and no uploaded bundles yet.
-Input is relayed to the page, not injected as OS events. Not in any published
-package version.
+Input is relayed to the page, not injected as OS events. The code ships in
+0.2.2 and later, but the hosted backend does not serve these routes yet.
 
 ### Screen sharing (draft, unreleased)
 
@@ -393,8 +395,8 @@ See [`packages/media/examples/screen-share.ts`](packages/media/examples/screen-s
 
 ### Call video composition (draft, unreleased)
 
-Not in any published package version, and not served by the backend yet. The
-call's video can be a page, or a page layered over live video, composed
+The code ships in 0.2.3, but the hosted backend does not serve it yet
+(`404 endpoint_unavailable`). The call's video can be a page, or a page layered over live video, composed
 server-side into the one track the caller sees.
 
 ```ts
@@ -518,7 +520,7 @@ These examples describe the APIs in this source tree, after following the linked
 language guide's local build setup. Apart from Python, they are not registry
 installation commands; other draft PRs may propose different unified APIs.
 
-**Python** — `pip install chert-sdk==0.2.2` (or `python/` on the module path for
+**Python** — `pip install chert-sdk==0.2.3` (or `python/` on the module path for
 unreleased source):
 
 ```python
@@ -536,7 +538,7 @@ sdk = Chert(
 
 Python defaults to `https://console.trychert.com` for iMessage and
 `https://facetime.trychert.com` for FaceTime; explicit `base_url` overrides remain
-available for tests/self-hosting. **Published 0.2.2 on PyPI:** default origins
+available for tests/self-hosting. **Published 0.2.3 on PyPI:** default origins
 and offline tests do not establish live service compatibility. Strict text,
 default-origin reactions, and billing availability require separate verification.
 No host fallback or automatic retries are performed; publication remains separate.
