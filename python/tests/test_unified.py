@@ -400,6 +400,29 @@ class UnifiedTests(unittest.TestCase):
                 self.assertEqual(len(self.server.calls), before + 1)
         self.assertEqual(self.messaging.calls, [])
 
+    def test_terminal_billing_actions_and_stripe_hosted_urls(self):
+        entitlement = {'plan': 'shared', 'status': 'active', 'valid_until': '2026-12-01T00:00:00Z', 'fulfillment_status': 'none'}
+        self.server.status = 200
+        self.server.payload = {'data': {'status': 'active', 'entitlement': entitlement}}
+        self.assertEqual(self.client.purchase(plan='shared', idempotency_key='buy-key-01'), {'status': 'active', 'entitlement': entitlement})
+        self.server.payload = {'data': {'status': 'requires_action', 'url': 'https://hooks.stripe.com/3d_secure_2/x'}}
+        self.assertEqual(self.client.change_plan(plan='dedicated', idempotency_key='switch-key-1')['status'], 'requires_action')
+        self.server.payload = {'data': {'status': 'requires_payment_method', 'url': 'https://checkout.stripe.com/c/pay/cs_x'}}
+        self.assertEqual(self.client.payment_method_setup(idempotency_key='card-key-01')['url'], 'https://checkout.stripe.com/c/pay/cs_x')
+        bodies = [call[3] for call in self.server.calls[-3:]]
+        self.assertEqual(bodies, [{'action': 'purchase', 'plan': 'shared'}, {'action': 'change_plan', 'plan': 'dedicated'}, {'action': 'payment_method'}])
+        for bad in ({'status': 'requires_action', 'url': 'http://hooks.stripe.com/x'}, {'status': 'requires_action', 'url': 'https://stripe.com.evil.example/x'},
+                    {'status': 'requires_action', 'url': 'https://u:p@checkout.stripe.com/x'}, {'status': 'requires_payment_method'},
+                    {'status': 'active'}, {'status': 'active', 'entitlement': {'plan': 'gold'}}, {'status': 'pending'}, None):
+            self.server.payload = {'data': bad}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.purchase(plan='shared', idempotency_key='buy-key-02')
+            self.assertEqual(caught.exception.code, 'invalid_response')
+        before = len(self.server.calls)
+        with self.assertRaises(ValueError):
+            self.client.purchase(plan='gold', idempotency_key='buy-key-03')
+        self.assertEqual(len(self.server.calls), before)
+
     def test_billing_refusals_surface_by_code(self):
         for status, code in ((409, 'billing_sales_disabled'), (409, 'billing_subscription_exists'), (409, 'billing_dedicated_no_inventory'),
                              (409, 'shared_no_capacity'), (503, 'billing_unconfigured'), (409, 'billing_secret_reason')):

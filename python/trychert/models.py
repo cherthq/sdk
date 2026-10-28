@@ -127,6 +127,13 @@ class BillingStatus(TypedDict):
     dedicated_available: bool
 
 
+class BillingResult(TypedDict, total=False):
+    """`active` carries the entitlement; `requires_payment_method`/`requires_action` carry a Stripe-hosted URL."""
+    status: Literal["active", "requires_payment_method", "requires_action"]
+    entitlement: dict[str, Json]
+    url: str
+
+
 class CheckoutSession(TypedDict):
     url: str
 

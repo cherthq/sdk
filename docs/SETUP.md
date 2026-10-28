@@ -119,7 +119,10 @@ retry cannot send twice. A queued receipt means accepted, not delivered or read.
   show an assigned shared line but does not allocate one.
 
 The SDK can read `billingStatus()` and start a checkout (`createCheckout`) with a
-signed-in user session, but it does not allocate lines. `chert-sdk` commands only
+signed-in user session, but it does not allocate lines. Terminal billing
+(`chert-sdk billing buy|switch|card|cancel`, `purchase`, `changePlan`) is a
+draft the backend does not serve yet; it charges a saved card and returns a
+Stripe-hosted URL whenever card entry or authentication is needed. `chert-sdk` commands only
 inspect access. The `chert` agent CLI's `chert dev` claims your project's line
 while it runs and can end at a time slot you set.
 

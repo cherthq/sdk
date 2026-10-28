@@ -10,6 +10,9 @@ const DOCS = 'https://github.com/cherthq/sdk/blob/main';
 const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk imessage send --phone +COUNTRYNUMBER --body TEXT --idempotency-key KEY --confirm
   chert-sdk facetime status | lines | workers
+  chert-sdk billing status
+  chert-sdk billing card | cancel --idempotency-key KEY --confirm
+  chert-sdk billing buy | switch --plan shared|dedicated --idempotency-key KEY --confirm
   chert-sdk adopt [path] [--write] [--install] [--json]
   chert-sdk context [--offline]
 
@@ -25,8 +28,11 @@ Set CHERT_API_KEY for iMessage; CHERT_FACETIME_TOKEN for FaceTime.
 iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.
 FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionally
 overrides the origin. Credentials are service-specific, not interchangeable.
-FaceTime commands inspect existing access/lines; no calls, media relay, billing,
+FaceTime commands inspect existing access/lines; no calls, media relay,
 concierge onboarding or automatic shared-line allocation is implemented.
+Billing (draft backend contract) uses CHERT_FACETIME_TOKEN with the billing scope.
+buy/switch charge the saved card; when a card or authentication is needed the
+output carries a Stripe-hosted url to open, then rerun billing status.
 Use --help on any channel without credentials. iMessage send requires an
 explicit --confirm and a caller-supplied stable idempotency key. Output is JSON.`;
 
@@ -44,6 +50,7 @@ async function main() {
   const unknown = channel === 'context' ? (command !== undefined && command !== '--offline') || args.length > 0
     : channel === 'imessage' ? command !== 'send'
     : channel === 'facetime' ? args.length > 0 || !['status', 'lines', 'workers'].includes(command!)
+    : channel === 'billing' ? !['status', 'card', 'buy', 'switch', 'cancel'].includes(command!) || (command === 'status' && args.length > 0)
     : true;
   if (unknown) throw Object.assign(new Error(), { code: 'unknown_command' });
   const env = process.env;
@@ -62,6 +69,23 @@ async function main() {
     if (!values.confirm) throw Object.assign(new Error(), { code: 'send_confirmation_required' });
     const client = new ChertClient({ baseURL: env.CHERT_BASE_URL, apiKey: required('CHERT_API_KEY'), ...(env.CHERT_TENANT ? { tenant: env.CHERT_TENANT } : {}) });
     result = await client.sendText({ phone: values.phone, body: values.body, idempotency_key: values['idempotency-key'] });
+  } else if (channel === 'billing') {
+    const { values } = parseArgs({ args, options: { plan: { type: 'string' }, 'idempotency-key': { type: 'string' }, confirm: { type: 'boolean' } } });
+    const mutation = command !== 'status';
+    if (mutation) {
+      if ((command === 'buy' || command === 'switch') !== (values.plan !== undefined) || (values.plan !== undefined && !['shared', 'dedicated'].includes(values.plan)))
+        throw Object.assign(new Error(), { code: 'invalid_request' });
+      if (values['idempotency-key'] === undefined) throw Object.assign(new Error(), { code: 'idempotency_key_required' });
+      if (!/^[\x21-\x7e]{8,200}$/.test(values['idempotency-key'])) throw Object.assign(new Error(), { code: 'invalid_idempotency_key' });
+      if (!values.confirm) throw Object.assign(new Error(), { code: 'billing_confirmation_required' });
+    }
+    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId });
+    const key = values['idempotency-key']!, plan = values.plan as 'shared' | 'dedicated';
+    result = command === 'status' ? await client.billingStatus()
+      : command === 'card' ? await client.paymentMethodSetup(key)
+      : command === 'buy' ? await client.purchase({ plan }, key)
+      : command === 'switch' ? await client.changePlan({ plan }, key)
+      : await client.cancelSubscription(key);
   } else {
     const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId });
     result = command === 'lines' ? await client.listLines() : command === 'workers' ? await client.listWorkers() : await client.whoami();
@@ -99,7 +123,7 @@ async function context(env: NodeJS.ProcessEnv, offline: boolean) {
     },
     missing: ['CHERT_PROJECT_ID', 'CHERT_API_KEY', 'CHERT_FACETIME_TOKEN'].filter(name => !set(name)),
     account: { facetime: offline ? 'skipped' : facetimeAccount ?? 'not_configured', imessage: 'not_inspected' },
-    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'adopt', 'context'],
+    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status', 'billing card', 'billing buy', 'billing switch', 'billing cancel', 'adopt', 'context'],
     docs: { setup: `${DOCS}/docs/SETUP.md`, llms: `${DOCS}/llms.txt`, ...(existsSync(llmsFile) ? { llmsFile } : {}), readme: `${DOCS}/README.md`,
       compatibility: `${DOCS}/COMPATIBILITY.md` },
     agentCli: { package: '@trychert/facetime', bin: 'chert', use: 'Browser login and putting a LiveKit voice or video agent on a FaceTime line' },

@@ -152,6 +152,17 @@ for example `billing_sales_disabled`, `billing_subscription_exists`,
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
+**Terminal billing (draft, unreleased; the backend does not serve it yet).**
+`purchase({ plan }, key)` and `changePlan({ plan }, key)` charge the saved card;
+`paymentMethodSetup(key)` adds or replaces it. Each returns `{ status: 'active',
+entitlement }` or `{ status: 'requires_payment_method' | 'requires_action', url }`,
+where `url` is a Stripe-hosted page for card entry or authentication: card details
+are never entered in the terminal. The CLI equivalents are
+`chert-sdk billing status | card | buy --plan P | switch --plan P | cancel`;
+mutations need `--idempotency-key` and `--confirm`. The CLI credential needs the
+`billing` scope and an owner/admin role. Dedicated purchases stay unavailable
+(`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
+
 ```sh
 bunx --package @trychert/sdk@0.2.2 chert-sdk context
 bunx --package @trychert/sdk@0.2.2 chert-sdk facetime status

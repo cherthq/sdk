@@ -8,7 +8,7 @@ Rules for coding agents:
 - Credentials are per service: `CHERT_API_KEY` (iMessage), `CHERT_FACETIME_TOKEN` plus `CHERT_PROJECT_ID` (FaceTime). They are not interchangeable. Never print or commit them.
 - `chert-sdk imessage send` needs `--confirm` and a stable `--idempotency-key`. Send only to recipients who agreed, and only when the user asked.
 - Nothing retries automatically. A queued receipt is not delivery; an accepted call is not a connected call. Reconcile before retrying.
-- The SDK does not allocate lines. It can read billing status and start a checkout only with a signed-in user session and explicit user intent.
+- The SDK does not allocate lines. It can read billing status and start a checkout only with a signed-in user session and explicit user intent. Terminal billing (`chert-sdk billing buy|switch|card|cancel`) is an unreleased draft the backend does not serve yet; never buy or switch plans without the user's explicit request, and open returned Stripe URLs only for the user.
 - FaceTime calls can carry audio and video (calls can also be audio-only). Video needs a line with `supports_video`, a FaceTime Video call, and an agent that publishes a camera track.
 - Custom video (WHIP/WHEP), living services and screen sharing are unreleased drafts (PRs #17, #18, #25); do not use them from a published package.
 - `chert-sdk` has no `login`, `onboard`, `new` or `dev` command; those belong to the `chert` CLI from `@trychert/facetime`.
