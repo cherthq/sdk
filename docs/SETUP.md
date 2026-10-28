@@ -142,11 +142,13 @@ The SDK does not relay media itself; call media flows between FaceTime and
 LiveKit. Custom video sources over WHIP/WHEP (`@trychert/sdk/media`: frame
 validation, a bounded video source and signaling for your own WebRTC peer
 connection), web frontends rendered as call video, and screen sharing (an agent
-streaming its screen into a call, and receiving the caller's shared screen) are
+streaming its screen into a call, and receiving the caller's shared screen) and
+call video composition (a page as the call video, or layered over live video) are
 in draft and not released: they are in the source tree but not in any published
 package ([#17](https://github.com/cherthq/sdk/pull/17),
 [#18](https://github.com/cherthq/sdk/pull/18),
-[#25](https://github.com/cherthq/sdk/pull/25)).
+[#25](https://github.com/cherthq/sdk/pull/25),
+[#29](https://github.com/cherthq/sdk/pull/29)).
 
 ## Put a LiveKit agent on a FaceTime line
 

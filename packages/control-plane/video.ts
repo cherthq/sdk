@@ -69,6 +69,8 @@ export interface Call {
   media_capabilities?: unknown;
   /** Draft: explicit versioned living-services capability; parse with parseLivingServices. */
   living_services?: unknown;
+  /** Draft: parse with parseVideoComposition. */
+  video_composition?: unknown;
   /** Read-only consent state for screen control. The public API exposes no control operations. */
   screen_control?: 'none' | 'requested' | 'granted';
   [key: string]: unknown;

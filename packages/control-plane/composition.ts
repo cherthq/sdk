@@ -3,7 +3,7 @@
  * published through the call's single publish slot. A base layer (z 0) carries camera frames over a #17 publish
  * grant, or a backend-managed source; page layers (z >= 1) are #18 living sessions. No other transport.
  */
-import { validateInitialState, validateLivingSession, type LivingInputKind, type LivingJson, type LivingSession } from './living';
+import { validateInitialState, validateLivingSession, validateManifest, type LivingInputKind, type LivingJson, type LivingServiceManifest, type LivingSession, type LivingViewport } from './living';
 import type { MediaSessionGrant } from './index';
 
 /** SDK v1 bound. The capability's `max_layers` is the backend's real limit. */
@@ -18,10 +18,12 @@ export interface CompositionBase { kind: CompositionBaseKind }
 /** Normalized to the output frame: 0..1, width/height > 0, and x+width, y+height <= 1. */
 export interface CompositionRegion { x: number; y: number; width: number; height: number }
 /**
- * A page: an HTTPS URL (ad-hoc, optionally digest-pinned) or an existing ready #18 deployment.
- * Ad-hoc URLs depend on the backend creating an implicit deployment (open question 1); see `pageRef`.
+ * A page: an existing ready #18 deployment, or an HTTPS URL that the SDK deploys first (create, wait ready) so the
+ * call-video resource only ever receives an immutable `deployment_id`. The backend never loads a URL directly.
+ * URL pages take an optional viewport/fps for the deployment manifest (default 1280x720 at 30; the effective values
+ * are clamped server-side) and a name (default: the URL host).
  */
-export type CompositionPage = string | { url: string; digest?: string } | { deployment_id: string };
+export type CompositionPage = string | { url: string; digest?: string; name?: string; viewport?: LivingViewport; fps?: number } | { deployment_id: string };
 export type CompositionBackground = 'opaque' | 'transparent';
 
 export interface BaseLayerInput { id: string; source: CompositionBase }
@@ -96,25 +98,26 @@ function regionOk(r: unknown): r is CompositionRegion {
 const fullFrame = (r: CompositionRegion) => r.x === 0 && r.y === 0 && r.width === 1 && r.height === 1;
 const inputsOk = (v: unknown) => Array.isArray(v) && v.every(k => KINDS.includes(k)) && new Set(v).size === v.length;
 
-/**
- * Seam for open question 1. Today an ad-hoc URL is sent as `{ url, digest? }` for the backend to deploy implicitly.
- * If the backend requires a deployment, resolve URLs to `{ deployment_id }` here (create, wait ready, then PUT).
- */
-function pageRef(page: CompositionPage): Record<string, string> {
+/** A URL page resolves to this manifest; the client deploys it and substitutes the ready `deployment_id`. */
+export type PageRef = { deployment_id: string } | { manifest: LivingServiceManifest };
+function pageRef(page: CompositionPage): PageRef {
   const p = typeof page === 'string' ? { url: page } : page;
   if (p && typeof p === 'object' && 'deployment_id' in p) {
     if (typeof p.deployment_id !== 'string' || !p.deployment_id || p.deployment_id.length > 128) throw new TypeError('deployment_id is required.');
     return { deployment_id: p.deployment_id };
   }
-  let url: URL;
-  try { url = new URL((p as { url: string }).url); } catch { throw new TypeError('A page URL must be an absolute HTTPS URL.'); }
-  if (url.protocol !== 'https:' || url.username || url.password || url.hash) throw new TypeError('A page URL must be HTTPS without credentials or fragment.');
-  const digest = (p as { digest?: unknown }).digest;
-  if (digest !== undefined && (typeof digest !== 'string' || !/^sha256-[A-Za-z0-9+/]{43}=$/.test(digest))) throw new TypeError('digest must be sha256-<base64>.');
-  return { url: url.href, ...(digest ? { digest } : {}) };
+  const u = p as Exclude<CompositionPage, string | { deployment_id: string }>;
+  let host = '';
+  try { host = new URL(u?.url).host; } catch { /* validateManifest reports it */ }
+  const manifest = validateManifest({ name: u?.name ?? (host || 'page'), entry_url: u?.url, viewport: u?.viewport ?? { width: 1280, height: 720 }, fps: u?.fps ?? 30,
+    ...(u?.digest !== undefined ? { entry_digest: u.digest } : {}) });
+  return { manifest };
 }
 
-/** @internal Validates locally and returns the PUT body. The page shortcut is one opaque full-frame page layer. */
+/**
+ * @internal Validates locally and returns the PUT body. The page shortcut is one opaque full-frame page layer.
+ * Page layers carry a `PageRef`; the client replaces each `{ manifest }` with a ready `deployment_id` before the PUT.
+ */
 export function compositionBody(input: SetCallVideo): Record<string, unknown> {
   if (!input || typeof input !== 'object') throw new TypeError('setCallVideo needs { page } or { layers }.');
   const layers: VideoLayerInput[] = 'page' in input && !('layers' in input)

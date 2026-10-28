@@ -1,6 +1,8 @@
 # Call video composition (proposal, unreleased)
 
-Status: draft contract for review. Nothing here is implemented or published.
+Status: draft, implemented in source on `feat/video-composition` (TypeScript, plus native
+parity without URL pages). Unreleased: nothing here is published, and the backend
+does not serve it yet.
 
 Agents should be able to say "the call video is this page", and to put an HTML
 page over live video (captions, UI, annotations, branding). This proposal adds
@@ -26,9 +28,14 @@ page is rendered by the #18 runtime and published as the call's video; voice
 continues on the existing call path. `clearCallVideo(callId)` stops it and frees
 the publish slot.
 
-A `page` is either a URL string or `{ url, digest? }` (ad-hoc, see Open
-question 1) or `{ deployment_id }` (an existing #18 deployment, pinned and
-immutable).
+A `page` is `{ deployment_id }` (a ready #18 deployment) or a URL. **The
+call-video resource only accepts deployment IDs; it never loads a URL.** For a
+URL page (`'https://…'` or `{ url, digest?, name?, viewport?, fps? }`) the SDK
+creates a living service, waits until the deployment is `ready` (default 60 s,
+`living_deployment_not_ready` otherwise), then sends its `deployment_id`. Retrying
+with the same idempotency key reuses the same deployment. To show one page on many
+calls, deploy once and pass `{ deployment_id }`. Native SDKs accept deployment IDs
+only.
 
 ## Layers
 
@@ -77,8 +84,11 @@ Rules:
   is this page" case).
 - **Alpha.** `background: 'transparent'` renders the page with an alpha channel:
   the document and root backgrounds are transparent, and CSS transparency shows
-  the layer below. Compositing is premultiplied source-over, then multiplied by
-  `opacity`. `'opaque'` fills the region with the page as rendered.
+  the layer below. The server compositor blends premultiplied RGBA source-over,
+  multiplied by `opacity`, before the final video encode (alpha never travels over
+  WebRTC). `'opaque'` fills the region with the page as rendered. Transparent
+  layers work only where the capability reports `page_alpha: true`; otherwise the
+  PUT fails with `composition_invalid`.
 - **Placement.** `region` is normalized to the output frame. The page viewport
   is the region's size in output pixels, rounded down to even and clamped to the
   living-service limits; the effective viewport is returned on the living
@@ -98,27 +108,32 @@ Rules:
 - **`camera`**: the response carries a #17 publish grant on the base layer
   (`content: 'camera'`, same limits). The agent publishes with `ChertVideoSource`
   and `whipTransport`, exactly as today; the grant routes into the compositor
-  instead of straight to the call.
+  instead of straight to the call. An already-live standalone camera session
+  cannot be adopted: clear it and republish to the composition's grant. Updating
+  a composition keeps the base session it already owns.
 - **Customer LiveKit track**: Chert never joins the customer's LiveKit room or
   holds its credentials. The customer subscribes to the track with
   `@livekit/rtc-node` and feeds its frames into `ChertVideoSource` over the
   `camera` base grant. The SDK adds `liveKitTrackFrames(rtc, videoStream)`, the
   inverse of the existing `liveKitVideoTransport`, so that is one line.
 - **`managed`**: a source the backend provides for the line, used only when the
-  capability lists it.
+  capability lists it. No managed source is composable yet, so `bases` omits it
+  today and the PUT returns `composition_base_unavailable`.
 
 ## Frame rate, publish slot, where it composes
 
 - **Composition is server-side,** in the Chert media pipeline next to the #18
   page renderer. The caller receives one composed video track. The SDK never
   composites, and nothing changes in the caller's FaceTime client.
-- **Output fps** = min(base fps, grant limit). Page layers render at their own
+- **Output fps** = min(base fps, grant limit, the capability's `max_fps`). The
+  capability's `max_fps` is a measured compositor rate, not the grant limit. Page layers render at their own
   effective fps (min(requested, manifest, grant limits), never above output
   fps); the compositor emits on the base cadence and reuses each layer's latest
   frame. With no base, output fps is the bottom page layer's fps. Expect up to
   one output frame of added latency on the base.
 - **One publish slot.** An active composition is the call's single publish
-  occupant. Camera, living surface and screen remain mutually exclusive with it:
+  occupant. Its camera grant and page sessions are children of that one slot, so
+  they never conflict with the composition itself. Camera, living surface and screen remain mutually exclusive with it:
   a direct `createMediaSession({ direction: 'publish' })` or `attachLivingService`
   while a composition is live returns `409 media_session_conflict` /
   `living_surface_conflict`, and `setCallVideo` while one of those is live returns
@@ -152,13 +167,16 @@ Explicit and versioned, never inferred from `custom_video` or
   `living_input_not_allowed`, `call_not_active`, `call_ended`.
 - Timeline: payload-free `call_video.live | updated | failed | stopped`.
 
-## Open questions for the backend
+## Backend decisions (2026-10-28)
 
-1. Can `PUT .../video` accept an ad-hoc `{ url }` page and create an implicit,
-   unpinned deployment server-side? If not, `setCallVideo({ page: url })` runs
-   create, wait-ready and attach in the SDK, and stays one call for the agent.
-2. Can the renderer produce an alpha channel from a transparent page, and at
-   what fps for a 1920×270 strip over 1080p?
-3. Can an already-live camera session be adopted as the base (re-routed into
-   the compositor) without a new WHIP session, or must the agent republish?
-4. Which `managed` sources exist today, if any? If none, `bases` omits it.
+1. No implicit or unpinned URL deployment at the PUT; the SDK deploys URL pages
+   first and sends the immutable deployment ID.
+2. Alpha is blended by the server compositor before the encode. `page_alpha`
+   stays false until that path exists and is tested, and `max_fps` is a measured
+   compositor capability.
+3. No adoption of a live camera session in v1; republish to the composition's
+   base grant. Updates keep the owned base session.
+4. No composable `managed` base yet; `bases` omits it.
+5. `/api/v1/calls/{id}/video`, the error codes and `call_video.*` events are
+   accepted. The camera grant and page sessions are owned by the composition's
+   one slot; standalone camera, living and screen resources conflict with it.

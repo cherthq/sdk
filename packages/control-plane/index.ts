@@ -2,8 +2,8 @@
 import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
 export * from './video';
 export { parseLivingServices, verifyLivingServiceWebhook, livingSignatureVersion, type LivingServicesCapability, type LivingInputKind, type LivingViewport, type LivingJson, type LivingServiceManifest, type LivingDeploymentStatus, type LivingDeployment, type AttachLivingService, type LivingSessionStatus, type LivingSession, type LivingInputEvent, type LivingServiceMessageWebhook } from './living';
-export { COMPOSITION_MAX_LAYERS, parseVideoComposition, compositionInputTarget, type VideoCompositionCapability, type CompositionBaseKind, type CompositionBase, type CompositionRegion, type CompositionPage, type CompositionBackground, type BaseLayerInput, type PageLayerInput, type VideoLayerInput, type SetCallVideo, type CompositionStatus, type BaseLayer, type PageLayer, type VideoLayer, type CallVideoComposition } from './composition';
-import { compositionBody, validateComposition, type CallVideoComposition, type SetCallVideo } from './composition';
+export { COMPOSITION_MAX_LAYERS, parseVideoComposition, compositionInputTarget, type VideoCompositionCapability, type CompositionBaseKind, type CompositionBase, type CompositionRegion, type CompositionPage, type CompositionBackground, type BaseLayerInput, type PageLayerInput, type VideoLayerInput, type SetCallVideo, type PageRef, type CompositionStatus, type BaseLayer, type PageLayer, type VideoLayer, type CallVideoComposition } from './composition';
+import { compositionBody, validateComposition, type CallVideoComposition, type PageRef, type SetCallVideo } from './composition';
 import { validateAttach, validateEvent, validateInput, validateLivingSession, validateManifest, validateState, type AttachLivingService, type LivingDeployment, type LivingInputEvent, type LivingJson, type LivingServiceManifest, type LivingSession } from './living';
 export type MediaSessionCodec = 'h264' | 'vp8';
 export type MediaDirection = 'publish' | 'subscribe';
@@ -164,7 +164,26 @@ export class ChertControlPlane {
    * Sets the call's video (draft): `{ page }` makes a page the whole video; `{ layers }` composes a camera or managed
    * base with a page layer above it. Replaces the current composition, which holds the call's single publish slot.
    */
-  async setCallVideo(callId:string,input:SetCallVideo,idempotencyKey:string):Promise<CallVideoComposition>{const body=compositionBody(input);return await this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`,'PUT',body,'project',this.idempotency(idempotencyKey)).then(checkComposition);}
+  async setCallVideo(callId:string,input:SetCallVideo,idempotencyKey:string,options:{signal?:AbortSignal;readyTimeoutMs?:number}={}):Promise<CallVideoComposition>{
+    const body=compositionBody(input);const key=this.idempotency(idempotencyKey);
+    // URL pages are deployed first (create, wait ready); the call-video resource only receives immutable deployment IDs.
+    for(const layer of body.layers as {id:string;page?:PageRef}[]){
+      if(!layer.page||!('manifest' in layer.page))continue;
+      const deployment=await this.createLivingService(layer.page.manifest,`${idempotencyKey}:page:${layer.id}`.slice(0,200));
+      layer.page={deployment_id:(await this.readyDeployment(deployment,options)).deployment_id};
+    }
+    return checkComposition(await this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`,'PUT',body,'project',key));
+  }
+  private async readyDeployment(deployment:LivingDeployment,{signal,readyTimeoutMs=60_000}:{signal?:AbortSignal;readyTimeoutMs?:number}){
+    const deadline=Date.now()+readyTimeoutMs;
+    while(deployment.status!=='ready'){
+      if(deployment.status==='failed'||Date.now()>=deadline)throw new ChertApiError(409,'living_deployment_not_ready');
+      if(signal?.aborted)throw new ChertApiError(0,'aborted');
+      await new Promise(resolve=>setTimeout(resolve,500));
+      deployment=await this.getLivingDeployment(deployment.service_id,deployment.deployment_id);
+    }
+    return deployment;
+  }
   getCallVideo(callId:string){return this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`).then(checkComposition);}
   /** Stops the composition and frees the publish slot. */
   clearCallVideo(callId:string){return this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`,'DELETE').then(checkComposition);}

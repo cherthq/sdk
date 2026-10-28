@@ -12,19 +12,22 @@ const layered = { composition_id: 'cmp', call_id: 'call', revision: 3, status: '
 const pageOnly = { ...layered, output: { width: 1280, height: 720, fps: 30 },
   layers: [{ id: 'page', z: 1, living_session: session(30), region: { x: 0, y: 0, width: 1, height: 1 }, background: 'opaque', opacity: 1, input: [] }] };
 
-function harness(reply: () => Response) {
+function harness(reply: (method: string, path: string) => Response) {
   const seen: { method: string; path: string; body: unknown; key: string | null }[] = [];
   const client = new ChertControlPlane({ token: 'project-key', projectId: 'project', fetch: (async (url, init) => {
     seen.push({ method: init!.method!, path: new URL(String(url)).pathname, body: init?.body ? JSON.parse(String(init.body)) : undefined,
       key: new Headers(init?.headers).get('idempotency-key') });
-    return reply();
+    return reply(init!.method!, new URL(String(url)).pathname);
   }) as typeof fetch });
   return { client, seen };
 }
 
 test('call video: page shortcut, layered base + overlay, get and clear', async () => {
+  const deployment = { service_id: 'svc', deployment_id: 'dep-url', revision: 1, error_code: null };
   let data: unknown = pageOnly;
-  const { client, seen } = harness(() => Response.json({ data }, { status: 200 }));
+  const { client, seen } = harness((method, path) => Response.json({ data: path.includes('living-services')
+    ? { ...deployment, status: method === 'POST' ? 'pending' : 'ready' } : data }, { status: 200 }));
+  // A URL page is deployed and awaited first; the call-video PUT only ever carries the immutable deployment ID.
   expect(await client.setCallVideo('call', { page: 'https://agent.example/live.html' }, 'video-key-1')).toEqual(pageOnly as never);
   data = layered;
   const result = await client.setCallVideo('call', { revision: 2, layers: [
@@ -35,7 +38,10 @@ test('call video: page shortcut, layered base + overlay, get and clear', async (
   await client.getCallVideo('call');
   await client.clearCallVideo('call');
   expect(seen).toEqual([
-    { method: 'PUT', path: '/api/v1/calls/call/video', key: 'video-key-1', body: { layers: [{ id: 'page', z: 1, page: { url: 'https://agent.example/live.html' },
+    { method: 'POST', path: '/api/v1/living-services', key: 'video-key-1:page:page', body: { name: 'agent.example', entry_url: 'https://agent.example/live.html',
+      viewport: { width: 1280, height: 720 }, fps: 30 } },
+    { method: 'GET', path: '/api/v1/living-services/svc/deployments/dep-url', key: null, body: undefined },
+    { method: 'PUT', path: '/api/v1/calls/call/video', key: 'video-key-1', body: { layers: [{ id: 'page', z: 1, page: { deployment_id: 'dep-url' },
       region: { x: 0, y: 0, width: 1, height: 1 }, background: 'opaque', opacity: 1 }] } },
     { method: 'PUT', path: '/api/v1/calls/call/video', key: 'video-key-2', body: { revision: 2, layers: [{ id: 'base', z: 0, source: { kind: 'camera' } },
       { id: 'captions', z: 1, page: { deployment_id: 'dep' }, region: { x: 0, y: 0.75, width: 1, height: 0.25 }, background: 'transparent', opacity: 0.8,
@@ -49,9 +55,17 @@ test('call video: page shortcut, layered base + overlay, get and clear', async (
   expect(compositionInputTarget(pageOnly as never, 0.5, 0.5)).toBeNull();   // declares no input
 });
 
+test('call video: a URL page whose deployment fails never reaches the call-video resource', async () => {
+  const { client, seen } = harness(() => Response.json({ data: { service_id: 'svc', deployment_id: 'dep', revision: 1, status: 'failed', error_code: 'fetch_failed' } }));
+  await expect(client.setCallVideo('call', { page: { url: 'https://agent.example/p', viewport: { width: 1920, height: 1080 }, fps: 24 } }, 'video-key-3'))
+    .rejects.toMatchObject({ status: 409, code: 'living_deployment_not_ready' });
+  expect(seen.map(s => `${s.method} ${s.path}`)).toEqual(['POST /api/v1/living-services']);
+  expect(seen[0]!.body).toMatchObject({ viewport: { width: 1920, height: 1080 }, fps: 24 });
+});
+
 test('call video: invalid compositions are rejected locally before any request', async () => {
   const { client, seen } = harness(() => Response.json({ data: layered }));
-  const page = { id: 'p', z: 1, page: 'https://agent.example/p' };
+  const page = { id: 'p', z: 1, page: { deployment_id: 'dep' } as never };
   const base = { id: 'base', source: { kind: 'camera' as const } };
   for (const input of [
     { layers: [] }, { layers: [base, page, { ...page, id: 'q', z: 2 }] },                          // 0 and 3 layers
@@ -99,7 +113,7 @@ test('call video: composition error codes survive sanitization without server te
   for (const [status, code] of [[409, 'video_composition_unsupported'], [422, 'composition_invalid'], [409, 'composition_revision_conflict'],
     [409, 'composition_base_unavailable'], [409, 'media_session_conflict'], [409, 'composition_secret']] as const) {
     const { client } = harness(() => Response.json({ error: { code, message: 'internal detail' } }, { status }));
-    const error = await client.setCallVideo('call', { page: 'https://agent.example/p' }, 'video-key-1').catch(e => e);
+    const error = await client.setCallVideo('call', { page: { deployment_id: 'dep' } }, 'video-key-1').catch(e => e);
     expect([error.status, error.code, JSON.stringify(error).includes('internal detail') || String(error).includes('internal detail')])
       .toEqual([status, code === 'composition_secret' ? 'request_failed' : code, false]);
   }

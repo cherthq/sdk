@@ -219,8 +219,8 @@ a bounded video source, capability parsing and WHIP/WHEP signaling.
   returns an experimental WHEP
   ([draft-ietf-wish-whep-05](https://datatracker.ietf.org/doc/draft-ietf-wish-whep/05/))
   endpoint. Treat `endpoint` and `token` as opaque secrets.
-- **One publish slot per call.** Custom camera video, a living surface and a
-  screen share are mutually exclusive. Requesting a second publish while one is
+- **One publish slot per call.** Custom camera video, a living surface, a
+  screen share and a call video composition are mutually exclusive. Requesting a second publish while one is
   active returns `media_session_conflict`.
 - **Signaling.** `publishWhip`/`receiveWhep` take any spec-compliant
   `RTCPeerConnection` (the browser's built-in one, or a Node/Bun/Deno WebRTC
@@ -325,8 +325,8 @@ video. There is no second transport.
   callId, { width, height, createTransport })` checks the capability, mints the
   grant and starts a `ChertVideoSource` at no more than the grant's fps. Give the
   WebRTC track `contentHint = 'detail'`. Stopping sends the WHIP `DELETE`.
-- **One publish slot per call.** Camera video, a screen and a living surface are
-  mutually exclusive. A second active publish fails with `media_session_conflict`
+- **One publish slot per call.** Camera video, a screen, a living surface and a
+  call video composition are mutually exclusive. A second active publish fails with `media_session_conflict`
   (`session_conflict` from signaling).
 - **Agent tools.** `SCREEN_SHARE_TOOLS` defines `share_screen` and
   `stop_screen_share` with JSON Schema parameters, usable as MCP `inputSchema` or
@@ -356,6 +356,58 @@ video. There is no second transport.
   screen-control operations.
 
 See [`packages/media/examples/screen-share.ts`](packages/media/examples/screen-share.ts).
+
+### Call video composition (draft, unreleased)
+
+Not in any published package version, and not served by the backend yet. The
+call's video can be a page, or a page layered over live video, composed
+server-side into the one track the caller sees.
+
+```ts
+// The call video is this page. The SDK deploys the URL, waits for it to be ready,
+// then sets the call video to that immutable deployment.
+await client.setCallVideo(callId, { page: 'https://agent.example/live.html' }, 'video-1-call-7');
+
+// Captions over the agent's camera.
+const video = await client.setCallVideo(callId, { layers: [
+  { id: 'base', source: { kind: 'camera' } },
+  { id: 'captions', z: 1, page: { deployment_id }, region: { x: 0, y: 0.75, width: 1, height: 0.25 },
+    background: 'transparent', opacity: 0.9, input: ['pointer'] },
+] }, 'video-2-call-7');
+// Publish base frames over video.layers[0].publish with ChertVideoSource + WHIP, as for custom video.
+```
+
+- **Layers.** v1 allows two: an optional base at z 0 (`camera`, or `managed`
+  where `video_composition.bases` lists it) and a page layer at z ≥ 1. Each page
+  layer is a living session, so `setLivingState`, `sendLivingEvent` and
+  `sendLivingInput` take its `living_session.session_id`. Without a base, the page
+  must be opaque, full frame and at opacity 1.
+- **Placement and alpha.** `region` is normalized to the output frame.
+  `background: 'transparent'` is blended (premultiplied source-over) with
+  `opacity` by the server compositor, and is accepted only where the capability
+  reports `page_alpha`.
+- **Pages.** The backend only accepts deployment IDs. URL pages are deployed by
+  the SDK first (`living_deployment_not_ready` if the deployment fails or is not
+  ready within 60 s); to reuse a page across calls, deploy it once.
+- **Frame rate.** Output fps is the lowest of the base fps, the grant limit and
+  the capability's measured `max_fps`; page layers render at or below it.
+- **One publish slot.** A composition occupies the call's single publish slot. Its
+  camera grant and page sessions belong to it; standalone camera, living and
+  screen sessions conflict with it (`media_session_conflict`,
+  `living_surface_conflict`). A live standalone camera session cannot be adopted
+  as the base: republish to the composition's grant.
+- **LiveKit base.** Chert never joins your LiveKit room. Feed a subscribed track
+  through the camera grant with `liveKitTrackFrames(rtc, new rtc.VideoStream(track))`
+  from `@trychert/sdk/media/livekit`.
+- **Input.** Only agent-relayed input, with pointer coordinates normalized to the
+  output frame; `compositionInputTarget(video, x, y)` finds the layer under a point.
+  The caller cannot click the page.
+- **Capability and errors.** `parseVideoComposition(line.video_composition)`.
+  Errors: `video_composition_unsupported`, `composition_invalid`,
+  `composition_revision_conflict`, `composition_base_unavailable`. Timeline events
+  `call_video.live | updated | failed | stopped` carry no payload.
+
+Contract: [`docs/proposals/CALL_VIDEO_COMPOSITION.md`](docs/proposals/CALL_VIDEO_COMPOSITION.md).
 
 ### iMessage events and webhooks (source preview)
 
