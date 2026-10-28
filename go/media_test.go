@@ -268,10 +268,14 @@ func TestScreenMediaSessions(t *testing.T) {
 			t.Fatalf("accepted %v %s: %v", tc.input, tc.data, err)
 		}
 	}
-	// An explicit camera echo on a default publish request stays valid.
+	// The backend echoes the resolved camera content on default requests in both directions.
 	f.set(reply(patchGrant(t, `{"content":"camera"}`)))
 	if r, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish}); err != nil || r.Data.Content != MediaContentCamera {
 		t.Fatalf("camera echo: %v", err)
+	}
+	f.set(reply(strings.Replace(callerScreen, `"content":"caller_screen"`, `"content":"camera"`, 1)))
+	if r, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaSubscribe}); err != nil || r.Data.Content != MediaContentCamera {
+		t.Fatalf("subscribe camera echo: %v", err)
 	}
 
 	f.set(func() (int, string) {

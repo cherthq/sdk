@@ -421,13 +421,11 @@ pub(crate) fn parse_media_session_grant(
     if value.get("direction")?.as_str()? != wire_direction {
         return None;
     }
-    // A requested content must be echoed exactly; a default request accepts no echo (or camera for publish).
+    // A requested content must be echoed exactly; a default request accepts no echo or camera (either direction).
     let content = match (requested_content, value.get("content")) {
         (Some(want), Some(echo)) if echo.as_str() == Some(want.wire()) => Some(want),
         (None, None) => None,
-        (None, Some(echo)) if direction == MediaDirection::Publish && echo == "camera" => {
-            Some(MediaSessionContent::Camera)
-        }
+        (None, Some(echo)) if echo == "camera" => Some(MediaSessionContent::Camera),
         _ => return None,
     };
     let fps_cap = if content == Some(MediaSessionContent::Screen) {

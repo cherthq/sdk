@@ -490,10 +490,17 @@ async fn screen_content_is_validated_echoed_and_capped() {
             (Some(201), "invalid_response")
         );
     }
-    // An explicit camera echo on a default publish request stays valid.
+    // The backend echoes the resolved camera content on default requests in both directions.
     let result = attempt(
         session(Publish, None),
         with(grant(), "content", json!("camera")),
+    )
+    .await
+    .unwrap();
+    assert_eq!(result.content, Some(Camera));
+    let result = attempt(
+        session(Subscribe, None),
+        with(caller_screen_grant(), "content", json!("camera")),
     )
     .await
     .unwrap();

@@ -203,11 +203,11 @@ def _parse_media_session_grant(value: Any, direction: MediaDirection,
     """Validated grant, or ``None`` when any field violates the v1 contract, the requested codecs or content."""
     if not isinstance(value, dict) or value.get('direction') != direction:
         return None
-    # A requested content must be echoed exactly; a default request accepts no echo (or 'camera' for publish).
+    # A requested content must be echoed exactly; a default request accepts no echo or 'camera' (either direction).
     echo = value.get('content', _ABSENT)
     if content is not None and echo != content:
         return None
-    if content is None and echo is not _ABSENT and not (direction == 'publish' and echo == 'camera'):
+    if content is None and echo is not _ABSENT and echo != 'camera':
         return None
     fps_cap = 15 if (content or echo) == 'screen' else 30
     width_cap, height_cap = (1920, 1080) if direction == 'publish' else (1280, 720)

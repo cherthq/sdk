@@ -192,9 +192,11 @@ class MediaSessionTests(unittest.TestCase):
             with self.assertRaises(ChertControlPlaneError) as caught:
                 self.client.create_media_session('call-1', **kwargs)
             self.assertEqual((caught.exception.status, caught.exception.code), (201, 'invalid_response'))
-        # An explicit camera echo on a default publish request stays valid.
+        # The backend echoes the resolved camera content on default requests in both directions.
         self.server.payload = {'data': grant(content='camera')}
         self.assertEqual(self.client.create_media_session('call-1', direction='publish').content, 'camera')
+        self.server.payload = {'data': {**caller, 'content': 'camera'}}
+        self.assertEqual(self.client.create_media_session('call-1', direction='subscribe').content, 'camera')
         self.server.payload = {'data': grant()}
         self.assertIsNone(self.client.create_media_session('call-1', direction='publish').content)
 

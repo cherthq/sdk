@@ -201,10 +201,10 @@ func parseGrant(raw json.RawMessage, direction MediaDirection, requested []Video
 	if json.Unmarshal(raw, &o) != nil || o == nil {
 		return g, false
 	}
-	// A requested content must be echoed exactly; a default request accepts no echo (or camera for publish).
+	// A requested content must be echoed exactly; a default request accepts no echo or camera (either direction).
 	echo, present := o["content"]
 	if content != "" && echo != string(content) ||
-		content == "" && present && !(direction == MediaPublish && echo == string(MediaContentCamera)) {
+		content == "" && present && echo != string(MediaContentCamera) {
 		return g, false
 	}
 	if present {
