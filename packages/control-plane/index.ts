@@ -2,6 +2,8 @@
 import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
 export * from './video';
 export { parseLivingServices, verifyLivingServiceWebhook, livingSignatureVersion, type LivingServicesCapability, type LivingInputKind, type LivingViewport, type LivingJson, type LivingServiceManifest, type LivingDeploymentStatus, type LivingDeployment, type AttachLivingService, type LivingSessionStatus, type LivingSession, type LivingInputEvent, type LivingServiceMessageWebhook } from './living';
+export { COMPOSITION_MAX_LAYERS, parseVideoComposition, compositionInputTarget, type VideoCompositionCapability, type CompositionBaseKind, type CompositionBase, type CompositionRegion, type CompositionPage, type CompositionBackground, type BaseLayerInput, type PageLayerInput, type VideoLayerInput, type SetCallVideo, type PageRef, type CompositionStatus, type BaseLayer, type PageLayer, type VideoLayer, type CallVideoComposition } from './composition';
+import { compositionBody, validateComposition, type CallVideoComposition, type PageRef, type SetCallVideo } from './composition';
 import { validateAttach, validateEvent, validateInput, validateLivingSession, validateManifest, validateState, type AttachLivingService, type LivingDeployment, type LivingInputEvent, type LivingJson, type LivingServiceManifest, type LivingSession } from './living';
 export type MediaSessionCodec = 'h264' | 'vp8';
 export type MediaDirection = 'publish' | 'subscribe';
@@ -26,6 +28,7 @@ export interface MediaSessionGrant {
   limits: { max_width: number; max_height: number; max_fps: number; max_frame_bytes: number };
 }
 const invalidGrant = () => new ChertApiError(201, 'invalid_response');
+const checkComposition = (c: CallVideoComposition) => { try { return validateComposition(c, g => validateGrant(g, 'publish', undefined, 'camera')); } catch { throw new ChertApiError(200, 'invalid_response'); } };
 /** Accepts only the documented outcomes; a URL must be an HTTPS Stripe-hosted page without credentials. */
 function checkBillingResult(r:BillingResult):BillingResult{
   const bad=()=>new ChertApiError(200,'invalid_response');
@@ -74,7 +77,7 @@ export interface Page<T> {items:T[];total:number;limit:number;offset:number}
 export interface DeviceLoginStart {device_code:string;user_code:string;verification_url:string;verification_url_complete:string;expires_in:number;interval:number}
 export type LoginResult = {status:'pending'} | {status:'approved';access_token:string;email:string|null;project:{id:string;name:string|null};device_name:string;expires_in:number};
 export interface Identity {email:string|null;project:{id:string;name:string|null};role:string;device_name?:string;expires_at?:string}
-export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;/** Parse with parseMediaCapabilities; never infer from supports_video. */media_capabilities?:unknown;living_services?:unknown;[key:string]:unknown}
+export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;/** Parse with parseMediaCapabilities; never infer from supports_video. */media_capabilities?:unknown;living_services?:unknown;/** Parse with parseVideoComposition. */video_composition?:unknown;[key:string]:unknown}
 export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;/** Present only on line/call-scoped projections. */media_capabilities?:unknown;living_services?:unknown;[key:string]:unknown}
 export interface Credential {id:string;device_name:string;token_prefix:string;user_id:string;email:string|null;created_at:string;last_used_at:string|null;expires_at:string}
 export interface ConnectorEnrollment {line_id:string;name:string;environment:'production'|'development';session_mode?:'byor'|'create-room'}
@@ -97,7 +100,7 @@ export interface BillingCancellation {status:'cancellation_requested';message:st
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
-const safeCodes = new Set(['living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded']);
+const safeCodes = new Set(['living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded','video_composition_unsupported','composition_invalid','composition_revision_conflict','composition_base_unavailable']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -179,6 +182,46 @@ export class ChertControlPlane {
   /** Optional input relay; only kinds declared in the manifest are accepted. Pointer coordinates are normalized 0..1. */
   sendLivingInput(callId:string,sessionId:string,input:LivingInputEvent){return this.request<{accepted:true}>(`${this.livingPath(callId,sessionId)}/input`,'POST',validateInput(input));}
   detachLivingService(callId:string,sessionId:string){return this.request<LivingSession>(this.livingPath(callId,sessionId),'DELETE');}
+  /**
+   * Sets the call's video (draft): `{ page }` makes a page the whole video; `{ layers }` composes a camera or managed
+   * base with a page layer above it. Replaces the current composition, which holds the call's single publish slot.
+   */
+  async setCallVideo(callId:string,input:SetCallVideo,idempotencyKey:string,options:{signal?:AbortSignal;readyTimeoutMs?:number}={}):Promise<CallVideoComposition>{
+    const body=compositionBody(input);const key=this.idempotency(idempotencyKey);
+    const {signal,readyTimeoutMs=60_000}=options;
+    if(!Number.isFinite(readyTimeoutMs)||readyTimeoutMs<=0)throw new TypeError('readyTimeoutMs must be a positive number.');
+    const layers=body.layers as {id:string;page?:PageRef}[];
+    // Derived per-layer keys must stay unique and within the 200-character limit.
+    if(layers.some(l=>l.page&&'manifest' in l.page)&&idempotencyKey.length>160)throw new TypeError('Use an idempotency key of at most 160 characters with URL pages.');
+    const aborted=()=>{if(signal?.aborted)throw new ChertApiError(0,'aborted');};
+    // URL pages are deployed first (create, wait ready); the call-video resource only receives immutable deployment IDs.
+    for(const layer of layers){
+      if(!layer.page||!('manifest' in layer.page))continue;
+      aborted();
+      const deployment=await this.createLivingService(layer.page.manifest,`${idempotencyKey}:page:${layer.id}`);
+      layer.page={deployment_id:(await this.readyDeployment(deployment,Date.now()+readyTimeoutMs,signal)).deployment_id};
+    }
+    aborted();
+    return checkComposition(await this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`,'PUT',body,'project',key));
+  }
+  private async readyDeployment(deployment:LivingDeployment,deadline:number,signal?:AbortSignal){
+    const valid=(d:LivingDeployment)=>{if(!d||typeof d.service_id!=='string'||!d.service_id||typeof d.deployment_id!=='string'||!d.deployment_id||!['pending','ready','failed'].includes(d.status))throw new ChertApiError(200,'invalid_response');return d;};
+    deployment=valid(deployment);
+    while(deployment.status!=='ready'){
+      if(deployment.status==='failed'||Date.now()>=deadline)throw new ChertApiError(409,'living_deployment_not_ready');
+      await new Promise<void>((resolve,reject)=>{
+        if(signal?.aborted)return reject(new ChertApiError(0,'aborted'));
+        const timer=setTimeout(()=>{signal?.removeEventListener('abort',stop);resolve();},500);
+        const stop=()=>{clearTimeout(timer);reject(new ChertApiError(0,'aborted'));};
+        signal?.addEventListener('abort',stop,{once:true});
+      });
+      deployment=valid(await this.getLivingDeployment(deployment.service_id,deployment.deployment_id));
+    }
+    return deployment;
+  }
+  getCallVideo(callId:string){return this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`).then(checkComposition);}
+  /** Stops the composition and frees the publish slot. */
+  clearCallVideo(callId:string){return this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`,'DELETE').then(checkComposition);}
   private livingPath(callId:string,sessionId:string){return `calls/${this.resourceId(callId)}/living-sessions/${this.resourceId(sessionId)}`;}
   getCallEvents(id:string){return this.request<{call_id:string;events:CallEvent[]}>(`calls/${this.resourceId(id)}/events`);}
   /** Acceptance is not connection/media success. Reconcile uncertain outcomes; never retry automatically. */

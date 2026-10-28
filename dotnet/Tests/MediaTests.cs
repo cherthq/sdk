@@ -14,6 +14,24 @@ static partial class Program
         foreach (var (name, value) in JsonNode.Parse(patch)!.AsObject().ToList()) grant[name] = value?.DeepClone();
         return grant.ToJsonString();
     }
+    static string PatchJson(string json, string patch)
+    {
+        var value = JsonNode.Parse(json)!.AsObject();
+        foreach (var (name, replacement) in JsonNode.Parse(patch)!.AsObject().ToList()) value[name] = replacement?.DeepClone();
+        return value.ToJsonString();
+    }
+    const string CameraGrant = "{\"session_id\":\"3f2b8c1e-0d4a-4b7e-9c11-2a6f5e0d9b77\",\"direction\":\"publish\",\"content\":\"camera\",\"endpoint\":\"https://signal.example/opaque/abc\","
+        + "\"token\":\"session-bearer\",\"connect_by\":\"2026-10-25T00:05:00Z\",\"expires_at\":\"2026-10-25T01:00:00Z\",\"ice_servers\":[{\"urls\":[\"turn:turn.example:3478\"]}],"
+        + "\"codecs\":[\"h264\"],\"limits\":{\"max_width\":1920,\"max_height\":1080,\"max_fps\":24,\"max_frame_bytes\":8388608}}";
+    static string Living(int fps, string call = "call") => "{\"session_id\":\"ls\",\"call_id\":\"" + call + "\",\"deployment_id\":\"dep\",\"status\":\"starting\","
+        + "\"viewport\":{\"width\":1920,\"height\":270},\"fps\":" + fps + ",\"ready_at\":null,\"last_heartbeat_at\":null,\"error_code\":null}";
+    static readonly string Captions = "{\"id\":\"captions\",\"z\":1,\"living_session\":" + Living(12) + ",\"region\":{\"x\":0,\"y\":0.75,\"width\":1,\"height\":0.25},"
+        + "\"background\":\"transparent\",\"opacity\":0.8,\"input\":[\"pointer\"]}";
+    static readonly string BaseJson = "{\"id\":\"base\",\"z\":0,\"source\":{\"kind\":\"camera\"},\"publish\":" + CameraGrant + "}";
+    static readonly string Layered = "{\"composition_id\":\"cmp\",\"call_id\":\"call\",\"revision\":3,\"status\":\"starting\",\"output\":{\"width\":1920,\"height\":1080,\"fps\":24},"
+        + "\"error_code\":null,\"layers\":[" + BaseJson + "," + Captions + "]}";
+    static readonly string PageOnly = PatchJson(Layered, "{\"output\":{\"width\":1280,\"height\":720,\"fps\":30},\"layers\":[{\"id\":\"page\",\"z\":1,\"living_session\":" + Living(30)
+        + ",\"region\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"background\":\"opaque\",\"opacity\":1,\"input\":[]}]}");
     static MediaCapabilities Caps(string json) => MediaCapabilities.Parse(JsonDocument.Parse(json).RootElement);
 
     static async Task MediaTests()
@@ -201,6 +219,127 @@ static partial class Program
                 Check(Caps(Section(okCv, iv)) is { CustomVideo: not null, InboundCallerVideo: null }, iv);
             var line = JsonSerializer.Deserialize<FaceTimeLine>("{\"id\":\"l\",\"status\":\"available\",\"supports_video\":true}", new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower })!;
             Check(MediaCapabilities.Parse(line.MediaCapabilities) == MediaCapabilities.Unsupported, "inferred from supports_video");
+            return Task.CompletedTask;
+        });
+        await Run("call video: deployment page shortcut, layered base + overlay, get and clear", async () =>
+        {
+            ReplyWith(Envelope(PageOnly), 200);
+            var page = await client.SetCallVideoAsync(Call, new() { DeploymentId = "dep-url" }, "video-key-1");
+            Wire(server, "PUT", "/calls/" + Call + "/video", key: "video-key-1", body: "{\"layers\":[{\"id\":\"page\",\"z\":1,\"page\":{\"deployment_id\":\"dep-url\"},"
+                + "\"region\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"background\":\"opaque\",\"opacity\":1}]}");
+            Check(page.Output == new CompositionOutput(1280, 720, 30) && page.Layers.Single() is PageLayer { Id: "page", Z: 1 });
+            ReplyWith(Envelope(Layered), 200);
+            var layered = await client.SetCallVideoAsync(Call, new()
+            {
+                Revision = 2,
+                Layers = [new BaseLayerInput("base", CompositionBaseKind.Camera), new PageLayerInput("captions", 1, "dep")
+                {
+                    Region = new(0, 0.75, 1, 0.25), Background = CompositionBackground.Transparent, Opacity = 0.8, Input = [LivingInputKind.Pointer],
+                    InitialState = JsonDocument.Parse("{\"lang\":\"en\"}").RootElement
+                }]
+            }, "video-key-2");
+            Wire(server, "PUT", "/calls/" + Call + "/video", key: "video-key-2", body: "{\"revision\":2,\"layers\":[{\"id\":\"base\",\"z\":0,\"source\":{\"kind\":\"camera\"}},"
+                + "{\"id\":\"captions\",\"z\":1,\"page\":{\"deployment_id\":\"dep\"},\"region\":{\"x\":0,\"y\":0.75,\"width\":1,\"height\":0.25},\"background\":\"transparent\","
+                + "\"opacity\":0.8,\"input\":[\"pointer\"],\"initial_state\":{\"lang\":\"en\"}}]}");
+            Check(layered.Layers[0] is BaseLayer { Publish.Token: "session-bearer" } && !layered.ToString().Contains("session-bearer"));
+            await client.GetCallVideoAsync(Call);
+            Wire(server, "GET", "/calls/" + Call + "/video");
+            await client.ClearCallVideoAsync(Call);
+            Wire(server, "DELETE", "/calls/" + Call + "/video");
+            // Input targets use output-frame coordinates; only the overlay's region accepts pointer input.
+            Check(layered.InputTarget(0.5, 0.9)?.Id == "captions" && layered.InputTarget(0.5, 0.74) is null && page.InputTarget(0.5, 0.5) is null);
+        });
+        await Run("call video: invalid compositions and URL pages are rejected locally before any request", async () =>
+        {
+            ReplyWith(Envelope(Layered), 200);
+            var before = server.Requests.Count;
+            var page = new PageLayerInput("p", 1, "dep");
+            var baseLayer = new BaseLayerInput("base", CompositionBaseKind.Camera);
+            var deep = "0";
+            for (var i = 0; i < 70; i++) deep = "[" + deep + "]";
+            // Unrepresentable here: z 1.5 (int) and a base at z != 0 (no z on BaseLayerInput).
+            var cases = new SetCallVideo[]
+            {
+                new() { Layers = [] }, new() { Layers = [baseLayer, page, page with { Id = "q", Z = 2 }] },
+                new() { Layers = [baseLayer, baseLayer with { Id = "b2" }] }, new() { Layers = [baseLayer, page with { Id = "base" }] },
+                new() { Layers = [baseLayer, page with { Z = 0 }] }, new() { Layers = [baseLayer, page with { Z = 65 }] },
+                new() { Layers = [baseLayer, page with { Region = new(0.5, 0, 0.6, 1) }] }, new() { Layers = [baseLayer, page with { Region = new(0, 0, 0, 1) }] },
+                new() { Layers = [baseLayer, page with { Region = new(double.NaN, 0, 1, 1) }] },
+                new() { Layers = [baseLayer, page with { Opacity = 1.2 }] }, new() { Layers = [baseLayer, page with { Background = (CompositionBackground)7 }] },
+                new() { Layers = [page with { Background = CompositionBackground.Transparent }] }, new() { Layers = [page with { Opacity = 0.5 }] },
+                new() { Layers = [page with { Region = new(0, 0, 0.5, 1) }] },
+                new() { Layers = [baseLayer, page with { Input = [LivingInputKind.Pointer, LivingInputKind.Pointer] }] },
+                new() { Layers = [baseLayer, page with { Input = [(LivingInputKind)9] }] },
+                new() { Layers = [new BaseLayerInput("base", (CompositionBaseKind)5)] }, new() { Layers = [page with { Id = "Upper" }] },
+                new() { Layers = [baseLayer, null!] }, new() { Layers = [page with { DeploymentId = "" }] }, new() { Layers = [page with { DeploymentId = new string('d', 129) }] },
+                new() { Layers = [baseLayer, page with { InitialState = JsonDocument.Parse("{\"blob\":\"" + new string('x', 64 * 1024) + "\"}").RootElement }] },
+                new() { DeploymentId = "dep", InitialState = JsonDocument.Parse(deep, new JsonDocumentOptions { MaxDepth = 128 }).RootElement },
+                new() { DeploymentId = "dep", Revision = -1 }, new() { DeploymentId = "" }, new(),
+                // URL pages need a deployment created with the TypeScript SDK first.
+                new() { DeploymentId = "https://agent.example/p" }, new() { Layers = [baseLayer, page with { DeploymentId = "https://agent.example/p" }] },
+            };
+            foreach (var input in cases) await Throws<ArgumentException>(() => client.SetCallVideoAsync(Call, input, "video-key-1"));
+            await Throws<ArgumentException>(() => client.SetCallVideoAsync(Call, null!, "video-key-1"));
+            await Throws<ArgumentException>(() => client.SetCallVideoAsync(Call, new() { DeploymentId = "dep" }, "short"));
+            await Throws<ArgumentException>(() => client.SetCallVideoAsync("call", new() { DeploymentId = "dep" }, "video-key-1"));
+            var url = await Throws<ArgumentException>(() => client.SetCallVideoAsync(Call, new() { DeploymentId = "https://agent.example/p" }, "video-key-1"));
+            Check(url.Message.Contains("TypeScript SDK"), "URL page message");
+            Check(server.Requests.Count == before, "invalid composition reached the network");
+            // A region touching the frame edge is inside it.
+            await client.SetCallVideoAsync(Call, new() { Layers = [baseLayer, page with { Region = new(0.75, 0.75, 0.25, 0.25) }] }, "video-key-1");
+            Check(server.Requests.Count == before + 1);
+        });
+        await Run("call video: responses outside the contract fail as invalid_response", async () =>
+        {
+            string WithLayers(string layers, string extra = "") => PatchJson(Layered, "{\"layers\":[" + layers + "]" + extra + "}");
+            string Caption(string patch) => PatchJson(Captions, patch);
+            var screenBase = PatchJson(BaseJson, "{\"publish\":" + PatchJson(CameraGrant, "{\"content\":\"screen\"}") + "}");
+            var missingErrorCode = JsonNode.Parse(Layered)!.AsObject();
+            missingErrorCode.Remove("error_code");
+            foreach (var bad in new[]
+            {
+                WithLayers(BaseJson + "," + Caption("{\"living_session\":" + Living(30) + "}")),
+                WithLayers(BaseJson + "," + Captions, ",\"output\":{\"width\":1920,\"height\":1080,\"fps\":30}"),
+                WithLayers("{\"id\":\"base\",\"z\":0,\"source\":{\"kind\":\"managed\"},\"publish\":" + CameraGrant + "}," + Captions),
+                WithLayers(screenBase + "," + Captions),
+                WithLayers(BaseJson + "," + Captions + "," + Caption("{\"id\":\"more\",\"z\":2}")),
+                WithLayers(BaseJson + "," + Caption("{\"living_session\":" + Living(12, "other") + "}")),
+                WithLayers(BaseJson + "," + Caption("{\"region\":{\"x\":0.5,\"y\":0,\"width\":0.6,\"height\":1}}")),
+                WithLayers(BaseJson + "," + Caption("{\"z\":0}")),
+                WithLayers(BaseJson + "," + Caption("{\"input\":[\"pointer\",\"pointer\"]}")),
+                PatchJson(Layered, "{\"status\":\"paused\"}"), PatchJson(Layered, "{\"output\":{\"width\":1921,\"height\":1080,\"fps\":24}}"),
+                missingErrorCode.ToJsonString(), "null",
+            })
+            {
+                ReplyWith(Envelope(bad), 200);
+                var error = await Throws<ChertApiException>(() => client.GetCallVideoAsync(Call));
+                Check(error.Code == "invalid_response" && error.ResponseData is null, "accepted " + bad);
+            }
+            ReplyWith(Envelope(WithLayers("{\"id\":\"base\",\"z\":0,\"source\":{\"kind\":\"managed\"}}," + Captions)), 200);
+            Check((await client.GetCallVideoAsync(Call)).Layers[0] is BaseLayer { Source: CompositionBaseKind.Managed, Publish: null });
+        });
+        await Run("call video: composition error codes survive sanitization without server text", async () =>
+        {
+            foreach (var (status, code) in new[] { (409, "video_composition_unsupported"), (422, "composition_invalid"), (409, "composition_revision_conflict"),
+                (409, "composition_base_unavailable"), (409, "media_session_conflict"), (409, "composition_secret") })
+            {
+                ReplyWith("{\"error\":{\"code\":\"" + code + "\",\"message\":\"internal host 192.0.2.5\"},\"request_id\":\"r\"}", status);
+                var error = await Throws<ChertApiException>(() => client.SetCallVideoAsync(Call, new() { DeploymentId = "dep" }, "video-key-1"));
+                Check(error.Status == status && error.Code == (code == "composition_secret" ? "request_failed" : code) && error.ResponseData is null, code);
+                Check(!error.Message.Contains("192.0.2.5") && !error.ToString().Contains("192.0.2.5"), "server text " + code);
+            }
+        });
+        await Run("video_composition capability: explicit, versioned, clamped to SDK v1 bounds", () =>
+        {
+            const string cap = "{\"version\":1,\"supported\":true,\"max_layers\":4,\"bases\":[\"camera\",\"hologram\",\"managed\",\"camera\",3],\"page_alpha\":true,\"regions\":true,"
+                + "\"max_width\":3840,\"max_height\":1080,\"max_fps\":60}";
+            VideoCompositionCapability? Parse(string json) => VideoCompositionCapability.Parse(JsonDocument.Parse(json).RootElement);
+            Check(Parse(cap) is { Version: 1, Supported: true, MaxLayers: 2, PageAlpha: true, Regions: true, MaxWidth: 1920, MaxHeight: 1080, MaxFps: 30 } parsed
+                && parsed.Bases.SequenceEqual(new[] { CompositionBaseKind.Camera, CompositionBaseKind.Managed }));
+            Check(Parse(PatchJson(cap, "{\"page_alpha\":\"yes\"}"))?.PageAlpha == false);
+            Check(VideoCompositionCapability.Parse(null) is null && Parse("null") is null);
+            foreach (var patch in new[] { "{\"version\":2}", "{\"supported\":false}", "{\"max_layers\":0}", "{\"max_fps\":1.5}", "{\"bases\":\"camera\"}" })
+                Check(Parse(PatchJson(cap, patch)) is null, patch);
             return Task.CompletedTask;
         });
         await Run("video frame bounds, defaults and copy semantics", () =>

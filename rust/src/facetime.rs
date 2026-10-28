@@ -1,6 +1,9 @@
 //! FaceTime control-plane HTTP API. This does not implement a LiveKit media runtime.
 //! Mutations make one attempt; an accepted action is not evidence that a call connected or ended.
-use crate::media::{parse_media_session_grant, CreateMediaSession, MediaSessionGrant};
+use crate::media::{
+    call_video_body, parse_call_video, parse_media_session_grant, CallVideoComposition,
+    CreateMediaSession, MediaSessionGrant, SetCallVideo,
+};
 use crate::{ChertClient, ChertError, FaceTimeConfig, HttpMethod};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -317,7 +320,7 @@ fn key(key: &str) -> Result<(), ChertError> {
     }
     Ok(())
 }
-/// Server error codes surfaced verbatim by media-session minting; others become `request_failed`.
+/// Server error codes surfaced verbatim by media-session and call-video routes; others become `request_failed`.
 const SAFE_CODES: &[&str] = &[
     "media_capability_unsupported",
     "media_session_conflict",
@@ -325,6 +328,10 @@ const SAFE_CODES: &[&str] = &[
     "media_content_unsupported",
     "caller_screen_unsupported",
     "media_limit_exceeded",
+    "video_composition_unsupported",
+    "composition_invalid",
+    "composition_revision_conflict",
+    "composition_base_unavailable",
     "call_not_active",
     "call_ended",
     "call_not_found",
@@ -346,6 +353,13 @@ const SAFE_CODES: &[&str] = &[
     "not_found",
     "conflict",
 ];
+/// Drops server error bodies; unlisted codes become `request_failed`.
+fn sanitized(mut error: ChertError) -> ChertError {
+    if error.data.take().is_some() && !SAFE_CODES.contains(&error.code.as_str()) {
+        error.code = "request_failed".into();
+    }
+    error
+}
 fn page_path(resource: &str, limit: u32, offset: u64) -> Result<String, ChertError> {
     if !(1..=100).contains(&limit) || offset > 9_007_199_254_740_991 {
         return Err(ChertError::new(None, "invalid_pagination"));
@@ -574,12 +588,7 @@ impl FaceTimeClient {
             .transport
             .request_json_with_key(&path, HttpMethod::POST, Some(&body), None)
             .await
-            .map_err(|mut error| {
-                if error.data.take().is_some() && !SAFE_CODES.contains(&error.code.as_str()) {
-                    error.code = "request_failed".into();
-                }
-                error
-            })?;
+            .map_err(sanitized)?;
         let invalid = |status| ChertError {
             status: Some(status),
             code: "invalid_response".into(),
@@ -597,6 +606,57 @@ impl FaceTimeClient {
             input.content,
         )
         .ok_or_else(|| invalid(201))
+    }
+    /// Draft, unreleased: replaces the call's video with a server-side composition of up to two
+    /// layers. Pages must be ready deployment IDs. Invalid input fails locally with
+    /// `invalid_call_video_request` before any request. One attempt; never retried.
+    pub async fn set_call_video(
+        &self,
+        call_id: &str,
+        input: &SetCallVideo,
+        idempotency_key: &str,
+    ) -> Result<CallVideoComposition, ChertError> {
+        let body = call_video_body(input)
+            .ok_or_else(|| ChertError::new(None, "invalid_call_video_request"))?;
+        key(idempotency_key)?;
+        self.call_video(call_id, HttpMethod::PUT, Some(&body), Some(idempotency_key))
+            .await
+    }
+    /// Draft, unreleased: the call's current video composition.
+    pub async fn get_call_video(&self, call_id: &str) -> Result<CallVideoComposition, ChertError> {
+        self.call_video(call_id, HttpMethod::GET, None, None).await
+    }
+    /// Draft, unreleased: stops the composition and frees the publish slot.
+    pub async fn clear_call_video(
+        &self,
+        call_id: &str,
+    ) -> Result<CallVideoComposition, ChertError> {
+        self.call_video(call_id, HttpMethod::DELETE, None, None)
+            .await
+    }
+    async fn call_video(
+        &self,
+        call_id: &str,
+        method: HttpMethod,
+        body: Option<&Value>,
+        idempotency_key: Option<&str>,
+    ) -> Result<CallVideoComposition, ChertError> {
+        let path = format!("/calls/{}/video", identifier(call_id)?);
+        let response = self
+            .transport
+            .request_json_with_key(&path, method, body, idempotency_key)
+            .await
+            .map_err(sanitized)?;
+        response
+            .value
+            .get("data")
+            .and_then(parse_call_video)
+            .ok_or_else(|| ChertError {
+                status: Some(response.status),
+                code: "invalid_response".into(),
+                request_id: response.request_id.clone(),
+                data: None,
+            })
     }
     pub async fn call_action(
         &self,

@@ -777,3 +777,491 @@ fn frame_bounds() {
     let frame = VideoFrame::copy_from(&frame(PixelFormat::Rgba, 1920, 1080, &tight)).unwrap();
     assert_eq!(frame.planes()[0].data().len(), 8_294_400);
 }
+
+mod call_video {
+    use super::*;
+    use trychert_sdk::{
+        composition_input_target,
+        media::{
+            BaseLayerInput, CompositionBackground, CompositionBaseKind, CompositionRegion,
+            LivingInputKind, PageLayerInput, VideoLayer, VideoLayerInput,
+        },
+        parse_video_composition, CallVideoComposition, SetCallVideo,
+    };
+
+    fn camera_grant() -> Value {
+        json!({"session_id":"3f2b8c1e-0d4a-4b7e-9c11-2a6f5e0d9b77","direction":"publish","content":"camera",
+            "endpoint":"https://signal.example/opaque/abc","token":"session-bearer",
+            "connect_by":"2026-10-25T00:05:00Z","expires_at":"2026-10-25T01:00:00Z",
+            "ice_servers":[{"urls":["turn:turn.example:3478"]}],"codecs":["h264"],
+            "limits":{"max_width":1920,"max_height":1080,"max_fps":24,"max_frame_bytes":8388608}})
+    }
+    fn living(fps: u32, call: &str) -> Value {
+        json!({"session_id":"ls","call_id":call,"deployment_id":"dep","status":"starting",
+            "viewport":{"width":1920,"height":270},"fps":fps,"ready_at":null,"last_heartbeat_at":null,"error_code":null})
+    }
+    fn captions() -> Value {
+        json!({"id":"captions","z":1,"living_session":living(12, "call"),
+            "region":{"x":0,"y":0.75,"width":1,"height":0.25},"background":"transparent","opacity":0.8,"input":["pointer"]})
+    }
+    fn base_layer() -> Value {
+        json!({"id":"base","z":0,"source":{"kind":"camera"},"publish":camera_grant()})
+    }
+    fn layered() -> Value {
+        json!({"composition_id":"cmp","call_id":"call","revision":3,"status":"starting",
+            "output":{"width":1920,"height":1080,"fps":24},"error_code":null,"layers":[base_layer(), captions()]})
+    }
+    fn page_only() -> Value {
+        let mut value = layered();
+        value["output"] = json!({"width":1280,"height":720,"fps":30});
+        value["layers"] = json!([{"id":"page","z":1,"living_session":living(30, "call"),
+            "region":{"x":0,"y":0,"width":1,"height":1},"background":"opaque","opacity":1,"input":[]}]);
+        value
+    }
+    fn base() -> VideoLayerInput {
+        VideoLayerInput::Base(BaseLayerInput {
+            id: "base".into(),
+            source: CompositionBaseKind::Camera,
+        })
+    }
+    fn page() -> PageLayerInput {
+        PageLayerInput::new("p", 1, "dep")
+    }
+    fn layers(layers: Vec<VideoLayerInput>) -> SetCallVideo {
+        SetCallVideo::Layers {
+            layers,
+            revision: None,
+        }
+    }
+    fn shortcut(deployment_id: &str) -> SetCallVideo {
+        SetCallVideo::Page {
+            deployment_id: deployment_id.into(),
+            input: None,
+            initial_state: None,
+            revision: None,
+        }
+    }
+    async fn get(data: Value) -> Result<CallVideoComposition, ChertError> {
+        let (url, handle) = server(200, json!({ "data": data }).to_string());
+        let result = client(&url).get_call_video("call").await;
+        handle.join().unwrap();
+        result
+    }
+    fn key_header(wire: &str) -> Option<String> {
+        wire.split_once("\r\n\r\n")
+            .unwrap()
+            .0
+            .lines()
+            .find_map(|l| {
+                l.to_ascii_lowercase()
+                    .strip_prefix("idempotency-key: ")
+                    .map(|_| l[17..].to_owned())
+            })
+    }
+
+    #[tokio::test]
+    async fn page_shortcut_layered_get_and_clear() {
+        let (url, handle) = server(200, json!({"data": page_only()}).to_string());
+        let result = client(&url)
+            .set_call_video("call", &shortcut("dep-url"), "video-key-1")
+            .await
+            .unwrap();
+        let wire = handle.join().unwrap();
+        assert!(wire.starts_with("PUT /api/v1/calls/call/video HTTP/1.1\r\n"));
+        assert_eq!(key_header(&wire).as_deref(), Some("video-key-1"));
+        assert_eq!(
+            body(&wire),
+            json!({"layers":[{"id":"page","z":1,"page":{"deployment_id":"dep-url"},
+                "region":{"x":0,"y":0,"width":1,"height":1},"background":"opaque","opacity":1}]})
+        );
+        // Integral numbers go out as JSON integers, as in the TypeScript SDK.
+        assert!(wire.contains("\"opacity\":1,") && !wire.contains("1.0"));
+        assert_eq!(result.output.fps, 30);
+
+        let (url, handle) = server(200, json!({"data": layered()}).to_string());
+        let input = SetCallVideo::Layers {
+            revision: Some(2),
+            layers: vec![
+                base(),
+                VideoLayerInput::Page(PageLayerInput {
+                    region: Some(CompositionRegion {
+                        x: 0.0,
+                        y: 0.75,
+                        width: 1.0,
+                        height: 0.25,
+                    }),
+                    background: Some(CompositionBackground::Transparent),
+                    opacity: Some(0.8),
+                    input: Some(vec![LivingInputKind::Pointer]),
+                    initial_state: Some(json!({"lang":"en"})),
+                    ..PageLayerInput::new("captions", 1, "dep")
+                }),
+            ],
+        };
+        let result = client(&url)
+            .set_call_video("call", &input, "video-key-2")
+            .await
+            .unwrap();
+        let wire = handle.join().unwrap();
+        assert!(wire.starts_with("PUT /api/v1/calls/call/video HTTP/1.1\r\n"));
+        assert_eq!(key_header(&wire).as_deref(), Some("video-key-2"));
+        assert_eq!(
+            body(&wire),
+            json!({"revision":2,"layers":[{"id":"base","z":0,"source":{"kind":"camera"}},
+                {"id":"captions","z":1,"page":{"deployment_id":"dep"},"region":{"x":0,"y":0.75,"width":1,"height":0.25},
+                 "background":"transparent","opacity":0.8,"input":["pointer"],"initial_state":{"lang":"en"}}]})
+        );
+        match &result.layers[0] {
+            VideoLayer::Base(base) => {
+                assert_eq!(base.publish.as_ref().unwrap().token, "session-bearer")
+            }
+            VideoLayer::Page(_) => panic!("expected base"),
+        }
+        assert!(!format!("{result:?}").contains("session-bearer"));
+
+        for (method, wire) in [
+            ("GET", {
+                let (url, handle) = server(200, json!({"data": layered()}).to_string());
+                client(&url).get_call_video("call").await.unwrap();
+                handle.join().unwrap()
+            }),
+            ("DELETE", {
+                let (url, handle) = server(200, json!({"data": layered()}).to_string());
+                client(&url).clear_call_video("call").await.unwrap();
+                handle.join().unwrap()
+            }),
+        ] {
+            assert!(wire.starts_with(&format!("{method} /api/v1/calls/call/video HTTP/1.1\r\n")));
+            assert_eq!(key_header(&wire), None);
+            assert!(wire.ends_with("\r\n\r\n"));
+        }
+
+        // Input targets use output-frame coordinates; only the overlay's region accepts pointer input.
+        assert_eq!(
+            composition_input_target(&result, 0.5, 0.9).map(|p| p.id.as_str()),
+            Some("captions")
+        );
+        assert!(composition_input_target(&result, 0.5, 0.74).is_none());
+        let page_only = get(page_only()).await.unwrap();
+        assert!(composition_input_target(&page_only, 0.5, 0.5).is_none());
+    }
+
+    #[tokio::test]
+    async fn invalid_compositions_are_rejected_locally_before_any_request() {
+        // Unroutable base: any network attempt would surface as outcome_unknown instead.
+        let sdk = client("http://127.0.0.1:9");
+        let with = |f: fn(&mut PageLayerInput)| {
+            let mut p = page();
+            f(&mut p);
+            VideoLayerInput::Page(p)
+        };
+        // Unrepresentable here: z 1.5 and negative revision (integer types), background
+        // `blurred` and base `screen` (enums), a base at z != 0 (no z field) and URL pages
+        // (pages are deployment IDs only).
+        let mut deep = json!(0);
+        for _ in 0..70 {
+            deep = json!([deep]);
+        }
+        let cases = vec![
+            layers(vec![]),
+            layers(vec![
+                base(),
+                VideoLayerInput::Page(page()),
+                with(|p| {
+                    p.id = "q".into();
+                    p.z = 2
+                }),
+            ]),
+            layers(vec![
+                base(),
+                VideoLayerInput::Base(BaseLayerInput {
+                    id: "b2".into(),
+                    source: CompositionBaseKind::Managed,
+                }),
+            ]),
+            layers(vec![base(), with(|p| p.id = "base".into())]),
+            layers(vec![base(), with(|p| p.z = 0)]),
+            layers(vec![base(), with(|p| p.z = 65)]),
+            layers(vec![
+                base(),
+                with(|p| {
+                    p.region = Some(CompositionRegion {
+                        x: 0.5,
+                        y: 0.0,
+                        width: 0.6,
+                        height: 1.0,
+                    })
+                }),
+            ]),
+            layers(vec![
+                base(),
+                with(|p| {
+                    p.region = Some(CompositionRegion {
+                        x: 0.0,
+                        y: 0.0,
+                        width: 0.0,
+                        height: 1.0,
+                    })
+                }),
+            ]),
+            layers(vec![
+                base(),
+                with(|p| {
+                    p.region = Some(CompositionRegion {
+                        x: f64::NAN,
+                        ..CompositionRegion::FULL
+                    })
+                }),
+            ]),
+            layers(vec![base(), with(|p| p.opacity = Some(1.2))]),
+            layers(vec![base(), with(|p| p.opacity = Some(f64::INFINITY))]),
+            layers(vec![with(|p| {
+                p.background = Some(CompositionBackground::Transparent)
+            })]),
+            layers(vec![with(|p| p.opacity = Some(0.5))]),
+            layers(vec![with(|p| {
+                p.region = Some(CompositionRegion {
+                    x: 0.0,
+                    y: 0.0,
+                    width: 0.5,
+                    height: 1.0,
+                })
+            })]),
+            layers(vec![
+                base(),
+                with(|p| p.input = Some(vec![LivingInputKind::Pointer, LivingInputKind::Pointer])),
+            ]),
+            layers(vec![with(|p| p.id = "Upper".into())]),
+            layers(vec![with(|p| p.id = "a".repeat(33))]),
+            layers(vec![with(|p| p.deployment_id = String::new())]),
+            layers(vec![with(|p| p.deployment_id = "d".repeat(129))]),
+            layers(vec![
+                base(),
+                with(|p| p.initial_state = Some(json!({"blob": "x".repeat(64 * 1024)}))),
+            ]),
+            shortcut(""),
+            // URL pages need a TypeScript SDK deployment first.
+            shortcut("https://agent.example/p"),
+            SetCallVideo::Page {
+                deployment_id: "dep".into(),
+                input: None,
+                initial_state: Some(deep),
+                revision: None,
+            },
+            SetCallVideo::Page {
+                deployment_id: "dep".into(),
+                input: None,
+                initial_state: None,
+                revision: Some(9_007_199_254_740_992),
+            },
+        ];
+        for input in cases {
+            let error = sdk
+                .set_call_video("call", &input, "video-key-1")
+                .await
+                .unwrap_err();
+            assert_eq!(
+                (error.status, error.code.as_str()),
+                (None, "invalid_call_video_request"),
+                "{input:?}"
+            );
+        }
+        for (id, key) in [
+            ("..", "video-key-1"),
+            ("call", "short"),
+            ("call", " padded-key "),
+        ] {
+            let error = sdk
+                .set_call_video(id, &shortcut("dep"), key)
+                .await
+                .unwrap_err();
+            assert!(error.status.is_none());
+            assert!(matches!(
+                error.code.as_str(),
+                "invalid_identifier" | "invalid_idempotency_key"
+            ));
+        }
+        // A region touching the frame edge is inside it.
+        let (url, handle) = server(200, json!({"data": layered()}).to_string());
+        client(&url)
+            .set_call_video(
+                "call",
+                &layers(vec![
+                    base(),
+                    with(|p| {
+                        p.region = Some(CompositionRegion {
+                            x: 0.75,
+                            y: 0.75,
+                            width: 0.25,
+                            height: 0.25,
+                        })
+                    }),
+                ]),
+                "video-key-1",
+            )
+            .await
+            .unwrap();
+        handle.join().unwrap();
+    }
+
+    #[tokio::test]
+    async fn responses_outside_the_contract_are_invalid_response() {
+        let with_layers = |layers: Value, extra: Option<(&str, Value)>| {
+            let mut value = layered();
+            value["layers"] = layers;
+            if let Some((key, replacement)) = extra {
+                value[key] = replacement;
+            }
+            value
+        };
+        let caption = |key: &str, replacement: Value| {
+            let mut value = captions();
+            value[key] = replacement;
+            value
+        };
+        let mut screen = base_layer();
+        screen["publish"]["content"] = json!("screen");
+        let mut status = layered();
+        status["status"] = json!("paused");
+        let mut width = layered();
+        width["output"]["width"] = json!(1921);
+        let mut missing_error_code = layered();
+        missing_error_code
+            .as_object_mut()
+            .unwrap()
+            .remove("error_code");
+        for bad in [
+            with_layers(
+                json!([base_layer(), caption("living_session", living(30, "call"))]),
+                None,
+            ),
+            with_layers(
+                json!([base_layer(), captions()]),
+                Some(("output", json!({"width":1920,"height":1080,"fps":30}))),
+            ),
+            with_layers(
+                json!([{"id":"base","z":0,"source":{"kind":"managed"},"publish":camera_grant()}, captions()]),
+                None,
+            ),
+            with_layers(json!([screen, captions()]), None),
+            with_layers(
+                json!([base_layer(), captions(), caption("id", json!("more"))]),
+                None,
+            ),
+            with_layers(
+                json!([base_layer(), caption("living_session", living(12, "other"))]),
+                None,
+            ),
+            with_layers(
+                json!([
+                    base_layer(),
+                    caption("region", json!({"x":0.5,"y":0,"width":0.6,"height":1}))
+                ]),
+                None,
+            ),
+            with_layers(json!([base_layer(), caption("z", json!(0))]), None),
+            with_layers(
+                json!([
+                    base_layer(),
+                    caption("input", json!(["pointer", "pointer"]))
+                ]),
+                None,
+            ),
+            status,
+            width,
+            missing_error_code,
+            Value::Null,
+        ] {
+            let error = get(bad).await.unwrap_err();
+            assert_eq!(
+                (error.status, error.code.as_str()),
+                (Some(200), "invalid_response")
+            );
+            assert!(error.data.is_none());
+        }
+        get(with_layers(
+            json!([{"id":"base","z":0,"source":{"kind":"managed"}}, captions()]),
+            None,
+        ))
+        .await
+        .unwrap();
+    }
+
+    #[tokio::test]
+    async fn composition_error_codes_survive_without_server_text() {
+        for (status, code, expected) in [
+            (
+                409,
+                "video_composition_unsupported",
+                "video_composition_unsupported",
+            ),
+            (422, "composition_invalid", "composition_invalid"),
+            (
+                409,
+                "composition_revision_conflict",
+                "composition_revision_conflict",
+            ),
+            (
+                409,
+                "composition_base_unavailable",
+                "composition_base_unavailable",
+            ),
+            (409, "media_session_conflict", "media_session_conflict"),
+            (409, "composition_secret", "request_failed"),
+        ] {
+            let payload = json!({"error":{"code":code,"message":PRIVATE}}).to_string();
+            let (url, handle) = server(status, payload);
+            let error = client(&url)
+                .set_call_video("call", &shortcut("dep"), "video-key-1")
+                .await
+                .unwrap_err();
+            handle.join().unwrap();
+            assert_eq!(
+                (error.status, error.code.as_str()),
+                (Some(status), expected)
+            );
+            assert!(error.data.is_none());
+            assert!(!format!("{error:?} {error}").contains(PRIVATE));
+        }
+    }
+
+    #[test]
+    fn video_composition_capability_is_explicit_versioned_and_clamped() {
+        let cap = json!({"version":1,"supported":true,"max_layers":4,"bases":["camera","hologram","managed","camera",3],
+            "page_alpha":true,"regions":true,"max_width":3840,"max_height":1080,"max_fps":60});
+        let parsed = parse_video_composition(&cap).unwrap();
+        assert_eq!(
+            (
+                parsed.max_layers,
+                parsed.bases.as_slice(),
+                parsed.page_alpha,
+                parsed.regions
+            ),
+            (
+                2,
+                &[CompositionBaseKind::Camera, CompositionBaseKind::Managed][..],
+                true,
+                true
+            )
+        );
+        assert_eq!(
+            (parsed.max_width, parsed.max_height, parsed.max_fps),
+            (1920, 1080, 30)
+        );
+        let mut alpha = cap.clone();
+        alpha["page_alpha"] = json!("yes");
+        assert!(!parse_video_composition(&alpha).unwrap().page_alpha);
+        for (key, value) in [
+            ("version", json!(2)),
+            ("supported", json!(false)),
+            ("max_layers", json!(0)),
+            ("max_fps", json!(1.5)),
+            ("bases", json!("camera")),
+        ] {
+            let mut bad = cap.clone();
+            bad[key] = value;
+            assert!(parse_video_composition(&bad).is_none(), "{key}");
+        }
+        assert!(parse_video_composition(&Value::Null).is_none());
+    }
+}

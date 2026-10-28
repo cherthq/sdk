@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -433,5 +434,261 @@ func TestCopyVideoFrame(t *testing.T) {
 	}
 	if code(with(i420, func(f *VideoFrame) { f.Planes[0] = Plane{buf(272*15 + 16), 16 + 256} })) != "" {
 		t.Fatal("max stride padding rejected")
+	}
+}
+
+type videoCall struct{ method, path, body, key string }
+
+func callVideoServer(t *testing.T, reply func() (int, any)) (*FaceTimeClient, func() []videoCall, func()) {
+	var mu sync.Mutex
+	var seen []videoCall
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		seen = append(seen, videoCall{r.Method, r.URL.RequestURI(), string(body), r.Header.Get("Idempotency-Key")})
+		code, payload := reply()
+		mu.Unlock()
+		out, _ := json.Marshal(payload)
+		w.WriteHeader(code)
+		writeFixture(t, w, string(out))
+	}))
+	c, err := NewFaceTimeClient(FaceTimeConfig{EndpointOverride: s.URL, Token: "ft-secret", ProjectID: "project-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return c, func() []videoCall { mu.Lock(); defer mu.Unlock(); return slices.Clone(seen) }, s.Close
+}
+
+func videoFixtures(t *testing.T) (layered, pageOnly map[string]any, base, captions map[string]any, session func(fps float64, call string) map[string]any) {
+	var grant map[string]any
+	if json.Unmarshal([]byte(patchGrant(t, `{"content":"camera","codecs":["h264"],"limits":{"max_width":1920,"max_height":1080,"max_fps":24,"max_frame_bytes":8388608}}`)), &grant) != nil {
+		t.Fatal("bad fixture")
+	}
+	session = func(fps float64, call string) map[string]any {
+		return map[string]any{"session_id": "ls", "call_id": call, "deployment_id": "dep", "status": "starting", "viewport": map[string]any{"width": 1920, "height": 270},
+			"fps": fps, "ready_at": nil, "last_heartbeat_at": nil, "error_code": nil}
+	}
+	base = map[string]any{"id": "base", "z": 0, "source": map[string]any{"kind": "camera"}, "publish": grant}
+	captions = map[string]any{"id": "captions", "z": 1, "living_session": session(12, "call"), "region": map[string]any{"x": 0, "y": 0.75, "width": 1, "height": 0.25},
+		"background": "transparent", "opacity": 0.8, "input": []any{"pointer"}}
+	layered = map[string]any{"composition_id": "cmp", "call_id": "call", "revision": 3, "status": "starting", "output": map[string]any{"width": 1920, "height": 1080, "fps": 24},
+		"error_code": nil, "layers": []any{base, captions}}
+	pageOnly = with(layered, map[string]any{"output": map[string]any{"width": 1280, "height": 720, "fps": 30}, "layers": []any{map[string]any{"id": "page", "z": 1,
+		"living_session": session(30, "call"), "region": map[string]any{"x": 0, "y": 0, "width": 1, "height": 1}, "background": "opaque", "opacity": 1, "input": []any{}}}})
+	return
+}
+
+func with(base map[string]any, patch map[string]any) map[string]any {
+	out := map[string]any{}
+	for k, v := range base {
+		out[k] = v
+	}
+	for k, v := range patch {
+		out[k] = v
+	}
+	return out
+}
+
+func TestCallVideoRequests(t *testing.T) {
+	ctx := context.Background()
+	layered, pageOnly, _, _, _ := videoFixtures(t)
+	data := pageOnly
+	c, seen, done := callVideoServer(t, func() (int, any) { return 200, map[string]any{"data": data, "request_id": "trace"} })
+	defer done()
+	r, err := c.SetCallVideo(ctx, "call", SetCallVideoRequest{Page: &CompositionPage{"dep-1"}}, "video-key-1")
+	if err != nil || r.Data.Output != (CompositionOutput{1280, 720, 30}) || len(r.Data.Layers) != 1 || r.Data.Layers[0].LivingSession.FPS != 30 || r.Data.Layers[0].Input == nil {
+		t.Fatalf("page shortcut: %v", err)
+	}
+	data = layered
+	opacity, revision := 0.8, int64(2)
+	r, err = c.SetCallVideo(ctx, "call", SetCallVideoRequest{Revision: &revision, Layers: []VideoLayerInput{
+		{ID: "base", Source: &CompositionBase{CompositionCamera}},
+		{ID: "captions", Z: 1, Page: CompositionPage{"dep"}, Region: &CompositionRegion{0, 0.75, 1, 0.25}, Background: CompositionTransparent, Opacity: &opacity,
+			Input: []LivingInputKind{LivingPointer}, InitialState: json.RawMessage(`{ "lang": "en" }`)},
+	}}, "video-key-2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := r.Data
+	if v.CompositionID != "cmp" || v.Revision != 3 || v.Status != "starting" || v.ErrorCode != nil || v.Layers[0].Publish == nil || v.Layers[0].Publish.Token != "grant-secret-token" ||
+		v.Layers[0].Publish.Content != MediaContentCamera || v.Layers[0].Publish.Limits.MaxFPS != 24 || v.Layers[0].Source.Kind != CompositionCamera ||
+		v.Layers[1].Region != (CompositionRegion{0, 0.75, 1, 0.25}) || v.Layers[1].Opacity != 0.8 || v.Layers[1].LivingSession.CallID != "call" {
+		t.Fatalf("layered %+v", v.Layers[1])
+	}
+	for _, verb := range []string{"%v", "%+v", "%#v"} {
+		if s := fmt.Sprintf(verb, v) + fmt.Sprintf(verb, r); strings.Contains(s, "grant-secret") {
+			t.Fatalf("%s leaked: %s", verb, s)
+		}
+	}
+	if _, err := c.GetCallVideo(ctx, "call"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.ClearCallVideo(ctx, "call"); err != nil {
+		t.Fatal(err)
+	}
+	want := []videoCall{
+		{"PUT", "/api/v1/calls/call/video", `{"layers":[{"id":"page","z":1,"page":{"deployment_id":"dep-1"},"region":{"x":0,"y":0,"width":1,"height":1},"background":"opaque","opacity":1}]}`, "video-key-1"},
+		{"PUT", "/api/v1/calls/call/video", `{"revision":2,"layers":[{"id":"base","z":0,"source":{"kind":"camera"}},{"id":"captions","z":1,"page":{"deployment_id":"dep"},"region":{"x":0,"y":0.75,"width":1,"height":0.25},"background":"transparent","opacity":0.8,"input":["pointer"],"initial_state":{"lang":"en"}}]}`, "video-key-2"},
+		{"GET", "/api/v1/calls/call/video", "", ""},
+		{"DELETE", "/api/v1/calls/call/video", "", ""},
+	}
+	if got := seen(); !reflect.DeepEqual(got, want) {
+		t.Fatalf("wire\n%q\nwant\n%q", got, want)
+	}
+	// Input targets use output-frame coordinates; only the overlay's region accepts pointer input.
+	if l := CompositionInputTarget(v, 0.5, 0.9); l == nil || l.ID != "captions" {
+		t.Fatal("captions target")
+	}
+	if CompositionInputTarget(v, 0.5, 0.74) != nil || CompositionInputTarget(v, 1.5, 0.9) != nil {
+		t.Fatal("outside target")
+	}
+	data = pageOnly
+	page, _ := c.GetCallVideo(ctx, "call")
+	if CompositionInputTarget(page.Data, 0.5, 0.5) != nil { // declares no input
+		t.Fatal("non-interactive target")
+	}
+}
+
+func TestCallVideoLocalValidation(t *testing.T) {
+	ctx := context.Background()
+	layered, _, _, _, _ := videoFixtures(t)
+	c, seen, done := callVideoServer(t, func() (int, any) { return 200, map[string]any{"data": layered, "request_id": "trace"} })
+	defer done()
+	f := func(v float64) *float64 { return &v }
+	page := VideoLayerInput{ID: "p", Z: 1, Page: CompositionPage{"dep"}}
+	base := VideoLayerInput{ID: "base", Source: &CompositionBase{CompositionCamera}}
+	mod := func(l VideoLayerInput, change func(*VideoLayerInput)) VideoLayerInput { change(&l); return l }
+	negative := int64(-1)
+	huge := int64(maxSafeInteger + 1)
+	deep := strings.Repeat("[", 66) + strings.Repeat("]", 66)
+	for i, input := range []SetCallVideoRequest{
+		{Layers: []VideoLayerInput{}}, {}, {Layers: []VideoLayerInput{base, page, mod(page, func(l *VideoLayerInput) { l.ID, l.Z = "q", 2 })}}, // 0 and 3 layers
+		{Layers: []VideoLayerInput{base, mod(base, func(l *VideoLayerInput) { l.ID = "b2" })}}, {Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.ID = "base" })}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Z = 0 })}}, {Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Z = 65 })}},
+		{Layers: []VideoLayerInput{mod(base, func(l *VideoLayerInput) { l.Z = 1 }), page}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Region = &CompositionRegion{0.5, 0, 0.6, 1} })}}, // leaves the frame
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Region = &CompositionRegion{0, 0, 0, 1} })}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Opacity = f(1.2) })}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Background = "blurred" })}},
+		{Layers: []VideoLayerInput{mod(page, func(l *VideoLayerInput) { l.Background = CompositionTransparent })}}, // nothing below to show through
+		{Layers: []VideoLayerInput{mod(page, func(l *VideoLayerInput) { l.Opacity = f(0.5) })}},
+		{Layers: []VideoLayerInput{mod(page, func(l *VideoLayerInput) { l.Region = &CompositionRegion{0, 0, 0.5, 1} })}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Input = []LivingInputKind{LivingPointer, LivingPointer} })}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Input = []LivingInputKind{"scroll"} })}},
+		{Layers: []VideoLayerInput{{ID: "base", Source: &CompositionBase{"screen"}}}},
+		{Page: &CompositionPage{""}}, {Page: &CompositionPage{strings.Repeat("d", 129)}}, // native SDKs need a ready deployment ID
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Page = CompositionPage{} })}},
+		{Page: &CompositionPage{"dep"}, Revision: &negative}, {Page: &CompositionPage{"dep"}, Revision: &huge},
+		{Layers: []VideoLayerInput{mod(page, func(l *VideoLayerInput) { l.ID = "Upper" })}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.InitialState = json.RawMessage(`{bad`) })}},
+		{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.InitialState = json.RawMessage(deep) })}},
+		{Page: &CompositionPage{"dep"}, InitialState: json.RawMessage(`"` + strings.Repeat("x", 64*1024) + `"`)},
+	} {
+		var api *APIError
+		if _, err := c.SetCallVideo(ctx, "call", input, "video-key-1"); !errors.As(err, &api) || api.Code != "invalid_request" {
+			t.Fatalf("case %d accepted: %v", i, err)
+		}
+	}
+	for _, key := range []string{"short", " leading-space", strings.Repeat("k", 201)} {
+		if _, err := c.SetCallVideo(ctx, "call", SetCallVideoRequest{Page: &CompositionPage{"dep"}}, key); err == nil {
+			t.Fatalf("key %q accepted", key)
+		}
+	}
+	for _, id := range []string{"", "../x", "a/b"} {
+		_, errSet := c.SetCallVideo(ctx, id, SetCallVideoRequest{Page: &CompositionPage{"dep"}}, "video-key-1")
+		_, errGet := c.GetCallVideo(ctx, id)
+		_, errClear := c.ClearCallVideo(ctx, id)
+		if errSet == nil || errGet == nil || errClear == nil {
+			t.Fatal("bad call id")
+		}
+	}
+	if len(seen()) != 0 {
+		t.Fatal("invalid input reached the network")
+	}
+	// A region touching the frame edge is inside it.
+	if _, err := c.SetCallVideo(ctx, "call", SetCallVideoRequest{Layers: []VideoLayerInput{base, mod(page, func(l *VideoLayerInput) { l.Region = &CompositionRegion{0.75, 0.75, 0.25, 0.25} })}}, "video-key-1"); err != nil || len(seen()) != 1 {
+		t.Fatalf("edge region: %v", err)
+	}
+}
+
+func TestCallVideoResponseValidation(t *testing.T) {
+	ctx := context.Background()
+	layered, _, base, captions, session := videoFixtures(t)
+	var data any
+	c, seen, done := callVideoServer(t, func() (int, any) { return 200, map[string]any{"data": data, "request_id": "trace"} })
+	defer done()
+	layers := func(l ...any) map[string]any { return with(layered, map[string]any{"layers": l}) }
+	grant := base["publish"].(map[string]any)
+	noError := with(layered, nil)
+	delete(noError, "error_code")
+	for i, bad := range []any{
+		layers(base, with(captions, map[string]any{"living_session": session(30, "call")})),                                   // page fps above output fps
+		with(layers(base, captions), map[string]any{"output": map[string]any{"width": 1920, "height": 1080, "fps": 30}}),      // output fps above the base grant
+		layers(map[string]any{"id": "base", "z": 0, "source": map[string]any{"kind": "managed"}, "publish": grant}, captions), // grant on a managed base
+		layers(with(base, map[string]any{"publish": with(grant, map[string]any{"content": "screen"})}), captions),
+		layers(base, captions, with(captions, map[string]any{"id": "more", "z": 2})),
+		layers(base, with(captions, map[string]any{"living_session": session(12, "other")})),
+		layers(base, with(captions, map[string]any{"region": map[string]any{"x": 0.5, "y": 0, "width": 0.6, "height": 1}})),
+		layers(base, with(captions, map[string]any{"z": 0})),
+		with(layered, map[string]any{"status": "paused"}), with(layered, map[string]any{"output": map[string]any{"width": 1921, "height": 1080, "fps": 24}}),
+		layers(base, with(captions, map[string]any{"living_session": with(session(12, "call"), map[string]any{"status": "paused"})})),
+		layers(base, with(captions, map[string]any{"living_session": with(session(12, "call"), map[string]any{"viewport": map[string]any{"width": 15, "height": 270}})})),
+		layers(base, with(captions, map[string]any{"living_session": with(session(12, "call"), map[string]any{"session_id": ""})})),
+		layers(base, with(captions, map[string]any{"input": []any{"pointer", "pointer"}})),
+		with(layered, map[string]any{"revision": 1.5}), noError, nil, []any{},
+	} {
+		data = bad
+		r, err := c.GetCallVideo(ctx, "call")
+		var api *APIError
+		if !errors.As(err, &api) || api.Code != "invalid_response" || api.Status != 200 || api.Data != nil || r.Response.Data != nil {
+			t.Fatalf("case %d accepted: %v", i, err)
+		}
+	}
+	data = layers(map[string]any{"id": "base", "z": 0, "source": map[string]any{"kind": "managed"}}, captions)
+	if r, err := c.GetCallVideo(ctx, "call"); err != nil || r.Data.Layers[0].Source.Kind != CompositionManaged || r.Data.Layers[0].Publish != nil {
+		t.Fatalf("managed base: %v", err)
+	}
+	if n := len(seen()); n != 19 {
+		t.Fatalf("requests %d", n)
+	}
+}
+
+func TestCallVideoErrorCodes(t *testing.T) {
+	ctx := context.Background()
+	for _, tc := range []struct {
+		status int
+		code   string
+	}{{409, "video_composition_unsupported"}, {422, "composition_invalid"}, {409, "composition_revision_conflict"}, {409, "composition_base_unavailable"}, {409, "media_session_conflict"}, {409, "composition_secret"}} {
+		c, _, done := callVideoServer(t, func() (int, any) {
+			return tc.status, map[string]any{"error": map[string]any{"code": tc.code, "message": "internal detail"}, "request_id": "trace"}
+		})
+		_, err := c.SetCallVideo(ctx, "call", SetCallVideoRequest{Page: &CompositionPage{"dep"}}, "video-key-1")
+		done()
+		want := tc.code
+		if tc.code == "composition_secret" {
+			want = "request_failed"
+		}
+		var api *APIError
+		if !errors.As(err, &api) || api.Status != tc.status || api.Code != want || api.Data != nil || strings.Contains(fmt.Sprintf("%v %+v %#v", err, err, err), "internal detail") {
+			t.Fatalf("%d %s: %v", tc.status, tc.code, err)
+		}
+	}
+}
+
+func TestParseVideoComposition(t *testing.T) {
+	cap := `{"version":1,"supported":true,"max_layers":4,"bases":["camera","hologram","managed","camera"],"page_alpha":true,"regions":true,"max_width":3840,"max_height":1080,"max_fps":60}`
+	got := ParseVideoComposition(json.RawMessage(cap))
+	if got == nil || !reflect.DeepEqual(*got, VideoCompositionCapability{1, true, 2, []CompositionBaseKind{CompositionCamera, CompositionManaged}, true, true, 1920, 1080, 30}) {
+		t.Fatalf("parsed %+v", got)
+	}
+	if p := ParseVideoComposition(json.RawMessage(strings.Replace(cap, `"page_alpha":true`, `"page_alpha":"yes"`, 1))); p == nil || p.PageAlpha {
+		t.Fatal("page_alpha")
+	}
+	for _, bad := range []string{``, `null`, `"v1"`, strings.Replace(cap, `"version":1`, `"version":2`, 1), strings.Replace(cap, `"supported":true`, `"supported":false`, 1),
+		strings.Replace(cap, `"max_layers":4`, `"max_layers":0`, 1), strings.Replace(cap, `["camera","hologram","managed","camera"]`, `"camera"`, 1),
+		strings.Replace(cap, `"max_fps":60`, `"max_fps":1.5`, 1)} {
+		if ParseVideoComposition(json.RawMessage(bad)) != nil {
+			t.Fatalf("accepted %s", bad)
+		}
 	}
 }

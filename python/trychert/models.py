@@ -252,6 +252,8 @@ CallEventType = Literal['incoming_registered', 'allocated', 'answer_requested', 
                         'active', 'ending', 'bridge_ready', 'agent_connected', 'remote_video_ready',
                         'remote_video_unavailable', 'caller_video_published', 'ended', 'failed',
                         'rejected', 'cleanup_complete',
+                        # Draft call video composition lifecycle. Payload-free.
+                        'call_video.live', 'call_video.updated', 'call_video.failed', 'call_video.stopped',
                         # Screen sharing. Payload-free: never screen content or coordinates.
                         'agent_screen_started', 'agent_screen_stopped', 'caller_screen_share_started',
                         'caller_screen_share_ended', 'screen_control_granted', 'screen_control_revoked', 'unknown']

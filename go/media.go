@@ -142,6 +142,7 @@ var mediaSafeCodes = map[string]bool{
 	"media_capability_unsupported": true, "media_session_conflict": true, "caller_screen_not_shared": true,
 	"media_content_unsupported": true, "caller_screen_unsupported": true, "media_limit_exceeded": true, "call_not_active": true, "call_ended": true,
 	"call_not_found": true, "media_session_expired": true, "media_transport_unavailable": true,
+	"video_composition_unsupported": true, "composition_invalid": true, "composition_revision_conflict": true, "composition_base_unavailable": true,
 }
 
 // mediaError never returns raw response data. Server error responses keep their status

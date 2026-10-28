@@ -180,6 +180,21 @@ async function living(client: ChertControlPlane, frame: Window) {
   if (await verifyLivingServiceWebhook(raw, 'sha256=00', version === 1 ? 'secret' : new Uint8Array(32))) { const event: LivingServiceMessageWebhook = JSON.parse(''); void event.event_id; }
 }
 void living;
+import {liveKitTrackFrames, type LiveKitVideoFrameEvent} from '@trychert/sdk/media/livekit';
+import {compositionInputTarget, parseVideoComposition, type CallVideoComposition, type VideoCompositionCapability} from '@trychert/sdk/facetime';
+async function composition(client: ChertControlPlane, stream: AsyncIterable<LiveKitVideoFrameEvent>, src: ChertVideoSource) {
+  const cap: VideoCompositionCapability | null = parseVideoComposition((await client.getCall('call')).video_composition);
+  if (!cap?.bases.includes('camera')) return;
+  const video: CallVideoComposition = await client.setCallVideo('call', {layers:[{id:'base',source:{kind:'camera'}},
+    {id:'captions',z:1,page:{deployment_id:'dep'},region:{x:0,y:0.75,width:1,height:0.25},background:'transparent',opacity:0.9}]}, 'video-key-1');
+  await client.setCallVideo('call', {page:'https://app.example/live'}, 'video-key-2', {readyTimeoutMs: 30_000});
+  // @ts-expect-error Base sources are camera or managed.
+  await client.setCallVideo('call', {layers:[{id:'base',source:{kind:'screen'}}]}, 'video-key-3');
+  void compositionInputTarget(video, 0.5, 0.9)?.living_session.session_id;
+  for await (const f of liveKitTrackFrames(rtcModule, stream)) src.pushFrame(f);
+  await client.clearCallVideo('call');
+}
+void composition;
 declare const billing: ChertControlPlane;
 const status: boolean = (await billing.billingStatus()).shared_available;
 const url: string = (await billing.createCheckout({plan:'dedicated'},'stable-key')).url;
