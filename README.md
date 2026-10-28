@@ -164,7 +164,7 @@ for example `billing_sales_disabled`, `billing_subscription_exists`,
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
-**Terminal billing (draft, unreleased; the code ships in 0.2.3, but the backend does not serve it yet).**
+**Terminal billing (draft; ships in 0.2.3, not served yet).**
 `purchase({ plan }, key)` charges the saved card and is refused while the project
 already has a live subscription; the plan is granted by the payment webhook.
 `paymentMethodSetup(key)` returns `{ status: 'requires_payment_method', url }` for
@@ -226,7 +226,8 @@ usage; do not rely on it to rename existing SDK imports. This documentation
 does not deprecate any registry package; registry actions require separate approval.
 
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
-`adopt` and `context`. Since 0.2.1, unknown commands and subcommands exit with
+`adopt` and `context`, and since 0.2.3 `billing status|card|buy|cancel` (draft;
+the backend does not serve it yet). Since 0.2.1, unknown commands and subcommands exit with
 `unknown_command` before any credential lookup. Published 0.1.0 through 0.2.3
 do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
 agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
@@ -346,8 +347,8 @@ through the same bridge, without a call. Examples: a
 
 Limitations: these routes are a draft contract and require a backend that reports
 `living_services`. There is no audio from the page, and no uploaded bundles yet.
-Input is relayed to the page, not injected as OS events. Not in any published
-package version.
+Input is relayed to the page, not injected as OS events. The code ships in
+0.2.2 and later, but the hosted backend does not serve these routes yet.
 
 ### Screen sharing (draft, unreleased)
 
@@ -394,8 +395,8 @@ See [`packages/media/examples/screen-share.ts`](packages/media/examples/screen-s
 
 ### Call video composition (draft, unreleased)
 
-Not in any published package version, and not served by the backend yet. The
-call's video can be a page, or a page layered over live video, composed
+The code ships in 0.2.3, but the hosted backend does not serve it yet
+(`404 endpoint_unavailable`). The call's video can be a page, or a page layered over live video, composed
 server-side into the one track the caller sees.
 
 ```ts
