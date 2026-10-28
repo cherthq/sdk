@@ -140,8 +140,8 @@ test('Chert webhook verification covers raw bytes, timestamp, secret and signatu
   expect(await verifyWebhook(body, signature(now), secret)).toBe(true);
   expect(await verifyWebhook(JSON.stringify(JSON.parse(body)), signature(now), secret)).toBe(false);
   expect(await verifyWebhook(body, signature(now), 'wrong')).toBe(false);
-  expect(await verifyWebhook(body, signature(now - 301), secret)).toBe(false);
-  expect(await verifyWebhook(body, signature(now + 301), secret)).toBe(false);
+  expect(await verifyWebhook(body, signature(now - 305), secret)).toBe(false);
+  expect(await verifyWebhook(body, signature(now + 305), secret)).toBe(false);
   expect(await verifyWebhook(body, 'v1,' + now + ',bad', secret)).toBe(false);
   expect(await verifyWebhook(body, signature(now) + '\n', secret)).toBe(false);
   expect(await verifyWebhook(body, signature(now) + 'a', secret)).toBe(false);

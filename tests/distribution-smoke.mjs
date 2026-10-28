@@ -80,6 +80,22 @@ import Blooio from '@cherthq/blooio-adapter';
   console.log('Built custom media core and WHIP signaling passed.');
 }
 
+// Living page runtime and preview host work on every runtime's MessageChannel.
+{
+  const living = await import('@cherthq/living');
+  const target = new EventTarget();
+  const win = { addEventListener: target.addEventListener.bind(target), removeEventListener: target.removeEventListener.bind(target),
+    postMessage(data, _o, ports) { queueMicrotask(() => { const e = new MessageEvent('message', { data, ports, origin: 'https://p.example' }); Object.defineProperty(e, 'source', { value: win }); target.dispatchEvent(e); }); } };
+  const states = [];
+  const page = living.connectLivingPage({ onState: s => states.push(s) }, { target: win, trusted: { source: win, origin: 'https://p.example' }, heartbeatMs: 1000 });
+  const preview = living.startLivingPreview(win, { origin: 'https://p.example', viewport: { width: 640, height: 360 }, fps: 15, state: 0 });
+  await new Promise(r => preview.on('ready', r));
+  preview.setState({ n: 1 });
+  const stopped = new Promise(r => preview.on('stopped', r)); await new Promise(r => setTimeout(r, 5)); preview.stop(); await stopped;
+  assert.deepEqual(states, [{ n: 1 }]); assert.equal(page.state, 'stopped');
+  console.log('Built living page runtime and preview bridge passed.');
+}
+
 // Exercise the built reaction API under each supported runtime, including
 // identity preservation and a response that must never become acceptance.
 {
