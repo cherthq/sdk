@@ -40,7 +40,8 @@ _ECMASCRIPT_WHITESPACE = frozenset("\t\n\v\f\r \u00a0\u1680\u2028\u2029\u202f\u2
 
 class QueuedTextReceipt(TypedDict):
     """CRM acceptance only, never delivery proof. ``success`` is the SDK's acceptance flag;
-    ``sent`` means the CRM dispatched it to a line, ``duplicate`` means the CRM already had this send."""
+    ``sent`` means the CRM dispatched it to a line, ``duplicate`` means the line's duplicate check already had this message;
+    ``message_id`` is a new record."""
     success: Literal[True]
     message_id: str
     chat_id: str
@@ -156,7 +157,10 @@ class ChertClient:
         if not valid_text:
             raise ValueError("Invalid strict plaintext")
         valid_key = idempotency_key is None
-        if isinstance(idempotency_key, str) and idempotency_key and "\0" not in idempotency_key:
+        # CRM trims keys (ECMAScript String.trim), so surrounding whitespace would change or drop them.
+        if (isinstance(idempotency_key, str) and idempotency_key and "\0" not in idempotency_key
+                and idempotency_key[0] not in _ECMASCRIPT_WHITESPACE
+                and idempotency_key[-1] not in _ECMASCRIPT_WHITESPACE):
             try:
                 valid_key = len(idempotency_key.encode("utf-8", errors="strict")) <= 200
             except UnicodeError:

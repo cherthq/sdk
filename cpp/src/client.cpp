@@ -75,21 +75,28 @@ bool valid_utf8(const std::string& value) {
     try { static_cast<void>(Json(value).dump()); return true; }
     catch (const Json::exception&) { return false; }
 }
+// ECMAScript String.trim whitespace for consistent input validation.
+// Encoding validation remains nlohmann/json's job; no Unicode normalization.
+constexpr auto ecmascript_spaces = std::to_array<std::string_view>({
+    "\t", "\n", "\v", "\f", "\r", " ", "\xc2\xa0", "\xe1\x9a\x80",
+    "\xe2\x80\x80", "\xe2\x80\x81", "\xe2\x80\x82", "\xe2\x80\x83", "\xe2\x80\x84",
+    "\xe2\x80\x85", "\xe2\x80\x86", "\xe2\x80\x87", "\xe2\x80\x88", "\xe2\x80\x89",
+    "\xe2\x80\x8a", "\xe2\x80\xa8", "\xe2\x80\xa9", "\xe2\x80\xaf", "\xe2\x81\x9f",
+    "\xe3\x80\x80", "\xef\xbb\xbf"});
 bool blank_text(std::string_view value) {
-    // ECMAScript String.trim whitespace for consistent input validation.
-    // Encoding validation remains nlohmann/json's job; no Unicode normalization.
-    constexpr auto spaces = std::to_array<std::string_view>({
-        "\t", "\n", "\v", "\f", "\r", " ", "\xc2\xa0", "\xe1\x9a\x80",
-        "\xe2\x80\x80", "\xe2\x80\x81", "\xe2\x80\x82", "\xe2\x80\x83", "\xe2\x80\x84",
-        "\xe2\x80\x85", "\xe2\x80\x86", "\xe2\x80\x87", "\xe2\x80\x88", "\xe2\x80\x89",
-        "\xe2\x80\x8a", "\xe2\x80\xa8", "\xe2\x80\xa9", "\xe2\x80\xaf", "\xe2\x81\x9f",
-        "\xe3\x80\x80", "\xef\xbb\xbf"});
     while (!value.empty()) {
-        const auto found = std::find_if(spaces.begin(), spaces.end(), [value](auto space) { return value.starts_with(space); });
-        if (found == spaces.end()) return false;
+        const auto found = std::find_if(ecmascript_spaces.begin(), ecmascript_spaces.end(),
+            [value](auto space) { return value.starts_with(space); });
+        if (found == ecmascript_spaces.end()) return false;
         value.remove_prefix(found->size());
     }
     return true;
+}
+// For valid UTF-8, matching a whole encoded space at either end is the same as
+// decoding the first/last code point: lead bytes never occur as continuations.
+bool untrimmed(std::string_view value) {
+    return std::any_of(ecmascript_spaces.begin(), ecmascript_spaces.end(),
+        [value](auto space) { return value.starts_with(space) || value.ends_with(space); });
 }
 bool canonical_phone(std::string_view value) {
     return value.size() >= 3 && value.size() <= 16 && value[0] == '+' && value[1] >= '1' && value[1] <= '9'
@@ -409,7 +416,8 @@ QueuedTextReceipt IMessageClient::send_text(const std::string& phone, const std:
                                     std::optional<std::string> key) const {
     if (!canonical_phone(phone) || text.empty() || text.size() > 16384 || text.find('\0') != text.npos
         || !valid_utf8(text) || blank_text(text)) throw std::invalid_argument("Invalid strict plaintext input");
-    if (key && (key->empty() || key->size() > 200 || key->find('\0') != key->npos || !valid_utf8(*key)))
+    if (key && (key->empty() || key->size() > 200 || key->find('\0') != key->npos || !valid_utf8(*key)
+                || untrimmed(*key)))
         throw std::invalid_argument("Invalid strict text idempotency key");
     Json payload{{"phone", phone}, {"body", text}};
     if (key) payload["idempotency_key"] = *key;

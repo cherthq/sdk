@@ -9,6 +9,7 @@ const record = (v: unknown): v is Record<string, unknown> => typeof v === 'objec
 const exact = (v: Record<string, unknown>, keys: string[]) => Object.keys(v).sort().join() === [...keys].sort().join();
 const uuid = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v);
 const publicId = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
+const sendId = (v: unknown): v is string => typeof v === 'string' && /^(?:[a-f0-9]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(v);
 const chatId = (v: unknown): v is string => typeof v === 'string' && /^[A-Za-z0-9:_-]{1,160}$/.test(v);
 const phone = (v: unknown): v is string => typeof v === 'string' && /^\+[1-9][0-9]{7,14}$/.test(v);
 const timestamp = (v: unknown): v is string => typeof v === 'string'
@@ -51,9 +52,10 @@ function fromError(error: unknown): Response {
   }
   const response = unknown();
   if (error instanceof ChertAPIError && error.status === 502 && error.code === '4103'
-    && record(error.data) && publicId(error.data.message_id) && chatId(error.data.chat_id)) {
+    && record(error.data) && sendId(error.data.message_id)) {
+    // CRM's flat /send failure body carries message_id only; chat_id when present.
     response.headers.set('X-Chert-Message-Id', error.data.message_id);
-    response.headers.set('X-Chert-Chat-Id', error.data.chat_id);
+    if (chatId(error.data.chat_id)) response.headers.set('X-Chert-Chat-Id', error.data.chat_id);
   }
   return response;
 }

@@ -92,7 +92,6 @@ export class Blooio extends OfficialBlooio {
             status: error.status, headers: error.requestId ? { 'x-request-id': error.requestId } : undefined,
           });
         }
-        if (error instanceof TypeError && !request.signal.aborted) return failure(400, 'Invalid text send request');
         throw error;
       }
     };

@@ -1,7 +1,7 @@
 import { ChertAPIError, ChertClient, type ChertClientOptions, type ChertFetch } from '@cherthq/imessage';
 const record=(value:unknown):value is Record<string,unknown>=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const failure=(status:number,message:string)=>Response.json({success:false,code:100,message},{status});
-const publicID=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{32}(?![\s\S])/.test(value);
+const sendID=(value:unknown):value is string=>typeof value==='string'&&/^(?:[a-f0-9]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?![\s\S])/i.test(value);
 const chatID=(value:unknown):value is string=>typeof value==='string'&&/^[A-Za-z0-9:_-]{1,160}(?![\s\S])/.test(value);
 const statusFailure=(status:number)=>Response.json({error_code:100,message:'Recorded status unavailable.'},{status});
 function recordedStatus(value:unknown,id:string):Record<string,unknown>|null {
@@ -76,9 +76,10 @@ export function createLoopMessageFetch(options:{chert:ChertClientOptions}):Chert
       const response=failure(error instanceof ChertAPIError&&error.status>=400&&error.status<=599?error.status:502,
         'Send request did not complete; reconcile before retrying.');
       if(error instanceof ChertAPIError&&error.status===502&&error.code==='4103'&&record(error.data)
-        &&record(error.data.error)&&error.data.error.retryable===false&&publicID(error.data.message_id)&&chatID(error.data.chat_id)){
+        &&(record(error.data.error)?error.data.error.retryable===false:error.data.retryable===false)&&sendID(error.data.message_id)){
+        // CRM's flat /send failure body carries message_id only; chat_id when present.
         response.headers.set('x-chert-message-id',error.data.message_id);
-        response.headers.set('x-chert-chat-id',error.data.chat_id);
+        if(chatID(error.data.chat_id))response.headers.set('x-chert-chat-id',error.data.chat_id);
       }
       return response;
     }

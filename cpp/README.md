@@ -306,15 +306,18 @@ auto queued = client.send_text("+15550000002", "Exact plaintext", "unique-operat
 `send_text(phone, text, optional_key)` makes one POST to `/send`
 through the same transport. Canonical E.164 and nonblank, lossless UTF-8 text
 of at most 16 KiB without NUL are required. An optional key must be nonempty,
-lossless UTF-8, at most 200 bytes, and contain no NUL. Payload whitespace and
-keys are preserved, not trimmed or normalized. Blankness follows
+lossless UTF-8, at most 200 bytes, contain no NUL, and have no leading or
+trailing whitespace (the CRM trims keys, so such keys are rejected before
+HTTP); internal whitespace is allowed. Payload text and keys are sent
+unchanged, not trimmed or normalized. Blankness and key trimming follow
 ECMAScript whitespace rules; UTF-8 validity uses the existing JSON
 library. The method requires a JSON object (extra fields ignored) with HTTP
 202 and `status="queued"`, or HTTP 200 and `status="sent"` or `"duplicate"`,
 plus string `message_id` and `chat_id` of 1–160 ASCII
 letters/digits/colon/underscore/hyphen. `success=true` is set by the SDK.
-`sent` means the CRM dispatched it to a line and `duplicate` means the CRM
-already had this send; none is delivery proof.
+`sent` means the CRM dispatched it to a line and `duplicate` means the line's
+duplicate check already had this message; message_id is a new record. None is
+delivery proof.
 
 Unexpected successful status or receipt shape raises sanitized
 `ApiError(502, "unconfirmed_text_outcome", ...)`; raw response data is explicit

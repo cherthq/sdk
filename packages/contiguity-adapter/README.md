@@ -34,8 +34,8 @@ actual 32-hex Chert public ID, not `imsg_…`, and means queue acceptance only.
 Errors use the documented `{…,object:'error',data:{error,status}}` envelope with
 sanitized text; 501 marks unsupported subsets and 502 an unconfirmed outcome that
 must be reconciled, not retried. For an actual Chert 4103 nonretryable 502 with
-validated IDs, `X-Chert-Message-Id` / `X-Chert-Chat-Id` headers carry
-reconciliation identity.
+a validated message ID, `X-Chert-Message-Id` (and `X-Chert-Chat-Id` when Chert
+returns one) carry reconciliation identity.
 
 Sources: [Send iMessage](https://docs.contiguity.com/api-reference/product/imessage/send),
 [typing](https://docs.contiguity.com/api-reference/product/imessage/typing),

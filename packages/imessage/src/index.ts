@@ -13,7 +13,7 @@ export type ChertClientOptions = {
 export type StrictTextRequest = { phone: string; body: string; idempotency_key?: string };
 /**
  * Server acceptance of one text send, not delivery proof. `success` is set by the SDK.
- * `queued`: accepted for a line (HTTP 202); `sent`: dispatched to a line; `duplicate`: Chert already had this send.
+ * `queued`: accepted for a line (HTTP 202); `sent`: dispatched to a line; `duplicate`: the line's duplicate check already had this message (message_id is a new record).
  */
 export type QueuedTextReceipt = { success: true; message_id: string; chat_id: string; status: 'queued' | 'sent' | 'duplicate' };
 export type SendTextOptions = { signal?: AbortSignal };
@@ -71,7 +71,7 @@ export class ChertClient {
       ||typeof body.body!=='string'||!body.body.trim()||body.body.includes('\0')||!lossless(body.body)
       ||new TextEncoder().encode(body.body).byteLength>16384
       ||(Object.hasOwn(body,'idempotency_key')&&(typeof body.idempotency_key!=='string'||!body.idempotency_key.length
-        ||body.idempotency_key.includes('\0')||!lossless(body.idempotency_key)||new TextEncoder().encode(body.idempotency_key).byteLength>200)))
+        ||body.idempotency_key.includes('\0')||body.idempotency_key.trim()!==body.idempotency_key||!lossless(body.idempotency_key)||new TextEncoder().encode(body.idempotency_key).byteLength>200)))
       throw new TypeError('Invalid strict text request');
     if(!isRecord(options)||Object.keys(options).some(key=>key!=='signal')
       ||(options.signal!==undefined&&!(options.signal instanceof AbortSignal)))throw new TypeError('Invalid strict text options');

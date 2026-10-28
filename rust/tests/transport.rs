@@ -320,8 +320,8 @@ async fn strict_text_preserves_tuple_and_requires_crm_send_receipt() {
     let chat = "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f";
     for (http, status, key) in [
         ("202 Accepted", "queued", None),
-        ("200 OK", "sent", Some(" exact-key ")),
-        ("200 OK", "duplicate", Some(" exact-key ")),
+        ("200 OK", "sent", Some("exact key")),
+        ("200 OK", "duplicate", Some("exact key")),
     ] {
         let reply = json!({"status":status,"message_id":id,"chat_id":chat,
             "lead_id":"9b2f7c1e-3d4a-4e5f-8a6b-7c8d9e0f1a2b","lead_created":false,
@@ -436,7 +436,15 @@ async fn strict_text_invalid_input_never_connects_and_cancellation_never_resends
             "invalid_text_request"
         );
     }
-    for key in ["".to_owned(), "bad\0key".to_owned(), "é".repeat(101)] {
+    for key in [
+        "".to_owned(),
+        "bad\0key".to_owned(),
+        "é".repeat(101),
+        " exact-key".to_owned(),
+        "exact-key\n".to_owned(),
+        " \t\u{feff}".to_owned(),
+        "exact-key\u{3000}".to_owned(),
+    ] {
         assert_eq!(
             c.send_text("+15550000002", "hello", Some(&key))
                 .await

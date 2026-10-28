@@ -28,7 +28,7 @@ FaceTime requires CHERT_PROJECT_ID; iMessage only reports it as context.
 Credentials by surface (service-specific, not interchangeable):
   imessage send            CHERT_API_KEY (iMessage API key)
   facetime status          CHERT_FACETIME_TOKEN = CLI login (ftu_, from chert login)
-  facetime lines, workers  CHERT_FACETIME_TOKEN = CLI login or project API key (ftk_)
+  facetime lines, workers  CHERT_FACETIME_TOKEN = project API key (ftk_) or CLI login
   billing (draft)          CHERT_FACETIME_TOKEN = CLI login with the billing scope,
                            held by a current project owner; not a project API key
 iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.

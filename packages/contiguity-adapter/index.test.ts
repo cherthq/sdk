@@ -124,6 +124,8 @@ test('Chert errors are sanitized; 4103 keeps validated reconciliation headers', 
   expect(response.headers.get('x-chert-message-id')).toBe('f'.repeat(32));
   expect(response.headers.get('x-chert-chat-id')).toBe('chat-a');
   expect(calls.length).toBe(1);
+  const flat = await post(fixture({status: 'failed', error: 'send_failed', code: 4103, message: 'private detail', retryable: false, message_id: '550e8400-e29b-41d4-a716-446655440000'}, 502).transport, send, contract.send.implicit); // CRM /send failure body
+  expect([flat.status, flat.headers.get('x-chert-message-id'), flat.headers.get('x-chert-chat-id')]).toEqual([502, '550e8400-e29b-41d4-a716-446655440000', null]);
 });
 
 test('typing start/stop with explicit from maps to Chert typing', async () => {

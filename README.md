@@ -147,8 +147,10 @@ not proof of delivery. Package publication and backend availability are separate
 
 `sendText` makes one `POST /api/v1/send` (all six SDKs). The receipt is
 `{ success: true, message_id, chat_id, status }`, where `status` is `queued`
-(HTTP 202), `sent` (dispatched to a line) or `duplicate` (Chert already had this
-send), both HTTP 200. Any other success response raises
+(HTTP 202), `sent` (dispatched to a line) or `duplicate` (the line's duplicate
+check already had this message; `message_id` is a new record), both HTTP 200.
+Idempotency keys with leading or trailing whitespace are rejected before sending,
+because Chert trims them. Any other success response raises
 `unconfirmed_text_outcome`: reconcile before sending again. Releases up to 0.2.2
 posted to a route production does not serve, so text sends failed there.
 
@@ -173,8 +175,8 @@ Stripe-hosted page for card entry or authentication: card details are never
 entered in the terminal. The CLI equivalents are
 `chert-sdk billing status | card | buy --plan P | cancel`; mutations need
 `--idempotency-key` and `--confirm`. **Switching plans is not available:**
-`changePlan` fails with `billing_plan_change_unavailable` until a plan-change
-policy exists, and the CLI has no `switch` command. Dedicated purchases stay
+once served, `changePlan` fails with `billing_plan_change_unavailable` until a
+plan-change policy exists, and the CLI has no `switch` command. Dedicated purchases stay
 unavailable (`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
 
 ```sh

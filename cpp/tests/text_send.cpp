@@ -23,9 +23,10 @@ int main(int argc, char** argv) {
         for (const auto& text : {std::string(), std::string(" \n\t"), std::string("\xc2\xa0"),
                  std::string("x\0y", 3), std::string("\xc0\xaf"), std::string("\xed\xa0\x80"), std::string(16385, 'x')})
             invalid([&] { static_cast<void>(client.send_text("+15550000002", text)); });
-        for (const auto& key : {std::string(), std::string("x\0y", 3), std::string("\xff"), std::string(201, 'x')})
+        for (const auto& key : {std::string(), std::string("x\0y", 3), std::string("\xff"), std::string(201, 'x'),
+                 std::string(" key"), std::string("key\n"), std::string(" \n\t"), std::string("key\xe3\x80\x80"), std::string("\xef\xbb\xbfkey")})
             invalid([&] { static_cast<void>(client.send_text("+15550000002", "hello", key)); });
-        auto receipt = client.send_text("+15550000002", "  exact / text  ", " key/\n");
+        auto receipt = client.send_text("+15550000002", "  exact / text  ", "key / \n inner");
         CHECK(receipt.success && receipt.message_id == "550e8400-e29b-41d4-a716-446655440000"
             && receipt.chat_id == "7c9e6679-7425-40de-944b-e07fc1f90ae7" && receipt.status == "queued");
         CHECK(client.send_text("+15550000002", "without-key").status == "queued");

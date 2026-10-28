@@ -22,6 +22,8 @@ test('incompatible successes never invent lifecycle or retry',async()=>{
 });
 test('uncertain outcomes expose only both validated Chert reconciliation headers',async()=>{
  for(const bad of [false,true]){const {calls,transport}=fixture({message_id:bad?'native_bad':'a'.repeat(32),chat_id:'chat-a',error:{code:4103,message:'private-secret',retryable:false}},502);const response=await post(transport,valid);expect(response.status).toBe(502);expect(await response.json()).toEqual({success:false,code:100,message:'Send request did not complete; reconcile before retrying.'});expect(response.headers.get('x-chert-message-id')).toBe(bad?null:'a'.repeat(32));expect(response.headers.get('x-chert-chat-id')).toBe(bad?null:'chat-a');expect(calls.length).toBe(1);}
+ const flat=await post(fixture({status: 'failed', error: 'send_failed', code: 4103, message: 'private detail', retryable: false, message_id: '550e8400-e29b-41d4-a716-446655440000'},502).transport,valid);// CRM /send failure body
+ expect([flat.status,flat.headers.get('x-chert-message-id'),flat.headers.get('x-chert-chat-id')]).toEqual([502,'550e8400-e29b-41d4-a716-446655440000',null]);
 });
 test('already cancelled input has zero requests',async()=>{const {calls,transport}=fixture();const abort=new AbortController();abort.abort();await expect(transport(endpoint,{method:'POST',body:JSON.stringify(valid),signal:abort.signal})).rejects.toThrow();expect(calls.length).toBe(0);});
 

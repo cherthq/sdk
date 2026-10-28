@@ -16,7 +16,7 @@ test('typed strict send uses exact request once and preserves queued receipt',as
 });
 test('invalid bodies and options reject before HTTP',async()=>{
  let calls=0;const client=new ChertClient({baseURL:'https://chert.test',apiKey:'key',fetch:async()=>{calls++;return Response.json(receipt,{status:202});}});
- for(const invalid of [null,[],{...body,phone:body.phone+'\n'},{...body,body:''},{...body,body:'bad\0body'},{...body,body:'\ud800'},{...body,body:'x'.repeat(16385)},{...body,idempotency_key:''},{...body,idempotency_key:null},{...body,idempotency_key:'x'.repeat(201)},{...body,extra:true}])await expect(client.sendText(invalid as never)).rejects.toThrow(TypeError);
+ for(const invalid of [null,[],{...body,phone:body.phone+'\n'},{...body,body:''},{...body,body:'bad\0body'},{...body,body:'\ud800'},{...body,body:'x'.repeat(16385)},{...body,idempotency_key:''},{...body,idempotency_key:null},{...body,idempotency_key:'x'.repeat(201)},{...body,idempotency_key:' key'},{...body,idempotency_key:'key\n'},{...body,idempotency_key:' '},{...body,extra:true}])await expect(client.sendText(invalid as never)).rejects.toThrow(TypeError);
  for(const options of [null,[],{retry:true},{signal:'bad'}])await expect(client.sendText(body,options as never)).rejects.toThrow(TypeError);
  expect(calls).toBe(0);
 });

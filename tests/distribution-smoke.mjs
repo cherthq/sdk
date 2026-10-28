@@ -545,7 +545,7 @@ const coreText = new ChertClient({baseURL:'https://chert.example',apiKey:'core-o
   if(coreTextMode==='wrong-status')return Response.json(coreWire,{status:200});
   return Response.json(coreWire,{status:202});
 }});
-const coreInput={phone:'+15550000002',body:'  exact / core text 🌙\n',idempotency_key:' core-key/🌙\n'};
+const coreInput={phone:'+15550000002',body:'  exact / core text 🌙\n',idempotency_key:'core-key/🌙 x'};
 assert.deepEqual(await coreText.sendText(coreInput),coreQueued);
 assert.deepEqual(coreTextCalls,[coreInput]);
 for(const mode of ['bad-id','sent-202','wrong-status']){

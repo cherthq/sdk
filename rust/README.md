@@ -281,10 +281,12 @@ object with HTTP 202 and `status:"queued"`, or HTTP 200 and `status:"sent"` or
 `"duplicate"`, plus `message_id` and `chat_id` matching `[A-Za-z0-9:_-]{1,160}`;
 extra fields are ignored. `QueuedTextReceipt` returns `success:true` (set by the
 SDK), `message_id`, `chat_id` and `status`. It is acceptance only: `sent` means
-the CRM dispatched it to a line, `duplicate` means the CRM already had this send;
-none is delivery or read proof. Invalid input fails before HTTP. Text and
-an optional caller key are preserved exactly (lossless UTF8, no NUL, text at
-most 16KiB, key at most 200 bytes). No key is generated automatically.
+the CRM dispatched it to a line, `duplicate` means the line's duplicate check
+already had this message; `message_id` is a new record. None is delivery or read
+proof. Invalid input fails before HTTP. Text and an optional caller key are
+preserved exactly (lossless UTF8, no NUL, text at most 16KiB, key at most 200
+bytes). Keys with leading or trailing whitespace are rejected because the CRM
+trims them; internal whitespace is allowed. No key is generated automatically.
 Unexpected success statuses or receipt shapes fail with
 `unconfirmed_text_outcome`; reconcile the explicit error data before retrying.
 Non-2xx Chert error codes and raw data remain available without automatic retry.

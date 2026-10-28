@@ -32,8 +32,8 @@ adapter does not guess.
 Upstream returns plain-text 400 for undecodable bodies; this adapter does the same
 for invalid JSON/text and adds plain-text 501 (unsupported) and 502 (unconfirmed;
 reconcile, do not retry). For an actual Chert 4103 nonretryable 502 with
-validated IDs, `X-Chert-Message-Id` / `X-Chert-Chat-Id` headers carry
-reconciliation identity. Chert sends from an owned line, not the Jared Mac's
+a validated message ID, `X-Chert-Message-Id` (and `X-Chert-Chat-Id` when Chert
+returns one) carry reconciliation identity. Chert sends from an owned line, not the Jared Mac's
 signed-in Apple ID.
 
 Source: Jared commit `969f145` (2023-01-02) [JaredWebServer.swift](https://github.com/ZekeSnider/Jared/blob/969f145321deacfc41401fb7728053f240dad465/Jared/JaredWebServer.swift)

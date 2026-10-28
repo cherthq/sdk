@@ -74,7 +74,7 @@ class SendTextTests(unittest.TestCase):
         self.assertIsNone(error.__cause__)
 
     def test_exact_queued_202_and_payload_auth_preserved_once(self):
-        text, key = '  exact / text 🌙\n', '  key/🌙\n'
+        text, key = '  exact / text 🌙\n', 'key / 🌙\ninternal'
         result = self.client.send_text('+15550000002', text, idempotency_key=key)
         self.assertEqual(result, RECEIPT)
         self.assertEqual(len(self.server.calls), self.before + 1)
@@ -97,7 +97,8 @@ class SendTextTests(unittest.TestCase):
         for text in ['', ' \n', 'x\0y', '\ud800', '🌙' * 4097, True, None]:
             with self.subTest(text=repr(text)), self.assertRaises(ValueError):
                 self.client.send_text('+15550000002', text)
-        for key in ['', 'x\0y', '\ud800', '🌙' * 51, True, 1]:
+        for key in ['', 'x\0y', '\ud800', '🌙' * 51, True, 1, ' key', 'key\n', ' \t\n',
+                    '\ufeffkey', 'key\u3000', '  key/🌙\n']:
             with self.subTest(key=repr(key)), self.assertRaises(ValueError):
                 self.client.send_text('+15550000002', 'hello', idempotency_key=key)
         self.assertEqual(len(self.server.calls), self.before)

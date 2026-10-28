@@ -67,7 +67,7 @@ Which credential each surface takes:
 | --- | --- |
 | iMessage send, events, webhooks | `CHERT_API_KEY` (plus `CHERT_TENANT` if your account has tenants) |
 | `chert-sdk facetime status`, `whoami()` | A CLI login (`ftu_…`, from `chert login`) in `CHERT_FACETIME_TOKEN` |
-| Lines, workers, calls, assistants | A project API key (`ftk_…`) or a CLI login, within its scopes |
+| Lines, workers, calls, assistants | A project API key (`ftk_…`) within its scopes; a CLI login can also read lines and workers |
 | Billing today | Only a signed-in browser session at https://facetime.trychert.com |
 | Terminal billing (draft, not served yet) | A CLI login with the `billing` scope, held by a current project owner; not a project API key |
 
@@ -175,8 +175,8 @@ project already has a live subscription, and return a Stripe-hosted URL whenever
 card entry or authentication is needed; the plan is granted only after the
 payment webhook arrives. It will accept a CLI login only with the `billing` scope
 held by a current project owner. **Switching plans is not available** anywhere:
-`changePlan` fails with `billing_plan_change_unavailable` and the CLI has no
-`switch` command.
+once served, `changePlan` fails with `billing_plan_change_unavailable`, and the
+CLI has no `switch` command.
 
 The `chert` agent CLI's `chert dev` claims your project's line while it runs and
 can end at a time slot you set.

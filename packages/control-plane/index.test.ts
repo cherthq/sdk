@@ -66,12 +66,12 @@ describe('safe failures',()=>{
   reply={status:'active',entitlement};
   expect(await client.purchase({plan:'shared'},'buy-key-01')).toEqual({status:'active',entitlement:entitlement as never});
   reply={status:'requires_action',url:'https://hooks.stripe.com/3d_secure_2/authenticate/x'};
-  expect(await client.changePlan({plan:'dedicated'},'switch-key-1')).toEqual({status:'requires_action',url:'https://hooks.stripe.com/3d_secure_2/authenticate/x'});
+  expect(await client.purchase({plan:'dedicated'},'buy-key-3ds')).toEqual({status:'requires_action',url:'https://hooks.stripe.com/3d_secure_2/authenticate/x'});
   reply={status:'pending',url:'https://ignored.example/'};
   expect(await client.purchase({plan:'shared'},'buy-key-01')).toEqual({status:'pending'});   // retry with the same key
   reply={status:'requires_payment_method',url:'https://checkout.stripe.com/c/pay/cs_x'};
   expect((await client.paymentMethodSetup('card-key-01')).url).toBe('https://checkout.stripe.com/c/pay/cs_x');
-  expect(seen).toEqual([{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'change_plan',plan:'dedicated'},key:'switch-key-1'},{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'payment_method'},key:'card-key-01'}]);
+  expect(seen).toEqual([{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'purchase',plan:'dedicated'},key:'buy-key-3ds'},{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'payment_method'},key:'card-key-01'}]);
   for(const bad of [{status:'requires_action',url:'http://hooks.stripe.com/x'},{status:'requires_action',url:'https://stripe.com.evil.example/x'},{status:'requires_action',url:'https://u:p@checkout.stripe.com/x'},{status:'requires_action',url:'https://evil.com\\.stripe.com/x'},{status:'requires_action',url:'https://checkout.stripe.com:8443/x'},
     {status:'requires_payment_method'},{status:'active'},{status:'active',entitlement:{plan:'gold'}},{status:'processing'},null]){
     reply=bad;await expect(client.purchase({plan:'shared'},'buy-key-02')).rejects.toMatchObject({code:'invalid_response'});
@@ -81,6 +81,10 @@ describe('safe failures',()=>{
   await expect(client.purchase({plan:'gold' as never},'buy-key-03')).rejects.toBeInstanceOf(TypeError);
   await expect(client.changePlan({plan:'shared'},'short')).rejects.toBeInstanceOf(TypeError);
   expect(seen.length).toBe(before);
+
+  // Plan switching is fail-closed on the backend; the SDK surfaces the code.
+  const refused=new ChertControlPlane({token:'user',projectId:'p',fetch:(async()=>Response.json({error:{code:'billing_plan_change_unavailable',message:'internal detail'}},{status:409})) as unknown as typeof fetch});
+  await expect(refused.changePlan({plan:'dedicated'},'switch-key-1')).rejects.toMatchObject({status:409,code:'billing_plan_change_unavailable'});
 });
  it('surfaces billing refusals by code so callers can tell them apart',async()=>{for(const [status,code] of [[409,'billing_sales_disabled'],[409,'billing_subscription_exists'],[409,'billing_dedicated_no_inventory'],[409,'billing_plan_change_unavailable'],[409,'shared_no_capacity'],[503,'billing_unconfigured'],[409,'billing_secret_reason']] as const){const client=new ChertControlPlane({token:'user',projectId:'p',fetch:(async()=>Response.json({error:{code,message:'internal detail'}},{status})) as unknown as typeof fetch});const error=await client.createCheckout({plan:'dedicated'},'checkout-key-1').catch(e=>e);expect([error.status,error.code,String(error).includes('internal detail')]).toEqual([status,code==='billing_secret_reason'?'request_failed':code,false]);}});
  it('reports an HTML 404 as endpoint_unavailable, not a protocol error',async()=>{const client=new ChertControlPlane({token:'k',projectId:'p',fetch:(async()=>new Response('<!DOCTYPE html><html>Not found</html>',{status:404,headers:{'content-type':'text/html'}})) as unknown as typeof fetch});for(const call of [()=>client.createMediaSession('call',{direction:'publish'}),()=>client.getLivingSession('call','s')])await expect(call()).rejects.toMatchObject({status:404,code:'endpoint_unavailable'});const json=new ChertControlPlane({token:'k',projectId:'p',fetch:(async()=>Response.json({error:{code:'call_not_found'}},{status:404})) as unknown as typeof fetch});await expect(json.getCall('c')).rejects.toMatchObject({status:404,code:'call_not_found'});const html502=new ChertControlPlane({token:'k',projectId:'p',fetch:(async()=>new Response('<html>bad gateway</html>',{status:502})) as unknown as typeof fetch});await expect(html502.getCall('c')).rejects.toMatchObject({status:502,code:'invalid_response'});});

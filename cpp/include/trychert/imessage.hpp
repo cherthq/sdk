@@ -20,7 +20,8 @@ struct UpdateWebhookSubscription {
 };
 struct MessagingStreamFrame { std::string event; Json data; };
 // Acceptance receipt only. status is "queued", "sent" (CRM dispatched it to a line) or
-// "duplicate" (CRM already had this send); none is delivery proof. success is the SDK's acceptance flag.
+// "duplicate" (the line's duplicate check already had this message; message_id is a new record);
+// none is delivery proof. success is the SDK's acceptance flag.
 struct QueuedTextReceipt {
     bool success;
     std::string message_id;

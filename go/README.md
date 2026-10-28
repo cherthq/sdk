@@ -125,11 +125,13 @@ and nesting beyond 128 levels. Empty 204/HEAD responses are supported.
 `SendText(ctx, TextRequest)` calls only `/send`. It preserves exact
 lossless UTF-8 text (nonblank under the cloud's ECMAScript whitespace policy,
 no NUL, at most 16 KiB). Optional text keys are nonempty, lossless UTF-8, no NUL,
-at most 200 bytes, preserved in the JSON body. Accepted receipts are HTTP 202
+at most 200 bytes, without leading/trailing ECMAScript whitespace (the CRM trims
+keys), preserved in the JSON body. Accepted receipts are HTTP 202
 `queued` or HTTP 200 `sent`/`duplicate` JSON objects with `message_id` and
 `chat_id` (`[A-Za-z0-9:_-]{1,160}`); extra fields are ignored and anything else
 is `unconfirmed_text_outcome` (502, never retried). `sent` means dispatched to a
-line, `duplicate` means already accepted. **None of these is delivery proof.**
+line, `duplicate` means the line's duplicate check already had this message;
+`message_id` is a new record. **None of these is delivery proof.**
 
 `SendReaction(ctx, chatID, messageID, ReactionRequest)` calls the nested reaction
 operation route with exact `{reaction,remove,part_index:0}`. Standard reactions:

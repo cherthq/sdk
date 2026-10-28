@@ -39,7 +39,7 @@ func TestTypedRequests(t *testing.T) {
 		}
 		w.WriteHeader(202)
 		if r.URL.Path == "/api/v1/send" {
-			if r.Method != "POST" || len(body) != 3 || body["body"] != "  Café 🌅 /\r\n  " || body["idempotency_key"] != " body key " {
+			if r.Method != "POST" || len(body) != 3 || body["body"] != "  Café 🌅 /\r\n  " || body["idempotency_key"] != "body \t key" {
 				t.Error("changed text")
 			}
 			fmt.Fprintf(w, `{"status":"queued","message_id":%q,"chat_id":%q,"lead_id":%q,"lead_created":true,"convo_id":"convo-1","phone_line_id":"line-1"}`, msgUUID, strings.ToLower(chatID), leadUUID)
@@ -52,7 +52,7 @@ func TestTypedRequests(t *testing.T) {
 	}))
 	defer s.Close()
 	c := client(t, s, 0, 0)
-	key := " body key "
+	key := "body \t key"
 	out, e := c.SendText(context.Background(), TextRequest{Phone: "+15550000002", Body: "  Café 🌅 /\r\n  ", IdempotencyKey: &key})
 	if e != nil || out != (QueuedTextReceipt{true, msgUUID, strings.ToLower(chatID), "queued"}) {
 		t.Fatalf("text %v %+v", e, out)
@@ -76,9 +76,10 @@ func TestInvalidInputsZeroRequests(t *testing.T) {
 			t.Error("invalid text accepted")
 		}
 	}
-	for _, v := range []string{"", strings.Repeat("x", 201), "a\x00b", string([]byte{255})} {
-		if _, e := c.SendText(context.Background(), TextRequest{Phone: "+15550000002", Body: "x", IdempotencyKey: &v}); e == nil {
-			t.Error("invalid key accepted")
+	for _, v := range []string{"", strings.Repeat("x", 201), "a\x00b", string([]byte{255}), " key", "key\n", " \t\u3000\ufeff", " body key ", "key\u00a0"} {
+		var api *APIError
+		if _, e := c.SendText(context.Background(), TextRequest{Phone: "+15550000002", Body: "x", IdempotencyKey: &v}); !errors.As(e, &api) || api.Code != "invalid_request" {
+			t.Errorf("invalid key %q accepted", v)
 		}
 	}
 	for _, id := range []string{".", "..", "a/b", "abc\n", strings.Repeat("x", 161)} {

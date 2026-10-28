@@ -19,8 +19,8 @@ public sealed class ChertApiException : Exception
     public override string ToString() => $"Chert request failed ({Status}); reconcile uncertain operations before retrying";
 }
 
-/// <summary>CRM acceptance only. Status is queued, sent (dispatched to a line) or duplicate (already accepted);
-/// none is delivery proof. Success is the SDK's acceptance flag.</summary>
+/// <summary>CRM acceptance only. Status is queued, sent (dispatched to a line) or duplicate (the line's duplicate
+/// check already had this message; message_id is a new record); none is delivery proof. Success is the SDK's acceptance flag.</summary>
 public sealed record QueuedTextReceipt(bool Success, string MessageId, string ChatId, string Status)
 {
     public override string ToString() => "QueuedTextReceipt { accepted }";
@@ -91,7 +91,8 @@ internal sealed partial class ChannelTransport : IDisposable
         if (!Exact(phone, @"\+[1-9][0-9]{1,14}") || !ValidUnicode(text) || text.Contains('\0')
             || StrictUtf8.GetByteCount(text) > 16384 || text.All(EcmaWhitespace)) throw new ArgumentException("Invalid strict plaintext");
         if (idempotencyKey is not null && (!ValidUnicode(idempotencyKey) || idempotencyKey.Length == 0
-            || idempotencyKey.Contains('\0') || StrictUtf8.GetByteCount(idempotencyKey) > 200)) throw new ArgumentException("Invalid idempotency key");
+            || idempotencyKey.Contains('\0') || StrictUtf8.GetByteCount(idempotencyKey) > 200
+            || EcmaWhitespace(idempotencyKey[0]) || EcmaWhitespace(idempotencyKey[^1]))) throw new ArgumentException("Invalid idempotency key");
         var payload = new Dictionary<string, object?> { ["phone"] = phone, ["body"] = text };
         if (idempotencyKey is not null) payload["idempotency_key"] = idempotencyKey;
         var response = await RequestWithResponseAsync("/send", JsonSerializer.SerializeToElement(payload), HttpMethod.Post, null, cancellationToken).ConfigureAwait(false);

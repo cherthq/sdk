@@ -43,10 +43,14 @@ static partial class Program
             server.Handler = _ => Task.FromResult(new Reply(204, "")); Check(await client.RequestAsync("/empty") is null);
             server.Handler = _ => Task.FromResult(new Reply(200, "")); Check(await client.RequestAsync("/head", method: HttpMethod.Head) is null);
         });
-        await Run("strict text keeps lossless whitespace Unicode key and exact queued receipt", async () =>
+        await Run("strict text rejects outer-whitespace key, keeps lossless Unicode key and exact queued receipt", async () =>
         {
             server.Handler = _ => Task.FromResult(new Reply(202, TextReceipt()));
-            const string text = "  Café / 🌅\r\n  "; const string key = " raw-key-🌅 ";
+            const string text = "  Café / 🌅\r\n  ";
+            var rejectedBefore = server.Requests.Count;
+            await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", text, " raw-key-🌅 "));
+            Check(server.Requests.Count == rejectedBefore);
+            const string key = "raw key-🌅\tinner";
             var receipt = await client.SendTextAsync("+15550000002", text, key); Check(receipt.Success && receipt.MessageId == TextMessageId && receipt.ChatId == Chat && receipt.Status == "queued");
             var wire = server.Requests.Last(); Check(wire.Target == "/api/v1/send" && wire.Method == "POST");
             using var payload = JsonDocument.Parse(wire.Body); var p = payload.RootElement;
@@ -59,7 +63,7 @@ static partial class Program
             foreach (var text in new[] { "", " \ufeff\r\n", "a\0b", "\ud800", new string('x', 16385) })
                 await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", text));
             foreach (var phone in new[] { "15550000002", "+05550000002", "+15550000002\n" }) await Throws<ArgumentException>(() => client.SendTextAsync(phone, "x"));
-            foreach (var key in new[] { "", "\ud800", "a\0b", new string('x', 201) }) await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", "x", key));
+            foreach (var key in new[] { "", "\ud800", "a\0b", new string('x', 201), " key", "key\n", " \t\ufeff\u3000" }) await Throws<ArgumentException>(() => client.SendTextAsync("+15550000002", "x", key));
             Check(server.Requests.Count == before);
         });
         await Run("ECMAScript blankness keeps NEL and separator as nonblank", async () =>

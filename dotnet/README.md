@@ -135,7 +135,8 @@ var queued = await chert.IMessage!.SendTextAsync(
 This makes one POST to `/send` with `phone`, `body` and optional
 JSON `idempotency_key`. It validates canonical E.164, nonblank lossless UTF-8 text
 up to 16 KiB without NUL, and an optional nonempty lossless UTF-8 key up to 200
-bytes without NUL. Text and key bytes are preserved. Blankness follows the cloud's
+bytes without NUL or leading/trailing ECMAScript whitespace (the CRM trims keys).
+Text and key bytes are preserved. Blankness follows the cloud's
 ECMAScript whitespace set, including BOM; NEL and U+001C are nonblank.
 
 Only a JSON object with HTTP 202 and `status:"queued"`, or HTTP 200 and
@@ -143,8 +144,8 @@ Only a JSON object with HTTP 202 and `status:"queued"`, or HTTP 200 and
 (`[A-Za-z0-9:_-]{1,160}`) produces `QueuedTextReceipt`; extra fields are ignored.
 Anything else raises `unconfirmed_text_outcome` (502) without retry. `Success` is
 the SDK's acceptance flag. The receipt is CRM acceptance only: `sent` means the
-CRM dispatched it to a line and `duplicate` means it already had this send; none
-is delivery proof.
+CRM dispatched it to a line and `duplicate` means the line's duplicate check
+already had this message; `message_id` is a new record. None is delivery proof.
 
 ## Standard reaction acknowledgement
 

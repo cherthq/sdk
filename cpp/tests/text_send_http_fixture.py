@@ -32,7 +32,7 @@ class Handler(BaseHTTPRequestHandler):
         mode = body['body']; counts[mode] += 1
         assert set(body) == ({'phone','body','idempotency_key'} if 'idempotency_key' in body else {'phone','body'})
         if mode == '  exact / text  ':
-            assert body['idempotency_key'] == ' key/\n'
+            assert body['idempotency_key'] == 'key / \n inner'
         if len(mode) == 16384:
             assert body['idempotency_key'] == 'k' * 200
         if mode == 'without-key':

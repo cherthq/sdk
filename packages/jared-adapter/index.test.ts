@@ -77,6 +77,8 @@ test('malformed receipts and errors are unconfirmed; 4103 keeps validated header
   const response = await post(transport, valid);
   expect(response.headers.get('x-chert-message-id')).toBe('f'.repeat(32));
   expect(response.headers.get('x-chert-chat-id')).toBe('chat-a');
+  const flat = await post(fixture({status: 'failed', error: 'send_failed', code: 4103, message: 'private detail', retryable: false, message_id: '550e8400-e29b-41d4-a716-446655440000'}, 502).transport, valid); // CRM /send failure body
+  expect([flat.status, flat.headers.get('x-chert-message-id'), flat.headers.get('x-chert-chat-id')]).toEqual([502, '550e8400-e29b-41d4-a716-446655440000', null]);
 });
 
 test('cancellation propagates without retry', async () => {

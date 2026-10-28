@@ -367,14 +367,16 @@ receipt = client.send_text(
 `send_text(phone, text, *, idempotency_key=None)` sends one POST to
 `/send` through the same pinned transport. It requires canonical
 E.164, nonblank lossless UTF-8 text of at most 16 KiB without NUL, and an optional
-nonempty lossless UTF-8 key of at most 200 bytes without NUL. Text and keys are
-not trimmed or normalized. Blankness matches ECMAScript `String.trim`, including
+nonempty lossless UTF-8 key of at most 200 bytes without NUL and without leading or
+trailing ECMAScript whitespace (the CRM trims keys, so such keys are rejected before
+any request; internal whitespace is allowed). Text and keys are not trimmed or normalized. Blankness matches ECMAScript `String.trim`, including
 BOM; U+0085 and U+001C remain valid nonblank text. It accepts only a JSON object with
 HTTP 202 and `status="queued"`, or HTTP 200 and `status="sent"`/`"duplicate"`, plus
 `message_id` and `chat_id` matching `[A-Za-z0-9:_-]{1,160}`; extra fields are ignored.
 The receipt has those three fields and SDK-set `success=True`. This is acceptance
-only: `sent` means the CRM dispatched it to a line, `duplicate` means the CRM
-already had this send; none is delivery proof.
+only: `sent` means the CRM dispatched it to a line, `duplicate` means the line's
+duplicate check already had this message and `message_id` is a new record; none is
+delivery proof.
 
 `QueuedTextReceipt` is exported as a `TypedDict`; the wheel includes `py.typed`.
 An unexpected successful status or receipt raises sanitized
