@@ -33,6 +33,9 @@ type Call struct {
 	TerminalReason *string `json:"terminal_reason"`
 	// MediaCapabilities is raw; parse it with ParseMediaCapabilities. Absent means unsupported.
 	MediaCapabilities json.RawMessage `json:"media_capabilities,omitempty"`
+	// ScreenControl is read-only screen-control consent state (none, requested or
+	// granted; empty when absent). The public API exposes no control operations.
+	ScreenControl string `json:"screen_control,omitempty"`
 }
 
 // Line describes an authorized line; availability is not proof of media readiness.
