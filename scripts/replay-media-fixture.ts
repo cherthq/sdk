@@ -3,12 +3,15 @@
  *
  *   bun scripts/replay-media-fixture.ts path/to/custom-media-session-v1.json
  *
- * Assumed fixture shape (the backend fixture is not available yet): a JSON array of
- *   { request: { method, path, body? }, response: { status, body } }
- * `path` may include or omit the `/api/v1` prefix. Only `POST /calls/{id}/media-sessions` pairs are replayed; others are
- * listed as skipped. For each pair the SDK's outgoing method, path and JSON body must equal the recorded request, a 2xx
- * response must pass the SDK's grant validation, and an error response must carry a code the SDK surfaces (not
- * `request_failed`). Any mismatch exits non-zero.
+ * Accepted fixture shapes:
+ * - The backend contract fixture: an object with `call_id` and `sessions[]` of `{ name, request, response, ... }`. Each
+ *   session replays as `POST /api/v1/calls/{call_id}/media-sessions` with body `request`, answered by 201
+ *   `{ data: response, request_id: 'fixture-<name>' }`. Other fields (`contract`, `now`, `persisted`, ...) are ignored.
+ *   No clock is needed: grant validation checks RFC 3339 format and connect_by <= expires_at, not the current time.
+ * - A JSON array of `{ request: { method, path, body? }, response: { status, body } }`; `path` may omit `/api/v1`.
+ * Only `POST /calls/{id}/media-sessions` pairs are replayed; others are listed as skipped. For each pair the SDK's
+ * outgoing method, path and JSON body must equal the recorded request, a 2xx response must pass the SDK's grant
+ * validation, and an error response must carry a code the SDK surfaces (not `request_failed`). Any mismatch exits non-zero.
  */
 import { isDeepStrictEqual } from 'node:util';
 import { ChertApiError, ChertControlPlane, type CreateMediaSession } from '../packages/control-plane/index';
@@ -17,12 +20,17 @@ interface Pair { request: { method: string; path: string; body?: unknown }; resp
 
 const file = process.argv[2];
 if (!file) { console.error('Usage: bun scripts/replay-media-fixture.ts <fixture.json>'); process.exit(2); }
-const fixture: unknown = JSON.parse(await Bun.file(file).text());
-if (!Array.isArray(fixture)) throw new TypeError('Fixture must be an array of {request, response} pairs.');
+const raw = JSON.parse(await Bun.file(file).text()) as unknown;
+const contract = raw as { call_id?: unknown; sessions?: { name: string; request: unknown; response: unknown }[] } | null;
+const fixture: Pair[] = Array.isArray(raw) ? raw
+  : contract && typeof contract.call_id === 'string' && Array.isArray(contract.sessions)
+    ? contract.sessions.map(s => ({ request: { method: 'POST', path: `/api/v1/calls/${encodeURIComponent(contract.call_id as string)}/media-sessions`, body: s.request },
+      response: { status: 201, body: { data: s.response, request_id: `fixture-${s.name}` } } }))
+    : (() => { throw new TypeError('Fixture must be a {call_id, sessions} contract object or an array of {request, response} pairs.'); })();
 
 const route = /^(?:\/api\/v1)?\/calls\/([^/]+)\/media-sessions$/;
 let failures = 0;
-for (const [index, pair] of (fixture as Pair[]).entries()) {
+for (const [index, pair] of fixture.entries()) {
   const label = `#${index} ${pair?.request?.method} ${pair?.request?.path}`;
   const match = pair?.request?.method?.toUpperCase() === 'POST' ? route.exec(pair.request.path) : null;
   if (!match || typeof pair.response?.status !== 'number') { console.log(`skip ${label}`); continue; }
