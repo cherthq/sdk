@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Framework-neutral living service page. Everything rendered here is visible to the caller. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Order status</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0f1115; color: #f4f4f5; font: 600 48px/1.2 system-ui, sans-serif; }
+    main { display: grid; place-content: center; height: 100%; text-align: center; gap: 24px; }
+    #step { font-size: 96px; }
+    #note { font-weight: 400; color: #a1a1aa; font-size: 32px; }
+    button { font: inherit; font-size: 32px; padding: 16px 32px; border-radius: 12px; border: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="title">Connecting…</div>
+    <div id="step"></div>
+    <div id="note"></div>
+    <button id="confirm" hidden>Confirm</button>
+  </main>
+  <script type="module">
+    // Serve the page runtime next to this file, e.g. copy node_modules/@trychert/sdk/dist/living/index.js to ./living.js
+    // (it has no imports), or bundle it with your toolchain.
+    import { connectLivingPage } from './living.js';
+    const $ = id => document.getElementById(id);
+    let confirmed = false;   // repeated taps must not send repeated confirmations
+    const render = state => {
+      $('title').textContent = state?.title ?? 'Your order';
+      $('step').textContent = state?.step ?? '';
+      $('confirm').hidden = confirmed || !state?.needsConfirmation;
+    };
+    const page = connectLivingPage({
+      onStart: ({ state }) => render(state),
+      onState: state => render(state),
+      onEvent: (event, data) => { if (event === 'note') $('note').textContent = String(data ?? ''); },
+      onCallEvent: event => { if (event.type === 'ending') $('note').textContent = 'Thanks for calling.'; },
+      onInput: input => {
+        if (input.kind !== 'pointer' || input.action !== 'down') return;
+        const target = document.elementFromPoint(input.x * innerWidth, input.y * innerHeight);
+        if (target?.id === 'confirm' && !confirmed) { confirmed = true; $('confirm').hidden = true; page.send('order.confirmed', { at: Date.now() }); }
+      },
+    });
+  </script>
+</body>
+</html>
