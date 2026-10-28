@@ -174,7 +174,8 @@ with `invalid_media_session_request` before any request; a grant that violates t
 contract fails with status 201 and `invalid_response`. Server error codes such as
 `unauthorized`, `media_session_expired`, `call_not_found`,
 `media_capability_unsupported`, `media_session_conflict`, `call_not_active`,
-`call_ended`, `media_transport_unavailable` and `caller_screen_not_shared` surface
+`call_ended`, `media_transport_unavailable`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported` and `media_limit_exceeded` surface
 verbatim; other codes become `request_failed`, and the error never carries server
 message text or raw data.
 

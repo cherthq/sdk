@@ -249,4 +249,10 @@ test('screen media sessions: content is validated, echoed and screen grants are 
 
   reply = () => Response.json({ error: { code: 'caller_screen_not_shared', message: 'internal detail' } }, { status: 409 });
   await expect(client.createMediaSession('call', { direction: 'subscribe', content: 'caller_screen' })).rejects.toMatchObject({ status: 409, code: 'caller_screen_not_shared' });
+  for (const [status, code] of [[409, 'media_content_unsupported'], [409, 'caller_screen_unsupported'], [422, 'media_limit_exceeded']] as const) {
+    reply = () => Response.json({ error: { code, message: 'internal detail' } }, { status });
+    const error = await client.createMediaSession('call', { direction: 'publish', content: 'screen' }).catch((e) => e);
+    expect(error).toMatchObject({ status, code });
+    expect(String(error) + JSON.stringify(error)).not.toContain('internal detail');
+  }
 });

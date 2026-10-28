@@ -266,7 +266,8 @@ before `ConnectBy`, and send the same `Authorization: Bearer <Token>` on the POS
 on PATCH/DELETE to the returned `Location`. The grant prints as redacted; never log
 `Token`. A malformed grant fails with `invalid_response`; server error codes
 (`unauthorized`, `call_not_found`, `media_capability_unsupported`,
-`media_session_conflict`, `caller_screen_not_shared`, `call_not_active`, `call_ended`,
+`media_session_conflict`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended`,
 `media_session_expired`, `media_transport_unavailable`) surface without server text.
 Requests are never retried.
 

@@ -158,6 +158,12 @@ static partial class Program
             ReplyWith("{\"error\":{\"code\":\"caller_screen_not_shared\",\"message\":\"internal host 10.0.0.5\"},\"request_id\":\"r\"}", 409);
             var notShared = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, MediaDirection.Subscribe, content: MediaSessionContent.CallerScreen));
             Check(notShared.Status == 409 && notShared.Code == "caller_screen_not_shared" && !notShared.ToString().Contains("10.0.0.5"));
+            foreach (var (status, code) in new[] { (409, "media_content_unsupported"), (409, "caller_screen_unsupported"), (422, "media_limit_exceeded") })
+            {
+                ReplyWith("{\"error\":{\"code\":\"" + code + "\",\"message\":\"internal host 10.0.0.5\"},\"request_id\":\"r\"}", status);
+                var denied = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, MediaDirection.Publish, content: MediaSessionContent.Screen));
+                Check(denied.Status == status && denied.Code == code && !denied.ToString().Contains("10.0.0.5"));
+            }
         });
         await Run("media capability contents ignore unknown entries and default to camera", () =>
         {

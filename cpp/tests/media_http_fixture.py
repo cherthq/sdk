@@ -65,6 +65,9 @@ SCREEN_CASES = {
     "camera-echo-subscribe": (dict(direction="subscribe"), 201, dict(data={**CALLER_SCREEN, "content": "camera"})),
     "not-shared": (dict(direction="subscribe", content="caller_screen"), 409,
                    dict(error=dict(code="caller_screen_not_shared", message="internal host 10.0.0.5"), request_id="r")),
+    **{code: (dict(direction="publish", content="screen"), status,
+              dict(error=dict(code=code, message="internal host 10.0.0.5"), request_id="r"))
+       for status, code in ((409, "media_content_unsupported"), (409, "caller_screen_unsupported"), (422, "media_limit_exceeded"))},
 }
 requests, errors = [], []
 

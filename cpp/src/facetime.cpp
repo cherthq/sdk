@@ -422,10 +422,10 @@ Result<MediaSessionGrant> FaceTimeClient::create_media_session(const std::string
     catch (const ApiError& error) {
         // Raw response data is never returned. Server error responses (parsed bodies) keep their
         // status and an allowlisted code, else request_failed; local failures keep their code.
-        static constexpr std::array<std::string_view, 23> safe = {"unauthorized", "forbidden", "cli_scope_denied",
+        static constexpr std::array<std::string_view, 26> safe = {"unauthorized", "forbidden", "cli_scope_denied",
             "billing_owner_required", "billing_unavailable", "project_required", "invalid_request", "cli_login_expired",
             "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited", "cli_login_busy", "not_found",
-            "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "call_not_active", "call_ended",
+            "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "media_content_unsupported", "caller_screen_unsupported", "media_limit_exceeded", "call_not_active", "call_ended",
             "call_not_found", "media_session_expired", "media_transport_unavailable"};
         auto request_id = error.request_id;
         if (error.data.is_object() && error.data.contains("request_id") && error.data["request_id"].is_string())

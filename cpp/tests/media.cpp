@@ -145,6 +145,16 @@ void screen_sessions(const std::function<trychert::FaceTimeClient(const std::str
         check(error.status == 409 && error.code == "caller_screen_not_shared" && error.data.is_null()
             && std::string(error.what()).find("10.0.0.5") == std::string::npos, "caller_screen_not_shared");
     }
+    for (const auto& [status, code] : {std::pair{409, "media_content_unsupported"}, std::pair{409, "caller_screen_unsupported"},
+             std::pair{422, "media_limit_exceeded"}}) {
+        try {
+            static_cast<void>(client(code).create_media_session(call, {MediaDirection::publish, std::nullopt, MediaSessionContent::screen}));
+            check(false, std::string("accepted ") + code);
+        } catch (const trychert::ApiError& error) {
+            check(error.status == status && error.code == code && error.data.is_null()
+                && std::string(error.what()).find("10.0.0.5") == std::string::npos, code);
+        }
+    }
 }
 
 void sessions(const std::string& origin, int bad_cases, int error_cases, int accept_cases, int screen_bad_cases) {

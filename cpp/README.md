@@ -195,7 +195,8 @@ the same `Authorization: Bearer <token>` on the POST and on PATCH/DELETE to the 
 `Location`. No stream operator prints the grant; never log `token`. A malformed grant
 throws `ApiError` with code `invalid_response` (raw data withheld); server codes
 (`unauthorized`, `call_not_found`, `media_capability_unsupported`,
-`media_session_conflict`, `caller_screen_not_shared`, `call_not_active`, `call_ended`,
+`media_session_conflict`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended`,
 `media_session_expired`, `media_transport_unavailable`) surface without server text.
 Requests are never retried.
 

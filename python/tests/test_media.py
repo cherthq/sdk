@@ -206,6 +206,13 @@ class MediaSessionTests(unittest.TestCase):
             self.client.create_media_session('call-1', direction='subscribe', content='caller_screen')
         self.assertEqual((caught.exception.status, caught.exception.code), (409, 'caller_screen_not_shared'))
         self.assertNotIn(PRIVATE, str(caught.exception))
+        for status, code in ((409, 'media_content_unsupported'), (409, 'caller_screen_unsupported'), (422, 'media_limit_exceeded')):
+            self.server.status = status
+            self.server.payload = {'error': {'code': code, 'message': PRIVATE}}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.create_media_session('call-1', direction='publish', content='screen')
+            self.assertEqual((caught.exception.status, caught.exception.code), (status, code))
+            self.assertNotIn(PRIVATE, str(caught.exception))
 
 
 def caps(**overrides):
