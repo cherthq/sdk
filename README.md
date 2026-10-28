@@ -13,7 +13,7 @@ the other clients are source previews, with unified channel support under review
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
 | JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.2`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
-| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.1.1 on PyPI](https://pypi.org/project/chert-sdk/0.1.1/): `pip install chert-sdk==0.1.1` | [Python guide](python/README.md) |
+| Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.2.2 on PyPI](https://pypi.org/project/chert-sdk/0.2.2/): `pip install chert-sdk==0.2.2` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
 | C++20 | iMessage and FaceTime HTTP clients (`trychert`, CMake `trychert::trychert`) | Unpublished `chert-sdk` archives; no C++ registry release | [C++ guide](cpp/README.md) |
@@ -146,7 +146,9 @@ No endpoint fallback or automatic retries are performed; a queued receipt is
 not proof of delivery. Package publication and backend availability are separate.
 
 Billing uses a signed-in user session and project UUID, not a CLI/project key.
-Use `billingStatus()` to inspect entitlement and availability. The 0.2.0 preview
+Use `billingStatus()` to inspect entitlement and availability. Refusals keep their code,
+for example `billing_sales_disabled`, `billing_subscription_exists`,
+`billing_dedicated_no_inventory` or `shared_no_capacity`. The 0.2.0 preview
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
@@ -437,7 +439,7 @@ These examples describe the APIs in this source tree, after following the linked
 language guide's local build setup. Apart from Python, they are not registry
 installation commands; other draft PRs may propose different unified APIs.
 
-**Python** — `pip install chert-sdk==0.1.1` (or `python/` on the module path for
+**Python** — `pip install chert-sdk==0.2.2` (or `python/` on the module path for
 unreleased source):
 
 ```python
@@ -455,7 +457,7 @@ sdk = Chert(
 
 Python defaults to `https://console.trychert.com` for iMessage and
 `https://facetime.trychert.com` for FaceTime; explicit `base_url` overrides remain
-available for tests/self-hosting. **Published 0.1.1 on PyPI:** default origins
+available for tests/self-hosting. **Published 0.2.2 on PyPI:** default origins
 and offline tests do not establish live service compatibility. Strict text,
 default-origin reactions, and billing availability require separate verification.
 No host fallback or automatic retries are performed; publication remains separate.
