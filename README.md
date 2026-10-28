@@ -145,7 +145,8 @@ before production use. Default-origin reaction support is not yet verified.
 No endpoint fallback or automatic retries are performed; a queued receipt is
 not proof of delivery. Package publication and backend availability are separate.
 
-Billing uses a signed-in user session and project UUID, not a CLI/project key.
+Billing uses a signed-in user session and project UUID. Only the terminal-billing
+draft below also accepts a CLI credential with the `billing` scope (owner/admin).
 Use `billingStatus()` to inspect entitlement and availability. Refusals keep their code,
 for example `billing_sales_disabled`, `billing_subscription_exists`,
 `billing_dedicated_no_inventory` or `shared_no_capacity`. The 0.2.0 preview
@@ -154,7 +155,8 @@ removes the obsolete catalog and checkout-row APIs; see the
 
 **Terminal billing (draft, unreleased; the backend does not serve it yet).**
 `purchase({ plan }, key)` and `changePlan({ plan }, key)` charge the saved card;
-`paymentMethodSetup(key)` adds or replaces it. Each returns `{ status: 'active',
+`paymentMethodSetup(key)` returns `{ status: 'requires_payment_method', url }` for
+adding or replacing it. Purchases and plan changes return `{ status: 'active',
 entitlement }`, `{ status: 'pending' }` (the payment was accepted but the
 entitlement is not committed yet: retry with the same idempotency key), or
 `{ status: 'requires_payment_method' | 'requires_action', url }`, where `url` is a

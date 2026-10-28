@@ -2,6 +2,7 @@
 import http.client
 import json
 import math
+import re
 from typing import Any, Literal
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode, urlsplit
@@ -318,13 +319,17 @@ def _billing_result(value: Any) -> BillingResult:
         return {'status': 'active', 'entitlement': entitlement}
     if status == 'pending':
         return {'status': 'pending'}
-    if status not in ('requires_payment_method', 'requires_action') or not isinstance(value.get('url'), str):
+    raw = value.get('url')
+    # Browsers treat backslashes, tabs and encoded separators differently from urlsplit; refuse them outright.
+    if status not in ('requires_payment_method', 'requires_action') or not isinstance(raw, str) \
+            or not re.fullmatch(r'[\x21-\x7e]+', raw) or '\\' in raw:
         raise bad
     try:
         url = urlsplit(value['url'])
         host = url.hostname or ''
     except ValueError:
         raise bad from None
-    if url.scheme != 'https' or url.username or url.password or not (host == 'stripe.com' or host.endswith('.stripe.com')):
+    if url.scheme != 'https' or url.username or url.password or url.port is not None or '%' in url.netloc \
+            or not (host == 'stripe.com' or host.endswith('.stripe.com')):
         raise bad
     return {'status': status, 'url': value['url']}

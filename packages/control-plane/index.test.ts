@@ -72,7 +72,7 @@ describe('safe failures',()=>{
   reply={status:'requires_payment_method',url:'https://checkout.stripe.com/c/pay/cs_x'};
   expect((await client.paymentMethodSetup('card-key-01')).url).toBe('https://checkout.stripe.com/c/pay/cs_x');
   expect(seen).toEqual([{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'change_plan',plan:'dedicated'},key:'switch-key-1'},{body:{action:'purchase',plan:'shared'},key:'buy-key-01'},{body:{action:'payment_method'},key:'card-key-01'}]);
-  for(const bad of [{status:'requires_action',url:'http://hooks.stripe.com/x'},{status:'requires_action',url:'https://stripe.com.evil.example/x'},{status:'requires_action',url:'https://u:p@checkout.stripe.com/x'},
+  for(const bad of [{status:'requires_action',url:'http://hooks.stripe.com/x'},{status:'requires_action',url:'https://stripe.com.evil.example/x'},{status:'requires_action',url:'https://u:p@checkout.stripe.com/x'},{status:'requires_action',url:'https://evil.com\\.stripe.com/x'},{status:'requires_action',url:'https://checkout.stripe.com:8443/x'},
     {status:'requires_payment_method'},{status:'active'},{status:'active',entitlement:{plan:'gold'}},{status:'processing'},null]){
     reply=bad;await expect(client.purchase({plan:'shared'},'buy-key-02')).rejects.toMatchObject({code:'invalid_response'});
   }

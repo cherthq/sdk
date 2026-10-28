@@ -33,7 +33,7 @@ function checkBillingResult(r:BillingResult):BillingResult{
   if(r?.status==='pending')return {status:'pending'};
   if(r?.status!=='requires_payment_method'&&r?.status!=='requires_action')throw bad();
   let url:URL;try{url=new URL(r.url);}catch{throw bad();}
-  if(url.protocol!=='https:'||url.username||url.password||!(url.hostname==='stripe.com'||url.hostname.endsWith('.stripe.com')))throw bad();
+  if(url.protocol!=='https:'||url.username||url.password||url.port||!(url.hostname==='stripe.com'||url.hostname.endsWith('.stripe.com')))throw bad();
   return {status:r.status,url:url.href};
 }
 const checkSession = (session: LivingSession) => { try { return validateLivingSession(session); } catch { throw new ChertApiError(200, 'invalid_response'); } };

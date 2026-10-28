@@ -24,7 +24,9 @@ the service; the SDK does not upgrade or exchange credentials implicitly.
 | paymentMethodSetup (draft) | POST billing | `{action:'payment_method'}`; returns `{status:'requires_payment_method',url}`. Not served yet. |
 
 All billing methods require a signed-in user token and owner/admin project
-membership. CLI, worker and project API keys cannot substitute for a user session.
+membership. CLI, worker and project API keys cannot substitute for a user session,
+except that the draft `purchase`, `changePlan` and `paymentMethodSetup` actions also
+accept a CLI credential granted the `billing` scope.
 Each billing POST requires a caller-owned `Idempotency-Key` of 8–200 characters
 after trimming. The SDK does not retry payments or other requests automatically.
 Refresh billing status after checkout or cancellation; a checkout URL or browser

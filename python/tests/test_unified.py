@@ -414,7 +414,9 @@ class UnifiedTests(unittest.TestCase):
         bodies = [call[3] for call in self.server.calls[-4:]]
         self.assertEqual(bodies, [{'action': 'purchase', 'plan': 'shared'}, {'action': 'change_plan', 'plan': 'dedicated'}, {'action': 'purchase', 'plan': 'shared'}, {'action': 'payment_method'}])
         for bad in ({'status': 'requires_action', 'url': 'http://hooks.stripe.com/x'}, {'status': 'requires_action', 'url': 'https://stripe.com.evil.example/x'},
-                    {'status': 'requires_action', 'url': 'https://u:p@checkout.stripe.com/x'}, {'status': 'requires_payment_method'},
+                    {'status': 'requires_action', 'url': 'https://u:p@checkout.stripe.com/x'},
+                    {'status': 'requires_action', 'url': 'https://evil.com\\.stripe.com/x'}, {'status': 'requires_action', 'url': 'https://evil.com\t.stripe.com/'},
+                    {'status': 'requires_action', 'url': 'https://evil.com%2f.stripe.com/'}, {'status': 'requires_action', 'url': 'https://checkout.stripe.com:8443/x'}, {'status': 'requires_payment_method'},
                     {'status': 'active'}, {'status': 'active', 'entitlement': {'plan': 'gold'}}, {'status': 'processing'}, None):
             self.server.payload = {'data': bad}
             with self.assertRaises(ChertControlPlaneError) as caught:
