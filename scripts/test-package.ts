@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -20,7 +20,7 @@ try {
   const installed = join(temporary, 'node_modules/@trychert/sdk');
   const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
   assert.equal(manifest.name, '@trychert/sdk');
-  assert.equal(manifest.version, '0.2.0');
+  assert.equal(manifest.version, '0.2.1');
   assert.deepEqual(manifest.bin, { 'chert-sdk': './dist/unified/cli.js' });
   assert.notEqual(manifest.private, true);
   assert.equal(manifest.publishConfig.access, 'public');
@@ -129,6 +129,13 @@ console.log('All portable unified exports loaded without workspace packages.');
     for (const channel of ['imessage', 'facetime', 'adopt']) await run([runtime, join(installed, manifest.bin['chert-sdk']), channel, '--help']);
   }
   await run(['bun', 'x', '--no-install', 'chert-sdk', '--help']);
+  // Coding agents find the shipped llms.txt and setup page through context, offline.
+  for (const file of ['llms.txt', 'docs/SETUP.md']) assert.ok(existsSync(join(installed, file)), `Missing ${file}`);
+  const context = Bun.spawnSync(['node', join(installed, manifest.bin['chert-sdk']), 'context', '--offline'], { env: { PATH: process.env.PATH } });
+  assert.equal(context.exitCode, 0);
+  const shipped = JSON.parse(context.stdout.toString());
+  assert.equal(shipped.sdk.version, manifest.version);
+  assert.equal(realpathSync(shipped.docs.llmsFile), realpathSync(join(installed, 'llms.txt')));
   // Resolve every shipped declaration using both supported TS resolution modes.
   writeFileSync(join(temporary, 'consumer.ts'), subpaths.map((path, i) => `import * as api${i} from '${specifier(path)}';\nvoid api${i};`).join('\n') + `
 import {ChertClient, verifyWebhook, type MessagingStreamFrame, type MessagingEventPage} from '@trychert/sdk';
