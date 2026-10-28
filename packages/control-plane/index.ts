@@ -169,21 +169,34 @@ export class ChertControlPlane {
    */
   async setCallVideo(callId:string,input:SetCallVideo,idempotencyKey:string,options:{signal?:AbortSignal;readyTimeoutMs?:number}={}):Promise<CallVideoComposition>{
     const body=compositionBody(input);const key=this.idempotency(idempotencyKey);
+    const {signal,readyTimeoutMs=60_000}=options;
+    if(!Number.isFinite(readyTimeoutMs)||readyTimeoutMs<=0)throw new TypeError('readyTimeoutMs must be a positive number.');
+    const layers=body.layers as {id:string;page?:PageRef}[];
+    // Derived per-layer keys must stay unique and within the 200-character limit.
+    if(layers.some(l=>l.page&&'manifest' in l.page)&&idempotencyKey.length>160)throw new TypeError('Use an idempotency key of at most 160 characters with URL pages.');
+    const aborted=()=>{if(signal?.aborted)throw new ChertApiError(0,'aborted');};
     // URL pages are deployed first (create, wait ready); the call-video resource only receives immutable deployment IDs.
-    for(const layer of body.layers as {id:string;page?:PageRef}[]){
+    for(const layer of layers){
       if(!layer.page||!('manifest' in layer.page))continue;
-      const deployment=await this.createLivingService(layer.page.manifest,`${idempotencyKey}:page:${layer.id}`.slice(0,200));
-      layer.page={deployment_id:(await this.readyDeployment(deployment,options)).deployment_id};
+      aborted();
+      const deployment=await this.createLivingService(layer.page.manifest,`${idempotencyKey}:page:${layer.id}`);
+      layer.page={deployment_id:(await this.readyDeployment(deployment,Date.now()+readyTimeoutMs,signal)).deployment_id};
     }
+    aborted();
     return checkComposition(await this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`,'PUT',body,'project',key));
   }
-  private async readyDeployment(deployment:LivingDeployment,{signal,readyTimeoutMs=60_000}:{signal?:AbortSignal;readyTimeoutMs?:number}){
-    const deadline=Date.now()+readyTimeoutMs;
+  private async readyDeployment(deployment:LivingDeployment,deadline:number,signal?:AbortSignal){
+    const valid=(d:LivingDeployment)=>{if(!d||typeof d.service_id!=='string'||!d.service_id||typeof d.deployment_id!=='string'||!d.deployment_id||!['pending','ready','failed'].includes(d.status))throw new ChertApiError(200,'invalid_response');return d;};
+    deployment=valid(deployment);
     while(deployment.status!=='ready'){
       if(deployment.status==='failed'||Date.now()>=deadline)throw new ChertApiError(409,'living_deployment_not_ready');
-      if(signal?.aborted)throw new ChertApiError(0,'aborted');
-      await new Promise(resolve=>setTimeout(resolve,500));
-      deployment=await this.getLivingDeployment(deployment.service_id,deployment.deployment_id);
+      await new Promise<void>((resolve,reject)=>{
+        if(signal?.aborted)return reject(new ChertApiError(0,'aborted'));
+        const timer=setTimeout(()=>{signal?.removeEventListener('abort',stop);resolve();},500);
+        const stop=()=>{clearTimeout(timer);reject(new ChertApiError(0,'aborted'));};
+        signal?.addEventListener('abort',stop,{once:true});
+      });
+      deployment=valid(await this.getLivingDeployment(deployment.service_id,deployment.deployment_id));
     }
     return deployment;
   }

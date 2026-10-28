@@ -514,7 +514,7 @@ Json call_video_body(const SetCallVideo& input) {
     CompositionBackground bottom_background = CompositionBackground::opaque;
     double bottom_opacity = 1;
     for (const auto& layer : layers) {
-        const auto& id = std::visit([](const auto& l) -> const std::string& { return l.id; }, layer);
+        const std::string id = std::visit([](const auto& l) { return l.id; }, layer);
         if (!layer_id(id) || std::find(ids.begin(), ids.end(), id) != ids.end())
             fail("Layer ids are unique, 1-32 chars: lowercase letter, then [a-z0-9_-].");
         ids.push_back(id);

@@ -71,7 +71,8 @@ interface CallVideoComposition {
   layers: Array<
     | { id: string; z: 0; source: BaseSource; publish?: MediaSessionGrant } // camera base only
     | { id: string; z: number; living_session: LivingSession; region: Region;
-        background: 'opaque' | 'transparent'; opacity: number }>;
+        background: 'opaque' | 'transparent'; opacity: number;
+        input: LivingInputKind[] }>;   // [] when not interactive
   error_code: string | null;
 }
 ```
@@ -92,8 +93,9 @@ Rules:
 - **Placement.** `region` is normalized to the output frame. The page viewport
   is the region's size in output pixels, rounded down to even and clamped to the
   living-service limits; the effective viewport is returned on the living
-  session. Regions may extend only within the frame.
-- **v1 bounds.** At most one base layer and one page layer (`max_layers: 2`).
+  session. Regions must stay within the frame (x + width ≤ 1 and y + height ≤ 1, with a
+  1e-9 tolerance for floating-point rounding).
+- **v1 bounds.** At most two layers (`max_layers: 2`), at most one of them a base.
   The model already allows more; the capability advertises the real limit.
 - **Updates.** `setCallVideo` is a desired-state PUT. An optional `revision`
   makes it compare-and-set (it must equal the current revision; the response
@@ -151,7 +153,7 @@ Explicit and versioned, never inferred from `custom_video` or
 
 ```json
 "video_composition": { "version": 1, "supported": true, "max_layers": 2,
-  "bases": ["camera", "managed"], "page_alpha": true, "regions": true,
+  "bases": ["camera"], "page_alpha": false, "regions": true,
   "max_width": 1920, "max_height": 1080, "max_fps": 30 }
 ```
 

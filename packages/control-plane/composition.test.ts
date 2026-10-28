@@ -55,6 +55,21 @@ test('call video: page shortcut, layered base + overlay, get and clear', async (
   expect(compositionInputTarget(pageOnly as never, 0.5, 0.5)).toBeNull();   // declares no input
 });
 
+test('call video: URL pages declare their input kinds, and an abort or bad timeout never sends the PUT', async () => {
+  const ready = { service_id: 'svc', deployment_id: 'dep', revision: 1, status: 'ready', error_code: null };
+  const { client, seen } = harness((_m, path) => Response.json({ data: path.includes('living-services') ? ready : pageOnly }));
+  const controller = new AbortController();
+  const pending = client.setCallVideo('call', { page: 'https://agent.example/p', input: ['pointer'] }, 'video-key-4', { signal: controller.signal });
+  controller.abort();
+  await expect(pending).rejects.toMatchObject({ code: 'aborted' });
+  expect(seen.map(s => s.method)).not.toContain('PUT');
+  expect(seen[0]?.body).toMatchObject({ input: ['pointer'] });
+  await expect(client.setCallVideo('call', { page: 'https://agent.example/p' }, 'video-key-5', { readyTimeoutMs: Number.NaN })).rejects.toBeInstanceOf(TypeError);
+  await expect(client.setCallVideo('call', { page: 'https://agent.example/p' }, 'k'.repeat(161))).rejects.toBeInstanceOf(TypeError);
+  const { client: broken } = harness(() => Response.json({ data: { status: 'ready' } }));
+  await expect(broken.setCallVideo('call', { page: 'https://agent.example/p' }, 'video-key-6')).rejects.toMatchObject({ code: 'invalid_response' });
+});
+
 test('call video: a URL page whose deployment fails never reaches the call-video resource', async () => {
   const { client, seen } = harness(() => Response.json({ data: { service_id: 'svc', deployment_id: 'dep', revision: 1, status: 'failed', error_code: 'fetch_failed' } }));
   await expect(client.setCallVideo('call', { page: { url: 'https://agent.example/p', viewport: { width: 1920, height: 1080 }, fps: 24 } }, 'video-key-3'))

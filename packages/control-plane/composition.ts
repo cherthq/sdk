@@ -100,7 +100,7 @@ const inputsOk = (v: unknown) => Array.isArray(v) && v.every(k => KINDS.includes
 
 /** A URL page resolves to this manifest; the client deploys it and substitutes the ready `deployment_id`. */
 export type PageRef = { deployment_id: string } | { manifest: LivingServiceManifest };
-function pageRef(page: CompositionPage): PageRef {
+function pageRef(page: CompositionPage, input?: LivingInputKind[]): PageRef {
   const p = typeof page === 'string' ? { url: page } : page;
   if (p && typeof p === 'object' && 'deployment_id' in p) {
     if (typeof p.deployment_id !== 'string' || !p.deployment_id || p.deployment_id.length > 128) throw new TypeError('deployment_id is required.');
@@ -110,7 +110,7 @@ function pageRef(page: CompositionPage): PageRef {
   let host = '';
   try { host = new URL(u?.url).host; } catch { /* validateManifest reports it */ }
   const manifest = validateManifest({ name: u?.name ?? (host || 'page'), entry_url: u?.url, viewport: u?.viewport ?? { width: 1280, height: 720 }, fps: u?.fps ?? 30,
-    ...(u?.digest !== undefined ? { entry_digest: u.digest } : {}) });
+    ...(u?.digest !== undefined ? { entry_digest: u.digest } : {}), ...(input?.length ? { input: [...input] } : {}) });
   return { manifest };
 }
 
@@ -145,7 +145,7 @@ export function compositionBody(input: SetCallVideo): Record<string, unknown> {
     if (!unit(opacity)) throw new TypeError('opacity must be 0..1.');
     if (layer.input !== undefined && !inputsOk(layer.input)) throw new TypeError('input must be a unique subset of pointer, keyboard, text.');
     if (layer.initial_state !== undefined) validateInitialState(layer.initial_state);
-    return { id: layer.id, z: layer.z, page: pageRef(layer.page), region: { x: region.x, y: region.y, width: region.width, height: region.height },
+    return { id: layer.id, z: layer.z, page: pageRef(layer.page, layer.input), region: { x: region.x, y: region.y, width: region.width, height: region.height },
       background, opacity, ...(layer.input ? { input: [...layer.input] } : {}), ...(layer.initial_state !== undefined ? { initial_state: layer.initial_state } : {}) };
   });
   if (!bases) {

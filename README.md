@@ -390,7 +390,7 @@ const video = await client.setCallVideo(callId, { layers: [
   `sendLivingInput` take its `living_session.session_id`. Without a base, the page
   must be opaque, full frame and at opacity 1.
 - **Placement and alpha.** `region` is normalized to the output frame.
-  `background: 'transparent'` is blended (premultiplied source-over) with
+  `background: 'transparent'` will be blended (premultiplied source-over) with
   `opacity` by the server compositor, and is accepted only where the capability
   reports `page_alpha`.
 - **Pages.** The backend only accepts deployment IDs. URL pages are deployed by
