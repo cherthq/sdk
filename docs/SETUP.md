@@ -138,11 +138,13 @@ FaceTime calls can carry audio and video; a call can also be audio-only.
 - Requesting video does not guarantee it: check the line's `supports_video` and
   the call's `media_status`.
 
-The SDK is an HTTP client. It does not carry audio or video frames; media flows
-between FaceTime and LiveKit. Custom video sources over WHIP/WHEP and web
-frontends rendered as call video are in draft
-([#17](https://github.com/cherthq/sdk/pull/17),
-[#18](https://github.com/cherthq/sdk/pull/18)) and are not released.
+The SDK does not relay media itself; call media flows between FaceTime and
+LiveKit. `@trychert/sdk/media` (an unreleased source preview until a release
+includes it) adds frame validation, a bounded video source and WHIP/WHEP
+signaling for your own WebRTC peer connection. Web frontends rendered as call
+video and screen sharing are still drafts
+([#18](https://github.com/cherthq/sdk/pull/18),
+[#25](https://github.com/cherthq/sdk/pull/25)).
 
 ## Put a LiveKit agent on a FaceTime line
 

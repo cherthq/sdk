@@ -146,7 +146,7 @@ request and lets the server select a line. Nonempty supplied IDs are validated
 and sent unchanged. BYOR, groups and FaceTime-link destinations still require an
 explicit line and reject an empty string before network I/O.
 
-### Custom video sessions (v1, video-only)
+### Custom video sessions (v1, video-only; source preview, unreleased)
 
 Lines, calls and line/call-scoped workers may report `media_capabilities`. Parse it
 with `parse_media_capabilities(&value)`; absent, malformed or unknown-version input

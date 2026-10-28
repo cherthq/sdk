@@ -145,7 +145,7 @@ void sessions(const std::string& origin, int bad_cases, int error_cases, int acc
         } catch (const trychert::ApiError& error) {
             check(error.status == expected[i].first && error.code == expected[i].second
                 && error.data.is_null() && error.request_id == "r"
-                && std::string(error.what()).find("10.0.0.5") == std::string::npos, "error " + expected[i].second);
+                && std::string(error.what()).find("192.0.2.5") == std::string::npos, "error " + expected[i].second);
         }
     }
 }

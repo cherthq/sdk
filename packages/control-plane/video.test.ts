@@ -115,8 +115,8 @@ test('media sessions: strict request, validated grant and stable error codes wit
   }
   for (const [status, code] of [[401, 'unauthorized'], [404, 'call_not_found'], [409, 'media_capability_unsupported'], [409, 'media_session_conflict'],
     [409, 'call_not_active'], [410, 'call_ended'], [503, 'media_transport_unavailable']] as const) {
-    reply = () => Response.json({ error: { code, message: 'internal host 10.0.0.5' } }, { status });
+    reply = () => Response.json({ error: { code, message: 'internal host 192.0.2.5' } }, { status });
     const error = await client.createMediaSession('call', { direction: 'publish' }).catch(e => e);
-    expect([error.status, error.code, error.message.includes('10.0.0.5')]).toEqual([status, code, false]);
+    expect([error.status, error.code, error.message.includes('192.0.2.5')]).toEqual([status, code, false]);
   }
 });

@@ -98,16 +98,16 @@ static partial class Program
             foreach (var (status, code) in new[] { (401, "unauthorized"), (401, "media_session_expired"), (404, "call_not_found"), (409, "media_capability_unsupported"),
                 (409, "media_session_conflict"), (409, "call_not_active"), (410, "call_ended"), (503, "media_transport_unavailable") })
             {
-                ReplyWith("{\"error\":{\"code\":\"" + code + "\",\"message\":\"internal host 10.0.0.5\"},\"request_id\":\"r\"}", status);
+                ReplyWith("{\"error\":{\"code\":\"" + code + "\",\"message\":\"internal host 192.0.2.5\"},\"request_id\":\"r\"}", status);
                 var before = server.Requests.Count;
                 var error = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, MediaDirection.Publish));
                 Check(error.Status == status && error.Code == code && error.ResponseData is null && server.Requests.Count == before + 1, code);
-                Check(!error.Message.Contains("10.0.0.5") && !error.ToString().Contains("10.0.0.5"), "server text " + code);
+                Check(!error.Message.Contains("192.0.2.5") && !error.ToString().Contains("192.0.2.5"), "server text " + code);
             }
         });
         await Run("unknown media session error code becomes request_failed without data", async () =>
         {
-            foreach (var body in new[] { "{\"error\":{\"code\":\"internal_detail\",\"message\":\"internal host 10.0.0.5\"},\"request_id\":\"r\"}", "not json" })
+            foreach (var body in new[] { "{\"error\":{\"code\":\"internal_detail\",\"message\":\"internal host 192.0.2.5\"},\"request_id\":\"r\"}", "not json" })
             {
                 ReplyWith(body, 418);
                 var error = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, MediaDirection.Publish));
