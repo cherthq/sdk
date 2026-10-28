@@ -273,7 +273,8 @@ Limitations: v1 is video only (audio stays on the existing call paths), and the
 SDK does not include a video encoder for Node. Remote keyframe requests are not
 guaranteed to arrive, and the SDK does not promise any bitrate. Caller video is
 capped at 1280×720 and 30 fps. These APIs require a backend that reports these
-capabilities, and they are not in any published package version yet.
+capabilities. The code ships in 0.2.2, but the hosted backend does not serve
+these routes yet: calls fail with `404 endpoint_unavailable`.
 
 ### Living services (draft, unreleased)
 

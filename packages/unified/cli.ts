@@ -10,28 +10,32 @@ const DOCS = 'https://github.com/cherthq/sdk/blob/main';
 const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk imessage send --phone +COUNTRYNUMBER --body TEXT --idempotency-key KEY --confirm
   chert-sdk facetime status | lines | workers
-  chert-sdk billing status
-  chert-sdk billing card | cancel --idempotency-key KEY --confirm
-  chert-sdk billing buy | switch --plan shared|dedicated --idempotency-key KEY --confirm
+  chert-sdk billing status (draft)
+  chert-sdk billing card | cancel --idempotency-key KEY --confirm (draft)
+  chert-sdk billing buy | switch --plan shared|dedicated --idempotency-key KEY --confirm (draft)
   chert-sdk adopt [path] [--write] [--install] [--json]
   chert-sdk context [--offline]
 
 context prints SDK, credential, account and documentation context for coding
-agents. It reads FaceTime identity and lines (read-only) when CHERT_FACETIME_TOKEN
-and CHERT_PROJECT_ID are set; --offline skips every request.
+agents. It reads FaceTime lines, and identity with a CLI login (not a project API
+key), when CHERT_FACETIME_TOKEN and CHERT_PROJECT_ID are set; --offline skips
+every request.
 Setup guide: ${DOCS}/docs/SETUP.md
 For browser login and putting a LiveKit voice or video agent on a FaceTime line,
 use the separate @trychert/facetime CLI (chert).
 
-Both channels use CHERT_PROJECT_ID as application context.
+FaceTime requires CHERT_PROJECT_ID; iMessage only reports it as context.
 Set CHERT_API_KEY for iMessage; CHERT_FACETIME_TOKEN for FaceTime.
 iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.
 FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionally
 overrides the origin. Credentials are service-specific, not interchangeable.
+facetime status needs a signed-in CLI login; a project API key (ftk_) can run
+facetime lines and workers when its scopes allow.
 FaceTime commands inspect existing access/lines; no calls, media relay,
 concierge onboarding or automatic shared-line allocation is implemented.
-Billing (draft backend contract) uses CHERT_FACETIME_TOKEN with the billing scope;
-the backend refuses CLI credentials for billing until it ships.
+Billing (draft backend contract) needs a CLI credential with the billing scope in
+CHERT_FACETIME_TOKEN, not a project API key (ftk_).
+The backend refuses CLI credentials for billing until it ships.
 buy/switch charge the saved card; when a card or authentication is needed the
 output carries a Stripe-hosted url to open, then rerun billing status. A pending
 status means rerun the same command with the same idempotency key.
@@ -58,7 +62,11 @@ async function main() {
   const env = process.env;
   const required = (name: string) => { const value = env[name]; if (!value?.trim()) throw new Error(`Set ${name}.`); return value; };
   if (channel === 'context') { console.log(JSON.stringify(await context(env, command === '--offline'))); return; }
-  const projectId = required('CHERT_PROJECT_ID');
+  // iMessage uses the project ID only as reported context; FaceTime requires it.
+  const projectId = channel === 'imessage' ? env.CHERT_PROJECT_ID?.trim() || null : required('CHERT_PROJECT_ID');
+  // Project API keys (ftk_) cannot read the signed-in identity; say so instead of reporting a bare 401.
+  if (channel === 'facetime' && command === 'status' && env.CHERT_FACETIME_TOKEN?.startsWith('ftk_'))
+    throw Object.assign(new Error(), { code: 'status_requires_cli_login' });
   // Instantiate only the selected transport; unrelated channel secrets are not required.
   const { ChertClient } = await import('@cherthq/imessage');
   const { ChertControlPlane } = await import('@cherthq/control-plane');
@@ -81,7 +89,7 @@ async function main() {
       if (!/^[\x21-\x7e]{8,200}$/.test(values['idempotency-key'])) throw Object.assign(new Error(), { code: 'invalid_idempotency_key' });
       if (!values.confirm) throw Object.assign(new Error(), { code: 'billing_confirmation_required' });
     }
-    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId });
+    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId: required('CHERT_PROJECT_ID') });
     const key = values['idempotency-key']!, plan = values.plan as 'shared' | 'dedicated';
     result = command === 'status' ? await client.billingStatus()
       : command === 'card' ? await client.paymentMethodSetup(key)
@@ -89,7 +97,7 @@ async function main() {
       : command === 'switch' ? await client.changePlan({ plan }, key)
       : await client.cancelSubscription(key);
   } else {
-    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId });
+    const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: required('CHERT_FACETIME_TOKEN'), projectId: required('CHERT_PROJECT_ID') });
     result = command === 'lines' ? await client.listLines() : command === 'workers' ? await client.listWorkers() : await client.whoami();
   }
   console.log(JSON.stringify({ projectId, channel, data: result }));
@@ -113,8 +121,10 @@ async function context(env: NodeJS.ProcessEnv, offline: boolean) {
     try {
       const client = new ChertControlPlane({ baseUrl: env.CHERT_FACETIME_URL, token: env.CHERT_FACETIME_TOKEN!, projectId });
       const read = <T>(request: Promise<T>) => request.then(data => ({ data }), failed);
-      const [identity, lines] = await Promise.all([read(client.whoami()), read(client.listLines())]);
-      facetimeAccount = { identity, lines };
+      // A project API key (ftk_) cannot read the signed-in identity; lines still work.
+      const identity = env.CHERT_FACETIME_TOKEN!.startsWith('ftk_') ? Promise.resolve({ error: 'requires_cli_login' }) : read(client.whoami());
+      const [who, lines] = await Promise.all([identity, read(client.listLines())]);
+      facetimeAccount = { identity: who, lines };
     } catch (error) { facetimeAccount = failed(error); }
   }
   return {
@@ -137,6 +147,7 @@ main().catch(error => {
   // Do not expose server response bodies or credentials.
   const code = safeErrorCode(error);
   const message = code === 'unknown_command' ? 'Unknown command. Use --help.'
+    : code === 'status_requires_cli_login' ? 'facetime status reads a signed-in identity, which a project API key (ftk_) does not have. Use facetime lines or workers, or chert whoami from @trychert/facetime.'
     : error instanceof Error && error.message.startsWith('Set CHERT_') ? error.message : 'Command failed. Check arguments, credentials and service access; no success is claimed.';
   console.error(JSON.stringify({ error: message, ...(code ? { code } : {}) }));
   process.exitCode = 1;
