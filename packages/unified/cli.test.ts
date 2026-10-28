@@ -63,7 +63,7 @@ test('CLI preserves a safe SDK error code without exposing server text or respon
 });
 
 test('CLI reports unknown commands as such, even without credentials', async () => {
-  for (const command of [['login'], ['onboard'], ['facetim'], ['facetime', 'statsu'], ['facetime', 'lines', 'extra'], ['imessage', 'sned'], ['context', 'extra'], ['context', '--offline', 'extra'], ['context', '--bogus']]) {
+  for (const command of [['login'], ['onboard'], ['facetim'], ['facetime', 'statsu'], ['facetime', 'lines', 'extra'], ['imessage', 'sned'], ['context', 'extra'], ['context', '--offline', 'extra'], ['context', '--bogus'], ['billing'], ['billing', 'refund'], ['billing', 'status', 'extra']]) {
     const env = { ...process.env }; delete env.CHERT_PROJECT_ID;
     const child = Bun.spawn(['node', resolve(import.meta.dir, '../../dist/unified/cli.js'), ...command], { env, stdout: 'pipe', stderr: 'pipe' });
     expect(await child.exited).toBe(1);
@@ -121,3 +121,36 @@ test('context reports account and docs context without exposing credential value
     expect(bare.json.account.facetime).toBe('not_configured');
   } finally { server.stop(true); }
 }, 20_000);
+
+test('billing CLI gates mutations before HTTP and passes Stripe-hosted next steps through', async () => {
+  const seen: { method: string; body: unknown; key: string | null }[] = [];
+  let reply: unknown = { status: 'requires_payment_method', url: 'https://checkout.stripe.com/c/pay/cs_x' };
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
+    seen.push({ method: request.method, body: request.method === 'POST' ? await request.json() : undefined, key: request.headers.get('idempotency-key') });
+    return Response.json({ data: reply });
+  } });
+  const cli = resolve(import.meta.dir, '../../dist/unified/cli.js');
+  const run = async (...args: string[]) => {
+    const child = Bun.spawn(['node', cli, 'billing', ...args], { env: { PATH: process.env.PATH, CHERT_PROJECT_ID: 'p', CHERT_FACETIME_TOKEN: 'billing-token', CHERT_FACETIME_URL: server.url.origin }, stdout: 'pipe', stderr: 'pipe' });
+    const [code, out, err] = [await child.exited, await new Response(child.stdout).text(), await new Response(child.stderr).text()];
+    return { code, json: JSON.parse(out || err) };
+  };
+  try {
+    for (const [args, code] of [
+      [['buy', '--idempotency-key', 'buy-key-01', '--confirm'], 'invalid_request'],            // plan required
+      [['buy', '--plan', 'gold', '--idempotency-key', 'buy-key-01', '--confirm'], 'invalid_request'],
+      [['cancel', '--plan', 'shared', '--idempotency-key', 'cancel-key-1', '--confirm'], 'invalid_request'],
+      [['switch', '--plan', 'dedicated', '--confirm'], 'idempotency_key_required'],
+      [['buy', '--plan', 'shared', '--idempotency-key', 'buy-key-01'], 'billing_confirmation_required'],
+    ] as const) expect((await run(...args)).json.code).toBe(code);
+    expect(seen).toEqual([]);
+    const card = await run('buy', '--plan', 'dedicated', '--idempotency-key', 'buy-key-01', '--confirm');
+    expect([card.code, card.json.data]).toEqual([0, { status: 'requires_payment_method', url: 'https://checkout.stripe.com/c/pay/cs_x' }]);
+    reply = { status: 'requires_action', url: 'https://evil.example/phish' };
+    expect((await run('switch', '--plan', 'shared', '--idempotency-key', 'switch-key-1', '--confirm')).json.code).toBe('invalid_response');
+    reply = { entitlement: null, needs_reconciliation: false, sales_enabled: true, shared_available: true, dedicated_available: false, payment_method: { brand: 'visa', last4: '4242' } };
+    expect((await run('status')).json.data.payment_method).toEqual({ brand: 'visa', last4: '4242' });
+    expect(seen).toEqual([{ method: 'POST', body: { action: 'purchase', plan: 'dedicated' }, key: 'buy-key-01' },
+      { method: 'POST', body: { action: 'change_plan', plan: 'shared' }, key: 'switch-key-1' }, { method: 'GET', body: undefined, key: null }]);
+  } finally { server.stop(true); }
+}, 30_000);

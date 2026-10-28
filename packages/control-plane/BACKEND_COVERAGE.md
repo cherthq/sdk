@@ -20,9 +20,14 @@ the service; the SDK does not upgrade or exchange credentials implicitly.
 | createCheckout | POST billing | `{action:'checkout',plan:'shared'\|'dedicated',coupon_code?}`; returns `{url}`. |
 | cancelSubscription | POST billing | `{action:'cancel'}`; returns a cancellation request acknowledgment, not immediate loss of access. |
 | validateCoupon | POST billing | `{action:'validate_coupon',coupon_code}`; returns discount information. |
+| purchase, changePlan (draft) | POST billing | `{action:'purchase'\|'change_plan',plan}`; returns `{status:'active',entitlement}`, `{status:'pending'}` (retry with the same key) or `{status:'requires_payment_method'\|'requires_action',url}` with an HTTPS `*.stripe.com` URL. Not served yet. |
+| paymentMethodSetup (draft) | POST billing | `{action:'payment_method'}`; returns `{status:'requires_payment_method',url}`. Not served yet. |
 
 All billing methods require a signed-in user token and owner/admin project
-membership. CLI, worker and project API keys cannot substitute for a user session.
+membership. CLI, worker and project API keys cannot substitute for a user session,
+except that the terminal-billing draft (status, `purchase`, `changePlan`,
+`paymentMethodSetup` and cancel) also accepts a CLI credential granted the `billing`
+scope with an owner/admin role. Until the backend ships it, a CLI credential is refused.
 Each billing POST requires a caller-owned `Idempotency-Key` of 8–200 characters
 after trimming. The SDK does not retry payments or other requests automatically.
 Refresh billing status after checkout or cancellation; a checkout URL or browser

@@ -2,6 +2,7 @@
 import http.client
 import json
 import math
+import re
 import sys
 from typing import Any, Literal
 from urllib.error import HTTPError, URLError
@@ -10,7 +11,7 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 
 from chert._fetch import FetchOpener
 
-from .models import (BillingStatus, CheckoutSession, BillingCancellation, CouponValidation, ConnectorEnrollment, ConnectorReceipt,
+from .models import (BillingResult, BillingStatus, CheckoutSession, BillingCancellation, CouponValidation, ConnectorEnrollment, ConnectorReceipt,
                      CallAction, CallDetail, CallEvents, CallPage, CreateCall,
                      Credentials, DeviceLoginStart, Identity, Json, LinePage, LoginApproval,
                      LoginInspection, LoginResult, Revoked, WorkerPage)
@@ -18,7 +19,7 @@ from .media import MediaDirection, MediaSessionContent, MediaSessionGrant, Video
 
 DEFAULT_FACETIME_URL = 'https://facetime.trychert.com'
 _UNSET = object()
-_SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable billing_binding_mismatch billing_checkout_exists billing_coupon_unavailable billing_dedicated_no_inventory billing_dedicated_unqualified billing_idempotency_conflict billing_invalid billing_no_subscription billing_paid_period_required billing_price_mismatch billing_provider_mismatch billing_provider_unavailable billing_reservation_expired billing_reservation_not_found billing_reservation_pending billing_sales_disabled billing_subscription_conflict billing_subscription_exists billing_unconfigured shared_no_capacity project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
+_SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable billing_binding_mismatch billing_checkout_exists billing_coupon_unavailable billing_dedicated_no_inventory billing_dedicated_unqualified billing_idempotency_conflict billing_invalid billing_no_subscription billing_paid_period_required billing_price_mismatch billing_provider_mismatch billing_provider_unavailable billing_reservation_expired billing_reservation_not_found billing_reservation_pending billing_sales_disabled billing_subscription_conflict billing_subscription_exists billing_payment_failed billing_plan_unchanged billing_unconfigured shared_no_capacity project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
                          "media_capability_unsupported media_session_conflict caller_screen_not_shared media_content_unsupported caller_screen_unsupported media_limit_exceeded call_not_active call_ended call_not_found "
                          "media_session_expired media_transport_unavailable".split())
 
@@ -280,6 +281,26 @@ class ChertControlPlane:
             raise ValueError('Use a nonblank coupon code of at most 64 characters')
         return value
 
+    def purchase(self, *, plan: Literal['shared', 'dedicated'], idempotency_key: str) -> BillingResult:
+        """Buy a plan with the saved default card (draft backend contract)."""
+        return self._billing_result('purchase', plan, idempotency_key)
+
+    def change_plan(self, *, plan: Literal['shared', 'dedicated'], idempotency_key: str) -> BillingResult:
+        """Switch the current subscription to another plan with proration (draft backend contract)."""
+        return self._billing_result('change_plan', plan, idempotency_key)
+
+    def payment_method_setup(self, *, idempotency_key: str) -> BillingResult:
+        """Return a Stripe-hosted page for adding or replacing the saved card (draft backend contract)."""
+        result = _billing_result(self._billing_action({'action': 'payment_method'}, idempotency_key))
+        if result['status'] != 'requires_payment_method':
+            raise ChertControlPlaneError(200, 'invalid_response')
+        return result
+
+    def _billing_result(self, action: str, plan: str, idempotency_key: str) -> BillingResult:
+        if plan not in ('shared', 'dedicated'):
+            raise ValueError('Use a shared or dedicated plan')
+        return _billing_result(self._billing_action({'action': action, 'plan': plan}, idempotency_key))
+
     def cancel_subscription(self, *, idempotency_key: str) -> BillingCancellation:
         """Request period-end cancellation; this is not confirmation of cancellation."""
         return self._billing_action({'action': 'cancel'}, idempotency_key)
@@ -287,3 +308,32 @@ class ChertControlPlane:
     def validate_coupon(self, coupon_code: str, *, idempotency_key: str) -> CouponValidation:
         return self._billing_action({'action': 'validate_coupon',
                                      'coupon_code': self._coupon_code(coupon_code)}, idempotency_key)
+
+
+def _billing_result(value: Any) -> BillingResult:
+    """Accept only documented outcomes; URLs must be HTTPS Stripe-hosted pages without credentials."""
+    bad = ChertControlPlaneError(200, 'invalid_response')
+    if not isinstance(value, dict):
+        raise bad
+    status = value.get('status')
+    if status == 'active':
+        entitlement = value.get('entitlement')
+        if not isinstance(entitlement, dict) or entitlement.get('plan') not in ('shared', 'dedicated'):
+            raise bad
+        return {'status': 'active', 'entitlement': entitlement}
+    if status == 'pending':
+        return {'status': 'pending'}
+    raw = value.get('url')
+    # Browsers treat backslashes, tabs and encoded separators differently from urlsplit; refuse them outright.
+    if status not in ('requires_payment_method', 'requires_action') or not isinstance(raw, str) \
+            or not re.fullmatch(r'[\x21-\x7e]+', raw) or '\\' in raw:
+        raise bad
+    try:
+        url = urlsplit(raw)
+        host, port = url.hostname or '', url.port
+    except ValueError:
+        raise bad from None
+    if url.scheme != 'https' or url.username or url.password or port is not None or '%' in url.netloc \
+            or url.netloc.endswith(':') or not (host == 'stripe.com' or host.endswith('.stripe.com')):
+        raise bad
+    return {'status': status, 'url': value['url']}

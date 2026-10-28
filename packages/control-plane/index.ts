@@ -26,6 +26,16 @@ export interface MediaSessionGrant {
   limits: { max_width: number; max_height: number; max_fps: number; max_frame_bytes: number };
 }
 const invalidGrant = () => new ChertApiError(201, 'invalid_response');
+/** Accepts only the documented outcomes; a URL must be an HTTPS Stripe-hosted page without credentials. */
+function checkBillingResult(r:BillingResult):BillingResult{
+  const bad=()=>new ChertApiError(200,'invalid_response');
+  if(r?.status==='active'){if(!r.entitlement||typeof r.entitlement!=='object'||!['shared','dedicated'].includes(r.entitlement.plan))throw bad();return {status:'active',entitlement:r.entitlement};}
+  if(r?.status==='pending')return {status:'pending'};
+  if(r?.status!=='requires_payment_method'&&r?.status!=='requires_action')throw bad();
+  let url:URL;try{url=new URL(r.url);}catch{throw bad();}
+  if(url.protocol!=='https:'||url.username||url.password||url.port||!(url.hostname==='stripe.com'||url.hostname.endsWith('.stripe.com')))throw bad();
+  return {status:r.status,url:url.href};
+}
 const checkSession = (session: LivingSession) => { try { return validateLivingSession(session); } catch { throw new ChertApiError(200, 'invalid_response'); } };
 const rfc3339 = (v: unknown): v is string => typeof v === 'string'
   && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/i.test(v) && !Number.isNaN(Date.parse(v));
@@ -71,14 +81,23 @@ export interface ConnectorEnrollment {line_id:string;name:string;environment:'pr
 export interface ConnectorReceipt {credentials:{connection:string;recovery:string};[key:string]:unknown}
 export type BillingPlan = 'shared' | 'dedicated';
 export interface BillingEntitlement {plan:BillingPlan;status:string;valid_until:string;fulfillment_status:string;[key:string]:unknown}
-export interface BillingStatus {entitlement:BillingEntitlement|null;needs_reconciliation:boolean;sales_enabled:boolean;shared_available:boolean;dedicated_available:boolean}
+/** Summary of the saved default card; never card numbers. */
+export interface BillingPaymentMethod {brand:string;last4:string;[key:string]:unknown}
+export interface BillingStatus {entitlement:BillingEntitlement|null;needs_reconciliation:boolean;sales_enabled:boolean;shared_available:boolean;dedicated_available:boolean;/** Backends that predate terminal billing omit it. */payment_method?:BillingPaymentMethod|null}
+/**
+ * Outcome of a terminal purchase or plan change. `active` needs nothing more. `requires_payment_method` and
+ * `requires_action` carry a short-lived Stripe-hosted URL (card entry or authentication): open it, then refresh
+ * `billingStatus()`. `pending` means the payment provider accepted the operation but the entitlement is not committed
+ * yet: retry with the same idempotency key until `active`. Card entry is never collected by the SDK.
+ */
+export type BillingResult = {status:'active';entitlement:BillingEntitlement} | {status:'pending'} | {status:'requires_payment_method'|'requires_action';url:string};
 export interface Checkout {url:string}
 export interface CheckoutInput {plan:BillingPlan;coupon_code?:string}
 export interface BillingCancellation {status:'cancellation_requested';message:string}
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
-const safeCodes = new Set(['living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded']);
+const safeCodes = new Set(['living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -184,6 +203,21 @@ export class ChertControlPlane {
   createCheckout(input:CheckoutInput,idempotencyKey:string){
     if(!input||!['shared','dedicated'].includes(input.plan))throw new TypeError('Choose a shared or dedicated billing plan.');
     return this.request<Checkout>('billing','POST',{action:'checkout',plan:input.plan,...(input.coupon_code===undefined?{}:{coupon_code:input.coupon_code})},'project',this.billingIdempotency(idempotencyKey));
+  }
+  /** Buys a plan with the saved default card (draft backend contract). Card entry or 3DS returns a Stripe-hosted URL. */
+  purchase(input:{plan:BillingPlan},idempotencyKey:string){return this.billingResult('purchase',input,idempotencyKey);}
+  /** Switches the current subscription to another plan with proration (draft backend contract). */
+  changePlan(input:{plan:BillingPlan},idempotencyKey:string){return this.billingResult('change_plan',input,idempotencyKey);}
+  /** Returns a Stripe-hosted page for adding or replacing the saved card (draft backend contract). */
+  async paymentMethodSetup(idempotencyKey:string):Promise<{status:'requires_payment_method';url:string}>{
+    const result=await this.request<BillingResult>('billing','POST',{action:'payment_method'},'project',this.billingIdempotency(idempotencyKey));
+    if(result?.status!=='requires_payment_method')throw new ChertApiError(200,'invalid_response');
+    return checkBillingResult(result) as {status:'requires_payment_method';url:string};
+  }
+  private async billingResult(action:'purchase'|'change_plan',input:{plan:BillingPlan},idempotencyKey:string):Promise<BillingResult>{
+    if(!input||!['shared','dedicated'].includes(input.plan))throw new TypeError('Choose a shared or dedicated billing plan.');
+    const key=this.billingIdempotency(idempotencyKey);
+    return checkBillingResult(await this.request<BillingResult>('billing','POST',{action,plan:input.plan},'project',key));
   }
   cancelSubscription(idempotencyKey:string){return this.request<BillingCancellation>('billing','POST',{action:'cancel'},'project',this.billingIdempotency(idempotencyKey));}
   validateCoupon(coupon_code:string,idempotencyKey:string){return this.request<CouponValidation>('billing','POST',{action:'validate_coupon',coupon_code},'project',this.billingIdempotency(idempotencyKey));}
