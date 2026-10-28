@@ -10,9 +10,9 @@ const DOCS = 'https://github.com/cherthq/sdk/blob/main';
 const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk imessage send --phone +COUNTRYNUMBER --body TEXT --idempotency-key KEY --confirm
   chert-sdk facetime status | lines | workers
-  chert-sdk billing status                                          (draft)
-  chert-sdk billing card | cancel --idempotency-key KEY --confirm
-  chert-sdk billing buy | switch --plan shared|dedicated --idempotency-key KEY --confirm
+  chert-sdk billing status (draft)
+  chert-sdk billing card | cancel --idempotency-key KEY --confirm (draft)
+  chert-sdk billing buy | switch --plan shared|dedicated --idempotency-key KEY --confirm (draft)
   chert-sdk adopt [path] [--write] [--install] [--json]
   chert-sdk context [--offline]
 
@@ -34,8 +34,8 @@ facetime lines and workers when its scopes allow.
 FaceTime commands inspect existing access/lines; no calls, media relay,
 concierge onboarding or automatic shared-line allocation is implemented.
 Billing (draft backend contract) needs a CLI credential with the billing scope in
-CHERT_FACETIME_TOKEN, not a project API key (ftk_);
-the backend refuses CLI credentials for billing until it ships.
+CHERT_FACETIME_TOKEN, not a project API key (ftk_).
+The backend refuses CLI credentials for billing until it ships.
 buy/switch charge the saved card; when a card or authentication is needed the
 output carries a Stripe-hosted url to open, then rerun billing status. A pending
 status means rerun the same command with the same idempotency key.
