@@ -169,8 +169,8 @@ and the SDK does not allocate lines. Other `chert-sdk` commands only inspect
 access.
 
 Terminal billing (`chert-sdk billing status|card|buy|cancel`, `purchase`) is a
-draft in the source tree only: it is not in a published version and the backend
-does not serve it yet. It will charge a saved card, refuse a purchase while the
+draft: the code ships in 0.2.3, but the backend does not serve it yet, so
+today every command fails. It will charge a saved card, refuse a purchase while the
 project already has a live subscription, and return a Stripe-hosted URL whenever
 card entry or authentication is needed; the plan is granted only after the
 payment webhook arrives. It will accept a CLI login only with the `billing` scope
@@ -203,9 +203,9 @@ connection), web frontends rendered as call video, and screen sharing (an agent
 streaming its screen into a call, and receiving the caller's shared screen) and
 call video composition (a page as the call video, or layered over live video) are
 unreleased drafts, so do not build on them. Custom video, living services and
-screen sharing ship in `@trychert/sdk` 0.2.2, but the hosted backend does not
-serve them yet: calls fail with `404 endpoint_unavailable`. Call video
-composition is in the source tree only, not in any published version
+screen sharing ship in `@trychert/sdk` 0.2.2 and later, and call video
+composition ships in 0.2.3, but the hosted backend does not serve any of them
+yet: calls fail with `404 endpoint_unavailable`
 ([#17](https://github.com/cherthq/sdk/pull/17),
 [#18](https://github.com/cherthq/sdk/pull/18),
 [#25](https://github.com/cherthq/sdk/pull/25),
