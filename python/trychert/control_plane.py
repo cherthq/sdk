@@ -325,11 +325,11 @@ def _billing_result(value: Any) -> BillingResult:
             or not re.fullmatch(r'[\x21-\x7e]+', raw) or '\\' in raw:
         raise bad
     try:
-        url = urlsplit(value['url'])
-        host = url.hostname or ''
+        url = urlsplit(raw)
+        host, port = url.hostname or '', url.port
     except ValueError:
         raise bad from None
-    if url.scheme != 'https' or url.username or url.password or url.port is not None or '%' in url.netloc \
-            or not (host == 'stripe.com' or host.endswith('.stripe.com')):
+    if url.scheme != 'https' or url.username or url.password or port is not None or '%' in url.netloc \
+            or url.netloc.endswith(':') or not (host == 'stripe.com' or host.endswith('.stripe.com')):
         raise bad
     return {'status': status, 'url': value['url']}

@@ -30,7 +30,8 @@ FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionall
 overrides the origin. Credentials are service-specific, not interchangeable.
 FaceTime commands inspect existing access/lines; no calls, media relay,
 concierge onboarding or automatic shared-line allocation is implemented.
-Billing (draft backend contract) uses CHERT_FACETIME_TOKEN with the billing scope.
+Billing (draft backend contract) uses CHERT_FACETIME_TOKEN with the billing scope;
+the backend refuses CLI credentials for billing until it ships.
 buy/switch charge the saved card; when a card or authentication is needed the
 output carries a Stripe-hosted url to open, then rerun billing status. A pending
 status means rerun the same command with the same idempotency key.
@@ -124,7 +125,7 @@ async function context(env: NodeJS.ProcessEnv, offline: boolean) {
     },
     missing: ['CHERT_PROJECT_ID', 'CHERT_API_KEY', 'CHERT_FACETIME_TOKEN'].filter(name => !set(name)),
     account: { facetime: offline ? 'skipped' : facetimeAccount ?? 'not_configured', imessage: 'not_inspected' },
-    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status', 'billing card (draft)', 'billing buy (draft)', 'billing switch (draft)', 'billing cancel', 'adopt', 'context'],
+    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status (draft)', 'billing card (draft)', 'billing buy (draft)', 'billing switch (draft)', 'billing cancel (draft)', 'adopt', 'context'],
     docs: { setup: `${DOCS}/docs/SETUP.md`, llms: `${DOCS}/llms.txt`, ...(existsSync(llmsFile) ? { llmsFile } : {}), readme: `${DOCS}/README.md`,
       compatibility: `${DOCS}/COMPATIBILITY.md` },
     agentCli: { package: '@trychert/facetime', bin: 'chert', use: 'Browser login and putting a LiveKit voice or video agent on a FaceTime line' },
