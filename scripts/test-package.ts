@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -20,7 +20,7 @@ try {
   const installed = join(temporary, 'node_modules/@trychert/sdk');
   const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
   assert.equal(manifest.name, '@trychert/sdk');
-  assert.equal(manifest.version, '0.2.1');
+  assert.equal(manifest.version, '0.2.2');
   assert.deepEqual(manifest.bin, { 'chert-sdk': './dist/unified/cli.js' });
   assert.notEqual(manifest.private, true);
   assert.equal(manifest.publishConfig.access, 'public');
@@ -129,6 +129,13 @@ console.log('All portable unified exports loaded without workspace packages.');
     for (const channel of ['imessage', 'facetime', 'adopt']) await run([runtime, join(installed, manifest.bin['chert-sdk']), channel, '--help']);
   }
   await run(['bun', 'x', '--no-install', 'chert-sdk', '--help']);
+  // Coding agents find the shipped llms.txt and setup page through context, offline.
+  for (const file of ['llms.txt', 'docs/SETUP.md']) assert.ok(existsSync(join(installed, file)), `Missing ${file}`);
+  const context = Bun.spawnSync(['node', join(installed, manifest.bin['chert-sdk']), 'context', '--offline'], { env: { PATH: process.env.PATH } });
+  assert.equal(context.exitCode, 0);
+  const shipped = JSON.parse(context.stdout.toString());
+  assert.equal(shipped.sdk.version, manifest.version);
+  assert.equal(realpathSync(shipped.docs.llmsFile), realpathSync(join(installed, 'llms.txt')));
   // Resolve every shipped declaration using both supported TS resolution modes.
   writeFileSync(join(temporary, 'consumer.ts'), subpaths.map((path, i) => `import * as api${i} from '${specifier(path)}';\nvoid api${i};`).join('\n') + `
 import {ChertClient, verifyWebhook, type MessagingStreamFrame, type MessagingEventPage} from '@trychert/sdk';
@@ -141,7 +148,53 @@ async function events(client: ChertClient, signal: AbortSignal) {
   return verifyWebhook(JSON.stringify(page), 'untrusted', secret);
 }
 void events;
-import {ChertControlPlane} from '@trychert/sdk/facetime';
+import {ChertControlPlane, type MediaSessionGrant} from '@trychert/sdk/facetime';
+import {ChertVideoSource, parseMediaCapabilities, publishWhip, type MediaTransport, type VideoFrameInit} from '@trychert/sdk/media';
+async function customVideo(client: ChertControlPlane, transport: MediaTransport, pc: RTCPeerConnection, frame: VideoFrameInit) {
+  if (!parseMediaCapabilities((await client.getCall('call')).media_capabilities).custom_video?.transports.includes('whip')) return;
+  const grant: MediaSessionGrant = await client.createMediaSession('call', {direction:'publish', codecs:['h264']});
+  const signaling = await publishWhip(pc, {endpoint: grant.endpoint, token: grant.token, connectBy: grant.connect_by});
+  const source = new ChertVideoSource({transport, width: 1280, height: 720, maxFps: 30});
+  await source.start(); const result: 'queued' | 'dropped' = source.pushFrame(frame); void result;
+  // @ts-expect-error v1 is video-only: there is no audio push.
+  source.pushAudio(frame);
+  await source.stop(); await signaling.close();
+}
+import {liveKitVideoTransport, type LiveKitRtcModule, type LiveKitVideoSourceLike} from '@trychert/sdk/media/livekit';
+declare const rtcModule: LiveKitRtcModule; declare const lkSource: LiveKitVideoSourceLike;
+const lk: MediaTransport = liveKitVideoTransport(rtcModule, lkSource);
+void customVideo; void lk;
+import {connectLivingPage, startLivingPreview, type LivingPage} from '@trychert/sdk/living';
+import {livingSignatureVersion, parseLivingServices, verifyLivingServiceWebhook, type LivingServiceMessageWebhook, type LivingSession} from '@trychert/sdk/facetime';
+async function living(client: ChertControlPlane, frame: Window) {
+  if (!parseLivingServices((await client.getCall('call')).living_services)) return;
+  const deployment = await client.createLivingService({name:'Board',entry_url:'https://app.example/v1/',viewport:{width:1280,height:720},fps:30,input:['pointer']},'create-key-1');
+  const session: LivingSession = await client.attachLivingService('call',{deployment_id:deployment.deployment_id,initial_state:{step:1}},'attach-key-1');
+  await client.setLivingState('call',session.session_id,1,{step:2});
+  const page: LivingPage = connectLivingPage<{step:number}>({onState: s => { const n: number = s.step; void n; }});
+  page.send('choice',{a:1});
+  // @ts-expect-error Messages must be JSON.
+  page.send('choice', new Date());
+  startLivingPreview(frame,{origin:'https://app.example',viewport:{width:640,height:360},fps:15});
+  const raw = new Uint8Array(0), version: number | null = livingSignatureVersion('1');
+  if (await verifyLivingServiceWebhook(raw, 'sha256=00', version === 1 ? 'secret' : new Uint8Array(32))) { const event: LivingServiceMessageWebhook = JSON.parse(''); void event.event_id; }
+}
+void living;
+import {liveKitTrackFrames, type LiveKitVideoFrameEvent} from '@trychert/sdk/media/livekit';
+import {compositionInputTarget, parseVideoComposition, type CallVideoComposition, type VideoCompositionCapability} from '@trychert/sdk/facetime';
+async function composition(client: ChertControlPlane, stream: AsyncIterable<LiveKitVideoFrameEvent>, src: ChertVideoSource) {
+  const cap: VideoCompositionCapability | null = parseVideoComposition((await client.getCall('call')).video_composition);
+  if (!cap?.bases.includes('camera')) return;
+  const video: CallVideoComposition = await client.setCallVideo('call', {layers:[{id:'base',source:{kind:'camera'}},
+    {id:'captions',z:1,page:{deployment_id:'dep'},region:{x:0,y:0.75,width:1,height:0.25},background:'transparent',opacity:0.9}]}, 'video-key-1');
+  await client.setCallVideo('call', {page:'https://app.example/live'}, 'video-key-2', {readyTimeoutMs: 30_000});
+  // @ts-expect-error Base sources are camera or managed.
+  await client.setCallVideo('call', {layers:[{id:'base',source:{kind:'screen'}}]}, 'video-key-3');
+  void compositionInputTarget(video, 0.5, 0.9)?.living_session.session_id;
+  for await (const f of liveKitTrackFrames(rtcModule, stream)) src.pushFrame(f);
+  await client.clearCallVideo('call');
+}
+void composition;
 declare const billing: ChertControlPlane;
 const status: boolean = (await billing.billingStatus()).shared_available;
 const url: string = (await billing.createCheckout({plan:'dedicated'},'stable-key')).url;

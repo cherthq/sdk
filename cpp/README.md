@@ -131,6 +131,7 @@ The SDK itself never reads these environment variables.
 | Call events/transcripts | `get_call_events`, `get_transcript` | Typed ordered records; optional event sequence is preserved |
 | Lines/worker health | `list_lines`, `list_workers` | Typed paginated records with additional server fields retained |
 | Line configuration | `update_line(id, UpdateLine)` | PATCH; distinguish omitted, null and assigned references |
+| Custom video session (v1) | `create_media_session(call_id, CreateMediaSession)` | HTTP 201 validated WHIP/WHEP grant; see below |
 | Other customer JSON routes | `request(path, body, method, key)` | `Result<Json>` escape hatch, not full typed management coverage |
 
 `Result<T>` contains `data`, `request_id`, and HTTP `status`. FaceTime unwraps
@@ -173,6 +174,72 @@ in UTF-8 bytes (conservative versus some server character-count limits).
 Pagination is explicit: limit 1–100, nonnegative safe-integer offset; no hidden
 auto-pagination, polling, retries or cancellation. Calls are synchronous and
 independent; const methods may be used concurrently while their client stays alive.
+
+### Custom video sessions (v1, video-only; source preview, unreleased)
+
+Check explicit capabilities first; never infer support from `supports_video`:
+
+```cpp
+const auto caps = trychert::parse_media_capabilities(line.fields.value("media_capabilities", trychert::Json()));
+if (!caps.custom_video) return; // unsupported
+const auto grant = sdk.facetime.create_media_session(call_id,
+    {trychert::MediaDirection::publish, std::vector{trychert::VideoCodec::h264}}); // codecs optional
+// Hand grant.data.endpoint, grant.data.token and grant.data.ice_servers to any
+// standards WHIP client (RFC 9725).
+```
+
+`create_media_session` mints one session for an active call. `publish` grants a WHIP
+endpoint; `subscribe` grants an experimental WHEP endpoint (draft-ietf-wish-whep-05)
+capped at 1280x720. Treat `endpoint` as opaque, connect before `connect_by`, and send
+the same `Authorization: Bearer <token>` on the POST and on PATCH/DELETE to the returned
+`Location`. No stream operator prints the grant; never log `token`. A malformed grant
+throws `ApiError` with code `invalid_response` (raw data withheld); server codes
+(`unauthorized`, `call_not_found`, `media_capability_unsupported`,
+`media_session_conflict`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended`,
+`media_session_expired`, `media_transport_unavailable`) surface without server text.
+Requests are never retried.
+
+Screen sharing: set `content = MediaSessionContent::screen` on a publish request to
+stream an agent's screen (the grant echoes `content` and caps `limits.max_fps` at 15),
+or `MediaSessionContent::caller_screen` on a subscribe request to receive the caller's
+shared screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations throw `std::invalid_argument` before any request. Capability sections
+expose `contents` (`camera`, `screen`; unknown entries ignored, default `camera`).
+`Call::screen_control` is read-only consent state (`none`/`requested`/`granted`); screen
+event types such as `agent_screen_started` are payload-free. There are no control
+operations.
+
+`copy_video_frame` validates a raw i420/nv12/rgba/bgra frame (even sizes from 16x16 to
+1920x1080, per-plane strides, 8 MiB total) and copies only the required bytes so
+buffers can be reused; failures throw `MediaFrameError` with `code` `invalid_frame` or
+`frame_too_large`.
+
+Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC stack;
+keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send periodic
+keyframes.
+
+### Call video composition (draft, unreleased)
+
+`set_call_video(call_id, SetCallVideo, idempotency_key)` (PUT `/calls/{id}/video` with
+`Idempotency-Key`), `get_call_video` and `clear_call_video` manage the call's video as a
+stack of layers that the server composes and publishes through the call's single publish
+slot. SDK v1 allows at most two layers: one base (`BaseLayerInput`, z 0, `camera` or
+`managed`) and page layers (`PageLayerInput`, z 1–64, normalized `region` defaulting to
+full frame, `opaque`/`transparent` background, `opacity` 0–1, optional `input` kinds and
+`initial_state` JSON). Setting only `SetCallVideo::deployment_id` is the shortcut for one
+opaque full-frame page.
+
+Pages are ready living-service deployment IDs only: the call-video resource never loads a
+URL, and the native SDKs cannot deploy one, so create the deployment with the TypeScript
+SDK first. Invalid input throws `std::invalid_argument` before any request; a response
+outside the contract throws `ApiError` with `invalid_response`. A camera base may return a
+publish grant (`MediaSessionGrant`) for your WHIP client. `video_composition_unsupported`,
+`composition_invalid`, `composition_revision_conflict` and `composition_base_unavailable`
+surface verbatim. `parse_video_composition` reads the explicit `video_composition`
+capability, and `composition_input_target(composition, x, y)` finds the topmost
+pointer-accepting page layer under an output-frame point. The native SDKs do not drive
+page state, events or input; living services are TypeScript-only for now.
 
 ## iMessage generic requests
 

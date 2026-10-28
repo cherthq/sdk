@@ -7,6 +7,11 @@ from chert.events import (MessagingEvent, RecordedMessagingEvent, MessagingEvent
                           UpdateWebhookSubscription, WebhookSubscriptions, WebhookSubscriptionResponse,
                           CreatedWebhookSubscriptionResponse, DeletedWebhookSubscription, verify_webhook)
 from .control_plane import ChertControlPlane, ChertControlPlaneError, DEFAULT_FACETIME_URL
+from .media import (MediaCapabilities, CustomVideoCapability, InboundCallerVideoCapability, MediaSessionGrant,
+                    MediaSessionLimits, IceServer, MediaFrameError, VideoFrame, VideoPlane,
+                    copy_video_frame, parse_media_capabilities)
+from .composition import (COMPOSITION_MAX_LAYERS, CallVideoComposition, VideoCompositionCapability,
+                          composition_input_target, parse_video_composition)
 from .session import UnsupportedUnifiedBackend, UNIFIED_CONTRACT, UNIFIED_SCOPES, discover, _ContractOpener
 
 
@@ -54,4 +59,9 @@ __all__ = ["Chert", "IMessageConfig", "FaceTimeConfig", "ChertClient", "ChertAPI
            "MessagingEvent", "RecordedMessagingEvent", "MessagingEventPage", "MessagingStreamFrame",
            "WebhookSubscription", "CreateWebhookSubscription", "UpdateWebhookSubscription",
            "WebhookSubscriptions", "WebhookSubscriptionResponse", "CreatedWebhookSubscriptionResponse",
-           "DeletedWebhookSubscription", "verify_webhook"]
+           "DeletedWebhookSubscription", "verify_webhook",
+           "MediaCapabilities", "CustomVideoCapability", "InboundCallerVideoCapability", "MediaSessionGrant",
+           "MediaSessionLimits", "IceServer", "MediaFrameError", "VideoFrame", "VideoPlane",
+           "copy_video_frame", "parse_media_capabilities",
+           "COMPOSITION_MAX_LAYERS", "CallVideoComposition", "VideoCompositionCapability",
+           "composition_input_target", "parse_video_composition"]

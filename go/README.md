@@ -244,6 +244,86 @@ confirmation. Do not treat checkout completion as line allocation.
 
 Connector management does not provide a connector or media runtime.
 
+### Custom video sessions (v1, video-only; source preview, unreleased)
+
+Check explicit capabilities first; never infer support from `SupportsVideo`:
+
+```go
+caps := chert.ParseMediaCapabilities(line.MediaCapabilities) // also on Call and scoped Worker
+if caps.CustomVideo == nil { return errors.New("custom video unsupported") }
+grant, err := sdk.FaceTime.CreateMediaSession(ctx, callID, chert.CreateMediaSessionRequest{
+    Direction: chert.MediaPublish, Codecs: []chert.VideoCodec{chert.H264}, // Codecs optional
+})
+if err != nil { return err } // e.g. media_capability_unsupported, call_not_active, call_ended
+// Hand grant.Data.Endpoint, grant.Data.Token and grant.Data.ICEServers to any
+// standards WHIP client (RFC 9725), e.g. one built on pion/webrtc.
+```
+
+`CreateMediaSession` mints one session for an active call. `MediaPublish` grants a WHIP
+endpoint; `MediaSubscribe` grants an experimental WHEP endpoint
+(draft-ietf-wish-whep-05) capped at 1280x720. Treat `Endpoint` as opaque, connect
+before `ConnectBy`, and send the same `Authorization: Bearer <Token>` on the POST and
+on PATCH/DELETE to the returned `Location`. The grant prints as redacted; never log
+`Token`. A malformed grant fails with `invalid_response`; server error codes
+(`unauthorized`, `call_not_found`, `media_capability_unsupported`,
+`media_session_conflict`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended`,
+`media_session_expired`, `media_transport_unavailable`) surface without server text.
+Requests are never retried.
+
+Screen sharing: set `Content: chert.MediaContentScreen` on a publish request to stream
+an agent's screen (the grant echoes `Content` and caps `Limits.MaxFPS` at 15), or
+`chert.MediaContentCallerScreen` on a subscribe request to receive the caller's shared
+screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations fail with `invalid_request` before any request; an empty `Content` is
+omitted from the body. Capability sections list `Contents` (`camera`, `screen`;
+unknown entries ignored, default `camera`). `Call.ScreenControl` is read-only
+consent state (`none`/`requested`/`granted`); screen events such as
+`agent_screen_started` and `caller_screen_share_started` are payload-free. There are
+no control operations.
+
+`CopyVideoFrame` validates a raw `i420`/`nv12`/`rgba`/`bgra` frame (even sizes from
+16x16 to 1920x1080, per-plane strides, 8 MiB total) and copies only the required
+bytes so buffers can be reused; failures are `*MediaFrameError` with `Code`
+`invalid_frame` or `frame_too_large`.
+
+Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC
+stack; keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send
+periodic keyframes.
+
+### Call video composition (draft, unreleased)
+
+A call's video can be a stack of layers that the backend composes server-side and
+publishes through the call's single publish slot (so it conflicts with other publish
+sessions: `media_session_conflict`). Check `chert.ParseVideoComposition(line.VideoComposition)`
+first; it returns nil unless the explicit, versioned capability is present.
+
+```go
+video, err := sdk.FaceTime.SetCallVideo(ctx, callID, chert.SetCallVideoRequest{Layers: []chert.VideoLayerInput{
+    {ID: "base", Source: &chert.CompositionBase{Kind: chert.CompositionCamera}},
+    {ID: "captions", Z: 1, Page: chert.CompositionPage{DeploymentID: "dep_123"},
+        Region: &chert.CompositionRegion{X: 0, Y: 0.75, Width: 1, Height: 0.25}, Background: chert.CompositionTransparent},
+}}, "video-key-1")
+// video.Data.Layers[0].Publish is a camera base's publish grant: push frames over WHIP.
+```
+
+`SetCallVideo` PUTs `/api/v1/calls/{id}/video` (the page shortcut is
+`SetCallVideoRequest{Page: &chert.CompositionPage{DeploymentID: ...}}`); `GetCallVideo` and
+`ClearCallVideo` read and stop it. v1 allows at most two layers: one base (`camera` or
+`managed`) at z 0 and page layers at z ≥ 1 with a normalized `Region` (default full
+frame), `Background` (opaque default or transparent), `Opacity` (0–1, default 1),
+optional `Input` (pointer, keyboard, text) and `InitialState`. A non-nil `Revision` makes
+the PUT compare-and-set. `CompositionInputTarget` returns the topmost pointer-accepting
+page layer under an output-frame point. Invalid compositions fail with `invalid_request`
+before any request; responses outside the contract fail with `invalid_response`. Server
+codes `video_composition_unsupported`, `composition_invalid`,
+`composition_revision_conflict` and `composition_base_unavailable` surface without
+server text.
+
+Pages are ready deployment IDs only; URL pages cannot be expressed. This SDK cannot
+deploy pages or drive page state, events or input; those living-service operations are
+TypeScript SDK only.
+
 ## Raw access and failures
 
 `RequestWithOptions` adds an optional iMessage header idempotency key for uncovered

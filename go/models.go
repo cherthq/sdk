@@ -31,6 +31,11 @@ type Call struct {
 	LineID         *string `json:"line_id"`
 	AssistantID    *string `json:"assistant_id"`
 	TerminalReason *string `json:"terminal_reason"`
+	// MediaCapabilities is raw; parse it with ParseMediaCapabilities. Absent means unsupported.
+	MediaCapabilities json.RawMessage `json:"media_capabilities,omitempty"`
+	// ScreenControl is read-only screen-control consent state (none, requested or
+	// granted; empty when absent). The public API exposes no control operations.
+	ScreenControl string `json:"screen_control,omitempty"`
 }
 
 // Line describes an authorized line; availability is not proof of media readiness.
@@ -43,6 +48,10 @@ type Line struct {
 	MaskedIdentity *string `json:"masked_identity"`
 	SupportsAudio  bool    `json:"supports_audio"`
 	SupportsVideo  bool    `json:"supports_video"`
+	// MediaCapabilities is raw; parse it with ParseMediaCapabilities. Absent means unsupported.
+	MediaCapabilities json.RawMessage `json:"media_capabilities,omitempty"`
+	// VideoComposition is raw; parse it with ParseVideoComposition. Absent means unsupported.
+	VideoComposition json.RawMessage `json:"video_composition,omitempty"`
 }
 
 // Worker is public inventory, not an administrator diagnostic result.
@@ -52,6 +61,8 @@ type Worker struct {
 	DisplayName string `json:"display_name"`
 	Status      string `json:"status"`
 	Enabled     bool   `json:"enabled"`
+	// MediaCapabilities is present only on line/call-scoped projections.
+	MediaCapabilities json.RawMessage `json:"media_capabilities,omitempty"`
 }
 
 // CallEvent records one server event; unknown payload fields remain in the raw response.

@@ -19,7 +19,9 @@
         "@cherthq/imessage": "workspace:*",
         "@cherthq/jared-adapter": "workspace:*",
         "@cherthq/linq-adapter": "workspace:*",
+        "@cherthq/living": "workspace:*",
         "@cherthq/loopmessage-adapter": "workspace:*",
+        "@cherthq/media": "workspace:*",
         "@cherthq/missblue-adapter": "workspace:*",
         "@cherthq/sendblue-adapter": "workspace:*",
         "@cherthq/texting-blue-adapter": "workspace:*",
@@ -88,12 +90,20 @@
         "@linqapp/sdk": "0.78.0",
       },
     },
+    "packages/living": {
+      "name": "@cherthq/living",
+      "version": "0.1.0",
+    },
     "packages/loopmessage-adapter": {
       "name": "@cherthq/loopmessage-adapter",
       "version": "0.1.0",
       "dependencies": {
         "@cherthq/imessage": "workspace:*",
       },
+    },
+    "packages/media": {
+      "name": "@cherthq/media",
+      "version": "0.1.0",
     },
     "packages/missblue-adapter": {
       "name": "@cherthq/missblue-adapter",
@@ -139,7 +149,11 @@
 
     "@cherthq/linq-adapter": ["@cherthq/linq-adapter@workspace:packages/linq-adapter"],
 
+    "@cherthq/living": ["@cherthq/living@workspace:packages/living"],
+
     "@cherthq/loopmessage-adapter": ["@cherthq/loopmessage-adapter@workspace:packages/loopmessage-adapter"],
+
+    "@cherthq/media": ["@cherthq/media@workspace:packages/media"],
 
     "@cherthq/missblue-adapter": ["@cherthq/missblue-adapter@workspace:packages/missblue-adapter"],
 

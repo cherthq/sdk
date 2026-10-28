@@ -23,6 +23,7 @@
     "tests/standalone*.ts"
   ],
   "exclude": [
-    "packages/adopt/fixtures"
+    "packages/adopt/fixtures",
+    "packages/living/examples/react"
   ]
 }

@@ -43,7 +43,14 @@ export type CallStatus = 'queued' | 'incoming' | 'allocating' | 'agent_preparing
 /** Public normalized event types. Raw LiveKit track callbacks are not HTTP call events. */
 export type CallEventType = 'incoming_registered' | 'allocated' | 'answer_requested' | 'reject_requested' | 'end_requested'
   | 'agent_preparing' | 'answered' | 'dialing' | 'connecting' | 'active' | 'ending' | 'bridge_ready' | 'agent_connected'
-  | 'remote_video_ready' | 'remote_video_unavailable' | 'caller_video_published' | 'ended' | 'failed' | 'rejected' | 'cleanup_complete' | 'unknown';
+  | 'remote_video_ready' | 'remote_video_unavailable' | 'caller_video_published' | 'ended' | 'failed' | 'rejected' | 'cleanup_complete'
+  /** Draft living-services lifecycle events. Payload-free; page messages arrive by signed webhook. */
+  | 'living_service.ready' | 'living_service.failed' | 'living_service.stopped'
+  /** Draft call video composition lifecycle. Payload-free. */
+  | 'call_video.live' | 'call_video.updated' | 'call_video.failed' | 'call_video.stopped'
+  /** Screen sharing. Payload-free: they report that something happened, never screen content or coordinates. */
+  | 'agent_screen_started' | 'agent_screen_stopped' | 'caller_screen_share_started' | 'caller_screen_share_ended'
+  | 'screen_control_granted' | 'screen_control_revoked' | 'unknown';
 export interface CallEvent { id: string; type: CallEventType; at: string; sequence: number | null; source: string }
 export interface CallDetailEvent {
   id: string; event_type: CallEventType; sequence: number; source: string; created_at: string;
@@ -57,7 +64,16 @@ export interface Call {
   line_id: string | null; worker_id: string | null; assistant_id: string | null;
   terminal_reason: string | null; started_at: string | null; ended_at: string | null; duration_seconds: number | null;
   video_framing?: 'fit' | 'fill'; connecting_screen_dismissal?: 'audio' | 'video';
-  has_transcript?: boolean; [key: string]: unknown;
+  has_transcript?: boolean;
+  /** Explicit custom-media capability; parse with parseMediaCapabilities. */
+  media_capabilities?: unknown;
+  /** Draft: explicit versioned living-services capability; parse with parseLivingServices. */
+  living_services?: unknown;
+  /** Draft: parse with parseVideoComposition. */
+  video_composition?: unknown;
+  /** Read-only consent state for screen control. The public API exposes no control operations. */
+  screen_control?: 'none' | 'requested' | 'granted';
+  [key: string]: unknown;
 }
 export interface CallDetail extends Call { facetime_call_events: CallDetailEvent[] }
 export interface CallAction { reason?: string }

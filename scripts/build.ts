@@ -2,7 +2,7 @@ import { dirname, relative, resolve } from 'node:path';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const root = resolve(import.meta.dir, '..');
-const entriesByPackage = [['control-plane', 'index.ts'], ['imessage', 'src/index.ts'], ['linq-adapter', 'src/index.ts'], ['sendblue-adapter', 'index.ts'], ['blooio-adapter', 'index.ts'], ['blooio-v4-adapter', 'index.ts'], ['loopmessage-adapter', 'index.ts'], ['missblue-adapter', 'index.ts'], ['texting-blue-adapter', 'index.ts'], ['contiguity-adapter', 'index.ts'], ['bluereacher-adapter', 'index.ts'], ['jared-adapter', 'index.ts'], ['adopt', 'src/main.ts', 'src/cli.ts']];
+const entriesByPackage = [['control-plane', 'index.ts'], ['media', 'index.ts', 'livekit.ts'], ['living', 'index.ts'], ['imessage', 'src/index.ts'], ['linq-adapter', 'src/index.ts'], ['sendblue-adapter', 'index.ts'], ['blooio-adapter', 'index.ts'], ['blooio-v4-adapter', 'index.ts'], ['loopmessage-adapter', 'index.ts'], ['missblue-adapter', 'index.ts'], ['texting-blue-adapter', 'index.ts'], ['contiguity-adapter', 'index.ts'], ['bluereacher-adapter', 'index.ts'], ['jared-adapter', 'index.ts'], ['adopt', 'src/main.ts', 'src/cli.ts']];
 for (const [name, ...entries] of entriesByPackage) {
   const directory = resolve(root, 'packages', name);
   rmSync(resolve(directory, 'dist'), { recursive: true, force: true });
@@ -10,7 +10,7 @@ for (const [name, ...entries] of entriesByPackage) {
     target: 'node', format: 'esm', packages: 'external', sourcemap: 'external' });
   if (!result.success) throw new AggregateError(result.logs, `Build failed: ${name}`);
   const declaration = Bun.spawn(['bun', 'x', '--no-install', 'tsc', '--declaration', '--emitDeclarationOnly', '--strict', '--target', 'ES2022',
-    '--module', 'ESNext', '--moduleResolution', 'bundler', '--skipLibCheck', '--types', 'bun', '--outDir', 'dist', entries[0]],
+    '--module', 'ESNext', '--moduleResolution', 'bundler', '--skipLibCheck', '--types', 'bun', '--outDir', 'dist', ...(name === 'media' ? entries : [entries[0]])],
     { cwd: directory, stdout: 'inherit', stderr: 'inherit' });
   if (await declaration.exited !== 0) throw new Error(`Declaration build failed: ${name}`);
 }

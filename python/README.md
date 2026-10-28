@@ -2,16 +2,21 @@
 
 Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
 The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
-[`chert-sdk` 0.1.1](https://pypi.org/project/chert-sdk/0.1.1/) is published on PyPI.
+[`chert-sdk` 0.2.2](https://pypi.org/project/chert-sdk/0.2.2/) is published on PyPI.
 The legacy `chert` import and explicit-URL constructor calls remain compatible.
 
 ```sh
-python -m pip install chert-sdk==0.1.1
-# or: uv add chert-sdk==0.1.1
+python -m pip install chert-sdk==0.2.2
+# or: uv add chert-sdk==0.2.2
 ```
 
-This guide matches the published 0.1.1 package, which was built from this source
-tree. 0.1.1 changes only package documentation from 0.1.0; the code is identical.
+This guide matches the published 0.2.2 package, which was built from this source
+tree. The version follows the npm `@trychert/sdk` 0.2.2 release. Since 0.1.1 it adds
+the custom video session and screen-share content contract (source preview,
+unreleased: the hosted backend does not serve them yet and they fail with
+`404 endpoint_unavailable`), the new allowlisted media error codes, billing
+refusals by code (such as `billing_sales_disabled` or `shared_no_capacity`)
+instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
 "Source preview" below means not production-verified, not absent from the package.
 
 ```python
@@ -34,7 +39,7 @@ sdk = Chert(
     ),
 )
 # Either channel may be omitted; its attribute will be None.
-identity = sdk.facetime.whoami()
+lines = sdk.facetime.list_lines()  # whoami() needs a CLI login, not a project API key
 ```
 
 This wrapper does not bind servers, provision devices, discover origins, share
@@ -116,7 +121,7 @@ the FaceTime control-plane API with Python snake_case methods:
 | Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)` |
 | User (bearer only) | `inspect_login(user_code)`, `approve_login(user_code, project_id)`, `logout()` |
 | Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)` |
-| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)` |
+| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)`; draft, not served yet: `purchase(plan=..., idempotency_key=...)`, `change_plan(plan=..., idempotency_key=...)`, `payment_method_setup(idempotency_key=...)` |
 
 Pagination parameters and checkout arguments are keyword-only. Enrollment uses
 a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
@@ -219,6 +224,99 @@ codes become `request_failed`; malformed responses use `invalid_response`;
 transport failures and redirects use status 0 / `network_error`.
 These are control-plane operations, not FaceTime media/calling APIs or evidence
 that a connector is provisioned or a call succeeded.
+
+## Custom video sessions (v1, video-only; source preview, unreleased)
+
+Until the hosted backend serves these routes, `create_media_session` fails with
+`ChertControlPlaneError` status 404, code `endpoint_unavailable`. Check
+`media_capabilities` first.
+
+Lines, calls and line/call-scoped workers may report `media_capabilities`. Parse it
+with `parse_media_capabilities(...)`; absent, malformed or unknown-version input is
+unsupported (`custom_video` and `inbound_caller_video` are `None`). Support is never
+inferred from `supports_video` or other generic video flags.
+
+```python
+from trychert import parse_media_capabilities
+
+caps = parse_media_capabilities(call.get("media_capabilities"))
+if caps.custom_video is not None:
+    # One explicit attempt; never retried. codecs is an optional ordered subset of h264, vp8.
+    grant = sdk.facetime.create_media_session(call["id"], direction="publish", codecs=["h264"])
+    # grant.endpoint and grant.token go to any WHIP client (e.g. aiortc-based); repr hides the token.
+```
+
+`create_media_session(call_id, *, direction, codecs=None)` posts to
+`/api/v1/calls/{id}/media-sessions` and returns a frozen `MediaSessionGrant`
+(`session_id`, `direction`, `endpoint`, `token`, `connect_by`, `expires_at`,
+`ice_servers`, `codecs`, `limits`). Invalid arguments raise `ValueError` before any
+request; a grant that violates the contract raises `ChertControlPlaneError(201,
+'invalid_response')`. Server errors surface allowlisted codes such as `unauthorized`,
+`media_session_expired`, `call_not_found`, `media_capability_unsupported`,
+`media_session_conflict`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended` and
+`media_transport_unavailable`, never server message text.
+
+Screen sharing: pass `content="screen"` with `direction="publish"` to stream an agent's
+screen (the grant echoes `content` and caps `limits.max_fps` at 15), or
+`content="caller_screen"` with `direction="subscribe"` to receive the caller's shared
+screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations raise `ValueError` before any request. Capability sections list
+publishable/receivable `contents` (`camera`, `screen`; unknown entries ignored,
+default `("camera",)`). Calls may report read-only `screen_control`
+(`none`/`requested`/`granted`) and payload-free screen events; there are no control
+operations.
+
+Treat `endpoint` as opaque: do not build paths from it. Pass `endpoint` and `token`
+to a standard WHIP (RFC 9725) client to publish, or a WHEP
+(draft-ietf-wish-whep-05, experimental) client to subscribe, using `ice_servers`.
+Send the same bearer on the initial POST and on PATCH/DELETE to the returned
+`Location`. Connect before `connect_by`; respect `limits`.
+
+`copy_video_frame(format=..., width=..., height=..., planes=[VideoPlane(data, stride), ...],
+timestamp_us=...)` validates raw `i420`/`nv12`/`rgba`/`bgra` frames (even dimensions
+16–1920 × 16–1080, stride within 256 bytes of the row size, at most 8 MiB) and copies
+only the required bytes from `bytes`/`bytearray`/`memoryview` planes, so buffers can
+be reused. Failures raise `MediaFrameError` (a `ValueError`) with `code`
+`invalid_frame` or `frame_too_large`.
+
+Limitations: no audio, no built-in media engine or WebRTC stack (bring your own,
+e.g. aiortc), and no guarantee that keyframe requests (PLI/FIR) are delivered.
+
+### Call video composition (draft, unreleased)
+
+A call's video can be a stack of layers that the backend composes server-side and
+publishes through the call's single publish slot (so it conflicts with other publish
+sessions: `media_session_conflict`). Check `parse_video_composition(line.get("video_composition"))`
+first; it returns `None` unless the explicit, versioned capability is present.
+
+```python
+sdk.facetime.set_call_video(call["id"], {"page": {"deployment_id": "dep_123"}}, idempotency_key="video-1")
+video = sdk.facetime.set_call_video(call["id"], {"layers": [
+    {"id": "base", "source": {"kind": "camera"}},
+    {"id": "captions", "z": 1, "page": {"deployment_id": "dep_123"},
+     "region": {"x": 0, "y": 0.75, "width": 1, "height": 0.25}, "background": "transparent", "input": ["pointer"]},
+]}, idempotency_key="video-2")
+grant = video["layers"][0].get("publish")  # MediaSessionGrant for a camera base: push frames over WHIP
+```
+
+`set_call_video(call_id, composition, *, idempotency_key)` PUTs `/api/v1/calls/{id}/video`;
+`get_call_video(call_id)` and `clear_call_video(call_id)` read and stop it. v1 allows at
+most two layers: one base (`camera` or `managed`) at z 0 and page layers at z ≥ 1 with a
+normalized `region` (default full frame), `background` (`opaque` default or
+`transparent`), `opacity` (0–1, default 1), optional `input` (`pointer`, `keyboard`,
+`text`) and `initial_state`. Optional `revision` makes the PUT compare-and-set.
+`composition_input_target(video, x, y)` returns the topmost pointer-accepting page layer
+under an output-frame point. Invalid compositions raise `ValueError` before any request;
+responses outside the contract raise `ChertControlPlaneError(200, 'invalid_response')`.
+Server codes `video_composition_unsupported`, `composition_invalid`,
+`composition_revision_conflict` and `composition_base_unavailable` surface without
+server text; lifecycle events are `call_video.live`, `call_video.updated`,
+`call_video.failed` and `call_video.stopped`.
+
+Pages must be ready deployment IDs: URL pages raise `ValueError`. This SDK cannot deploy
+pages or drive page state, events or input; those living-service operations are
+TypeScript SDK only.
 
 ## Existing iMessage transport
 
@@ -420,6 +518,47 @@ uses LiveKit, not these HTTP event streams.
   Transport failures have status 0 and code `timeout` or `transport_error`.
   Invalid JSON uses `invalid_response`; redirects use `redirect_blocked`.
   Neither errors nor a timeout authorize resending an uncertain mutation.
+
+## Cloudflare Python Workers (source preview)
+
+The same public API runs in [Cloudflare Python Workers](https://developers.cloudflare.com/workers/languages/python/)
+(Pyodide). When `sys.platform == "emscripten"`, `ChertClient`, `ChertControlPlane`,
+`Chert(...)` and `Chert.connect(...)` send each request through the runtime's
+JavaScript `fetch` instead of `urllib`; CPython behavior is unchanged. There is no
+transport argument to configure, and the `workers` extra adds no dependencies.
+
+```toml
+# Worker pyproject.toml, managed with pywrangler
+dependencies = ["chert-sdk[workers]"]
+```
+
+```python
+import json
+from workers import Response, WorkerEntrypoint
+from trychert import ChertClient
+
+class Default(WorkerEntrypoint):
+    async def fetch(self, request):
+        client = ChertClient(api_key=self.env.CHERT_IMESSAGE_KEY)
+        return Response(json.dumps(client.request("/whoami")))
+```
+
+Methods stay synchronous: each call suspends the handler with Pyodide's
+`run_sync` (JSPI), so call the SDK inside a handler, not at module import time.
+The fetch transport keeps the existing contract: pinned headers,
+`redirect: "manual"` (any 3xx is `redirect_blocked` / `network_error`), exactly
+one attempt, response size limits, and sanitized `timeout` / `transport_error`
+codes. `timeout` bounds each wait for headers or a body chunk and aborts the
+fetch when exceeded. `stream_events` reads the body incrementally and cancels it
+on close. `verify_webhook` uses only `hmac`/`hashlib` and needs no network.
+Proxy and TLS behavior belong to the Workers runtime, not the SDK.
+
+`python/examples/workers` is a minimal Worker: from that directory, put
+`CHERT_IMESSAGE_KEY` and `CHERT_WEBHOOK_SECRET` in `.dev.vars` and run
+`uv run pywrangler dev`. It was exercised locally under `wrangler dev` against a
+loopback stub only; that is not evidence of a deployed Worker reaching a live
+Chert service. `python/tests/test_workers.py` covers the transport offline with
+fake `js` and `pyodide.ffi` modules.
 
 ## Local checks and packaging
 

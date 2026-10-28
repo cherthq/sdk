@@ -86,7 +86,11 @@ public sealed class FaceTimeCall : FaceTimeModel
     public string? CreatedAt { get; init; }
     public string? EndedAt { get; init; }
     public bool? HasTranscript { get; init; }
+    /// <summary>Read-only screen-control consent state (<c>none</c>, <c>requested</c> or <c>granted</c>). No control operations exist.</summary>
+    public string? ScreenControl { get; init; }
     public CallDetailEvent[]? FacetimeCallEvents { get; init; }
+    /// <summary>Raw; parse with <see cref="TryChert.MediaCapabilities.Parse"/>. Never infer support from video flags.</summary>
+    public JsonElement? MediaCapabilities { get; init; }
     internal override void Validate()
     {
         if (Id.Length != 36 || !Guid.TryParseExact(Id, "D", out _) || string.IsNullOrWhiteSpace(Status))
@@ -142,6 +146,8 @@ public sealed class FaceTimeLine : FaceTimeModel
     public string? MaskedIdentity { get; init; }
     public bool? SupportsAudio { get; init; }
     public bool? SupportsVideo { get; init; }
+    /// <summary>Raw; parse with <see cref="TryChert.MediaCapabilities.Parse"/>. Never infer support from video flags.</summary>
+    public JsonElement? MediaCapabilities { get; init; }
 }
 public sealed class FaceTimeWorker : FaceTimeModel
 {
@@ -151,6 +157,8 @@ public sealed class FaceTimeWorker : FaceTimeModel
     public string? WorkerKey { get; init; }
     public string? DisplayName { get; init; }
     public string? LastHeartbeatAt { get; init; }
+    /// <summary>Raw; parse with <see cref="TryChert.MediaCapabilities.Parse"/>. Never infer support from video flags.</summary>
+    public JsonElement? MediaCapabilities { get; init; }
 }
 public sealed class ProjectIdentity : FaceTimeModel
 {

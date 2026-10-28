@@ -146,6 +146,87 @@ request and lets the server select a line. Nonempty supplied IDs are validated
 and sent unchanged. BYOR, groups and FaceTime-link destinations still require an
 explicit line and reject an empty string before network I/O.
 
+### Custom video sessions (v1, video-only; source preview, unreleased)
+
+Lines, calls and line/call-scoped workers may report `media_capabilities`. Parse it
+with `parse_media_capabilities(&value)`; absent, malformed or unknown-version input
+is unsupported (`custom_video` and `inbound_caller_video` are `None`). Support is
+never inferred from `supports_video` or other generic video flags.
+
+```rust,no_run
+use trychert_sdk::{facetime::FaceTimeClient, CreateMediaSession, MediaDirection, VideoCodec};
+# async fn example(facetime: &FaceTimeClient) -> Result<(), trychert_sdk::ChertError> {
+// One explicit attempt; never retried.
+let grant = facetime.create_media_session("call-id", CreateMediaSession {
+    direction: MediaDirection::Publish,
+    codecs: Some(vec![VideoCodec::H264]),
+    content: None,
+}).await?;
+// Pass grant.endpoint and grant.token to a WHIP client; Debug output redacts the token.
+# let _ = grant;
+# Ok(()) }
+```
+
+`create_media_session` posts to `/calls/{id}/media-sessions` and returns a validated
+`MediaSessionGrant` (`session_id`, `direction`, `endpoint`, `token`, `connect_by`,
+`expires_at`, `ice_servers`, `codecs`, `limits`). Empty or duplicate codecs fail
+with `invalid_media_session_request` before any request; a grant that violates the
+contract fails with status 201 and `invalid_response`. Server error codes such as
+`unauthorized`, `media_session_expired`, `call_not_found`,
+`media_capability_unsupported`, `media_session_conflict`, `call_not_active`,
+`call_ended`, `media_transport_unavailable`, `caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported` and `media_limit_exceeded` surface
+verbatim; other codes become `request_failed`, and the error never carries server
+message text or raw data.
+
+Screen sharing: set `content: Some(MediaSessionContent::Screen)` on a publish request
+to stream an agent's screen (the grant echoes `content` and caps `limits.max_fps` at
+15), or `Some(MediaSessionContent::CallerScreen)` on a subscribe request to receive
+the caller's shared screen (only while they share; otherwise
+`caller_screen_not_shared`). Other combinations fail with
+`invalid_media_session_request` before any request. Capability sections list
+`contents` (`Camera`, `Screen`; unknown entries ignored, default `[Camera]`). `Call`
+exposes read-only `screen_control` (`none`/`requested`/`granted`); screen event
+types (`agent_screen_started`, `caller_screen_share_started`, ...) are payload-free.
+There are no control operations.
+
+Treat `endpoint` as opaque: do not build paths from it. Pass `endpoint` and `token`
+to a standard WHIP (RFC 9725) client to publish, or a WHEP
+(draft-ietf-wish-whep-05, experimental) client to subscribe, using `ice_servers`.
+Send the same bearer on the initial POST and on PATCH/DELETE to the returned
+`Location`. Connect before `connect_by`; respect `limits`.
+
+`VideoFrame::copy_from(&VideoFrameInit { .. })` validates raw I420/NV12/RGBA/BGRA
+frames (even dimensions 16–1920 × 16–1080, stride within 256 bytes of the row size,
+at most 8 MiB) and copies only the required bytes, so caller buffers can be reused.
+Failures return `MediaFrameError` (`code()` is `invalid_frame` or `frame_too_large`).
+
+Limitations: no audio, no built-in media engine or WebRTC stack (bring your own),
+and no guarantee that keyframe requests (PLI/FIR) are delivered.
+
+### Call video composition (draft, unreleased)
+
+`set_call_video(call_id, &SetCallVideo, idempotency_key)` (PUT
+`/calls/{id}/video` with `Idempotency-Key`), `get_call_video` and `clear_call_video`
+manage the call's video as a stack of layers that the server composes and publishes
+through the call's single publish slot. SDK v1 allows at most two layers: one base
+(`BaseLayerInput`, z 0, `Camera` or `Managed`) and page layers (`PageLayerInput`,
+z 1–64, normalized `region` defaulting to full frame, `Opaque`/`Transparent`
+background, `opacity` 0–1, optional `input` kinds and `initial_state` JSON).
+`SetCallVideo::Page` is the shortcut for one opaque full-frame page.
+
+Pages are ready living-service deployment IDs only: the call-video resource never
+loads a URL, and the native SDKs cannot deploy one, so create the deployment with the
+TypeScript SDK first. Invalid input fails with `invalid_call_video_request` before
+any request; a response outside the contract fails with `invalid_response`. A camera
+base may return a publish grant (`MediaSessionGrant`) for your WHIP client.
+`video_composition_unsupported`, `composition_invalid`,
+`composition_revision_conflict` and `composition_base_unavailable` surface verbatim.
+`parse_video_composition(&value)` reads the explicit `video_composition` capability,
+and `composition_input_target(&composition, x, y)` finds the topmost pointer-accepting
+page layer under an output-frame point. The native SDKs do not drive page state,
+events or input; living services are TypeScript-only for now.
+
 `ChertClient` remains the messaging-only compatibility name; `IMessageClient`
 names that role explicitly. Existing imports migrate from `cherthq_imessage` to
 `trychert_sdk`. The fixture executable names remain unchanged.

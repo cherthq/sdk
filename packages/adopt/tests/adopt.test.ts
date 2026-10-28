@@ -195,7 +195,7 @@ describe('dry run, write and safety', () => {
   "private": true,
   "type": "module",
   "dependencies": {
-    "@trychert/sdk": "0.2.1",
+    "@trychert/sdk": "0.2.2",
     "express": "4.21.2"
   }
 }
@@ -220,7 +220,7 @@ describe('dry run, write and safety', () => {
     expect(run(dir, '--write').code).toBe(0);
     expect(readFileSync(join(dir, 'src/notifier.ts'), 'utf8')).toStartWith('import Blooio from "@trychert/sdk/blooio-adapter";\nimport type { MessageSendResponse } from "@blooio/sdk/resources/messages";');
     expect(readFileSync(join(dir, 'src/legacy.cjs'), 'utf8')).toBe(readFileSync(join(fixtures, 'blooio-ts/src/legacy.cjs'), 'utf8'));
-    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@blooio/sdk': '0.0.2', '@trychert/sdk': '0.2.1' });
+    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@blooio/sdk': '0.0.2', '@trychert/sdk': '0.2.2' });
     expect(readFileSync(join(dir, 'ADOPTION_REPORT.md'), 'utf8')).toContain('`src/legacy.cjs:4` Blooio SDK 0.0.2 `messages.cancel`: Message cancellation is rejected');
   });
 
@@ -234,7 +234,7 @@ describe('dry run, write and safety', () => {
 
     const v4 = project('blooio-v4-ts');
     expect(run(v4, '--write').code).toBe(0);
-    expect(JSON.parse(readFileSync(join(v4, 'package.json'), 'utf8')).dependencies).toEqual({ '@trychert/sdk': '0.2.1' });
+    expect(JSON.parse(readFileSync(join(v4, 'package.json'), 'utf8')).dependencies).toEqual({ '@trychert/sdk': '0.2.2' });
     expect(readFileSync(join(v4, 'src/api.ts'), 'utf8')).toBe(readFileSync(join(fixtures, 'blooio-v4-ts/src/api.ts'), 'utf8'));
   });
 

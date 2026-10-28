@@ -260,6 +260,70 @@ requires the expected binding (including explicit null) and assignment generatio
 Checkout creation and cancellation are explicit financial actions, not proof of
 live entitlement or allocation.
 
+### Custom video sessions (v1, video-only; source preview, unreleased)
+
+Check explicit capabilities first; never infer support from `SupportsVideo`:
+
+```csharp
+var caps = MediaCapabilities.Parse(line.MediaCapabilities); // also on FaceTimeCall and scoped FaceTimeWorker
+if (caps.CustomVideo is null) return; // unsupported
+var grant = await chert.FaceTime!.CreateMediaSessionAsync(callId, MediaDirection.Publish,
+    codecs: [VideoCodec.H264], cancellationToken: cancellation); // codecs optional
+// Hand grant.Endpoint, grant.Token and grant.IceServers to any standards WHIP client (RFC 9725).
+```
+
+`CreateMediaSessionAsync` mints one session for an active call. `Publish` grants a WHIP
+endpoint; `Subscribe` grants an experimental WHEP endpoint (draft-ietf-wish-whep-05)
+capped at 1280x720. Treat `Endpoint` as opaque, connect before `ConnectBy`, and send the
+same `Authorization: Bearer <Token>` on the POST and on PATCH/DELETE to the returned
+`Location`. `ToString()` redacts the grant; never log `Token`. A malformed grant throws
+`ChertApiException` with `Code == "invalid_response"`; server codes (`unauthorized`,
+`call_not_found`, `media_capability_unsupported`, `media_session_conflict`,
+`caller_screen_not_shared`,
+`media_content_unsupported`, `caller_screen_unsupported`, `media_limit_exceeded`, `call_not_active`, `call_ended`, `media_session_expired`,
+`media_transport_unavailable`) surface without server text. Requests are never retried.
+
+Screen sharing: pass `content: MediaSessionContent.Screen` with `Publish` to stream an
+agent's screen (the grant echoes `Content` and caps `Limits.MaxFps` at 15), or
+`MediaSessionContent.CallerScreen` with `Subscribe` to receive the caller's shared
+screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations throw `ArgumentException` before any request. Capability sections expose
+`Contents` (`Camera`, `Screen`; unknown entries ignored, default `[Camera]`).
+`FaceTimeCall.ScreenControl` is read-only consent state (`none`/`requested`/`granted`);
+screen events such as `agent_screen_started` and `caller_screen_share_started` are
+payload-free. There are no control operations.
+
+`VideoFrame.Copy(VideoFrameInit)` validates a raw I420/NV12/RGBA/BGRA frame (even sizes
+from 16x16 to 1920x1080, per-plane strides, 8 MiB total) and copies only the required
+bytes so buffers can be reused; failures throw `MediaFrameException` with `Code`
+`invalid_frame` or `frame_too_large`.
+
+Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC stack;
+keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send periodic
+keyframes.
+
+### Call video composition (draft, unreleased)
+
+`SetCallVideoAsync(callId, SetCallVideo, idempotencyKey)` (PUT `/calls/{id}/video` with
+`Idempotency-Key`), `GetCallVideoAsync` and `ClearCallVideoAsync` manage the call's video
+as a stack of layers that the server composes and publishes through the call's single
+publish slot. SDK v1 allows at most two layers: one base (`BaseLayerInput`, z 0, `Camera`
+or `Managed`) and page layers (`PageLayerInput`, z 1–64, normalized `Region` defaulting to
+full frame, `Opaque`/`Transparent` background, `Opacity` 0–1, optional `Input` kinds and
+`InitialState` JSON). Setting only `SetCallVideo.DeploymentId` is the shortcut for one
+opaque full-frame page.
+
+Pages are ready living-service deployment IDs only: the call-video resource never loads
+a URL, and the native SDKs cannot deploy one, so create the deployment with the
+TypeScript SDK first. Invalid input throws `ArgumentException` before any request; a
+response outside the contract throws `ChertApiException` with `invalid_response`. A
+camera base may return a publish grant (`MediaSessionGrant`) for your WHIP client.
+`video_composition_unsupported`, `composition_invalid`, `composition_revision_conflict`
+and `composition_base_unavailable` surface verbatim. `VideoCompositionCapability.Parse`
+reads the explicit `video_composition` capability, and `CallVideoComposition.InputTarget(x, y)`
+finds the topmost pointer-accepting page layer under an output-frame point. The native
+SDKs do not drive page state, events or input; living services are TypeScript-only for now.
+
 ## Billing and preview migration
 
 All billing methods use `/api/v1/billing` and require a **signed-in user bearer

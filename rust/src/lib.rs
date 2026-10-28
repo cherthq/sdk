@@ -2,8 +2,14 @@
 mod backend;
 pub mod events;
 pub mod facetime;
+pub mod media;
 mod unified;
 pub mod webhook;
+pub use media::{
+    composition_input_target, parse_media_capabilities, parse_video_composition,
+    CallVideoComposition, CreateMediaSession, MediaCapabilities, MediaContent, MediaDirection,
+    MediaFrameError, MediaSessionContent, MediaSessionGrant, SetCallVideo, VideoCodec, VideoFrame,
+};
 pub use unified::{
     ChertSdk, FaceTimeConfig, IMessageConfig, TransportLimits, UnifiedSessionOptions,
 };

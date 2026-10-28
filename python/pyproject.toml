@@ -4,13 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chert-sdk"
-version = "0.1.1"
+version = "0.2.2"
 description = "Explicit synchronous iMessage and FaceTime control-plane clients"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = []
+
+[project.optional-dependencies]
+workers = []
 
 [tool.setuptools]
 packages = ["chert", "trychert"]

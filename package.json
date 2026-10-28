@@ -1,13 +1,13 @@
 {
   "name": "@trychert/sdk",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Unified Chert iMessage, FaceTime control-plane, provider adapters and migration CLI",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "engines": { "node": ">=22.12" },
   "publishConfig": { "access": "public" },
-  "files": ["dist", "README.md", "LICENSE", "COMPATIBILITY.md"],
+  "files": ["dist", "README.md", "LICENSE", "COMPATIBILITY.md", "llms.txt", "docs/SETUP.md"],
   "bin": {
     "chert-sdk": "./dist/unified/cli.js"
   },
@@ -16,6 +16,9 @@
     "./imessage": { "types": "./dist/imessage/index.d.ts", "import": "./dist/imessage/index.js" },
     "./control-plane": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
     "./facetime": { "types": "./dist/control-plane/index.d.ts", "import": "./dist/control-plane/index.js" },
+    "./media": { "types": "./dist/media/index.d.ts", "import": "./dist/media/index.js" },
+    "./media/livekit": { "types": "./dist/media/livekit.d.ts", "import": "./dist/media/livekit.js" },
+    "./living": { "types": "./dist/living/index.d.ts", "import": "./dist/living/index.js" },
     "./adopt": { "types": "./dist/adopt/main.d.ts", "import": "./dist/adopt/main.js" },
     "./linq-adapter": { "types": "./dist/linq-adapter/index.d.ts", "import": "./dist/linq-adapter/index.js" },
     "./sendblue-adapter": { "types": "./dist/sendblue-adapter/index.d.ts", "import": "./dist/sendblue-adapter/index.js" },
@@ -54,7 +57,9 @@
     "@cherthq/contiguity-adapter": "workspace:*",
     "@cherthq/bluereacher-adapter": "workspace:*",
     "@cherthq/jared-adapter": "workspace:*",
-    "@cherthq/control-plane": "workspace:*"
+    "@cherthq/control-plane": "workspace:*",
+    "@cherthq/media": "workspace:*",
+    "@cherthq/living": "workspace:*"
   },
   "dependencies": {
     "@blooio/sdk": "0.0.2",
