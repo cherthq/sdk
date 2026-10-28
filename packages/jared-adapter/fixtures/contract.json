@@ -7,6 +7,6 @@
   "defaultPort": {"documented": 3005, "source": 3000},
   "send": {
     "request": {"body": {"message": "Jared is an amazing app"}, "recipient": {"handle": "+14155551234"}},
-    "chertQueued": {"success": true, "message_id": "0123456789abcdef0123456789abcdef", "chat_id": "chat-a", "status": "queued"}
+    "chertQueued": {"status": "queued", "message_id": "550e8400-e29b-41d4-a716-446655440000", "chat_id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "lead_id": "a1b2c3d4-e5f6-4789-8abc-def012345678", "lead_created": false, "convo_id": "convo-1", "phone_line_id": "line-1"}
   }
 }

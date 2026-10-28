@@ -28,7 +28,7 @@ test('documented POST /message maps to strict Chert text and returns the empty 2
   expect(response.status).toBe(200);
   expect(await response.text()).toBe('');
   expect(calls.length).toBe(1);
-  expect(calls[0]!.url).toBe('https://chert.test/api/v1/text-operations/v1');
+  expect(calls[0]!.url).toBe('https://chert.test/api/v1/send');
   expect(await calls[0]!.json()).toEqual({phone: '+14155551234', body: 'Jared is an amazing app'});
   expect(calls[0]!.headers.get('authorization')).toBe('Bearer owned-key');
 });

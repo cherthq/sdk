@@ -16,16 +16,6 @@ function strictText(value: unknown, max: number): value is string {
   return typeof value === 'string' && !value.includes('\0') && value.trim().length > 0 && new TextEncoder().encode(value).length <= max
     && new TextDecoder().decode(new TextEncoder().encode(value)) === value;
 }
-function mapSend(value: unknown): MessageSendResponse {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid Chert response');
-  const result = value as Record<string, unknown>;
-  if (Object.keys(result).sort().join() !== 'chat_id,message_id,status,success' || result.success !== true
-    || typeof result.message_id !== 'string' || !/^[a-f0-9]{32}(?![\s\S])/.test(result.message_id)
-    || typeof result.chat_id !== 'string' || !/^[A-Za-z0-9:_-]{1,160}(?![\s\S])/.test(result.chat_id)
-    || result.status !== 'queued') throw new Error('Invalid strict text receipt');
-  return {message_id:result.message_id,status:'queued'};
-}
-
 function readTarget(path: string): { id: string; statusOnly: boolean } | null {
   const match = /^\/v1\/api\/messages\/([^/]+)(\/status)?$/.exec(path);
   if (!match) return null;
@@ -91,21 +81,18 @@ export class Blooio extends OfficialBlooio {
           try { return Response.json(mapRead(result, read.id, read.statusOnly)); }
           catch { return failure(502, 'Chert returned an incompatible recorded-message response'); }
         }
-        const result = await chert.requestWithResponse<unknown>('/text-operations/v1', {
-          method: 'POST', signal: request.signal,
-          body: {
-            phone: fields!.to, body: fields!.text,
-            ...(idempotencyKey !== null ? { idempotency_key: idempotencyKey } : {}),
-          },
-        });
-        try { if(result.status!==202)throw new Error('Unexpected strict response status');return Response.json(mapSend(result.data),{status:202}); }
-        catch { return failure(502, 'Chert returned an invalid send response'); }
+        const receipt = await chert.sendText({
+          phone: fields!.to as string, body: fields!.text as string,
+          ...(idempotencyKey !== null ? { idempotency_key: idempotencyKey } : {}),
+        }, { signal: request.signal });
+        return Response.json({ message_id: receipt.message_id, status: receipt.status } satisfies MessageSendResponse, { status: 202 });
       } catch (error) {
         if (error instanceof ChertAPIError) {
           return Response.json({ error: { code: error.code, message: error.message, data: error.data } }, {
             status: error.status, headers: error.requestId ? { 'x-request-id': error.requestId } : undefined,
           });
         }
+        if (error instanceof TypeError && !request.signal.aborted) return failure(400, 'Invalid text send request');
         throw error;
       }
     };

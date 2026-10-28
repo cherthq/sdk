@@ -23,7 +23,7 @@ adapter does not guess.
 
 | Operation | Status |
 | --- | --- |
-| `POST /message` text to a phone | Supported subset: exactly `{body:{message},recipient:{handle}}` with an E.164 phone `handle` and lossless nonblank text ≤16 KiB, no NUL. Calls Chert recipient-only `POST /text-operations/v1` once (owned line policy, existing Apple DM). Exact HTTP 202 queued receipt → empty HTTP 200, matching upstream "parsed and handed to the sender". |
+| `POST /message` text to a phone | Supported subset: exactly `{body:{message},recipient:{handle}}` with an E.164 phone `handle` and lossless nonblank text ≤16 KiB, no NUL. Calls Chert recipient-only `POST /send` via `ChertClient.sendText` once (owned line policy, existing Apple DM). Confirmed receipt (202 `queued` or 200 `sent`/`duplicate`) → empty HTTP 200, matching upstream "parsed and handed to the sender". |
 | Email handles, group GUID handles (`iMessage;+;chat…`) | Unsupported (501). |
 | `attachments` (local file paths) | Unsupported (501). |
 | Extra `recipient` fields (`givenName`, …) | Unsupported (501). |

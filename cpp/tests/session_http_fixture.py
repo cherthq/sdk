@@ -56,16 +56,16 @@ class Handler(BaseHTTPRequestHandler):
                     payload = b'{"data":{"ok":true},"request_id":"probe"}'
                 else:
                     assert self.headers.get("X-Chert-Project-Id") is None
-                    assert self.path in ("/api/v1/events", "/api/v1/events?", "/api/v1/events/stream", "/api/v1/text-operations/v1")
+                    assert self.path in ("/api/v1/events", "/api/v1/events?", "/api/v1/events/stream", "/api/v1/send")
                     payload = b'data: {}\r\n\r\n' if self.path.endswith("/stream") else b'{"count":0}'
                 status = 200
-                if self.path == "/api/v1/text-operations/v1":
+                if self.path == "/api/v1/send":
                     assert self.command == "POST"
                     assert self.headers.get("Content-Type") == "application/json"
                     body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                     assert body == dict(phone="+15550000002", body="Unified plaintext", idempotency_key="session-send-key")
                     status = 202
-                    payload = json.dumps(dict(success=True, message_id="a" * 32, chat_id="chat-1", status="queued")).encode()
+                    payload = json.dumps(dict(status="queued", message_id="550e8400-e29b-41d4-a716-446655440000", chat_id="7c9e6679-7425-40de-944b-e07fc1f90ae7", lead_id="6f1c2a5e-9b0d-4c3e-8a7f-1d2e3f4a5b6c", lead_created=True, convo_id="convo-0001", phone_line_id="line-0001")).encode()
                 else:
                     assert self.command == "GET"
                 if mode.endswith("empty"): payload = b""

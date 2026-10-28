@@ -43,15 +43,12 @@ export function createJaredFetch(options: {chert: ChertClientOptions; origin: st
     if (!phone(handle)) return unsupported();
     if (!text(message)) return plain(400, 'A lossless nonblank text body within 16384 UTF-8 bytes is required.');
     try {
-      const result = await client.requestWithResponse<unknown>('/text-operations/v1', {method: 'POST', signal: request.signal, body: {phone: handle, body: message}});
-      const data = result.data;
-      if (result.status !== 202 || !record(data) || !exact(data, ['success', 'message_id', 'chat_id', 'status']) || data.success !== true
-        || data.status !== 'queued' || !publicId(data.message_id) || !chatId(data.chat_id))
-        return plain(502, 'Send outcome unconfirmed; reconcile before retrying.');
+      await client.sendText({phone: handle, body: message}, {signal: request.signal});
       return new Response(null, {status: 200});
     } catch (error) {
       request.signal.throwIfAborted();
       if (error instanceof ChertAPIError && (error.status === 400 || error.status === 422)) return plain(400, 'The request was rejected before sending.');
+      if (error instanceof ChertAPIError && error.code === 'unconfirmed_text_outcome') return plain(502, 'Send outcome unconfirmed; reconcile before retrying.');
       const response = plain(502, 'Send request did not complete; reconcile before retrying.');
       if (error instanceof ChertAPIError && error.status === 502 && error.code === '4103' && record(error.data)
         && publicId(error.data.message_id) && chatId(error.data.chat_id)) {

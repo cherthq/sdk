@@ -2,7 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import OfficialBlooio, { APIError } from '@blooio/sdk';
 import Blooio from './index';
 
-function fixture(response: unknown = { success:true,message_id:'a'.repeat(32),chat_id:'chat-a',status:'queued' }, status = 202) {
+const receipt = { status:'queued',message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'a1b2c3d4-e5f6-4789-8abc-def012345678',lead_id:'a1b2c3d4-e5f6-4789-8abc-def012345678',lead_created:false,convo_id:'convo-1',phone_line_id:'line-1' };
+function fixture(response: unknown = receipt, status = 202) {
   const requests: Request[] = [];
   const client = new Blooio({
     apiKey: 'vendor-secret-must-not-leak',
@@ -26,9 +27,9 @@ describe('official Blooio 0.0.2 compatibility', () => {
     expect(client).toBeInstanceOf(OfficialBlooio);
     expect(client.maxRetries).toBe(0);
     const response = await client.messages.send({ to: '+15551234567', text: 'hello', 'Idempotency-Key': 'logical-send-42' });
-    expect(response).toEqual({ message_id: 'a'.repeat(32), status: 'queued' });
+    expect(response).toEqual({ message_id: receipt.message_id, status: 'queued' });
     expect(requests).toHaveLength(1);
-    expect(requests[0]!.url).toBe('https://chert.example.test/api/v1/text-operations/v1');
+    expect(requests[0]!.url).toBe('https://chert.example.test/api/v1/send');
     expect(await requests[0]!.json()).toEqual({ phone: '+15551234567', body: 'hello', idempotency_key: 'logical-send-42' });
     expect(requests[0]!.headers.get('authorization')).toBe('Bearer chert-key');
     expect([...requests[0]!.headers.values()].join(' ')).not.toContain('vendor-secret');
@@ -62,8 +63,8 @@ describe('official Blooio 0.0.2 compatibility', () => {
   });
 
   test('strict sends reject incomplete, contradictory or non-202 receipts after exactly one attempt', async () => {
-    const good={success:true,message_id:'a'.repeat(32),chat_id:'chat-a',status:'queued'};
-    for(const [body,status] of [[{},202],[{success:true,message_id:null,status:null},202],[{...good,extra:true},202],[{...good,status:'sent'},202],[{...good,message_id:'legacy-id'},202],[{...good,chat_id:'bad/chat'},202],[good,200],[good,201]] as const){
+    const good=receipt;
+    for(const [body,status] of [[{},202],[{message_id:null,status:null},202],[{...good,status:'sent'},202],[{...good,message_id:'bad id'},202],[{...good,chat_id:'bad/chat'},202],[good,200],[good,201],[{...good,status:'failed'},200]] as const){
       const {client,requests}=fixture(body,status);await expect((async()=>await client.messages.send({to:'+15551234567',text:'hello'}))()).rejects.toMatchObject({status:502});expect(requests).toHaveLength(1);
     }
   });
@@ -85,7 +86,7 @@ describe('official Blooio 0.0.2 compatibility', () => {
     const copied = client.withOptions({ apiKey: 'another-vendor-secret', baseURL: 'https://elsewhere.invalid' });
     await copied.messages.send({ to: '+15551234567', text: 'hello' });
     expect(requests).toHaveLength(1);
-    expect(requests[0]!.url).toBe('https://chert.example.test/api/v1/text-operations/v1');
+    expect(requests[0]!.url).toBe('https://chert.example.test/api/v1/send');
     expect(() => client.withOptions({ maxRetries: 1 })).toThrow('maxRetries: 0');
   });
 });
@@ -103,9 +104,9 @@ test('cloned clients keep the explicit Chert transport and cannot restore retrie
   const { client, requests } = fixture();
   const clone = client.withOptions({ baseURL: 'https://vendor.invalid', apiKey: 'vendor-replacement' });
   expect(clone).toBeInstanceOf(Blooio);
-  expect((await clone.messages.send({ to: '+15551234567', text: 'hello' })).message_id).toBe('a'.repeat(32));
+  expect((await clone.messages.send({ to: '+15551234567', text: 'hello' })).message_id).toBe(receipt.message_id);
   expect(requests).toHaveLength(1);
-  expect(requests[0]!.url).toBe('https://chert.example.test/api/v1/text-operations/v1');
+  expect(requests[0]!.url).toBe('https://chert.example.test/api/v1/send');
   expect(requests[0]!.headers.get('authorization')).toBe('Bearer chert-key');
   expect(() => client.withOptions({ maxRetries: 2 })).toThrow();
 });
@@ -224,13 +225,13 @@ test('strict plaintext limits reject invalid recipients, lossy text and oversize
  }
 });
 test('old cloud404 propagates without fallback and uncertain4103 retains public identity data',async()=>{
- for(const status of [404,502]){const body={success:false,error:{code:4103,message:'private body',retryable:false},message_id:'b'.repeat(32),chat_id:'chat-a'};const{client,requests}=fixture(body,status);try{await client.messages.send({to:'+15551234567',text:'hello'});throw Error('expectedfailure');}catch(error){expect(error).toBeInstanceOf(APIError);if(!(error instanceof APIError))throw error;expect(error.status).toBe(status);expect(JSON.stringify(error.error)).toContain('b'.repeat(32));}expect(requests).toHaveLength(1);expect(requests[0].url).toEndWith('/text-operations/v1');}
+ for(const status of [404,502]){const body={success:false,error:{code:4103,message:'private body',retryable:false},message_id:'b'.repeat(32),chat_id:'chat-a'};const{client,requests}=fixture(body,status);try{await client.messages.send({to:'+15551234567',text:'hello'});throw Error('expectedfailure');}catch(error){expect(error).toBeInstanceOf(APIError);if(!(error instanceof APIError))throw error;expect(error.status).toBe(status);expect(JSON.stringify(error.error)).toContain('b'.repeat(32));}expect(requests).toHaveLength(1);expect(requests[0].url).toEndWith('/api/v1/send');}
 });
 
 test('strict send preserves exact boundary text/key and original SDK response helpers',async()=>{
  const {client,requests}=fixture();const text='🦀'.repeat(4096),key='é'.repeat(100);
  const {data,response}=await client.messages.send({to:'+15551234567',text,'Idempotency-Key':key}).withResponse();
- expect(response.status).toBe(202);expect(data).toEqual({message_id:'a'.repeat(32),status:'queued'});
+ expect(response.status).toBe(202);expect(data).toEqual({message_id:receipt.message_id,status:'queued'});
  expect(await requests[0]!.json()).toEqual({phone:'+15551234567',body:text,idempotency_key:key});
  const invalid=fixture();await expect((async()=>await invalid.client.messages.send({to:'+15551234567',text:'hello','Idempotency-Key':'é'.repeat(101)}))()).rejects.toMatchObject({status:400});expect(invalid.requests).toHaveLength(0);
  const cancelled=fixture(),controller=new AbortController();controller.abort();await expect((async()=>await cancelled.client.messages.send({to:'+15551234567',text:'hello'},{signal:controller.signal}))()).rejects.toThrow();expect(cancelled.requests).toHaveLength(0);

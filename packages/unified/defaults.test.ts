@@ -7,7 +7,7 @@ import Linq from '../linq-adapter/src/index';
 import Sendblue from '../sendblue-adapter/index';
 import { createBlooioV4Fetch } from '../blooio-v4-adapter/index';
 
-const receipt = { success: true, message_id: 'a'.repeat(32), chat_id: 'test_chat', status: 'queued' };
+const receipt = { status: 'queued', message_id: '550e8400-e29b-41d4-a716-446655440000', chat_id: 'test_chat', lead_id: 'test_chat', lead_created: false, convo_id: 'convo-1', phone_line_id: 'line-1' };
 const body = { phone: '+61412345678', body: 'hello' };
 
 test('provider adapters use the messaging default for requests and owned media', async () => {
@@ -46,7 +46,7 @@ test('canonical defaults keep channel credentials isolated and refuse redirects'
   const sdk = new ChertSDK({ projectId: 'project', imessage: { apiKey: 'message-key', tenant: 'tenant', fetch: fetcher }, facetime: { token: 'face-token', fetch: fetcher as typeof fetch } });
   await sdk.imessage.sendText(body);
   await sdk.facetime.whoami();
-  expect(requests.map(r => r.url)).toEqual(['https://console.trychert.com/api/v1/text-operations/v1', 'https://facetime.trychert.com/api/v1/cli/whoami']);
+  expect(requests.map(r => r.url)).toEqual(['https://console.trychert.com/api/v1/send', 'https://facetime.trychert.com/api/v1/cli/whoami']);
   const [message, face] = requests.map(r => new Headers(r.init.headers));
   expect(message!.get('Authorization')).toBe('Bearer message-key');
   expect(message!.get('x-chert-tenant')).toBe('tenant');
@@ -62,7 +62,7 @@ test('messaging overrides preserve root, trailing slash and deployment prefixes'
     let requested = '';
     const client = new ChertClient({ baseURL, apiKey: 'fixture', fetch: async url => { requested = String(url); return Response.json(receipt, { status: 202 }); } });
     await client.sendText(body);
-    expect(requested).toBe(`${prefix}/text-operations/v1`);
+    expect(requested).toBe(`${prefix}/send`);
   }
 });
 
@@ -80,7 +80,7 @@ test('invalid explicit overrides fail locally rather than selecting a default', 
 test('CLI defaults and explicit overrides use only selected channel credentials', async () => {
   const preload = `globalThis.fetch = async (url, init) => {
     console.log(JSON.stringify({ intercepted: String(url), headers: Object.fromEntries(new Headers(init.headers)), redirect: init.redirect }));
-    return String(url).includes('text-operations') ? Response.json(${JSON.stringify(receipt)}, {status:202}) : Response.json({data:{}});
+    return String(url).endsWith('/api/v1/send') ? Response.json(${JSON.stringify(receipt)}, {status:202}) : Response.json({data:{}});
   };`;
   for (const channel of ['imessage', 'facetime']) {
     for (const override of [undefined, 'https://override.test', '']) {
@@ -95,7 +95,7 @@ test('CLI defaults and explicit overrides use only selected channel credentials'
       if (override === '') { expect(output).toBe(''); continue; }
       const request = JSON.parse(output.split('\n')[0]!);
       const origin = override ?? (channel === 'imessage' ? 'https://console.trychert.com' : 'https://facetime.trychert.com');
-      expect(request.intercepted).toBe(`${origin}/api/v1/${channel === 'imessage' ? 'text-operations/v1' : 'cli/whoami'}`);
+      expect(request.intercepted).toBe(`${origin}/api/v1/${channel === 'imessage' ? 'send' : 'cli/whoami'}`);
       expect(request.headers.authorization).toBe('Bearer selected-secret');
       expect(request.headers['x-chert-project-id']).toBe(channel === 'facetime' ? 'project' : undefined);
       expect(request.redirect).toBe('error');

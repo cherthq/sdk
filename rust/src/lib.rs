@@ -67,7 +67,9 @@ pub struct ChertClient {
     unified_contract: bool,
 }
 
-/// Verified queue acceptance only; this is not sent or delivery evidence.
+/// Verified CRM acceptance only. `status` is `queued`, `sent` (the CRM dispatched
+/// it to a line) or `duplicate` (the CRM already had this send); none is delivery proof.
+/// `success` is the SDK's acceptance flag, not a server field.
 pub struct QueuedTextReceipt {
     pub success: bool,
     pub message_id: String,
@@ -321,7 +323,7 @@ impl ChertClient {
             body["idempotency_key"] = Value::String(key.into());
         }
         let response = self
-            .request_json("/text-operations/v1", Method::POST, Some(&body))
+            .request_json("/send", Method::POST, Some(&body))
             .await?;
         let value = &response.value;
         let message_id = value
@@ -329,19 +331,20 @@ impl ChertClient {
             .and_then(Value::as_str)
             .unwrap_or("");
         let chat_id = value.get("chat_id").and_then(Value::as_str).unwrap_or("");
-        if response.status != 202
-            || value.as_object().is_none_or(|row| row.len() != 4)
-            || value.get("success") != Some(&Value::Bool(true))
-            || value.get("status").and_then(Value::as_str) != Some("queued")
-            || message_id.len() != 32
-            || !message_id
-                .bytes()
-                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            || chat_id.is_empty()
-            || chat_id.len() > 160
-            || !chat_id
-                .bytes()
-                .all(|b| b.is_ascii_alphanumeric() || b":_-".contains(&b))
+        let status = value.get("status").and_then(Value::as_str).unwrap_or("");
+        let valid_id = |id: &str| {
+            (1..=160).contains(&id.len())
+                && id
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b":_-".contains(&b))
+        };
+        if !value.is_object()
+            || !matches!(
+                (response.status, status),
+                (202, "queued") | (200, "sent" | "duplicate")
+            )
+            || !valid_id(message_id)
+            || !valid_id(chat_id)
         {
             return Err(ChertError {
                 status: Some(502),
@@ -354,7 +357,7 @@ impl ChertClient {
             success: true,
             message_id: message_id.into(),
             chat_id: chat_id.into(),
-            status: "queued".into(),
+            status: status.into(),
         })
     }
 

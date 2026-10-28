@@ -13,12 +13,12 @@ import (
 
 func TestInstalledModule(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/v1/text-operations/v1" {
+		if r.URL.Path == "/api/v1/send" {
 			if r.Header.Get("Authorization") != "Bearer im-key" || r.Header.Get("X-Chert-Tenant") != "im-tenant" || r.Header.Get("X-Chert-Project-ID") != "" {
 				t.Error("iMessage scope")
 			}
 			w.WriteHeader(202)
-			if _, err := fmt.Fprint(w, `{"success":true,"message_id":"0123456789abcdef0123456789abcdef","chat_id":"chat-1","status":"queued"}`); err != nil {
+			if _, err := fmt.Fprint(w, `{"status":"queued","message_id":"6f1c2b9e-3d4a-4f5b-9c8d-7e6f5a4b3c2d","chat_id":"chat-1","lead_id":"0b7e2c1d-9a8f-4e3d-8c2b-1a0f9e8d7c6b","lead_created":false}`); err != nil {
 				t.Error(err)
 			}
 			return

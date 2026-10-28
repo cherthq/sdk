@@ -100,7 +100,7 @@ export interface BillingCancellation {status:'cancellation_requested';message:st
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
-const safeCodes = new Set(['living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded','video_composition_unsupported','composition_invalid','composition_revision_conflict','composition_base_unavailable']);
+const safeCodes = new Set(['billing_plan_change_unavailable','living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded','video_composition_unsupported','composition_invalid','composition_revision_conflict','composition_base_unavailable']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -247,9 +247,15 @@ export class ChertControlPlane {
     if(!input||!['shared','dedicated'].includes(input.plan))throw new TypeError('Choose a shared or dedicated billing plan.');
     return this.request<Checkout>('billing','POST',{action:'checkout',plan:input.plan,...(input.coupon_code===undefined?{}:{coupon_code:input.coupon_code})},'project',this.billingIdempotency(idempotencyKey));
   }
-  /** Buys a plan with the saved default card (draft backend contract). Card entry or 3DS returns a Stripe-hosted URL. */
+  /**
+   * Buys a plan with the saved default card (draft backend contract). Card entry or 3DS returns a Stripe-hosted URL.
+   * Refused while the project already has a live subscription; the entitlement is granted by the payment webhook.
+   */
   purchase(input:{plan:BillingPlan},idempotencyKey:string){return this.billingResult('purchase',input,idempotencyKey);}
-  /** Switches the current subscription to another plan with proration (draft backend contract). */
+  /**
+   * Unavailable: the backend fails closed with `billing_plan_change_unavailable` until a plan-change policy
+   * (timing, proration, refunds, payment failure, fulfilment) exists. Kept so callers can detect that code.
+   */
   changePlan(input:{plan:BillingPlan},idempotencyKey:string){return this.billingResult('change_plan',input,idempotencyKey);}
   /** Returns a Stripe-hosted page for adding or replacing the saved card (draft backend contract). */
   async paymentMethodSetup(idempotencyKey:string):Promise<{status:'requires_payment_method';url:string}>{

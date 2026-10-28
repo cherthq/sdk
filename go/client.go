@@ -286,7 +286,9 @@ type TextRequest struct {
 	IdempotencyKey *string `json:"idempotency_key,omitempty"`
 }
 
-// QueuedTextReceipt is queue acceptance only.
+// QueuedTextReceipt is CRM acceptance only: Success is the SDK's acceptance flag,
+// Status is queued, sent (dispatched to a line) or duplicate (already accepted).
+// None of these is delivery proof.
 type QueuedTextReceipt struct {
 	Success   bool   `json:"success"`
 	MessageID string `json:"message_id"`
@@ -309,12 +311,15 @@ func unconfirmed(r Response, code string) error {
 	return &APIError{Status: 502, Code: code, RequestID: r.RequestID, Data: r.Data}
 }
 func receiptObject(r Response, err error, code string) (map[string]any, error) {
+	return decodeReceipt(r, err, code, func(obj map[string]any) bool { return r.Status == 202 && len(obj) == 4 })
+}
+func decodeReceipt(r Response, err error, code string, accept func(map[string]any) bool) (map[string]any, error) {
 	if err != nil && (r.Status < 200 || r.Status >= 300) {
 		return nil, err
 	}
 	v, e := decodeJSON(r.Data)
 	obj, ok := v.(map[string]any)
-	if err != nil || e != nil || !ok || r.Status != 202 || len(obj) != 4 {
+	if err != nil || e != nil || !ok || !accept(obj) {
 		failure := unconfirmed(r, code).(*APIError)
 		if errors.Is(err, context.Canceled) {
 			failure.cause = context.Canceled
@@ -333,17 +338,19 @@ func (c *Client) SendText(ctx context.Context, input TextRequest) (QueuedTextRec
 	if !phonePattern.MatchString(input.Phone) || !validText(input.Body) || input.IdempotencyKey != nil && !validBodyKey(*input.IdempotencyKey) {
 		return out, invalid()
 	}
-	r, err := c.request(ctx, "POST", "/text-operations/v1", input, "")
-	obj, err := receiptObject(r, err, "unconfirmed_text_outcome")
+	r, err := c.request(ctx, "POST", "/send", input, "")
+	obj, err := decodeReceipt(r, err, "unconfirmed_text_outcome", func(map[string]any) bool { return true })
 	if err != nil {
 		return out, err
 	}
 	id, _ := obj["message_id"].(string)
 	chat, _ := obj["chat_id"].(string)
-	if obj["success"] != true || obj["status"] != "queued" || !publicPattern.MatchString(id) || !chatPattern.MatchString(chat) {
+	status, _ := obj["status"].(string)
+	accepted := r.Status == 202 && status == "queued" || r.Status == 200 && (status == "sent" || status == "duplicate")
+	if !accepted || !chatPattern.MatchString(id) || !chatPattern.MatchString(chat) {
 		return out, unconfirmed(r, "unconfirmed_text_outcome")
 	}
-	return QueuedTextReceipt{true, id, chat, "queued"}, nil
+	return QueuedTextReceipt{true, id, chat, status}, nil
 }
 
 // ReactionRequest targets part zero using one of six standard names.

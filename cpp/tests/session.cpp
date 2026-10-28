@@ -22,8 +22,8 @@ int main(int argc, char** argv) {
         if (mode.starts_with("positive")) {
             check(client.imessage.list_events().at("count") == 0);
             const auto receipt = client.imessage.send_text("+15550000002", "Unified plaintext", "session-send-key");
-            check(receipt.success && receipt.status == "queued" && receipt.message_id == std::string(32, 'a')
-                && receipt.chat_id == "chat-1");
+            check(receipt.success && receipt.status == "queued" && receipt.message_id == "550e8400-e29b-41d4-a716-446655440000"
+                && receipt.chat_id == "7c9e6679-7425-40de-944b-e07fc1f90ae7");
             check(client.facetime.request("/probe").data.at("ok") == true);
             int frames = 0;
             client.imessage.stream_events([&](const auto&) { ++frames; return false; });

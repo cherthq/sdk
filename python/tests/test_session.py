@@ -13,7 +13,10 @@ from trychert import Chert, ChertAPIError, UnsupportedUnifiedBackend, UNIFIED_CO
 
 TOKEN = "chu_" + "a" * 43
 PROJECT = "12345678-1234-1234-1234-123456789abc"
-RECEIPT = {"success": True, "message_id": "a" * 32, "chat_id": "synthetic-chat", "status": "queued"}
+CRM = {"status": "queued", "message_id": "550e8400-e29b-41d4-a716-446655440000",
+       "chat_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7", "lead_id": "16fd2706-8baf-433b-82eb-8c7fada847da",
+       "lead_created": True, "convo_id": "convo-1", "phone_line_id": "line-1"}
+RECEIPT = {"success": True, "message_id": CRM["message_id"], "chat_id": CRM["chat_id"], "status": "queued"}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -23,12 +26,12 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         body = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         self.server.posts.append((self.path, dict(self.headers), body))
-        sending = self.path == "/api/v1/text-operations/v1"
+        sending = self.path == "/api/v1/send"
         calling = self.path == "/api/v1/calls"
         self.send_response(self.server.send_status if sending or calling else 200)
         for echo in self.server.echo:
             self.send_header("X-Chert-Contract", echo)
-        payload = json.dumps(RECEIPT if sending else
+        payload = json.dumps(CRM if sending else
                              {"data": self.server.call_response if calling else {"revoked": True}}).encode()
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(payload)))
@@ -125,7 +128,7 @@ class SessionTest(unittest.TestCase):
         for key in (None, "synthetic-operation"):
             self.assertEqual(client.imessage.send_text("+15550000002", "Synthetic text", idempotency_key=key), RECEIPT)
             path, headers, body = self.messaging.posts[-1]
-            self.assertEqual(path, "/api/v1/text-operations/v1")
+            self.assertEqual(path, "/api/v1/send")
             expected = {"phone": "+15550000002", "body": "Synthetic text"}
             if key is not None:
                 expected["idempotency_key"] = key

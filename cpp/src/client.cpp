@@ -413,15 +413,20 @@ QueuedTextReceipt IMessageClient::send_text(const std::string& phone, const std:
         throw std::invalid_argument("Invalid strict text idempotency key");
     Json payload{{"phone", phone}, {"body", text}};
     if (key) payload["idempotency_key"] = *key;
-    auto response = request_with_response("/text-operations/v1", std::move(payload), "POST");
+    auto response = request_with_response("/send", std::move(payload), "POST");
     const auto& data = response.data;
-    if (response.status != 202 || !data || !data->is_object() || data->size() != 4
-        || !data->contains("success") || !data->at("success").is_boolean() || !data->at("success").get<bool>()
-        || !data->contains("status") || data->at("status") != "queued"
-        || !data->contains("message_id") || !data->at("message_id").is_string() || !public_id(data->at("message_id").get_ref<const std::string&>())
+    const auto status_ok = [&] {
+        if (!data || !data->is_object() || !data->contains("status") || !data->at("status").is_string()) return false;
+        const auto& status = data->at("status").get_ref<const std::string&>();
+        return (response.status == 202 && status == "queued")
+            || (response.status == 200 && (status == "sent" || status == "duplicate"));
+    };
+    if (!status_ok()
+        || !data->contains("message_id") || !data->at("message_id").is_string() || !chat_id(data->at("message_id").get_ref<const std::string&>())
         || !data->contains("chat_id") || !data->at("chat_id").is_string() || !chat_id(data->at("chat_id").get_ref<const std::string&>()))
         throw ApiError(502, "unconfirmed_text_outcome", response.request_id, data.value_or(Json(nullptr)));
-    return {true, data->at("message_id").get<std::string>(), data->at("chat_id").get<std::string>(), "queued"};
+    return {true, data->at("message_id").get<std::string>(), data->at("chat_id").get<std::string>(),
+            data->at("status").get<std::string>()};
 }
 
 ReactionReceipt IMessageClient::send_reaction(const std::string& input_chat, const std::string& message,

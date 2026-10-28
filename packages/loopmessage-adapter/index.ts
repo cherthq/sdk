@@ -68,15 +68,11 @@ export function createLoopMessageFetch(options:{chert:ChertClientOptions}):Chert
       return failure(501,'Only canonical phone and plaintext with explicit iMessage channel are supported. No message was sent.');
     const contact=body.contact,text=body.text;
     try{
-      const response=await client.requestWithResponse<unknown>('/text-operations/v1',{
-        method:'POST',body:{phone:contact,body:text},signal:request.signal});
-      const data=response.data;
-      if(response.status!==202||!record(data)||Object.keys(data).sort().join()!=='chat_id,message_id,status,success'
-        ||data.success!==true||data.status!=='queued'||!publicID(data.message_id)||!chatID(data.chat_id))
-        return failure(502,'Send outcome unconfirmed; reconcile before retrying.');
-      return Response.json({message_id:data.message_id,contact,text},{status:200});
+      const receipt=await client.sendText({phone:contact,body:text},{signal:request.signal});
+      return Response.json({message_id:receipt.message_id,contact,text},{status:200});
     }catch(error){
       request.signal.throwIfAborted();
+      if(error instanceof ChertAPIError&&error.code==='unconfirmed_text_outcome')return failure(502,'Send outcome unconfirmed; reconcile before retrying.');
       const response=failure(error instanceof ChertAPIError&&error.status>=400&&error.status<=599?error.status:502,
         'Send request did not complete; reconcile before retrying.');
       if(error instanceof ChertAPIError&&error.status===502&&error.code==='4103'&&record(error.data)

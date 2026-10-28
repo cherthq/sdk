@@ -42,11 +42,6 @@ function chatQueued(value: unknown, to: string, body: string): string | null {
     || !record(c.handles[0]) || c.handles[0].address !== to) return null;
   return m.id;
 }
-function textQueued(value: unknown): string | null {
-  if (!record(value) || !exact(value, ['success', 'message_id', 'chat_id', 'status']) || value.success !== true
-    || value.status !== 'queued' || !publicId(value.message_id) || !chatId(value.chat_id)) return null;
-  return value.message_id;
-}
 function fromError(error: unknown): Response {
   if (error instanceof ChertAPIError) {
     if (error.status === 400 || error.status === 422) return failure(400, 'Bad Request');
@@ -86,8 +81,8 @@ export function createContiguityFetch(options: {chert: ChertClientOptions}): Che
       try {
         let id: string | null;
         if (from === null) {
-          const result = await client.requestWithResponse<unknown>('/text-operations/v1', {method: 'POST', signal: request.signal, body: {phone: to, body: message}});
-          id = result.status === 202 ? textQueued(result.data) : null;
+          try { id = (await client.sendText({phone: to, body: message}, {signal: request.signal})).message_id; }
+          catch (error) { if (error instanceof ChertAPIError && error.code === 'unconfirmed_text_outcome') id = null; else throw error; }
         } else {
           const result = await client.requestWithResponse<unknown>('/chats', {method: 'POST', signal: request.signal,
             body: {from, to: [to], message: {parts: [{type: 'text', value: message}]}}});

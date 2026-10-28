@@ -63,11 +63,11 @@ static partial class Program
             messaging.Handler = _ => Task.FromResult(new Reply(200, "event: close\ndata:{}\n\n", sse));
             var count = 0; await foreach (var frame in client.IMessage.StreamEventsAsync()) { Check(frame.Event == "close"); count++; }
             Check(count == 1 && messaging.Requests.Last().Headers["x-chert-contract"] == "chert-unified-v1");
-            // Existing strict text route is deliberately unchanged.
+            // Strict text uses the CRM send route.
             messaging.Handler = _ => Task.FromResult(new Reply(202, TextReceipt(), echo));
             var receipt = await client.IMessage.SendTextAsync("+15550000002", "fixture", "stable-operation");
             var send = messaging.Requests.Last();
-            Check(send.Target == "/api/v1/text-operations/v1" && send.Method == "POST");
+            Check(send.Target == "/api/v1/send" && send.Method == "POST");
             Check(send.Headers["authorization"] == "Bearer " + token && send.Headers["x-chert-contract"] == "chert-unified-v1");
             Check(!send.Headers.ContainsKey("idempotency-key") && !send.Headers.ContainsKey("x-chert-tenant"));
             using var payload = JsonDocument.Parse(send.Body);
@@ -75,7 +75,7 @@ static partial class Program
                 && payload.RootElement.GetProperty("phone").GetString() == "+15550000002"
                 && payload.RootElement.GetProperty("body").GetString() == "fixture"
                 && payload.RootElement.GetProperty("idempotency_key").GetString() == "stable-operation");
-            Check(receipt.Success && receipt.Status == "queued" && receipt.MessageId == PublicId && receipt.ChatId == Chat);
+            Check(receipt.Success && receipt.Status == "queued" && receipt.MessageId == TextMessageId && receipt.ChatId == Chat);
             foreach (var reply in new[] { new Reply(200, TextReceipt(), echo), new Reply(202, TextReceipt("sent"), echo) })
             {
                 messaging.Handler = _ => Task.FromResult(reply);

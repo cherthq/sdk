@@ -44,8 +44,8 @@ test('omitted or null from uses Chert line policy through strict text', async ()
     const {calls, transport} = fixture(contract.send.chertTextQueued);
     const response = await post(transport, send, body);
     expect(response.status).toBe(200);
-    expect((await response.json() as Envelope).data).toEqual(contract.send.responseData);
-    expect(calls[0]!.url).toBe('https://chert.test/api/v1/text-operations/v1');
+    expect((await response.json() as Envelope).data).toEqual({message_id: contract.send.chertTextQueued.message_id});
+    expect(calls[0]!.url).toBe('https://chert.test/api/v1/send');
     expect(await calls[0]!.json()).toEqual({phone: '+14155551234', body: 'Hello, world!'});
   }
 });
@@ -101,7 +101,7 @@ test('malformed Chert receipts are unconfirmed, never accepted', async () => {
     [{...chat, message: {...chat.message, service: 'imessage'}}, contract.send.explicit, 202],
     [{...chat, chat: {...chat.chat, handles: [{address: '+19999999999'}]}}, contract.send.explicit, 202],
     [chat, contract.send.explicit, 200],
-    [{...text, status: 'sent'}, contract.send.implicit, 202], [{...text, extra: 1}, contract.send.implicit, 202], [text, contract.send.implicit, 200],
+    [{...text, status: 'sent'}, contract.send.implicit, 202], [{...text, message_id: 'bad id'}, contract.send.implicit, 202], [text, contract.send.implicit, 200],
   ] as const) {
     const {calls, transport} = fixture(body, status);
     const response = await post(transport, send, req);

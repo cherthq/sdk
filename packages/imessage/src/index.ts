@@ -11,7 +11,11 @@ export type ChertClientOptions = {
   fetch?: ChertFetch;
 };
 export type StrictTextRequest = { phone: string; body: string; idempotency_key?: string };
-export type QueuedTextReceipt = { success: true; message_id: string; chat_id: string; status: 'queued' };
+/**
+ * Server acceptance of one text send, not delivery proof. `success` is set by the SDK.
+ * `queued`: accepted for a line (HTTP 202); `sent`: dispatched to a line; `duplicate`: Chert already had this send.
+ */
+export type QueuedTextReceipt = { success: true; message_id: string; chat_id: string; status: 'queued' | 'sent' | 'duplicate' };
 export type SendTextOptions = { signal?: AbortSignal };
 export type StandardReaction = 'love' | 'like' | 'dislike' | 'laugh' | 'emphasize' | 'question';
 export type ReactionRequest = { reaction: StandardReaction; remove?: boolean };
@@ -72,13 +76,13 @@ export class ChertClient {
     if(!isRecord(options)||Object.keys(options).some(key=>key!=='signal')
       ||(options.signal!==undefined&&!(options.signal instanceof AbortSignal)))throw new TypeError('Invalid strict text options');
     options.signal?.throwIfAborted();
-    const result=await this.#performRequest<unknown>('/text-operations/v1',{method:'POST',body,signal:options.signal},true);
-    const data=result.data;
-    if(result.status!==202||!isRecord(data)||Object.keys(data).sort().join()!=='chat_id,message_id,status,success'
-      ||data.success!==true||data.status!=='queued'||typeof data.message_id!=='string'||!/^[a-f0-9]{32}(?![\s\S])/.test(data.message_id)
-      ||typeof data.chat_id!=='string'||!/^[A-Za-z0-9:_-]{1,160}(?![\s\S])/.test(data.chat_id))
+    // CRM's flat send envelope: 202 queued, or 200 sent/duplicate, with extra lead/line fields.
+    const result=await this.#performRequest<unknown>('/send',{method:'POST',body,signal:options.signal},true);
+    const data=result.data,id=/^[A-Za-z0-9:_-]{1,160}(?![\s\S])/;
+    if(!isRecord(data)||!(result.status===202?data.status==='queued':result.status===200&&(data.status==='sent'||data.status==='duplicate'))
+      ||typeof data.message_id!=='string'||!id.test(data.message_id)||typeof data.chat_id!=='string'||!id.test(data.chat_id))
       throw new ChertAPIError(502,'unconfirmed_text_outcome','Text outcome unconfirmed; reconcile before retrying',result.requestId,data);
-    return data as QueuedTextReceipt;
+    return {success:true,message_id:data.message_id,chat_id:data.chat_id,status:data.status as QueuedTextReceipt['status']};
   }
   /** One explicit standard reaction dispatch; no applied/current-state claim. */
   async sendReaction(chatId: string, messageId: string, body: ReactionRequest,

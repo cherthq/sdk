@@ -61,6 +61,16 @@ with a key, `chert-sdk facetime status` stops with `status_requires_cli_login`
 and `chert-sdk context` reports `requires_cli_login` for identity. Use
 `chert-sdk facetime lines`, or `chert whoami` from the agent CLI, instead.
 
+Which credential each surface takes:
+
+| Surface | Credential |
+| --- | --- |
+| iMessage send, events, webhooks | `CHERT_API_KEY` (plus `CHERT_TENANT` if your account has tenants) |
+| `chert-sdk facetime status`, `whoami()` | A CLI login (`ftu_…`, from `chert login`) in `CHERT_FACETIME_TOKEN` |
+| Lines, workers, calls, assistants | A project API key (`ftk_…`) or a CLI login, within its scopes |
+| Billing today | Only a signed-in browser session at https://facetime.trychert.com |
+| Terminal billing (draft, not served yet) | A CLI login with the `billing` scope, held by a current project owner; not a project API key |
+
 Keep these out of source control and logs. Defaults are
 `https://console.trychert.com` (iMessage) and `https://facetime.trychert.com`
 (FaceTime). Override them only for self-hosting or tests, with `CHERT_BASE_URL`
@@ -139,7 +149,8 @@ npx --package=@trychert/sdk chert-sdk imessage send --phone +15555550123 \
 ```
 
 `imessage send` requires `--confirm` and a stable idempotency key you keep, so a
-retry cannot send twice. A queued receipt means accepted, not delivered or read.
+retry cannot send twice. A `queued`, `sent` or `duplicate` receipt means Chert
+accepted the send, not that it was delivered or read.
 
 ## Lines: existing and shared
 
@@ -155,13 +166,20 @@ signed-in browser session: buy on the Billing page at https://facetime.trychert.
 where checkout opens a Stripe-hosted page. `billingStatus()` and `createCheckout`
 accept only that browser session's token, not a project API key or a CLI login,
 and the SDK does not allocate lines. Other `chert-sdk` commands only inspect
-access. Terminal billing (`chert-sdk billing status|buy|switch|card|cancel`,
-`purchase`, `changePlan`) is a draft in the source tree only: it is not in a
-published version and the backend does not serve it yet. It will charge a saved
-card and return a Stripe-hosted URL whenever card entry or authentication is
-needed, and will accept a CLI credential only with the `billing` scope and an
-owner/admin role. The `chert` agent CLI's `chert dev` claims your project's line
-while it runs and can end at a time slot you set.
+access.
+
+Terminal billing (`chert-sdk billing status|card|buy|cancel`, `purchase`) is a
+draft in the source tree only: it is not in a published version and the backend
+does not serve it yet. It will charge a saved card, refuse a purchase while the
+project already has a live subscription, and return a Stripe-hosted URL whenever
+card entry or authentication is needed; the plan is granted only after the
+payment webhook arrives. It will accept a CLI login only with the `billing` scope
+held by a current project owner. **Switching plans is not available** anywhere:
+`changePlan` fails with `billing_plan_change_unavailable` and the CLI has no
+`switch` command.
+
+The `chert` agent CLI's `chert dev` claims your project's line while it runs and
+can end at a time slot you set.
 
 ## Voice and video
 

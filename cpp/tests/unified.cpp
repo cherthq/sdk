@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
             im.base_url = im_origin + suffix;
             ft.base_url = ft_origin + suffix;
             const trychert::Client overridden({im, ft});
-            check(overridden.imessage.send_text("+15550000002", "separate transport", "text-key").status == "queued");
+            check(overridden.imessage.send_text("+15550000002", "separate transport", "text-key").status == "sent");
             check(overridden.facetime.list_lines({1, 9}).data.items[0].supports_video);
         }
         const trychert::Client client({{im_origin, "im-secret", "im-tenant"},
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
         const auto scenario = [&](const std::string& name) {
             return trychert::FaceTimeClient({ft_origin + "/case/" + name, "ft-secret", project});
         };
-        check(client.imessage.send_text("+15550000002", "separate transport", "text-key").status == "queued");
+        check(client.imessage.send_text("+15550000002", "separate transport", "text-key").status == "sent");
         const auto calls = client.facetime.list_calls({2, 7});
         check(calls.status == 200 && calls.request_id == "body-request-id");
         check(calls.data.total == 19 && calls.data.offset == 7 && calls.data.limit == 2 && calls.data.items.size() == 1);

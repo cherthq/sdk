@@ -19,12 +19,13 @@ struct UpdateWebhookSubscription {
     std::optional<bool> is_active;
 };
 struct MessagingStreamFrame { std::string event; Json data; };
-// Queue/dispatch receipts are not physical send, delivery or application proof.
+// Acceptance receipt only. status is "queued", "sent" (CRM dispatched it to a line) or
+// "duplicate" (CRM already had this send); none is delivery proof. success is the SDK's acceptance flag.
 struct QueuedTextReceipt {
     bool success;
     std::string message_id;
     std::string chat_id;
-    std::string status;
+    std::string status; // "queued" | "sent" | "duplicate"
 };
 struct ReactionReceipt {
     std::string operation_id;

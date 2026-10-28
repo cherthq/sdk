@@ -437,6 +437,13 @@ class UnifiedTests(unittest.TestCase):
             expected = 'request_failed' if code == 'billing_secret_reason' else code
             self.assertEqual((caught.exception.status, caught.exception.code), (status, expected))
             self.assertNotIn(PRIVATE, str(caught.exception))
+        for status in (409, 400):
+            self.server.status = status
+            self.server.payload = {'error': {'code': 'billing_plan_change_unavailable', 'message': PRIVATE}}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.change_plan(plan='dedicated', idempotency_key='switch-key-2')
+            self.assertEqual((caught.exception.status, caught.exception.code), (status, 'billing_plan_change_unavailable'))
+            self.assertNotIn(PRIVATE, str(caught.exception))
 
     def test_invalid_input_rejected_before_network(self):
         for base in ('', 'https://user:secret@example.test', 'https://example.test/path', 'https://example.test?', 'https://example.test#', 'https://example.test:99999', 'http://example.test', 'https://example.test\n', None):

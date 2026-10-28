@@ -65,7 +65,8 @@ for (const request of requests) assert.equal(request.redirect, 'error');
 const unifiedToken = 'chu_' + 'a'.repeat(43);
 const unifiedProject = '11111111-1111-4111-8111-111111111111';
 const unifiedRequests = [];
-const receipt = {success:true,message_id:'a'.repeat(32),chat_id:'chat_fixture',status:'queued'};
+const wire = {status:'sent',message_id:'550e8400-e29b-41d4-a716-446655440000',chat_id:'chat_fixture',lead_id:'chat_fixture',lead_created:false,convo_id:'convo-1',phone_line_id:'line-1'};
+const receipt = {success:true,message_id:wire.message_id,chat_id:'chat_fixture',status:'sent'};
 const unified = await ChertSDK.connect({accessToken:unifiedToken,projectId:unifiedProject,fetch:async(url,init)=>{
   const headers = new Headers(init.headers);
   unifiedRequests.push(String(url));
@@ -81,10 +82,10 @@ const unified = await ChertSDK.connect({accessToken:unifiedToken,projectId:unifi
   assert.equal(headers.get('X-Chert-Contract'),'chert-unified-v1');
   assert.equal(headers.has('X-Chert-Tenant'),false);
   if (String(url).includes('console.')) {
-    assert.equal(String(url),'https://console.trychert.com/api/v1/text-operations/v1');
+    assert.equal(String(url),'https://console.trychert.com/api/v1/send');
     assert.equal(init.method,'POST');
     assert.deepEqual(JSON.parse(init.body),{phone:'+15555550123',body:'Hello',idempotency_key:'consumer'});
-    return Response.json(receipt,{status:202,headers:{'X-Chert-Contract':'chert-unified-v1'}});
+    return Response.json(wire,{status:200,headers:{'X-Chert-Contract':'chert-unified-v1'}});
   }
   assert.equal(headers.get('X-Chert-Project-Id'),unifiedProject);
   return Response.json({data:{id:'call'}},{status:201,headers:{'X-Chert-Contract':'chert-unified-v1'}});

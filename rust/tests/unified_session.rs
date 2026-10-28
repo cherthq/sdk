@@ -309,14 +309,20 @@ async fn discovery_redirects_and_each_missing_scope_fail_closed() {
 
 #[tokio::test]
 async fn unified_send_keeps_strict_route_body_receipt_and_allows_extra_scope() {
-    for (status, valid) in [("202 Accepted", true), ("200 OK", false)] {
+    for (status, state, valid) in [
+        ("202 Accepted", "queued", true),
+        ("200 OK", "sent", true),
+        ("200 OK", "queued", false),
+    ] {
         let (listener, origin) = listen();
         let mut capabilities = descriptor(&origin, &origin);
         capabilities["data"]["scopes"]
             .as_array_mut()
             .unwrap()
             .push(json!("future:read"));
-        let receipt = json!({"success":true,"message_id":"a".repeat(32),"chat_id":"chat-a","status":"queued"});
+        let receipt = json!({"status":state,"message_id":"550e8400-e29b-41d4-a716-446655440000",
+            "chat_id":"chat-a","lead_id":"lead-a","lead_created":false,
+            "convo_id":"convo-a","phone_line_id":"line-a"});
         let (rx, h) = serve(
             listener,
             vec![
@@ -339,14 +345,14 @@ async fn unified_send_keeps_strict_route_body_receipt_and_allows_extra_scope() {
             .await;
         if valid {
             let result = result.unwrap();
-            assert_eq!(result.status, "queued");
-            assert_eq!(result.message_id, "a".repeat(32));
+            assert_eq!(result.status, state);
+            assert_eq!(result.message_id, "550e8400-e29b-41d4-a716-446655440000");
         } else {
             assert_eq!(result.unwrap_err().code, "unconfirmed_text_outcome");
         }
         discovery(rx.recv().unwrap());
         let wire = rx.recv().unwrap();
-        assert!(wire.starts_with("POST /api/v1/text-operations/v1 HTTP/1.1"));
+        assert!(wire.starts_with("POST /api/v1/send HTTP/1.1"));
         let body: Value = serde_json::from_str(wire.split_once("\r\n\r\n").unwrap().1).unwrap();
         assert_eq!(
             body,

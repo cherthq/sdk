@@ -18,8 +18,8 @@ await client.messages.send({
 
 Explicit Chert connection options are mandatory. Vendor credentials are unused:
 the original client receives a stub token and virtual `.invalid` base URL;
-only Chert receives a request. Text sends use Chert-relative `/text-operations/v1`
-(default `POST /api/v1/text-operations/v1`) with `{phone,body,idempotency_key?}`.
+only Chert receives a request. Text sends use `ChertClient.sendText`, which calls Chert-relative `/send`
+(default `POST /api/v1/send`) with `{phone,body,idempotency_key?}`.
 Use the public Chert service, not a device-local endpoint.
 Only canonical E.164 recipients and nonempty lossless UTF-8 plaintext up to
 16 KiB are supported. The original SDK's `Idempotency-Key` header maps to the
@@ -27,9 +27,9 @@ Chert body key (nonempty, at most 200 UTF-8 bytes); upstream HTTP header
 normalization still applies. SDK retries are disabled; no legacy `/send` fallback
 occurs, including when an older cloud returns 404.
 
-Only a strict HTTP 202 receipt with actual compact public message ID, owned chat
-ID, `success:true` and `status:queued` is accepted. Missing, contradictory, extra
-or legacy response fields produce an unknown-outcome error after one attempt;
+Only a confirmed Chert receipt is accepted: HTTP 202 `status:queued`, or HTTP 200
+`status:sent`/`duplicate`, with a safe `message_id` and `chat_id`; the send response
+carries that `message_id` and `status`. Anything else produces an unknown-outcome error after one attempt;
 reconcile the recorded ID before any resend. No send or delivery observation,
 service, or occurrence timestamp is inferred from acceptance. Error data may
 retain an explicit durable public ID for reconciliation; diagnostic strings are

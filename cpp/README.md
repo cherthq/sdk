@@ -76,9 +76,8 @@ There is no fallback, retry, refresh, or automatic login. Existing transport
 TLS, proxy, body-size, timeout, and SSE cancellation policies are retained.
 
 The `imessage:messages:send` scope authorizes the existing strict
-`POST /api/v1/text-operations/v1` route. `send_text` retains its exact request
-body and HTTP 202 queued receipt contract; no route remapping is needed.
-Queued remains acceptance, not recipient delivery. Logout remains a POST
+`POST /api/v1/send` route used by `send_text`. Receipts are acceptance,
+not recipient delivery. Logout remains a POST
 operation; this connect-only factory does not implement login, refresh or logout.
 These source-preview contracts do not establish production availability.
 
@@ -301,24 +300,27 @@ resource coverage.
 ```cpp
 // Explicit effectful call: use only an authorized recipient.
 auto queued = client.send_text("+15550000002", "Exact plaintext", "unique-operation-key");
-// QueuedTextReceipt: success, message_id, chat_id, status == "queued".
+// QueuedTextReceipt: success, message_id, chat_id, status: "queued" | "sent" | "duplicate".
 ```
 
-`send_text(phone, text, optional_key)` makes one POST to `/text-operations/v1`
+`send_text(phone, text, optional_key)` makes one POST to `/send`
 through the same transport. Canonical E.164 and nonblank, lossless UTF-8 text
 of at most 16 KiB without NUL are required. An optional key must be nonempty,
 lossless UTF-8, at most 200 bytes, and contain no NUL. Payload whitespace and
 keys are preserved, not trimmed or normalized. Blankness follows
 ECMAScript whitespace rules; UTF-8 validity uses the existing JSON
-library. The method requires actual HTTP 202 with exactly four receipt fields,
-strict Boolean `success=true`, `status="queued"`, a lowercase 32-hex public ID,
-and a safe chat ID of 1–160 ASCII letters/digits/colon/underscore/hyphen.
+library. The method requires a JSON object (extra fields ignored) with HTTP
+202 and `status="queued"`, or HTTP 200 and `status="sent"` or `"duplicate"`,
+plus string `message_id` and `chat_id` of 1–160 ASCII
+letters/digits/colon/underscore/hyphen. `success=true` is set by the SDK.
+`sent` means the CRM dispatched it to a line and `duplicate` means the CRM
+already had this send; none is delivery proof.
 
 Unexpected successful status or receipt shape raises sanitized
 `ApiError(502, "unconfirmed_text_outcome", ...)`; raw response data is explicit
 only in `error.data`. Other HTTP/transport errors keep existing behavior. No
 identifiers, sent/delivered/read state or timestamps are fabricated.
-Queued is an operation identity, not delivery evidence. Do not
+A receipt is an operation identity, not delivery evidence. Do not
 resend or change the operation key after an uncertain outcome without the
 server's reconciliation policy. The client never retries itself.
 
@@ -385,8 +387,9 @@ ctest --test-dir /tmp/chert-cpp-sdk --output-on-failure
 
 The loopback fixture exercises real HTTP, authentication/header preservation,
 JSON/error handling, response limits, timeout, redirect refusal and single POST
-attempts. A separate strict-text gate checks exact 202 receipts, invalid UTF-8,
-byte/key boundaries, malformed/UUID receipts and one-attempt fault paths.
+attempts. A separate strict-text gate checks the `/send` target, 202 queued and 200
+sent/duplicate receipts, invalid UTF-8, byte/key boundaries, malformed or
+status-mismatched receipts and one-attempt fault paths.
 The reaction gate adds 30 exact HTTP attempts covering all six names, removal,
 encoded IDs, canonical chat case, header keys and malformed/unknown outcomes;
 invalid inputs make no HTTP request.

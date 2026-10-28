@@ -5,7 +5,7 @@ test('CLI preserves keyed sends and rejects an explicit empty key before HTTP', 
   const requests: unknown[] = [];
   const server = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
     requests.push(await request.json());
-    return Response.json({ success: true, message_id: 'a'.repeat(32), chat_id: 'test_chat', status: 'queued' }, { status: 202 });
+    return Response.json({ status: 'queued', message_id: '550e8400-e29b-41d4-a716-446655440000', chat_id: 'test_chat', lead_id: 'test_chat', lead_created: false, convo_id: 'convo-1', phone_line_id: 'line-1' }, { status: 202 });
   } });
   try {
     for (const [key, exit] of [['', 1], ['stable-key', 0]] as const) {
@@ -27,7 +27,7 @@ test('CLI requires caller confirmation and an idempotency key before sending', a
   let requests = 0;
   const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch() {
     requests++;
-    return Response.json({ success: true, message_id: 'a'.repeat(32), chat_id: 'test_chat', status: 'queued' }, { status: 202 });
+    return Response.json({ status: 'queued', message_id: '550e8400-e29b-41d4-a716-446655440000', chat_id: 'test_chat', lead_id: 'test_chat', lead_created: false, convo_id: 'convo-1', phone_line_id: 'line-1' }, { status: 202 });
   } });
   try {
     for (const [flags, code] of [
@@ -140,18 +140,19 @@ test('billing CLI gates mutations before HTTP and passes Stripe-hosted next step
       [['buy', '--idempotency-key', 'buy-key-01', '--confirm'], 'invalid_request'],            // plan required
       [['buy', '--plan', 'gold', '--idempotency-key', 'buy-key-01', '--confirm'], 'invalid_request'],
       [['cancel', '--plan', 'shared', '--idempotency-key', 'cancel-key-1', '--confirm'], 'invalid_request'],
-      [['switch', '--plan', 'dedicated', '--confirm'], 'idempotency_key_required'],
+      [['buy', '--plan', 'dedicated', '--confirm'], 'idempotency_key_required'],
+      [['switch', '--plan', 'shared', '--idempotency-key', 'switch-key-1', '--confirm'], 'unknown_command'], // plan switching is unavailable
       [['buy', '--plan', 'shared', '--idempotency-key', 'buy-key-01'], 'billing_confirmation_required'],
     ] as const) expect((await run(...args)).json.code).toBe(code);
     expect(seen).toEqual([]);
     const card = await run('buy', '--plan', 'dedicated', '--idempotency-key', 'buy-key-01', '--confirm');
     expect([card.code, card.json.data]).toEqual([0, { status: 'requires_payment_method', url: 'https://checkout.stripe.com/c/pay/cs_x' }]);
     reply = { status: 'requires_action', url: 'https://evil.example/phish' };
-    expect((await run('switch', '--plan', 'shared', '--idempotency-key', 'switch-key-1', '--confirm')).json.code).toBe('invalid_response');
+    expect((await run('buy', '--plan', 'shared', '--idempotency-key', 'buy-key-02', '--confirm')).json.code).toBe('invalid_response');
     reply = { entitlement: null, needs_reconciliation: false, sales_enabled: true, shared_available: true, dedicated_available: false, payment_method: { brand: 'visa', last4: '4242' } };
     expect((await run('status')).json.data.payment_method).toEqual({ brand: 'visa', last4: '4242' });
     expect(seen).toEqual([{ method: 'POST', body: { action: 'purchase', plan: 'dedicated' }, key: 'buy-key-01' },
-      { method: 'POST', body: { action: 'change_plan', plan: 'shared' }, key: 'switch-key-1' }, { method: 'GET', body: undefined, key: null }]);
+      { method: 'POST', body: { action: 'purchase', plan: 'shared' }, key: 'buy-key-02' }, { method: 'GET', body: undefined, key: null }]);
   } finally { server.stop(true); }
 }, 30_000);
 
@@ -160,7 +161,7 @@ test('setup walkthrough: iMessage needs no project ID, and project API keys get 
   const server = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
     const path = new URL(request.url).pathname; paths.push(path);
     if (path === '/api/v1/lines') return Response.json({ data: { items: [], total: 0, limit: 50, offset: 0 } });
-    if (path.startsWith('/api/v1/text-operations')) return Response.json({ success: true, message_id: 'a'.repeat(32), chat_id: 'test_chat', status: 'queued' }, { status: 202 });
+    if (path.startsWith('/api/v1/send')) return Response.json({ status: 'queued', message_id: '550e8400-e29b-41d4-a716-446655440000', chat_id: 'test_chat', lead_id: 'test_chat', lead_created: false, convo_id: 'convo-1', phone_line_id: 'line-1' }, { status: 202 });
     return Response.json({ error: { code: 'unauthorized' } }, { status: 401 });
   } });
   const cli = resolve(import.meta.dir, '../../dist/unified/cli.js');

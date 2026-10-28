@@ -189,9 +189,12 @@ class WorkersTransportTest(unittest.TestCase):
     def test_send_text_posts_exact_json_bytes(self):
         with self.pyodide():
             client = ChertClient(api_key=KEY)
-        receipt = {"success": True, "message_id": "a" * 32, "chat_id": "chat", "status": "queued"}
-        self.js.respond("/api/v1/text-operations/v1", 202, receipt)
-        self.assertEqual(client.send_text("+15550000002", "hi ✓", idempotency_key="k"), receipt)
+        crm = {"status": "sent", "message_id": "550e8400-e29b-41d4-a716-446655440000",
+               "chat_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7", "lead_id": "16fd2706-8baf-433b-82eb-8c7fada847da",
+               "lead_created": False, "convo_id": "convo-1", "phone_line_id": "line-1"}
+        self.js.respond("/api/v1/send", 200, crm)
+        self.assertEqual(client.send_text("+15550000002", "hi ✓", idempotency_key="k"),
+                         {"success": True, "message_id": crm["message_id"], "chat_id": crm["chat_id"], "status": "sent"})
         init = self.js.calls[0][1]
         self.assertEqual(init["method"], "POST")
         self.assertEqual(json.loads(init["body"]), {"phone": "+15550000002", "body": "hi ✓", "idempotency_key": "k"})

@@ -62,13 +62,13 @@ test('retains durable media reconciliation identity without retrying or logging 
 test('status-aware requests retain the actual HTTP status without a second transport', async () => {
   let calls=0,status=202;
   const client=new ChertClient({...options,fetch:async()=>{calls++;return Response.json({status:'queued'},{status});}});
-  expect(await client.requestWithResponse('/text-operations/v1',{body:{}})).toEqual({status:202,data:{status:'queued'}});
-  status=200;expect(await client.requestWithResponse('/text-operations/v1',{body:{}})).toEqual({status:200,data:{status:'queued'}});
-  expect(await client.request<{status:string}>('/text-operations/v1',{body:{}})).toEqual({status:'queued'});
+  expect(await client.requestWithResponse('/send',{body:{}})).toEqual({status:202,data:{status:'queued'}});
+  status=200;expect(await client.requestWithResponse('/send',{body:{}})).toEqual({status:200,data:{status:'queued'}});
+  expect(await client.request<{status:string}>('/send',{body:{}})).toEqual({status:'queued'});
   expect(calls).toBe(3);
 });
 test('status-aware empty and error responses use the same no-retry boundary',async()=>{
  let calls=0;const client=new ChertClient({...options,fetch:async()=>{calls++;return calls===1?new Response(null,{status:204}):Response.json({error:{code:4103,message:'private-content'}},{status:502});}});
  expect(await client.requestWithResponse('/empty')).toEqual({status:204,data:undefined});
- await expect(client.requestWithResponse('/text-operations/v1',{body:{}})).rejects.toMatchObject({status:502,code:'4103'});expect(calls).toBe(2);
+ await expect(client.requestWithResponse('/send',{body:{}})).rejects.toMatchObject({status:502,code:'4103'});expect(calls).toBe(2);
 });
