@@ -279,8 +279,18 @@ same `Authorization: Bearer <Token>` on the POST and on PATCH/DELETE to the retu
 `Location`. `ToString()` redacts the grant; never log `Token`. A malformed grant throws
 `ChertApiException` with `Code == "invalid_response"`; server codes (`unauthorized`,
 `call_not_found`, `media_capability_unsupported`, `media_session_conflict`,
-`call_not_active`, `call_ended`, `media_session_expired`, `media_transport_unavailable`)
-surface without server text. Requests are never retried.
+`caller_screen_not_shared`, `call_not_active`, `call_ended`, `media_session_expired`,
+`media_transport_unavailable`) surface without server text. Requests are never retried.
+
+Screen sharing: pass `content: MediaSessionContent.Screen` with `Publish` to stream an
+agent's screen (the grant echoes `Content` and caps `Limits.MaxFps` at 15), or
+`MediaSessionContent.CallerScreen` with `Subscribe` to receive the caller's shared
+screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations throw `ArgumentException` before any request. Capability sections expose
+`Contents` (`Camera`, `Screen`; unknown entries ignored, default `[Camera]`).
+`FaceTimeCall.ScreenControl` is read-only consent state (`none`/`requested`/`granted`);
+screen events such as `agent_screen_started` and `caller_screen_share_started` are
+payload-free. There are no control operations.
 
 `VideoFrame.Copy(VideoFrameInit)` validates a raw I420/NV12/RGBA/BGRA frame (even sizes
 from 16x16 to 1920x1080, per-plane strides, 8 MiB total) and copies only the required

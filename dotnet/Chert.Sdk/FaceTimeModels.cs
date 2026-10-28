@@ -86,6 +86,8 @@ public sealed class FaceTimeCall : FaceTimeModel
     public string? CreatedAt { get; init; }
     public string? EndedAt { get; init; }
     public bool? HasTranscript { get; init; }
+    /// <summary>Read-only screen-control consent state (<c>none</c>, <c>requested</c> or <c>granted</c>). No control operations exist.</summary>
+    public string? ScreenControl { get; init; }
     public CallDetailEvent[]? FacetimeCallEvents { get; init; }
     /// <summary>Raw; parse with <see cref="TryChert.MediaCapabilities.Parse"/>. Never infer support from video flags.</summary>
     public JsonElement? MediaCapabilities { get; init; }

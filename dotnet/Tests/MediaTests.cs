@@ -114,6 +114,65 @@ static partial class Program
                 Check(error.Status == 418 && error.Code == "request_failed" && error.ResponseData is null, "unknown code " + body);
             }
         });
+        await Run("screen media sessions: content is validated, echoed and capped at 15 fps", async () =>
+        {
+            var screen = PatchGrant("{\"content\":\"screen\",\"limits\":{\"max_width\":1920,\"max_height\":1080,\"max_fps\":15,\"max_frame_bytes\":8388608}}");
+            var callerScreen = PatchGrant("{\"direction\":\"subscribe\",\"content\":\"caller_screen\",\"limits\":{\"max_width\":1280,\"max_height\":720,\"max_fps\":30,\"max_frame_bytes\":8388608}}");
+            ReplyWith(Envelope(screen));
+            var grant = await client.CreateMediaSessionAsync(Call, MediaDirection.Publish, content: MediaSessionContent.Screen);
+            Wire(server, "POST", "/calls/" + Call + "/media-sessions", body: "{\"direction\":\"publish\",\"content\":\"screen\"}");
+            Check(grant.Content == MediaSessionContent.Screen && grant.Limits.MaxFps == 15);
+            ReplyWith(Envelope(callerScreen));
+            grant = await client.CreateMediaSessionAsync(Call, MediaDirection.Subscribe, content: MediaSessionContent.CallerScreen);
+            Wire(server, "POST", "/calls/" + Call + "/media-sessions", body: "{\"direction\":\"subscribe\",\"content\":\"caller_screen\"}");
+            Check(grant.Content == MediaSessionContent.CallerScreen);
+
+            // Wrong combinations fail locally with no request.
+            var before = server.Requests.Count;
+            foreach (var (direction, content) in new[] { (MediaDirection.Publish, MediaSessionContent.CallerScreen), (MediaDirection.Subscribe, MediaSessionContent.Screen),
+                (MediaDirection.Subscribe, MediaSessionContent.Camera), (MediaDirection.Publish, (MediaSessionContent)9) })
+                await Throws<ArgumentException>(() => client.CreateMediaSessionAsync(Call, direction, content: content));
+            Check(server.Requests.Count == before, "invalid content reached the network");
+
+            var noEcho = JsonNode.Parse(screen)!.AsObject();
+            noEcho.Remove("content");
+            foreach (var (direction, content, body) in new (MediaDirection, MediaSessionContent?, string)[] {
+                (MediaDirection.Publish, MediaSessionContent.Screen, PatchGrant("{\"content\":\"screen\"}")),
+                (MediaDirection.Publish, MediaSessionContent.Screen, noEcho.ToJsonString()),
+                (MediaDirection.Publish, MediaSessionContent.Screen, PatchGrant("{\"content\":\"camera\",\"limits\":{\"max_width\":1920,\"max_height\":1080,\"max_fps\":15,\"max_frame_bytes\":8388608}}")),
+                (MediaDirection.Publish, null, screen), (MediaDirection.Subscribe, null, callerScreen),
+                (MediaDirection.Subscribe, null, PatchGrant("{\"direction\":\"subscribe\",\"content\":\"screen\",\"limits\":{\"max_width\":1280,\"max_height\":720,\"max_fps\":15,\"max_frame_bytes\":8388608}}")) })
+            {
+                ReplyWith(Envelope(body));
+                var error = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, direction, content: content));
+                Check(error.Code == "invalid_response", "accepted " + body);
+            }
+            // The backend echoes the resolved camera content on default requests in both directions.
+            ReplyWith(Envelope(PatchGrant("{\"content\":\"camera\"}")));
+            Check((await client.CreateMediaSessionAsync(Call, MediaDirection.Publish)).Content == MediaSessionContent.Camera);
+            ReplyWith(Envelope(PatchGrant("{\"direction\":\"subscribe\",\"content\":\"camera\",\"limits\":{\"max_width\":1280,\"max_height\":720,\"max_fps\":30,\"max_frame_bytes\":8388608}}")));
+            Check((await client.CreateMediaSessionAsync(Call, MediaDirection.Subscribe)).Content == MediaSessionContent.Camera);
+            ReplyWith(Envelope(Grant));
+            Check((await client.CreateMediaSessionAsync(Call, MediaDirection.Publish)).Content is null);
+
+            ReplyWith("{\"error\":{\"code\":\"caller_screen_not_shared\",\"message\":\"internal host 10.0.0.5\"},\"request_id\":\"r\"}", 409);
+            var notShared = await Throws<ChertApiException>(() => client.CreateMediaSessionAsync(Call, MediaDirection.Subscribe, content: MediaSessionContent.CallerScreen));
+            Check(notShared.Status == 409 && notShared.Code == "caller_screen_not_shared" && !notShared.ToString().Contains("10.0.0.5"));
+        });
+        await Run("media capability contents ignore unknown entries and default to camera", () =>
+        {
+            MediaCapabilities WithContents(string cv, string iv) => Caps("{\"version\":1,\"custom_video\":{\"supported\":true,\"transports\":[\"whip\"],\"codecs\":[\"h264\"],\"max_width\":1920,\"max_height\":1080,\"max_fps\":30" + cv
+                + "},\"inbound_caller_video\":{\"supported\":true,\"transports\":[\"whep\"],\"max_width\":1280,\"max_height\":720,\"max_fps\":30" + iv + "}}");
+            var parsed = WithContents(",\"contents\":[\"screen\",\"window\",\"camera\",\"screen\"]", ",\"contents\":[\"screen\"]");
+            Check(parsed.CustomVideo!.Contents.SequenceEqual(new[] { MediaContent.Screen, MediaContent.Camera }));
+            Check(parsed.InboundCallerVideo!.Contents.SequenceEqual(new[] { MediaContent.Screen }));
+            foreach (var contents in new[] { "", ",\"contents\":[]", ",\"contents\":[\"window\"]", ",\"contents\":\"screen\"", ",\"contents\":null", ",\"contents\":[7]" })
+            {
+                parsed = WithContents(contents, contents);
+                Check(parsed.CustomVideo!.Contents.SequenceEqual(new[] { MediaContent.Camera }) && parsed.InboundCallerVideo!.Contents.SequenceEqual(new[] { MediaContent.Camera }), contents);
+            }
+            return Task.CompletedTask;
+        });
         await Run("media capabilities parse strictly and per section", () =>
         {
             var full = Caps("{\"version\":1,\"custom_video\":{\"supported\":true,\"transports\":[\"whip\",\"livekit\",\"whip\"],\"codecs\":[\"vp8\",\"h264\",\"vp8\"],\"max_width\":1920,\"max_height\":1080.0,\"max_fps\":30},"

@@ -61,10 +61,11 @@ public sealed class FaceTimeClient : IDisposable
 
     /// <summary>
     /// Mints one WHIP (publish) or experimental WHEP (subscribe) session for an active call. v1 is video-only.
-    /// Codecs, when given, must be a non-empty ordered unique list. Single attempt; never retried.
+    /// Codecs, when given, must be a non-empty ordered unique list. Content, when given, must be Camera or Screen
+    /// (capped at 15 fps) for publish, or CallerScreen for subscribe (only while the caller shares). Single attempt; never retried.
     /// </summary>
     public async Task<MediaSessionGrant> CreateMediaSessionAsync(string callId, MediaDirection direction,
-        IReadOnlyList<VideoCodec>? codecs = null, CancellationToken cancellationToken = default)
+        IReadOnlyList<VideoCodec>? codecs = null, MediaSessionContent? content = null, CancellationToken cancellationToken = default)
     {
         var path = "/calls/" + Id(callId) + "/media-sessions";
         var body = new Dictionary<string, object>
@@ -80,6 +81,12 @@ public sealed class FaceTimeClient : IDisposable
             if (codecs.Count == 0 || codecs.Any(c => !Enum.IsDefined(c)) || codecs.Distinct().Count() != codecs.Count)
                 throw new ArgumentException("codecs must be a non-empty ordered subset of h264, vp8");
             body["codecs"] = codecs.Select(c => c == VideoCodec.H264 ? "h264" : "vp8").ToArray();
+        }
+        if (content is { } requested)
+        {
+            if (direction == MediaDirection.Publish ? requested is not (MediaSessionContent.Camera or MediaSessionContent.Screen) : requested != MediaSessionContent.CallerScreen)
+                throw new ArgumentException("content must be camera or screen for publish, or caller_screen for subscribe");
+            body["content"] = MediaSessionGrant.Wire(requested);
         }
         ChannelTransport.JsonResponse response;
         try
@@ -100,7 +107,7 @@ public sealed class FaceTimeClient : IDisposable
             if (response.Status != 201 || response.Value is not { ValueKind: JsonValueKind.Object } envelope || !envelope.TryGetProperty("data", out var data))
                 throw new JsonException();
             UniqueProperties(envelope);
-            return MediaSessionGrant.Parse(data, direction, codecs);
+            return MediaSessionGrant.Parse(data, direction, codecs, content);
         }
         // Response data is withheld: an invalid grant may still carry a bearer token.
         catch (JsonException) { throw new ChertApiException(502, "invalid_response", response.RequestId); }
@@ -182,7 +189,7 @@ public sealed class FaceTimeClient : IDisposable
     {
         "unauthorized", "forbidden", "cli_scope_denied", "billing_owner_required", "billing_unavailable", "project_required",
         "invalid_request", "cli_login_expired", "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited",
-        "cli_login_busy", "not_found", "conflict", "media_capability_unsupported", "media_session_conflict", "call_not_active",
+        "cli_login_busy", "not_found", "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "call_not_active",
         "call_ended", "call_not_found", "media_session_expired", "media_transport_unavailable"
     };
     private enum Auth { Public, User, Project }
