@@ -244,8 +244,18 @@ if caps.custom_video is not None:
 request; a grant that violates the contract raises `ChertControlPlaneError(201,
 'invalid_response')`. Server errors surface allowlisted codes such as `unauthorized`,
 `media_session_expired`, `call_not_found`, `media_capability_unsupported`,
-`media_session_conflict`, `call_not_active`, `call_ended` and
+`media_session_conflict`, `caller_screen_not_shared`, `call_not_active`, `call_ended` and
 `media_transport_unavailable`, never server message text.
+
+Screen sharing: pass `content="screen"` with `direction="publish"` to stream an agent's
+screen (the grant echoes `content` and caps `limits.max_fps` at 15), or
+`content="caller_screen"` with `direction="subscribe"` to receive the caller's shared
+screen (only while they share; otherwise `caller_screen_not_shared`). Other
+combinations raise `ValueError` before any request. Capability sections list
+publishable/receivable `contents` (`camera`, `screen`; unknown entries ignored,
+default `("camera",)`). Calls may report read-only `screen_control`
+(`none`/`requested`/`granted`) and payload-free screen events; there are no control
+operations.
 
 Treat `endpoint` as opaque: do not build paths from it. Pass `endpoint` and `token`
 to a standard WHIP (RFC 9725) client to publish, or a WHEP

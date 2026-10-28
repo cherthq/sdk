@@ -10,6 +10,9 @@ from urllib.parse import urlsplit
 
 VideoCodec = Literal['h264', 'vp8']
 MediaDirection = Literal['publish', 'subscribe']
+MediaContent = Literal['camera', 'screen']
+# Publish: 'camera' (default) or 'screen' (capped at 15 fps). Subscribe: omit, or 'caller_screen' while the caller shares.
+MediaSessionContent = Literal['camera', 'screen', 'caller_screen']
 PixelFormat = Literal['i420', 'nv12', 'rgba', 'bgra']
 Rotation = Literal[0, 90, 180, 270]
 ColorSpace = Literal['bt709-limited', 'bt601-limited', 'srgb-full']
@@ -26,6 +29,8 @@ class CustomVideoCapability:
     max_width: int
     max_height: int
     max_fps: int
+    # What may be published; 'screen' means an agent can stream a screen (capped at 15 fps).
+    contents: tuple[MediaContent, ...] = ('camera',)
 
 
 @dataclass(frozen=True)
@@ -35,6 +40,8 @@ class InboundCallerVideoCapability:
     max_width: int
     max_height: int
     max_fps: int
+    # 'screen' means the caller's shared screen is available as a 'caller_screen' subscription.
+    contents: tuple[MediaContent, ...] = ('camera',)
 
 
 @dataclass(frozen=True)
@@ -60,6 +67,13 @@ def _wire_list(value: Any, allowed: tuple[str, ...]) -> tuple[str, ...] | None:
     return tuple(dict.fromkeys(value))
 
 
+def _contents(value: Any) -> tuple[MediaContent, ...]:
+    """Unknown entries are ignored for forward compatibility; absent or empty means camera only."""
+    known = tuple(dict.fromkeys(x for x in value if isinstance(x, str) and x in ('camera', 'screen'))) \
+        if isinstance(value, list) else ()
+    return known or ('camera',)  # type: ignore[return-value]
+
+
 def _is_one(value: Any) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and value == 1
 
@@ -77,14 +91,16 @@ def parse_media_capabilities(value: Any) -> MediaCapabilities:
         width, height, fps = (_wire_int(cv.get('max_width'), 1920), _wire_int(cv.get('max_height'), 1080),
                               _wire_int(cv.get('max_fps'), 30))
         if transports and codecs and width and height and fps:
-            custom = CustomVideoCapability(True, transports, codecs, width, height, fps)  # type: ignore[arg-type]
+            custom = CustomVideoCapability(True, transports, codecs, width, height, fps,  # type: ignore[arg-type]
+                                           _contents(cv.get('contents')))  # type: ignore[arg-type]
     iv = value.get('inbound_caller_video')
     if isinstance(iv, dict) and iv.get('supported') is True:
         transports = _wire_list(iv.get('transports'), ('whep', 'livekit'))
         width, height, fps = (_wire_int(iv.get('max_width'), 1280), _wire_int(iv.get('max_height'), 720),
                               _wire_int(iv.get('max_fps'), 30))
         if transports and width and height and fps:
-            inbound = InboundCallerVideoCapability(True, transports, width, height, fps)  # type: ignore[arg-type]
+            inbound = InboundCallerVideoCapability(True, transports, width, height, fps,  # type: ignore[arg-type]
+                                                   _contents(iv.get('contents')))  # type: ignore[arg-type]
     return MediaCapabilities(1, custom, inbound)
 
 
@@ -116,8 +132,11 @@ class MediaSessionGrant:
     ice_servers: tuple[IceServer, ...]
     codecs: tuple[VideoCodec, ...]
     limits: MediaSessionLimits
+    # Echo of the requested content; ``None`` on grants for the default content.
+    content: MediaSessionContent | None = None
 
 
+_ABSENT = object()
 _UUID = re.compile(r'[0-9a-f-]{36}', re.IGNORECASE)
 _RFC3339 = re.compile(r'(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?([Zz]|[+-]\d{2}:\d{2})', re.ASCII)
 
@@ -179,10 +198,18 @@ def _ice_server(value: Any) -> IceServer | None:
 
 
 def _parse_media_session_grant(value: Any, direction: MediaDirection,
-                               requested: tuple[str, ...] | list[str] | None = None) -> MediaSessionGrant | None:
-    """Validated grant, or ``None`` when any field violates the v1 contract or the requested codecs."""
+                               requested: tuple[str, ...] | list[str] | None = None,
+                               content: MediaSessionContent | None = None) -> MediaSessionGrant | None:
+    """Validated grant, or ``None`` when any field violates the v1 contract, the requested codecs or content."""
     if not isinstance(value, dict) or value.get('direction') != direction:
         return None
+    # A requested content must be echoed exactly; a default request accepts no echo (or 'camera' for publish).
+    echo = value.get('content', _ABSENT)
+    if content is not None and echo != content:
+        return None
+    if content is None and echo is not _ABSENT and not (direction == 'publish' and echo == 'camera'):
+        return None
+    fps_cap = 15 if (content or echo) == 'screen' else 30
     width_cap, height_cap = (1920, 1080) if direction == 'publish' else (1280, 720)
     session_id, token = value.get('session_id'), value.get('token')
     ice, codecs, limits = value.get('ice_servers'), value.get('codecs'), value.get('limits')
@@ -197,12 +224,12 @@ def _parse_media_session_grant(value: Any, direction: MediaDirection,
         return None
     servers = tuple(_ice_server(server) for server in ice)
     bounds = (_wire_int(limits.get('max_width'), width_cap), _wire_int(limits.get('max_height'), height_cap),
-              _wire_int(limits.get('max_fps'), 30), _wire_int(limits.get('max_frame_bytes'), MAX_FRAME_BYTES))
+              _wire_int(limits.get('max_fps'), fps_cap), _wire_int(limits.get('max_frame_bytes'), MAX_FRAME_BYTES))
     if None in servers or None in bounds:
         return None
     return MediaSessionGrant(session_id, direction, value['endpoint'], token, value['connect_by'],
                              value['expires_at'], servers, tuple(codecs),  # type: ignore[arg-type]
-                             MediaSessionLimits(*bounds))  # type: ignore[arg-type]
+                             MediaSessionLimits(*bounds), None if echo is _ABSENT else echo)  # type: ignore[arg-type]
 
 
 class MediaFrameError(ValueError):
@@ -285,7 +312,7 @@ def copy_video_frame(*, format: PixelFormat, width: int, height: int, planes: li
                       color_space or ('bt709-limited' if yuv else 'srgb-full'))
 
 
-__all__ = ['VideoCodec', 'MediaDirection', 'PixelFormat', 'Rotation', 'ColorSpace', 'MAX_FRAME_BYTES',
+__all__ = ['VideoCodec', 'MediaDirection', 'MediaContent', 'MediaSessionContent', 'PixelFormat', 'Rotation', 'ColorSpace', 'MAX_FRAME_BYTES',
            'CustomVideoCapability', 'InboundCallerVideoCapability', 'MediaCapabilities', 'parse_media_capabilities',
            'IceServer', 'MediaSessionLimits', 'MediaSessionGrant',
            'MediaFrameError', 'VideoPlane', 'VideoFrame', 'copy_video_frame']

@@ -160,6 +160,51 @@ class MediaSessionTests(unittest.TestCase):
             self.assertNotIn(PRIVATE, str(caught.exception) + repr(caught.exception))
         self.assertEqual(len(self.server.calls), len(cases))
 
+    def test_screen_content_is_validated_echoed_and_capped(self):
+        screen_limits = {'max_width': 1920, 'max_height': 1080, 'max_fps': 15, 'max_frame_bytes': 8388608}
+        screen = grant(content='screen', limits=screen_limits)
+        caller = grant(direction='subscribe', content='caller_screen',
+                       limits={'max_width': 1280, 'max_height': 720, 'max_fps': 30, 'max_frame_bytes': 8388608})
+        self.server.payload = {'data': screen}
+        result = self.client.create_media_session('call-1', direction='publish', content='screen')
+        self.assertEqual((result.content, result.limits.max_fps), ('screen', 15))
+        self.server.payload = {'data': caller}
+        result = self.client.create_media_session('call-1', direction='subscribe', content='caller_screen')
+        self.assertEqual(result.content, 'caller_screen')
+        self.assertEqual([call[3] for call in self.server.calls],
+                         [{'direction': 'publish', 'content': 'screen'},
+                          {'direction': 'subscribe', 'content': 'caller_screen'}])
+
+        # Wrong combinations fail locally with no request.
+        for direction, content in (('publish', 'caller_screen'), ('subscribe', 'screen'),
+                                   ('subscribe', 'camera'), ('publish', 'window')):
+            with self.assertRaises(ValueError):
+                self.client.create_media_session('call-1', direction=direction, content=content)
+        self.assertEqual(len(self.server.calls), 2)
+
+        no_echo = dict(screen)
+        del no_echo['content']
+        for kwargs, payload in (({'direction': 'publish', 'content': 'screen'}, {**screen, 'limits': {**screen_limits, 'max_fps': 30}}),
+                                ({'direction': 'publish', 'content': 'screen'}, no_echo),
+                                ({'direction': 'publish', 'content': 'screen'}, {**screen, 'content': 'camera'}),
+                                ({'direction': 'publish'}, screen), ({'direction': 'subscribe'}, caller)):
+            self.server.payload = {'data': payload}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.create_media_session('call-1', **kwargs)
+            self.assertEqual((caught.exception.status, caught.exception.code), (201, 'invalid_response'))
+        # An explicit camera echo on a default publish request stays valid.
+        self.server.payload = {'data': grant(content='camera')}
+        self.assertEqual(self.client.create_media_session('call-1', direction='publish').content, 'camera')
+        self.server.payload = {'data': grant()}
+        self.assertIsNone(self.client.create_media_session('call-1', direction='publish').content)
+
+        self.server.status = 409
+        self.server.payload = {'error': {'code': 'caller_screen_not_shared', 'message': PRIVATE}}
+        with self.assertRaises(ChertControlPlaneError) as caught:
+            self.client.create_media_session('call-1', direction='subscribe', content='caller_screen')
+        self.assertEqual((caught.exception.status, caught.exception.code), (409, 'caller_screen_not_shared'))
+        self.assertNotIn(PRIVATE, str(caught.exception))
+
 
 def caps(**overrides):
     value = {'version': 1,
@@ -183,6 +228,18 @@ class CapabilityTests(unittest.TestCase):
         self.assertEqual(parsed.custom_video.codecs, ('vp8', 'h264'))
         self.assertEqual(parsed.inbound_caller_video.max_width, 1280)
         self.assertEqual(parse_media_capabilities(caps(version=1.0)).custom_video.max_fps, 30)
+
+    def test_contents_default_to_camera_and_ignore_unknown_entries(self):
+        parsed = parse_media_capabilities(caps())
+        self.assertEqual((parsed.custom_video.contents, parsed.inbound_caller_video.contents), (('camera',), ('camera',)))
+        cv, iv = caps()['custom_video'], caps()['inbound_caller_video']
+        parsed = parse_media_capabilities(caps(custom_video={**cv, 'contents': ['screen', 'window', 'camera', 'screen']},
+                                               inbound_caller_video={**iv, 'contents': ['screen']}))
+        self.assertEqual(parsed.custom_video.contents, ('screen', 'camera'))
+        self.assertEqual(parsed.inbound_caller_video.contents, ('screen',))
+        for contents in ([], ['window'], 'screen', None, [7]):
+            parsed = parse_media_capabilities(caps(custom_video={**cv, 'contents': contents}))
+            self.assertEqual(parsed.custom_video.contents, ('camera',))
 
     def test_invalid_sections_disable_only_themselves(self):
         cv, iv = caps()['custom_video'], caps()['inbound_caller_video']
