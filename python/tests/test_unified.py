@@ -400,6 +400,17 @@ class UnifiedTests(unittest.TestCase):
                 self.assertEqual(len(self.server.calls), before + 1)
         self.assertEqual(self.messaging.calls, [])
 
+    def test_billing_refusals_surface_by_code(self):
+        for status, code in ((409, 'billing_sales_disabled'), (409, 'billing_subscription_exists'), (409, 'billing_dedicated_no_inventory'),
+                             (409, 'shared_no_capacity'), (503, 'billing_unconfigured'), (409, 'billing_secret_reason')):
+            self.server.status = status
+            self.server.payload = {'error': {'code': code, 'message': PRIVATE}}
+            with self.assertRaises(ChertControlPlaneError) as caught:
+                self.client.create_checkout(plan='dedicated', idempotency_key='stable-key')
+            expected = 'request_failed' if code == 'billing_secret_reason' else code
+            self.assertEqual((caught.exception.status, caught.exception.code), (status, expected))
+            self.assertNotIn(PRIVATE, str(caught.exception))
+
     def test_invalid_input_rejected_before_network(self):
         for base in ('', 'https://user:secret@example.test', 'https://example.test/path', 'https://example.test?', 'https://example.test#', 'https://example.test:99999', 'http://example.test', 'https://example.test\n', None):
             with self.subTest(base=base), self.assertRaises(ValueError):
