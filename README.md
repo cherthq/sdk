@@ -215,9 +215,8 @@ does not deprecate any registry package; registry actions require separate appro
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
 `adopt` and `context`. Since 0.2.1, unknown commands and subcommands exit with
 `unknown_command` before any credential lookup. Published 0.1.0, 0.2.0, 0.2.1 and 0.2.2
-do not include `login`, `onboard`, `new`, `doctor` or `dev`. The preview CLI/onboarding work remains in
-[draft #5](https://github.com/cherthq/sdk/pull/5) and its integration branch in
-[draft #6](https://github.com/cherthq/sdk/pull/6).
+do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
+agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
 
 ### Custom video sources (source preview, unreleased)
 
