@@ -220,6 +220,49 @@ transport failures and redirects use status 0 / `network_error`.
 These are control-plane operations, not FaceTime media/calling APIs or evidence
 that a connector is provisioned or a call succeeded.
 
+## Custom video sessions (v1, video-only; source preview, unreleased)
+
+Lines, calls and line/call-scoped workers may report `media_capabilities`. Parse it
+with `parse_media_capabilities(...)`; absent, malformed or unknown-version input is
+unsupported (`custom_video` and `inbound_caller_video` are `None`). Support is never
+inferred from `supports_video` or other generic video flags.
+
+```python
+from trychert import parse_media_capabilities
+
+caps = parse_media_capabilities(call.get("media_capabilities"))
+if caps.custom_video is not None:
+    # One explicit attempt; never retried. codecs is an optional ordered subset of h264, vp8.
+    grant = sdk.facetime.create_media_session(call["id"], direction="publish", codecs=["h264"])
+    # grant.endpoint and grant.token go to any WHIP client (e.g. aiortc-based); repr hides the token.
+```
+
+`create_media_session(call_id, *, direction, codecs=None)` posts to
+`/api/v1/calls/{id}/media-sessions` and returns a frozen `MediaSessionGrant`
+(`session_id`, `direction`, `endpoint`, `token`, `connect_by`, `expires_at`,
+`ice_servers`, `codecs`, `limits`). Invalid arguments raise `ValueError` before any
+request; a grant that violates the contract raises `ChertControlPlaneError(201,
+'invalid_response')`. Server errors surface allowlisted codes such as `unauthorized`,
+`media_session_expired`, `call_not_found`, `media_capability_unsupported`,
+`media_session_conflict`, `call_not_active`, `call_ended` and
+`media_transport_unavailable`, never server message text.
+
+Treat `endpoint` as opaque: do not build paths from it. Pass `endpoint` and `token`
+to a standard WHIP (RFC 9725) client to publish, or a WHEP
+(draft-ietf-wish-whep-05, experimental) client to subscribe, using `ice_servers`.
+Send the same bearer on the initial POST and on PATCH/DELETE to the returned
+`Location`. Connect before `connect_by`; respect `limits`.
+
+`copy_video_frame(format=..., width=..., height=..., planes=[VideoPlane(data, stride), ...],
+timestamp_us=...)` validates raw `i420`/`nv12`/`rgba`/`bgra` frames (even dimensions
+16–1920 × 16–1080, stride within 256 bytes of the row size, at most 8 MiB) and copies
+only the required bytes from `bytes`/`bytearray`/`memoryview` planes, so buffers can
+be reused. Failures raise `MediaFrameError` (a `ValueError`) with `code`
+`invalid_frame` or `frame_too_large`.
+
+Limitations: no audio, no built-in media engine or WebRTC stack (bring your own,
+e.g. aiortc), and no guarantee that keyframe requests (PLI/FIR) are delivered.
+
 ## Existing iMessage transport
 
 The generic `request` operation matches the JavaScript core's raw Chert API

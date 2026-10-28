@@ -202,6 +202,58 @@ do not include `login`, `onboard`, `new`, `doctor` or `dev`. The preview CLI/onb
 [draft #5](https://github.com/cherthq/sdk/pull/5) and its integration branch in
 [draft #6](https://github.com/cherthq/sdk/pull/6).
 
+### Custom video sources (source preview, unreleased)
+
+`@trychert/sdk/media` lets you send your own frames into a FaceTime call, and
+receive caller video, over standard WebRTC. LiveKit is not required. The core
+works without a network connection and has no dependencies: frame validation,
+a bounded video source, capability parsing and WHIP/WHEP signaling.
+
+- **Capabilities are explicit.** Read `media_capabilities` from a line, call or
+  worker returned for that line or call, and parse it with
+  `parseMediaCapabilities`. A missing field or unknown version means
+  unsupported. The SDK never infers support from `supports_video` or `media.video`.
+- **Sessions.** `client.createMediaSession(callId, { direction, codecs })` mints
+  a short-lived session for one call. `publish` returns a WHIP
+  ([RFC 9725](https://www.rfc-editor.org/rfc/rfc9725)) endpoint. `subscribe`
+  returns an experimental WHEP
+  ([draft-ietf-wish-whep-05](https://datatracker.ietf.org/doc/draft-ietf-wish-whep/05/))
+  endpoint. Treat `endpoint` and `token` as opaque secrets.
+- **One publish slot per call.** Custom camera video, a living surface and a
+  screen share are mutually exclusive. Requesting a second publish while one is
+  active returns `media_session_conflict`.
+- **Signaling.** `publishWhip`/`receiveWhep` take any spec-compliant
+  `RTCPeerConnection` (the browser's built-in one, or a Node/Bun/Deno WebRTC
+  library). They send the same bearer token on `POST`, and on `PATCH`
+  (trickle ICE, `restartIce`) and `DELETE` to the returned session URL.
+- **Frames.** Supported formats are `i420`, `nv12`, `rgba` and `bgra`, with an
+  explicit stride per plane. Width and height must be even, from 16 up to
+  1920×1080. Frames are limited to 30 fps and 8 MiB, with microsecond
+  timestamps that must strictly increase. Frames carry rotation and color-space
+  metadata.
+- **Pushing frames.** `pushFrame` copies its input, so you can reuse your buffer
+  right away. It never blocks: when the queue (2 frames by default) is full, the
+  oldest frame is dropped. Encoded H.264/VP8 chunks can be pushed with
+  `pushEncoded`. After a chunk is lost, frames are dropped until the next
+  keyframe and a `keyframe-request` event is emitted.
+- **Lifecycle.** `idle → starting → live → stopping → stopped`, or `failed`.
+  Errors carry stable codes (`session_expired`, `session_conflict`,
+  `call_not_active`, `call_ended`, `capability_missing`, …) and never include
+  tokens, URLs, SDP or media bytes.
+
+- **LiveKit stays optional.** If you already use LiveKit,
+  `@trychert/sdk/media/livekit` exports `liveKitVideoTransport(rtc, videoSource)`.
+  It feeds the same source into a `@livekit/rtc-node` `VideoSource` that you
+  create and publish yourself. The SDK has no LiveKit dependency: you pass the
+  module in.
+
+See [`packages/media/examples/publish-whip.ts`](packages/media/examples/publish-whip.ts).
+Limitations: v1 is video only (audio stays on the existing call paths), and the
+SDK does not include a video encoder for Node. Remote keyframe requests are not
+guaranteed to arrive, and the SDK does not promise any bitrate. Caller video is
+capped at 1280×720 and 30 fps. These APIs require a backend that reports these
+capabilities, and they are not in any published package version yet.
+
 ### iMessage events and webhooks (source preview)
 
 The 0.2.0 preview adds `listEvents`, `getEvent`, `streamEvents`, and

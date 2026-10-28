@@ -1,6 +1,48 @@
 /** Thin client for the inspected Chert FaceTime control-plane routes. No retries or provisioning fiction. */
 import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
 export * from './video';
+export type MediaSessionCodec = 'h264' | 'vp8';
+export type MediaDirection = 'publish' | 'subscribe';
+export interface CreateMediaSession { direction: MediaDirection; codecs?: MediaSessionCodec[] }
+export interface MediaSessionGrant {
+  session_id: string; direction: MediaDirection;
+  /** Opaque absolute HTTPS signaling URL (WHIP for publish, experimental WHEP for subscribe). */
+  endpoint: string;
+  /** Session-bound bearer; never log it. */
+  token: string;
+  connect_by: string; expires_at: string;
+  ice_servers: { urls: string | string[]; username?: string; credential?: string; credentialType?: 'password' }[];
+  codecs: MediaSessionCodec[];
+  limits: { max_width: number; max_height: number; max_fps: number; max_frame_bytes: number };
+}
+const invalidGrant = () => new ChertApiError(201, 'invalid_response');
+const rfc3339 = (v: unknown): v is string => typeof v === 'string'
+  && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/i.test(v) && !Number.isNaN(Date.parse(v));
+const iceServer = (s: unknown): boolean => {
+  if (!s || typeof s !== 'object') return false;
+  const { urls, username, credential, credentialType } = s as Record<string, unknown>;
+  return (typeof urls === 'string' || (Array.isArray(urls) && urls.length > 0 && urls.every(u => typeof u === 'string')))
+    && (username === undefined || typeof username === 'string') && (credential === undefined || typeof credential === 'string')
+    && (credentialType === undefined || credentialType === 'password');
+};
+function validateGrant(grant: MediaSessionGrant, direction: MediaDirection, requested?: readonly MediaSessionCodec[]): MediaSessionGrant {
+  const g = grant as unknown as Record<string, unknown>, limits = g?.limits as Record<string, unknown> | undefined;
+  let endpoint: URL;
+  try { endpoint = new URL(String(g?.endpoint)); } catch { throw invalidGrant(); }
+  const local = endpoint.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(endpoint.hostname);
+  const cap = direction === 'publish' ? [1920, 1080] : [1280, 720];
+  const int = (v: unknown, max: number) => Number.isInteger(v) && (v as number) > 0 && (v as number) <= max;
+  if (g?.direction !== direction || typeof g.session_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(g.session_id)
+    || (endpoint.protocol !== 'https:' && !local) || endpoint.username || endpoint.password || endpoint.hash
+    || typeof g.token !== 'string' || !g.token || /[\r\n]/.test(g.token)
+    || !rfc3339(g.connect_by) || !rfc3339(g.expires_at) || Date.parse(g.connect_by) > Date.parse(g.expires_at)
+    || !Array.isArray(g.ice_servers) || !g.ice_servers.every(iceServer)
+    || !Array.isArray(g.codecs) || !g.codecs.length || new Set(g.codecs).size !== g.codecs.length
+    || !g.codecs.every(c => (c === 'h264' || c === 'vp8') && (!requested || requested.includes(c)))
+    || !limits || !int(limits.max_width, cap[0]!) || !int(limits.max_height, cap[1]!) || !int(limits.max_fps, 30) || !int(limits.max_frame_bytes, 8_388_608))
+    throw invalidGrant();
+  return grant;
+}
 export type Json = null | boolean | number | string | Json[] | {[key:string]:Json};
 export interface ClientOptions { baseUrl?:string; token?:string; projectId?:string; fetch?:typeof globalThis.fetch }
 export interface PageOptions { limit?:number; offset?:number }
@@ -8,8 +50,8 @@ export interface Page<T> {items:T[];total:number;limit:number;offset:number}
 export interface DeviceLoginStart {device_code:string;user_code:string;verification_url:string;verification_url_complete:string;expires_in:number;interval:number}
 export type LoginResult = {status:'pending'} | {status:'approved';access_token:string;email:string|null;project:{id:string;name:string|null};device_name:string;expires_in:number};
 export interface Identity {email:string|null;project:{id:string;name:string|null};role:string;device_name?:string;expires_at?:string}
-export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;[key:string]:unknown}
-export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;[key:string]:unknown}
+export interface Line extends LineUpdate {id:string;line_key:string;display_name:string;status:string;worker_id:string|null;masked_identity?:string|null;supports_audio?:boolean;supports_video?:boolean;/** Parse with parseMediaCapabilities; never infer from supports_video. */media_capabilities?:unknown;[key:string]:unknown}
+export interface Worker {id:string;worker_key:string;display_name:string;status:string;enabled:boolean;capabilities?:VideoCapabilities;readiness?:MediaReadiness;/** Present only on line/call-scoped projections. */media_capabilities?:unknown;[key:string]:unknown}
 export interface Credential {id:string;device_name:string;token_prefix:string;user_id:string;email:string|null;created_at:string;last_used_at:string|null;expires_at:string}
 export interface ConnectorEnrollment {line_id:string;name:string;environment:'production'|'development';session_mode?:'byor'|'create-room'}
 export interface ConnectorReceipt {credentials:{connection:string;recovery:string};[key:string]:unknown}
@@ -22,7 +64,7 @@ export interface BillingCancellation {status:'cancellation_requested';message:st
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
-const safeCodes = new Set(['unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
+const safeCodes = new Set(['media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -72,6 +114,16 @@ export class ChertControlPlane {
   updateLine(id:string,input:LineUpdate){return this.request<Line>(`lines/${this.resourceId(id)}`,'PATCH',input);}
   listCalls(options:PageOptions={}){return this.request<Page<Call>>(this.page('calls',options));}
   getCall(id:string){return this.request<CallDetail>(`calls/${this.resourceId(id)}`);}
+  /**
+   * Mints one WHIP (publish) or experimental WHEP (subscribe) session for an active call. v1 is video-only.
+   * Treat `endpoint` as opaque; pass the result to publishWhip/receiveWhep from `@trychert/sdk/media`.
+   */
+  async createMediaSession(callId:string,input:CreateMediaSession):Promise<MediaSessionGrant>{
+    if(!input||(input.direction!=='publish'&&input.direction!=='subscribe'))throw new TypeError('direction must be publish or subscribe.');
+    if(input.codecs!==undefined&&(!Array.isArray(input.codecs)||!input.codecs.length||input.codecs.some(c=>c!=='h264'&&c!=='vp8')||new Set(input.codecs).size!==input.codecs.length))throw new TypeError('codecs must be a non-empty ordered subset of h264, vp8.');
+    const grant=await this.request<MediaSessionGrant>(`calls/${this.resourceId(callId)}/media-sessions`,'POST',{direction:input.direction,...(input.codecs?{codecs:input.codecs}:{})});
+    return validateGrant(grant,input.direction,input.codecs);
+  }
   getCallEvents(id:string){return this.request<{call_id:string;events:CallEvent[]}>(`calls/${this.resourceId(id)}/events`);}
   /** Acceptance is not connection/media success. Reconcile uncertain outcomes; never retry automatically. */
   createCall(input:CreateCall,idempotencyKey:string){return this.request<CallDetail>('calls','POST',input,'project',this.idempotency(idempotencyKey));}

@@ -146,6 +146,50 @@ request and lets the server select a line. Nonempty supplied IDs are validated
 and sent unchanged. BYOR, groups and FaceTime-link destinations still require an
 explicit line and reject an empty string before network I/O.
 
+### Custom video sessions (v1, video-only; source preview, unreleased)
+
+Lines, calls and line/call-scoped workers may report `media_capabilities`. Parse it
+with `parse_media_capabilities(&value)`; absent, malformed or unknown-version input
+is unsupported (`custom_video` and `inbound_caller_video` are `None`). Support is
+never inferred from `supports_video` or other generic video flags.
+
+```rust,no_run
+use trychert_sdk::{facetime::FaceTimeClient, CreateMediaSession, MediaDirection, VideoCodec};
+# async fn example(facetime: &FaceTimeClient) -> Result<(), trychert_sdk::ChertError> {
+// One explicit attempt; never retried.
+let grant = facetime.create_media_session("call-id", CreateMediaSession {
+    direction: MediaDirection::Publish,
+    codecs: Some(vec![VideoCodec::H264]),
+}).await?;
+// Pass grant.endpoint and grant.token to a WHIP client; Debug output redacts the token.
+# let _ = grant;
+# Ok(()) }
+```
+
+`create_media_session` posts to `/calls/{id}/media-sessions` and returns a validated
+`MediaSessionGrant` (`session_id`, `direction`, `endpoint`, `token`, `connect_by`,
+`expires_at`, `ice_servers`, `codecs`, `limits`). Empty or duplicate codecs fail
+with `invalid_media_session_request` before any request; a grant that violates the
+contract fails with status 201 and `invalid_response`. Server error codes such as
+`unauthorized`, `media_session_expired`, `call_not_found`,
+`media_capability_unsupported`, `media_session_conflict`, `call_not_active`,
+`call_ended` and `media_transport_unavailable` surface verbatim; other codes become
+`request_failed`, and the error never carries server message text or raw data.
+
+Treat `endpoint` as opaque: do not build paths from it. Pass `endpoint` and `token`
+to a standard WHIP (RFC 9725) client to publish, or a WHEP
+(draft-ietf-wish-whep-05, experimental) client to subscribe, using `ice_servers`.
+Send the same bearer on the initial POST and on PATCH/DELETE to the returned
+`Location`. Connect before `connect_by`; respect `limits`.
+
+`VideoFrame::copy_from(&VideoFrameInit { .. })` validates raw I420/NV12/RGBA/BGRA
+frames (even dimensions 16–1920 × 16–1080, stride within 256 bytes of the row size,
+at most 8 MiB) and copies only the required bytes, so caller buffers can be reused.
+Failures return `MediaFrameError` (`code()` is `invalid_frame` or `frame_too_large`).
+
+Limitations: no audio, no built-in media engine or WebRTC stack (bring your own),
+and no guarantee that keyframe requests (PLI/FIR) are delivered.
+
 `ChertClient` remains the messaging-only compatibility name; `IMessageClient`
 names that role explicitly. Existing imports migrate from `cherthq_imessage` to
 `trychert_sdk`. The fixture executable names remain unchanged.

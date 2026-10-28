@@ -1,5 +1,6 @@
 //! FaceTime control-plane HTTP API. This does not implement a LiveKit media runtime.
 //! Mutations make one attempt; an accepted action is not evidence that a call connected or ended.
+use crate::media::{parse_media_session_grant, CreateMediaSession, MediaSessionGrant};
 use crate::{ChertClient, ChertError, FaceTimeConfig, HttpMethod};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -312,6 +313,31 @@ fn key(key: &str) -> Result<(), ChertError> {
     }
     Ok(())
 }
+/// Server error codes surfaced verbatim by media-session minting; others become `request_failed`.
+const SAFE_CODES: &[&str] = &[
+    "media_capability_unsupported",
+    "media_session_conflict",
+    "call_not_active",
+    "call_ended",
+    "call_not_found",
+    "media_session_expired",
+    "media_transport_unavailable",
+    "unauthorized",
+    "forbidden",
+    "cli_scope_denied",
+    "billing_owner_required",
+    "billing_unavailable",
+    "project_required",
+    "invalid_request",
+    "cli_login_expired",
+    "cli_login_not_found",
+    "cli_login_forbidden",
+    "slow_down",
+    "cli_login_rate_limited",
+    "cli_login_busy",
+    "not_found",
+    "conflict",
+];
 fn page_path(resource: &str, limit: u32, offset: u64) -> Result<String, ChertError> {
     if !(1..=100).contains(&limit) || offset > 9_007_199_254_740_991 {
         return Err(ChertError::new(None, "invalid_pagination"));
@@ -508,6 +534,50 @@ impl FaceTimeClient {
             Some(201),
         )
         .await
+    }
+    /// Mints one video-only WHIP (publish) or experimental WHEP (subscribe) session for an active call.
+    /// Treat `endpoint` as opaque. One attempt; never retried. Errors never carry server message text.
+    pub async fn create_media_session(
+        &self,
+        call_id: &str,
+        input: CreateMediaSession,
+    ) -> Result<MediaSessionGrant, ChertError> {
+        if input.codecs.as_ref().is_some_and(|codecs| {
+            codecs.is_empty()
+                || codecs
+                    .iter()
+                    .enumerate()
+                    .any(|(i, codec)| codecs[..i].contains(codec))
+        }) {
+            return Err(ChertError::new(None, "invalid_media_session_request"));
+        }
+        let path = format!("/calls/{}/media-sessions", identifier(call_id)?);
+        let mut body = json!({ "direction": input.direction });
+        if let Some(codecs) = &input.codecs {
+            body["codecs"] = json!(codecs);
+        }
+        let response = self
+            .transport
+            .request_json_with_key(&path, HttpMethod::POST, Some(&body), None)
+            .await
+            .map_err(|mut error| {
+                if error.data.take().is_some() && !SAFE_CODES.contains(&error.code.as_str()) {
+                    error.code = "request_failed".into();
+                }
+                error
+            })?;
+        let invalid = |status| ChertError {
+            status: Some(status),
+            code: "invalid_response".into(),
+            request_id: response.request_id.clone(),
+            data: None,
+        };
+        let data = response
+            .value
+            .get("data")
+            .ok_or_else(|| invalid(response.status))?;
+        parse_media_session_grant(data, input.direction, input.codecs.as_deref())
+            .ok_or_else(|| invalid(201))
     }
     pub async fn call_action(
         &self,

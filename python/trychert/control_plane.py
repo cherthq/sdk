@@ -11,10 +11,13 @@ from .models import (BillingStatus, CheckoutSession, BillingCancellation, Coupon
                      CallAction, CallDetail, CallEvents, CallPage, CreateCall,
                      Credentials, DeviceLoginStart, Identity, Json, LinePage, LoginApproval,
                      LoginInspection, LoginResult, Revoked, WorkerPage)
+from .media import MediaDirection, MediaSessionGrant, VideoCodec, _parse_media_session_grant
 
 DEFAULT_FACETIME_URL = 'https://facetime.trychert.com'
 _UNSET = object()
-_SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict".split())
+_SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
+                         "media_capability_unsupported media_session_conflict call_not_active call_ended call_not_found "
+                         "media_session_expired media_transport_unavailable".split())
 
 
 class ChertControlPlaneError(Exception):
@@ -180,6 +183,26 @@ class ChertControlPlane:
     def get_call_events(self, call_id: str) -> CallEvents:
         """Finite JSON timeline, not SSE or a media stream."""
         return self._request('calls/' + self._call_id(call_id) + '/events')
+
+    def create_media_session(self, call_id: str, *, direction: MediaDirection,
+                             codecs: list[VideoCodec] | tuple[VideoCodec, ...] | None = None) -> MediaSessionGrant:
+        """Mint one video-only WHIP (publish) or experimental WHEP (subscribe) session for an active call.
+
+        Treat ``endpoint`` as opaque and pass it with ``token`` to a standard client; never retried."""
+        if direction not in ('publish', 'subscribe'):
+            raise ValueError('direction must be publish or subscribe')
+        if codecs is not None and (not isinstance(codecs, (list, tuple)) or not codecs
+                                   or not all(isinstance(c, str) and c in ('h264', 'vp8') for c in codecs)
+                                   or len(set(codecs)) != len(codecs)):
+            raise ValueError('codecs must be a non-empty ordered subset of h264, vp8')
+        body: dict[str, Any] = {'direction': direction}
+        if codecs is not None:
+            body['codecs'] = list(codecs)
+        data = self._request('calls/' + self._call_id(call_id) + '/media-sessions', 'POST', body)
+        grant = _parse_media_session_grant(data, direction, codecs)
+        if grant is None:
+            raise ChertControlPlaneError(201, 'invalid_response')
+        return grant
 
     def _call_mutation(self, path: str, body: Any, idempotency_key: str) -> CallDetail:
         if (not isinstance(idempotency_key, str) or not 8 <= len(idempotency_key) <= 200

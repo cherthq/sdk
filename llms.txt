@@ -1,6 +1,6 @@
 # Chert SDK
 
-> Open-source clients for Chert iMessage messaging and the Chert FaceTime control plane. `@trychert/sdk` (npm, CLI `chert-sdk`) and `chert-sdk` (PyPI, import `trychert`) are published; Rust, .NET, C++ and Go are source previews. The SDK is an HTTP client, not a media runtime. Putting a LiveKit voice or video agent on a FaceTime line uses the separate `chert` CLI from `@trychert/facetime`.
+> Open-source clients for Chert iMessage messaging and the Chert FaceTime control plane. `@trychert/sdk` (npm, CLI `chert-sdk`) and `chert-sdk` (PyPI, import `trychert`) are published; Rust, .NET, C++ and Go are source previews. The SDK does not relay media itself; `@trychert/sdk/media` (unreleased source preview) adds frame validation, a bounded video source and WHIP/WHEP signaling for your own WebRTC peer connection; it, living services and screen sharing are unreleased drafts (#17, #18, #25). Putting a LiveKit voice or video agent on a FaceTime line uses the separate `chert` CLI from `@trychert/facetime`.
 
 Rules for coding agents:
 

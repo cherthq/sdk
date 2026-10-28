@@ -159,6 +159,7 @@ static partial class Program
         await FaceTimeTests();
         await MessagingEventTests();
         await UnifiedSessionTests();
+        await MediaTests();
         Console.WriteLine(JsonSerializer.Serialize(new { passed = true, cases, transport = "actual-loopback-http", externalRequests = 0 }));
     }
 }

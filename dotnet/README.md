@@ -260,6 +260,37 @@ requires the expected binding (including explicit null) and assignment generatio
 Checkout creation and cancellation are explicit financial actions, not proof of
 live entitlement or allocation.
 
+### Custom video sessions (v1, video-only; source preview, unreleased)
+
+Check explicit capabilities first; never infer support from `SupportsVideo`:
+
+```csharp
+var caps = MediaCapabilities.Parse(line.MediaCapabilities); // also on FaceTimeCall and scoped FaceTimeWorker
+if (caps.CustomVideo is null) return; // unsupported
+var grant = await chert.FaceTime!.CreateMediaSessionAsync(callId, MediaDirection.Publish,
+    codecs: [VideoCodec.H264], cancellationToken: cancellation); // codecs optional
+// Hand grant.Endpoint, grant.Token and grant.IceServers to any standards WHIP client (RFC 9725).
+```
+
+`CreateMediaSessionAsync` mints one session for an active call. `Publish` grants a WHIP
+endpoint; `Subscribe` grants an experimental WHEP endpoint (draft-ietf-wish-whep-05)
+capped at 1280x720. Treat `Endpoint` as opaque, connect before `ConnectBy`, and send the
+same `Authorization: Bearer <Token>` on the POST and on PATCH/DELETE to the returned
+`Location`. `ToString()` redacts the grant; never log `Token`. A malformed grant throws
+`ChertApiException` with `Code == "invalid_response"`; server codes (`unauthorized`,
+`call_not_found`, `media_capability_unsupported`, `media_session_conflict`,
+`call_not_active`, `call_ended`, `media_session_expired`, `media_transport_unavailable`)
+surface without server text. Requests are never retried.
+
+`VideoFrame.Copy(VideoFrameInit)` validates a raw I420/NV12/RGBA/BGRA frame (even sizes
+from 16x16 to 1920x1080, per-plane strides, 8 MiB total) and copies only the required
+bytes so buffers can be reused; failures throw `MediaFrameException` with `Code`
+`invalid_frame` or `frame_too_large`.
+
+Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC stack;
+keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send periodic
+keyframes.
+
 ## Billing and preview migration
 
 All billing methods use `/api/v1/billing` and require a **signed-in user bearer

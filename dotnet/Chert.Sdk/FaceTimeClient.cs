@@ -59,6 +59,53 @@ public sealed class FaceTimeClient : IDisposable
         return Send<FaceTimeCall>($"/calls/{Id(id)}/{action}", new { reason }, HttpMethod.Post, Key(key), ct, expectedStatus: 202);
     }
 
+    /// <summary>
+    /// Mints one WHIP (publish) or experimental WHEP (subscribe) session for an active call. v1 is video-only.
+    /// Codecs, when given, must be a non-empty ordered unique list. Single attempt; never retried.
+    /// </summary>
+    public async Task<MediaSessionGrant> CreateMediaSessionAsync(string callId, MediaDirection direction,
+        IReadOnlyList<VideoCodec>? codecs = null, CancellationToken cancellationToken = default)
+    {
+        var path = "/calls/" + Id(callId) + "/media-sessions";
+        var body = new Dictionary<string, object>
+        {
+            ["direction"] = direction switch
+            {
+                MediaDirection.Publish => "publish", MediaDirection.Subscribe => "subscribe",
+                _ => throw new ArgumentException("direction must be publish or subscribe")
+            }
+        };
+        if (codecs is not null)
+        {
+            if (codecs.Count == 0 || codecs.Any(c => !Enum.IsDefined(c)) || codecs.Distinct().Count() != codecs.Count)
+                throw new ArgumentException("codecs must be a non-empty ordered subset of h264, vp8");
+            body["codecs"] = codecs.Select(c => c == VideoCodec.H264 ? "h264" : "vp8").ToArray();
+        }
+        ChannelTransport.JsonResponse response;
+        try
+        {
+            response = await transport.RequestWithResponseAsync(path, JsonSerializer.SerializeToElement(body), HttpMethod.Post, null,
+                cancellationToken, projectRequest: true).ConfigureAwait(false);
+        }
+        catch (ChertApiException error)
+        {
+            // Raw response data is never returned. Server error responses keep their status and an
+            // allowlisted code; local and transport failures keep their code.
+            var server = error.Status >= 300 && (error.ResponseData is not null || error.Code == "http_error");
+            var code = error.Code == "invalid_json" ? "invalid_response" : server && !MediaSafeCodes.Contains(error.Code) ? "request_failed" : error.Code;
+            throw new ChertApiException(error.Status, code, error.RequestId);
+        }
+        try
+        {
+            if (response.Status != 201 || response.Value is not { ValueKind: JsonValueKind.Object } envelope || !envelope.TryGetProperty("data", out var data))
+                throw new JsonException();
+            UniqueProperties(envelope);
+            return MediaSessionGrant.Parse(data, direction, codecs);
+        }
+        // Response data is withheld: an invalid grant may still carry a bearer token.
+        catch (JsonException) { throw new ChertApiException(502, "invalid_response", response.RequestId); }
+    }
+
     public Task<DeviceLogin> BeginLoginAsync(string deviceName, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(deviceName) || deviceName.Length > 80 || deviceName.Any(c => c < 32 || c > 126))
@@ -131,6 +178,13 @@ public sealed class FaceTimeClient : IDisposable
         return value.Trim();
     }
 
+    private static readonly HashSet<string> MediaSafeCodes = new(StringComparer.Ordinal)
+    {
+        "unauthorized", "forbidden", "cli_scope_denied", "billing_owner_required", "billing_unavailable", "project_required",
+        "invalid_request", "cli_login_expired", "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited",
+        "cli_login_busy", "not_found", "conflict", "media_capability_unsupported", "media_session_conflict", "call_not_active",
+        "call_ended", "call_not_found", "media_session_expired", "media_transport_unavailable"
+    };
     private enum Auth { Public, User, Project }
     private async Task<T> Send<T>(string path, object? body = null, HttpMethod? method = null, string? key = null,
         CancellationToken cancellationToken = default, Auth auth = Auth.Project, int? expectedStatus = 200, bool allowNull = false)

@@ -1,6 +1,7 @@
 #pragma once
 #include <trychert/transport.hpp>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace trychert {
@@ -83,6 +84,84 @@ struct UpdateLine {
     std::optional<ConnectingScreenAppearance> connecting_screen_appearance;
 };
 
+// Custom media v1 is video-only. Endpoints are opaque: hand endpoint + token to a
+// standard WHIP (RFC 9725) or experimental WHEP client; reuse the bearer on PATCH/DELETE.
+enum class MediaDirection { publish, subscribe };
+enum class VideoCodec { h264, vp8 };
+struct CreateMediaSession {
+    MediaDirection direction = MediaDirection::publish;
+    // nullopt omits codecs; otherwise a non-empty ordered unique list.
+    std::optional<std::vector<VideoCodec>> codecs;
+};
+struct IceServer {
+    std::vector<std::string> urls;
+    std::optional<std::string> username, credential, credential_type;
+};
+struct MediaLimits { int max_width, max_height, max_fps, max_frame_bytes; };
+// Session-bound bearer grant. Never log `token`; no stream operator is provided.
+struct MediaSessionGrant {
+    std::string session_id;
+    MediaDirection direction;
+    std::string endpoint, token;
+    std::string connect_by, expires_at; // RFC 3339
+    std::vector<IceServer> ice_servers;
+    std::vector<VideoCodec> codecs;
+    MediaLimits limits;
+};
+struct CustomVideoCapability {
+    bool supported = true;
+    std::vector<std::string> transports; // "whip" | "livekit"
+    std::vector<VideoCodec> codecs;
+    int max_width, max_height, max_fps;
+};
+struct InboundCallerVideoCapability {
+    bool supported = true;
+    std::vector<std::string> transports; // "whep" | "livekit"
+    int max_width, max_height, max_fps;
+};
+// Absent sections are unsupported. Never infer support from supports_video.
+struct MediaCapabilities {
+    int version = 1;
+    std::optional<CustomVideoCapability> custom_video;
+    std::optional<InboundCallerVideoCapability> inbound_caller_video;
+};
+// Parses a raw `media_capabilities` value (for example
+// `line.fields.value("media_capabilities", Json())`). Absent, malformed or
+// unknown-version input is unsupported; a malformed section disables only itself.
+[[nodiscard]] MediaCapabilities parse_media_capabilities(const Json& input);
+
+enum class PixelFormat { i420, nv12, rgba, bgra };
+enum class ColorSpace { bt709_limited, bt601_limited, srgb_full };
+struct PlaneView { std::span<const std::uint8_t> data; int stride; };
+struct VideoFrameInit {
+    PixelFormat format;
+    int width, height;
+    std::vector<PlaneView> planes;
+    std::int64_t timestamp_us; // Monotonic microseconds from the source clock.
+    std::optional<std::int64_t> duration_us;
+    int rotation = 0; // Clockwise degrees: 0, 90, 180 or 270.
+    std::optional<ColorSpace> color_space; // Defaults: bt709-limited YUV, srgb-full RGB.
+};
+struct Plane { std::vector<std::uint8_t> data; int stride; };
+struct VideoFrame {
+    PixelFormat format;
+    int width, height;
+    std::vector<Plane> planes;
+    std::int64_t timestamp_us;
+    std::optional<std::int64_t> duration_us;
+    int rotation;
+    ColorSpace color_space;
+};
+inline constexpr int max_frame_bytes = 8 * 1024 * 1024;
+class MediaFrameError final : public std::invalid_argument {
+public:
+    MediaFrameError(std::string code, const std::string& message);
+    const std::string code; // "invalid_frame" | "frame_too_large"
+};
+void check_frame_dimensions(int width, int height);
+// Validates and copies stride*(rows-1)+row_bytes bytes per plane; callers may reuse buffers.
+[[nodiscard]] VideoFrame copy_video_frame(const VideoFrameInit& input);
+
 class FaceTimeClient final : private detail::Transport {
     friend class Client;
 public:
@@ -103,6 +182,10 @@ public:
     [[nodiscard]] Result<Page<Line>> list_lines(Pagination page = {}) const;
     [[nodiscard]] Result<Line> update_line(const std::string& id, const UpdateLine& input) const;
     [[nodiscard]] Result<Page<Worker>> list_workers(Pagination page = {}) const;
+    // Mints one WHIP (publish) or experimental WHEP (subscribe) session for an
+    // active call. Single attempt; an invalid grant throws ApiError "invalid_response".
+    [[nodiscard]] Result<MediaSessionGrant> create_media_session(const std::string& call_id,
+        const CreateMediaSession& input) const;
 private:
     std::string project_id_;
 };

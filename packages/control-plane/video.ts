@@ -57,7 +57,10 @@ export interface Call {
   line_id: string | null; worker_id: string | null; assistant_id: string | null;
   terminal_reason: string | null; started_at: string | null; ended_at: string | null; duration_seconds: number | null;
   video_framing?: 'fit' | 'fill'; connecting_screen_dismissal?: 'audio' | 'video';
-  has_transcript?: boolean; [key: string]: unknown;
+  has_transcript?: boolean;
+  /** Explicit custom-media capability; parse with parseMediaCapabilities. */
+  media_capabilities?: unknown;
+  [key: string]: unknown;
 }
 export interface CallDetail extends Call { facetime_call_events: CallDetailEvent[] }
 export interface CallAction { reason?: string }
