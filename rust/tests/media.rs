@@ -11,8 +11,9 @@ use trychert_sdk::{
         ColorSpace, CustomVideoTransport, PixelFormat, PlaneRef, Rotation, VideoFrameInit,
         MAX_FRAME_BYTES,
     },
-    parse_media_capabilities, CreateMediaSession, FaceTimeConfig, MediaCapabilities,
-    MediaDirection, MediaFrameError, TransportLimits, VideoCodec, VideoFrame,
+    parse_media_capabilities, ChertError, CreateMediaSession, FaceTimeConfig, MediaCapabilities,
+    MediaContent, MediaDirection, MediaFrameError, MediaSessionContent, MediaSessionGrant,
+    TransportLimits, VideoCodec, VideoFrame,
 };
 
 const KEY: &str = "ft-media-synthetic";
@@ -101,6 +102,7 @@ fn publish(codecs: Option<Vec<VideoCodec>>) -> CreateMediaSession {
     CreateMediaSession {
         direction: MediaDirection::Publish,
         codecs,
+        content: None,
     }
 }
 fn body(wire: &str) -> Value {
@@ -331,6 +333,7 @@ async fn subscribe_limits_are_capped_at_720p() {
     let subscribe = || CreateMediaSession {
         direction: MediaDirection::Subscribe,
         codecs: None,
+        content: None,
     };
     for (w, h, ok) in [(1280, 720, true), (1281, 720, false), (1280, 721, false)] {
         let data = with(
@@ -387,6 +390,130 @@ async fn error_codes_surface_without_server_text() {
     }
 }
 
+fn session(direction: MediaDirection, content: Option<MediaSessionContent>) -> CreateMediaSession {
+    CreateMediaSession {
+        direction,
+        codecs: None,
+        content,
+    }
+}
+fn screen_grant() -> Value {
+    with(
+        with(grant(), "content", json!("screen")),
+        "limits",
+        json!({"max_width":1920,"max_height":1080,"max_fps":15,"max_frame_bytes":8388608}),
+    )
+}
+fn caller_screen_grant() -> Value {
+    let data = with(grant(), "direction", json!("subscribe"));
+    let data = with(data, "content", json!("caller_screen"));
+    with(
+        data,
+        "limits",
+        json!({"max_width":1280,"max_height":720,"max_fps":30,"max_frame_bytes":8388608}),
+    )
+}
+async fn attempt(
+    request: CreateMediaSession,
+    data: Value,
+) -> Result<MediaSessionGrant, ChertError> {
+    let (url, handle) = server(201, json!({ "data": data }).to_string());
+    let result = client(&url).create_media_session("call-1", request).await;
+    handle.join().unwrap();
+    result
+}
+
+#[tokio::test]
+async fn screen_content_is_validated_echoed_and_capped() {
+    use MediaDirection::{Publish, Subscribe};
+    use MediaSessionContent::{CallerScreen, Camera, Screen};
+    let (url, handle) = server(201, json!({"data": screen_grant()}).to_string());
+    let result = client(&url)
+        .create_media_session("call-1", session(Publish, Some(Screen)))
+        .await
+        .unwrap();
+    assert_eq!(
+        body(&handle.join().unwrap()),
+        json!({"direction":"publish","content":"screen"})
+    );
+    assert_eq!((result.content, result.limits.max_fps), (Some(Screen), 15));
+    let (url, handle) = server(201, json!({"data": caller_screen_grant()}).to_string());
+    let result = client(&url)
+        .create_media_session("call-1", session(Subscribe, Some(CallerScreen)))
+        .await
+        .unwrap();
+    assert_eq!(
+        body(&handle.join().unwrap()),
+        json!({"direction":"subscribe","content":"caller_screen"})
+    );
+    assert_eq!(result.content, Some(CallerScreen));
+
+    // Wrong combinations fail locally; the unroutable base would surface any request.
+    let sdk = client("http://127.0.0.1:9");
+    for (direction, content) in [
+        (Publish, CallerScreen),
+        (Subscribe, Screen),
+        (Subscribe, Camera),
+    ] {
+        let error = sdk
+            .create_media_session("call-1", session(direction, Some(content)))
+            .await
+            .unwrap_err();
+        assert_eq!(
+            (error.status, error.code.as_str()),
+            (None, "invalid_media_session_request")
+        );
+    }
+
+    let mut no_echo = screen_grant();
+    no_echo.as_object_mut().unwrap().remove("content");
+    for (request, data) in [
+        (
+            session(Publish, Some(Screen)),
+            with(
+                screen_grant(),
+                "limits",
+                json!({"max_width":1920,"max_height":1080,"max_fps":30,"max_frame_bytes":8388608}),
+            ),
+        ),
+        (session(Publish, Some(Screen)), no_echo),
+        (
+            session(Publish, Some(Screen)),
+            with(screen_grant(), "content", json!("camera")),
+        ),
+        (session(Publish, None), screen_grant()),
+        (session(Subscribe, None), caller_screen_grant()),
+    ] {
+        let error = attempt(request, data).await.unwrap_err();
+        assert_eq!(
+            (error.status, error.code.as_str()),
+            (Some(201), "invalid_response")
+        );
+    }
+    // An explicit camera echo on a default publish request stays valid.
+    let result = attempt(
+        session(Publish, None),
+        with(grant(), "content", json!("camera")),
+    )
+    .await
+    .unwrap();
+    assert_eq!(result.content, Some(Camera));
+
+    let payload =
+        json!({"error":{"code":"caller_screen_not_shared","message":PRIVATE}}).to_string();
+    let (url, handle) = server(409, payload);
+    let error = client(&url)
+        .create_media_session("call-1", session(Subscribe, Some(CallerScreen)))
+        .await
+        .unwrap_err();
+    handle.join().unwrap();
+    assert_eq!(
+        (error.status, error.code.as_str()),
+        (Some(409), "caller_screen_not_shared")
+    );
+    assert!(!format!("{error:?} {error}").contains(PRIVATE));
+}
+
 fn caps() -> Value {
     json!({"version":1,
         "custom_video":{"supported":true,"transports":["whip","whip","livekit"],"codecs":["vp8","h264","vp8"],
@@ -414,6 +541,33 @@ fn capabilities_absent_malformed_and_unknown_version_are_unsupported() {
             parse_media_capabilities(&value),
             MediaCapabilities::default()
         );
+    }
+}
+
+#[test]
+fn capabilities_contents_default_to_camera_and_ignore_unknown_entries() {
+    use MediaContent::{Camera, Screen};
+    let parsed = parse_media_capabilities(&caps());
+    assert_eq!(parsed.custom_video.unwrap().contents, vec![Camera]);
+    assert_eq!(parsed.inbound_caller_video.unwrap().contents, vec![Camera]);
+    let mut value = section(
+        "custom_video",
+        "contents",
+        json!(["screen", "window", "camera", "screen"]),
+    );
+    value["inbound_caller_video"]["contents"] = json!(["screen"]);
+    let parsed = parse_media_capabilities(&value);
+    assert_eq!(parsed.custom_video.unwrap().contents, vec![Screen, Camera]);
+    assert_eq!(parsed.inbound_caller_video.unwrap().contents, vec![Screen]);
+    for contents in [
+        json!([]),
+        json!(["window"]),
+        json!("screen"),
+        Value::Null,
+        json!([7]),
+    ] {
+        let parsed = parse_media_capabilities(&section("custom_video", "contents", contents));
+        assert_eq!(parsed.custom_video.unwrap().contents, vec![Camera]);
     }
 }
 

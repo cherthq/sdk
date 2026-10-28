@@ -38,6 +38,10 @@ pub struct Call {
     pub line_id: Option<String>,
     pub assistant_id: Option<String>,
     pub terminal_reason: Option<String>,
+    /// Read-only screen-control consent state (`none`, `requested` or `granted`; open to future
+    /// values). The public API exposes no control operations.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub screen_control: Option<String>,
     /// Additional server fields, including timestamps and embedded events, preserved losslessly.
     #[serde(flatten)]
     pub extra: Map<String, Value>,
@@ -317,6 +321,7 @@ fn key(key: &str) -> Result<(), ChertError> {
 const SAFE_CODES: &[&str] = &[
     "media_capability_unsupported",
     "media_session_conflict",
+    "caller_screen_not_shared",
     "call_not_active",
     "call_ended",
     "call_not_found",
@@ -548,13 +553,19 @@ impl FaceTimeClient {
                     .iter()
                     .enumerate()
                     .any(|(i, codec)| codecs[..i].contains(codec))
-        }) {
+        }) || input
+            .content
+            .is_some_and(|content| !content.allowed_for(input.direction))
+        {
             return Err(ChertError::new(None, "invalid_media_session_request"));
         }
         let path = format!("/calls/{}/media-sessions", identifier(call_id)?);
         let mut body = json!({ "direction": input.direction });
         if let Some(codecs) = &input.codecs {
             body["codecs"] = json!(codecs);
+        }
+        if let Some(content) = input.content {
+            body["content"] = json!(content);
         }
         let response = self
             .transport
@@ -576,8 +587,13 @@ impl FaceTimeClient {
             .value
             .get("data")
             .ok_or_else(|| invalid(response.status))?;
-        parse_media_session_grant(data, input.direction, input.codecs.as_deref())
-            .ok_or_else(|| invalid(201))
+        parse_media_session_grant(
+            data,
+            input.direction,
+            input.codecs.as_deref(),
+            input.content,
+        )
+        .ok_or_else(|| invalid(201))
     }
     pub async fn call_action(
         &self,

@@ -21,6 +21,41 @@ pub enum MediaDirection {
     Publish,
     Subscribe,
 }
+/// What a capability section can carry. `Screen` on `custom_video` means an agent can stream a
+/// screen (capped at 15 fps); on `inbound_caller_video` it means the caller's shared screen is
+/// available as its own `CallerScreen` subscription.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MediaContent {
+    Camera,
+    Screen,
+}
+/// What a session carries. Publish: `Camera` (default) or `Screen` (capped at 15 fps).
+/// Subscribe: omit for the caller's video, or `CallerScreen` for the caller's shared screen
+/// (only while sharing). A call has one publish slot (`media_session_conflict`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MediaSessionContent {
+    Camera,
+    Screen,
+    CallerScreen,
+}
+impl MediaSessionContent {
+    fn wire(self) -> &'static str {
+        match self {
+            Self::Camera => "camera",
+            Self::Screen => "screen",
+            Self::CallerScreen => "caller_screen",
+        }
+    }
+    /// Whether this content may be requested for `direction`.
+    pub(crate) fn allowed_for(self, direction: MediaDirection) -> bool {
+        match direction {
+            MediaDirection::Publish => matches!(self, Self::Camera | Self::Screen),
+            MediaDirection::Subscribe => self == Self::CallerScreen,
+        }
+    }
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CustomVideoTransport {
@@ -42,6 +77,8 @@ pub struct CustomVideoCapability {
     pub max_width: u32,
     pub max_height: u32,
     pub max_fps: u32,
+    /// What may be published; never empty (defaults to `[Camera]`).
+    pub contents: Vec<MediaContent>,
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InboundCallerVideoCapability {
@@ -50,6 +87,8 @@ pub struct InboundCallerVideoCapability {
     pub max_width: u32,
     pub max_height: u32,
     pub max_fps: u32,
+    /// What may be received; never empty (defaults to `[Camera]`).
+    pub contents: Vec<MediaContent>,
 }
 /// `None` sections are unsupported. Never infer support from generic video flags.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -100,6 +139,24 @@ fn codec(value: &str) -> Option<VideoCodec> {
         _ => None,
     }
 }
+/// Unknown entries are ignored for forward compatibility; absent or empty means camera only.
+fn contents(value: Option<&Value>) -> Vec<MediaContent> {
+    let mut out = Vec::new();
+    for item in value.and_then(Value::as_array).into_iter().flatten() {
+        let content = match item.as_str() {
+            Some("camera") => MediaContent::Camera,
+            Some("screen") => MediaContent::Screen,
+            _ => continue,
+        };
+        if !out.contains(&content) {
+            out.push(content);
+        }
+    }
+    if out.is_empty() {
+        out.push(MediaContent::Camera);
+    }
+    out
+}
 fn supported(section: Option<&Value>) -> Option<&Value> {
     section.filter(|s| s.is_object() && s.get("supported") == Some(&Value::Bool(true)))
 }
@@ -132,6 +189,7 @@ pub fn parse_media_capabilities(value: &Value) -> MediaCapabilities {
                 max_width,
                 max_height,
                 max_fps,
+                contents: contents(cv.get("contents")),
             });
         }
     }
@@ -153,6 +211,7 @@ pub fn parse_media_capabilities(value: &Value) -> MediaCapabilities {
                 max_width,
                 max_height,
                 max_fps,
+                contents: contents(iv.get("contents")),
             });
         }
     }
@@ -160,10 +219,12 @@ pub fn parse_media_capabilities(value: &Value) -> MediaCapabilities {
 }
 
 /// Request for one video-only media session. `codecs` is an ordered, non-empty, unique preference.
+/// `content` must be `Camera`/`Screen` for publish or `CallerScreen` for subscribe; `None` sends nothing.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CreateMediaSession {
     pub direction: MediaDirection,
     pub codecs: Option<Vec<VideoCodec>>,
+    pub content: Option<MediaSessionContent>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -220,6 +281,9 @@ pub struct MediaSessionGrant {
     pub ice_servers: Vec<IceServer>,
     pub codecs: Vec<VideoCodec>,
     pub limits: MediaSessionLimits,
+    /// Echo of the requested content; `None` on grants for the default content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<MediaSessionContent>,
 }
 impl fmt::Debug for MediaSessionGrant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -233,6 +297,7 @@ impl fmt::Debug for MediaSessionGrant {
             .field("ice_servers", &self.ice_servers)
             .field("codecs", &self.codecs)
             .field("limits", &self.limits)
+            .field("content", &self.content)
             .finish()
     }
 }
@@ -342,11 +407,12 @@ fn ice_server(value: &Value) -> Option<IceServer> {
     })
 }
 
-/// Validated grant, or `None` when any field violates the v1 contract or the requested codecs.
+/// Validated grant, or `None` when any field violates the v1 contract, the requested codecs or content.
 pub(crate) fn parse_media_session_grant(
     value: &Value,
     direction: MediaDirection,
     requested: Option<&[VideoCodec]>,
+    requested_content: Option<MediaSessionContent>,
 ) -> Option<MediaSessionGrant> {
     let wire_direction = match direction {
         MediaDirection::Publish => "publish",
@@ -355,6 +421,20 @@ pub(crate) fn parse_media_session_grant(
     if value.get("direction")?.as_str()? != wire_direction {
         return None;
     }
+    // A requested content must be echoed exactly; a default request accepts no echo (or camera for publish).
+    let content = match (requested_content, value.get("content")) {
+        (Some(want), Some(echo)) if echo.as_str() == Some(want.wire()) => Some(want),
+        (None, None) => None,
+        (None, Some(echo)) if direction == MediaDirection::Publish && echo == "camera" => {
+            Some(MediaSessionContent::Camera)
+        }
+        _ => return None,
+    };
+    let fps_cap = if content == Some(MediaSessionContent::Screen) {
+        15
+    } else {
+        30
+    };
     let session_id = value.get("session_id")?.as_str()?;
     let endpoint_url = value.get("endpoint")?.as_str()?;
     let token = value.get("token")?.as_str()?;
@@ -408,9 +488,10 @@ pub(crate) fn parse_media_session_grant(
         limits: MediaSessionLimits {
             max_width: wire_int(limits.get("max_width"), width_cap)?,
             max_height: wire_int(limits.get("max_height"), height_cap)?,
-            max_fps: wire_int(limits.get("max_fps"), 30)?,
+            max_fps: wire_int(limits.get("max_fps"), fps_cap)?,
             max_frame_bytes: wire_int(limits.get("max_frame_bytes"), MAX_FRAME_BYTES as u64)?,
         },
+        content,
     })
 }
 
