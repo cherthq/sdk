@@ -302,6 +302,28 @@ Limitations: no audio; the SDK has no built-in media engine, encoder or WebRTC s
 keyframe requests (PLI/FIR) are not guaranteed to reach your source, so send periodic
 keyframes.
 
+### Call video composition (draft, unreleased)
+
+`SetCallVideoAsync(callId, SetCallVideo, idempotencyKey)` (PUT `/calls/{id}/video` with
+`Idempotency-Key`), `GetCallVideoAsync` and `ClearCallVideoAsync` manage the call's video
+as a stack of layers that the server composes and publishes through the call's single
+publish slot. SDK v1 allows at most two layers: one base (`BaseLayerInput`, z 0, `Camera`
+or `Managed`) and page layers (`PageLayerInput`, z 1–64, normalized `Region` defaulting to
+full frame, `Opaque`/`Transparent` background, `Opacity` 0–1, optional `Input` kinds and
+`InitialState` JSON). Setting only `SetCallVideo.DeploymentId` is the shortcut for one
+opaque full-frame page.
+
+Pages are ready living-service deployment IDs only: the call-video resource never loads
+a URL, and the native SDKs cannot deploy one, so create the deployment with the
+TypeScript SDK first. Invalid input throws `ArgumentException` before any request; a
+response outside the contract throws `ChertApiException` with `invalid_response`. A
+camera base may return a publish grant (`MediaSessionGrant`) for your WHIP client.
+`video_composition_unsupported`, `composition_invalid`, `composition_revision_conflict`
+and `composition_base_unavailable` surface verbatim. `VideoCompositionCapability.Parse`
+reads the explicit `video_composition` capability, and `CallVideoComposition.InputTarget(x, y)`
+finds the topmost pointer-accepting page layer under an output-frame point. The native
+SDKs do not drive page state, events or input; living services are TypeScript-only for now.
+
 ## Billing and preview migration
 
 All billing methods use `/api/v1/billing` and require a **signed-in user bearer

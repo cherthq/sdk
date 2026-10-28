@@ -1,4 +1,4 @@
-"""Custom media v1: session minting wire contract, grant validation and error codes on loopback."""
+"""Custom media v1 and call video composition (draft): wire contract, response validation and error codes on loopback."""
 import json
 import subprocess
 import sys
@@ -69,12 +69,116 @@ SCREEN_CASES = {
               dict(error=dict(code=code, message="internal host 10.0.0.5"), request_id="r"))
        for status, code in ((409, "media_content_unsupported"), (409, "caller_screen_unsupported"), (422, "media_limit_exceeded"))},
 }
+CAMERA_GRANT = {**GRANT, "session_id": "3f2b8c1e-0d4a-4b7e-9c11-2a6f5e0d9b77", "content": "camera", "token": "session-bearer",
+                "codecs": ["h264"], "limits": {**LIMITS, "max_fps": 24}}
+
+
+def living(fps, call="call"):
+    return dict(session_id="ls", call_id=call, deployment_id="dep", status="starting", viewport=dict(width=1920, height=270),
+                fps=fps, ready_at=None, last_heartbeat_at=None, error_code=None)
+
+
+CAPTIONS = dict(id="captions", z=1, living_session=living(12), region=dict(x=0, y=0.75, width=1, height=0.25),
+                background="transparent", opacity=0.8, input=["pointer"])
+BASE = dict(id="base", z=0, source=dict(kind="camera"), publish=CAMERA_GRANT)
+LAYERED = dict(composition_id="cmp", call_id="call", revision=3, status="starting", output=dict(width=1920, height=1080, fps=24),
+               error_code=None, layers=[BASE, CAPTIONS])
+PAGE_ONLY = {**LAYERED, "output": dict(width=1280, height=720, fps=30),
+             "layers": [dict(id="page", z=1, living_session=living(30), region=dict(x=0, y=0, width=1, height=1),
+                             background="opaque", opacity=1, input=[])]}
+FULL = dict(x=0, y=0, width=1, height=1)
+# (name, method, expected body or None, expected key or None, reply data) for accepted call-video requests.
+VIDEO = {
+    "video-page": ("PUT", dict(layers=[dict(id="page", z=1, page=dict(deployment_id="dep-url"), region=FULL,
+                                            background="opaque", opacity=1)]), "video-key-1", PAGE_ONLY),
+    "video-layered": ("PUT", dict(revision=2, layers=[dict(id="base", z=0, source=dict(kind="camera")),
+                                                      dict(id="captions", z=1, page=dict(deployment_id="dep"),
+                                                           region=dict(x=0, y=0.75, width=1, height=0.25), background="transparent",
+                                                           opacity=0.8, input=["pointer"], initial_state=dict(lang="en"))]),
+                      "video-key-2", LAYERED),
+    "video-get": ("GET", None, None, LAYERED),
+    "video-clear": ("DELETE", None, None, LAYERED),
+    # A region touching the frame edge is inside it.
+    "video-edge": ("PUT", dict(layers=[dict(id="base", z=0, source=dict(kind="camera")),
+                                       dict(id="p", z=1, page=dict(deployment_id="dep"), region=dict(x=0.75, y=0.75, width=0.25, height=0.25),
+                                            background="opaque", opacity=1)]), "video-key-1", LAYERED),
+    "video-managed": ("GET", None, None, {**LAYERED, "layers": [dict(id="base", z=0, source=dict(kind="managed")), CAPTIONS]}),
+}
+VIDEO_BAD = [{**LAYERED, "layers": layers, **extra} for layers, extra in (
+    ([BASE, {**CAPTIONS, "living_session": living(30)}], {}),               # page fps above output fps
+    ([BASE, CAPTIONS], dict(output=dict(width=1920, height=1080, fps=30))),  # output fps above the base grant
+    ([{**BASE, "source": dict(kind="managed")}, CAPTIONS], {}),             # grant on a managed base
+    ([{**BASE, "publish": {**CAMERA_GRANT, "content": "screen"}}, CAPTIONS], {}),
+    ([BASE, CAPTIONS, {**CAPTIONS, "id": "more", "z": 2}], {}),
+    ([BASE, {**CAPTIONS, "living_session": living(12, "other")}], {}),
+    ([BASE, {**CAPTIONS, "region": dict(x=0.5, y=0, width=0.6, height=1)}], {}),
+    ([BASE, {**CAPTIONS, "z": 0}], {}),
+    ([BASE, {**CAPTIONS, "input": ["pointer", "pointer"]}], {}),
+    ([BASE, CAPTIONS], dict(status="paused")),
+    ([BASE, CAPTIONS], dict(output=dict(width=1921, height=1080, fps=24))))] + [
+    {k: v for k, v in LAYERED.items() if k != "error_code"}, None]
+VIDEO_ERRORS = [(409, "video_composition_unsupported"), (422, "composition_invalid"), (409, "composition_revision_conflict"),
+                (409, "composition_base_unavailable"), (409, "media_session_conflict"), (409, "composition_secret")]
 requests, errors = [], []
 
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         pass
+
+    def reply(self, status, envelope):
+        if isinstance(envelope, dict) and "request_id" not in envelope:
+            envelope["request_id"] = "trace"
+        if isinstance(envelope, dict) and envelope["request_id"] is None:
+            del envelope["request_id"]
+        payload = envelope.encode() if isinstance(envelope, str) else json.dumps(envelope).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def video(self, method):
+        try:
+            _, case, name, *rest = self.path.split("/")
+            assert case == "case" and "/".join(rest) == f"calls/{CALL}/video", self.path
+            assert self.headers.get("Authorization") == "Bearer ft-secret"
+            assert self.headers.get("X-Chert-Project-Id") == PROJECT
+            length = int(self.headers.get("Content-Length") or 0)
+            raw = self.rfile.read(length) if length else b""
+            body = json.loads(raw) if raw else None
+            requests.append((name, body))
+            key = self.headers.get("Idempotency-Key")
+            status, envelope = 200, None
+            if name in VIDEO:
+                expected_method, expected_body, expected_key, data = VIDEO[name]
+                assert (method, body, key) == (expected_method, expected_body, expected_key), (name, method, body, key)
+                envelope = dict(data=data)
+            elif name.startswith("video-bad-"):
+                assert (method, body, key) == ("GET", None, None), name
+                envelope = dict(data=VIDEO_BAD[int(name[10:])])
+            elif name.startswith("video-error-"):
+                assert (method, key) == ("PUT", "video-key-1") and body["layers"][0]["page"] == dict(deployment_id="dep"), body
+                status, code = VIDEO_ERRORS[int(name[12:])]
+                envelope = dict(error=dict(code=code, message="internal host 192.0.2.5"), request_id="r")
+            else:
+                raise AssertionError(name)
+            if name == "video-page":  # Integral numbers go out as JSON integers, as in the TypeScript SDK.
+                assert b'"opacity":1' in raw and b"1.0" not in raw, raw
+            self.reply(status, envelope)
+        except Exception as exc:
+            errors.append(repr(exc))
+            self.send_response(500)
+            self.end_headers()
+
+    def do_PUT(self):
+        self.video("PUT")
+
+    def do_GET(self):
+        self.video("GET")
+
+    def do_DELETE(self):
+        self.video("DELETE")
 
     def do_POST(self):
         try:
@@ -116,16 +220,7 @@ class Handler(BaseHTTPRequestHandler):
                 envelope = dict(error=dict(code=code, message="internal host 192.0.2.5"), request_id="r")
             else:
                 raise AssertionError(name)
-            if isinstance(envelope, dict) and "request_id" not in envelope:
-                envelope["request_id"] = "trace"
-            if isinstance(envelope, dict) and envelope["request_id"] is None:
-                del envelope["request_id"]
-            payload = envelope.encode() if isinstance(envelope, str) else json.dumps(envelope).encode()
-            self.send_response(status)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(payload)))
-            self.end_headers()
-            self.wfile.write(payload)
+            self.reply(status, envelope)
         except Exception as exc:
             errors.append(repr(exc))
             self.send_response(500)
@@ -135,10 +230,12 @@ class Handler(BaseHTTPRequestHandler):
 with ThreadingHTTPServer(("127.0.0.1", 0), Handler) as server:
     threading.Thread(target=server.serve_forever, daemon=True).start()
     origin = f"http://127.0.0.1:{server.server_port}"
-    result = subprocess.run([sys.argv[1], origin, str(len(BAD)), str(len(ERRORS)), str(len(ACCEPT)), str(len(SCREEN_BAD))],
+    result = subprocess.run([sys.argv[1], origin, str(len(BAD)), str(len(ERRORS)), str(len(ACCEPT)), str(len(SCREEN_BAD)),
+                             str(len(VIDEO_BAD)), str(len(VIDEO_ERRORS))],
                             timeout=60)
     server.shutdown()
 assert not errors, errors
 assert result.returncode == 0, result.returncode
 # Local validation never reaches the network: exactly one request per remote case.
-assert len(requests) == 4 + len(BAD) + len(ERRORS) + len(ACCEPT) + len(SCREEN_CASES) + len(SCREEN_BAD), requests
+assert len(requests) == (4 + len(BAD) + len(ERRORS) + len(ACCEPT) + len(SCREEN_CASES) + len(SCREEN_BAD)
+                         + len(VIDEO) + len(VIDEO_BAD) + len(VIDEO_ERRORS)), requests

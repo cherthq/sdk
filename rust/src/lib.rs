@@ -4,8 +4,9 @@ pub mod facetime;
 pub mod media;
 mod unified;
 pub use media::{
-    parse_media_capabilities, CreateMediaSession, MediaCapabilities, MediaContent, MediaDirection,
-    MediaFrameError, MediaSessionContent, MediaSessionGrant, VideoCodec, VideoFrame,
+    composition_input_target, parse_media_capabilities, parse_video_composition,
+    CallVideoComposition, CreateMediaSession, MediaCapabilities, MediaContent, MediaDirection,
+    MediaFrameError, MediaSessionContent, MediaSessionGrant, SetCallVideo, VideoCodec, VideoFrame,
 };
 pub use unified::{
     ChertSdk, FaceTimeConfig, IMessageConfig, TransportLimits, UnifiedSessionOptions,

@@ -94,14 +94,7 @@ public sealed class FaceTimeClient : IDisposable
             response = await transport.RequestWithResponseAsync(path, JsonSerializer.SerializeToElement(body), HttpMethod.Post, null,
                 cancellationToken, projectRequest: true).ConfigureAwait(false);
         }
-        catch (ChertApiException error)
-        {
-            // Raw response data is never returned. Server error responses keep their status and an
-            // allowlisted code; local and transport failures keep their code.
-            var server = error.Status >= 300 && (error.ResponseData is not null || error.Code == "http_error");
-            var code = error.Code == "invalid_json" ? "invalid_response" : server && !MediaSafeCodes.Contains(error.Code) ? "request_failed" : error.Code;
-            throw new ChertApiException(error.Status, code, error.RequestId);
-        }
+        catch (ChertApiException error) { throw Sanitized(error); }
         try
         {
             if (response.Status != 201 || response.Value is not { ValueKind: JsonValueKind.Object } envelope || !envelope.TryGetProperty("data", out var data))
@@ -111,6 +104,49 @@ public sealed class FaceTimeClient : IDisposable
         }
         // Response data is withheld: an invalid grant may still carry a bearer token.
         catch (JsonException) { throw new ChertApiException(502, "invalid_response", response.RequestId); }
+    }
+
+    /// <summary>
+    /// Draft, unreleased: replaces the call's video with a server-side composition of up to two layers. Pages must be ready
+    /// deployment IDs. Invalid input throws <see cref="ArgumentException"/> before any request. Single attempt; never retried.
+    /// </summary>
+    public Task<CallVideoComposition> SetCallVideoAsync(string callId, SetCallVideo input, string idempotencyKey, CancellationToken cancellationToken = default)
+    {
+        var body = CallVideoComposition.Body(input);
+        return CallVideo(callId, body, HttpMethod.Put, Key(idempotencyKey), cancellationToken);
+    }
+    /// <summary>Draft, unreleased: the call's current video composition.</summary>
+    public Task<CallVideoComposition> GetCallVideoAsync(string callId, CancellationToken cancellationToken = default)
+        => CallVideo(callId, null, HttpMethod.Get, null, cancellationToken);
+    /// <summary>Draft, unreleased: stops the composition and frees the publish slot.</summary>
+    public Task<CallVideoComposition> ClearCallVideoAsync(string callId, CancellationToken cancellationToken = default)
+        => CallVideo(callId, null, HttpMethod.Delete, null, cancellationToken);
+    private async Task<CallVideoComposition> CallVideo(string callId, System.Text.Json.Nodes.JsonObject? body, HttpMethod method, string? key, CancellationToken ct)
+    {
+        var path = "/calls/" + Id(callId) + "/video";
+        ChannelTransport.JsonResponse response;
+        try
+        {
+            response = await transport.RequestWithResponseAsync(path, body is null ? null : JsonSerializer.SerializeToElement(body, CallVideoComposition.Deep), method, key,
+                ct, projectRequest: true).ConfigureAwait(false);
+        }
+        catch (ChertApiException error) { throw Sanitized(error); }
+        try
+        {
+            if (response.Value is not { ValueKind: JsonValueKind.Object } envelope || !envelope.TryGetProperty("data", out var data)) throw new JsonException();
+            UniqueProperties(envelope);
+            return CallVideoComposition.Parse(data);
+        }
+        // Response data is withheld: an invalid composition may still carry a bearer token.
+        catch (JsonException) { throw new ChertApiException(502, "invalid_response", response.RequestId); }
+    }
+    // Raw response data is never returned. Server error responses keep their status and an
+    // allowlisted code; local and transport failures keep their code.
+    private static ChertApiException Sanitized(ChertApiException error)
+    {
+        var server = error.Status >= 300 && (error.ResponseData is not null || error.Code == "http_error");
+        var code = error.Code == "invalid_json" ? "invalid_response" : server && !MediaSafeCodes.Contains(error.Code) ? "request_failed" : error.Code;
+        return new ChertApiException(error.Status, code, error.RequestId);
     }
 
     public Task<DeviceLogin> BeginLoginAsync(string deviceName, CancellationToken cancellationToken = default)
@@ -189,7 +225,8 @@ public sealed class FaceTimeClient : IDisposable
     {
         "unauthorized", "forbidden", "cli_scope_denied", "billing_owner_required", "billing_unavailable", "project_required",
         "invalid_request", "cli_login_expired", "cli_login_not_found", "cli_login_forbidden", "slow_down", "cli_login_rate_limited",
-        "cli_login_busy", "not_found", "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "media_content_unsupported", "caller_screen_unsupported", "media_limit_exceeded", "call_not_active",
+        "cli_login_busy", "not_found", "conflict", "media_capability_unsupported", "media_session_conflict", "caller_screen_not_shared", "media_content_unsupported", "caller_screen_unsupported", "media_limit_exceeded",
+        "video_composition_unsupported", "composition_invalid", "composition_revision_conflict", "composition_base_unavailable", "call_not_active",
         "call_ended", "call_not_found", "media_session_expired", "media_transport_unavailable"
     };
     private enum Auth { Public, User, Project }
