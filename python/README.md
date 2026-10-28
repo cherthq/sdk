@@ -220,7 +220,7 @@ transport failures and redirects use status 0 / `network_error`.
 These are control-plane operations, not FaceTime media/calling APIs or evidence
 that a connector is provisioned or a call succeeded.
 
-## Custom video sessions (v1, video-only)
+## Custom video sessions (v1, video-only; source preview, unreleased)
 
 Lines, calls and line/call-scoped workers may report `media_capabilities`. Parse it
 with `parse_media_capabilities(...)`; absent, malformed or unknown-version input is

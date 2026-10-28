@@ -260,7 +260,7 @@ requires the expected binding (including explicit null) and assignment generatio
 Checkout creation and cancellation are explicit financial actions, not proof of
 live entitlement or allocation.
 
-### Custom video sessions (v1, video-only)
+### Custom video sessions (v1, video-only; source preview, unreleased)
 
 Check explicit capabilities first; never infer support from `SupportsVideo`:
 

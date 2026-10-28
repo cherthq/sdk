@@ -112,7 +112,7 @@ test('source: transport failure and abort move to failed with redacted errors', 
   const pending = aborted.start(controller.signal); controller.abort();
   const failure = await pending.catch(e => e);
   expect([failure.code, String(failure.message).includes('secret'), aborted.state]).toEqual(['aborted', false, 'failed']);
-  const broken: MediaTransport = { kind: 'broken', accepts: ['video'], async connect() {}, async close() {}, async send() { throw new Error('socket 10.0.0.1 token=secret'); } };
+  const broken: MediaTransport = { kind: 'broken', accepts: ['video'], async connect() {}, async close() {}, async send() { throw new Error('socket 192.0.2.1 token=secret'); } };
   const failing = new ChertVideoSource({ transport: broken, width: 16, height: 16, maxFps: 30 });
   const seen: MediaError[] = []; failing.on('error', e => seen.push(e));
   await failing.start(); failing.pushFrame(i420(16, 16, 0n)); await tick(); await tick();

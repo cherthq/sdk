@@ -186,7 +186,7 @@ func TestCreateMediaSessionRequestAndGrant(t *testing.T) {
 
 	// Unknown server codes become request_failed; raw data and response are never returned.
 	f.set(func() (int, string) {
-		return 418, `{"error":{"code":"internal_detail","message":"internal host 10.0.0.5"},"request_id":"trace"}`
+		return 418, `{"error":{"code":"internal_detail","message":"internal host 192.0.2.5"},"request_id":"trace"}`
 	})
 	if r, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish}); true {
 		var api *APIError
@@ -201,13 +201,13 @@ func TestCreateMediaSessionRequestAndGrant(t *testing.T) {
 		code   string
 	}{{401, "unauthorized"}, {401, "media_session_expired"}, {404, "call_not_found"}, {409, "media_capability_unsupported"}, {409, "media_session_conflict"}, {409, "call_not_active"}, {410, "call_ended"}, {503, "media_transport_unavailable"}} {
 		f.set(func() (int, string) {
-			return tc.status, `{"error":{"code":"` + tc.code + `","message":"internal host 10.0.0.5"},"request_id":"trace"}`
+			return tc.status, `{"error":{"code":"` + tc.code + `","message":"internal host 192.0.2.5"},"request_id":"trace"}`
 		})
 		before := f.requests()
 		_, err := c.CreateMediaSession(ctx, "call-1", CreateMediaSessionRequest{Direction: MediaPublish})
 		var api *APIError
 		if !errors.As(err, &api) || api.Status != tc.status || api.Code != tc.code || f.requests() != before+1 || api.Data != nil ||
-			strings.Contains(err.Error(), "10.0.0.5") || strings.Contains(fmt.Sprintf("%v %+v %#v", err, err, err), "10.0.0.5") {
+			strings.Contains(err.Error(), "192.0.2.5") || strings.Contains(fmt.Sprintf("%v %+v %#v", err, err, err), "192.0.2.5") {
 			t.Fatalf("%d %s: %v", tc.status, tc.code, err)
 		}
 	}

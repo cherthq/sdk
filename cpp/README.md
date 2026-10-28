@@ -175,7 +175,7 @@ Pagination is explicit: limit 1–100, nonnegative safe-integer offset; no hidde
 auto-pagination, polling, retries or cancellation. Calls are synchronous and
 independent; const methods may be used concurrently while their client stays alive.
 
-### Custom video sessions (v1, video-only)
+### Custom video sessions (v1, video-only; source preview, unreleased)
 
 Check explicit capabilities first; never infer support from `supports_video`:
 

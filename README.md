@@ -219,6 +219,9 @@ a bounded video source, capability parsing and WHIP/WHEP signaling.
   returns an experimental WHEP
   ([draft-ietf-wish-whep-05](https://datatracker.ietf.org/doc/draft-ietf-wish-whep/05/))
   endpoint. Treat `endpoint` and `token` as opaque secrets.
+- **One publish slot per call.** Custom camera video, a living surface and a
+  screen share are mutually exclusive. Requesting a second publish while one is
+  active returns `media_session_conflict`.
 - **Signaling.** `publishWhip`/`receiveWhep` take any spec-compliant
   `RTCPeerConnection` (the browser's built-in one, or a Node/Bun/Deno WebRTC
   library). They send the same bearer token on `POST`, and on `PATCH`

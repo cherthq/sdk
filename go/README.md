@@ -244,7 +244,7 @@ confirmation. Do not treat checkout completion as line allocation.
 
 Connector management does not provide a connector or media runtime.
 
-### Custom video sessions (v1, video-only)
+### Custom video sessions (v1, video-only; source preview, unreleased)
 
 Check explicit capabilities first; never infer support from `SupportsVideo`:
 

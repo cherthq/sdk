@@ -82,7 +82,7 @@ class Handler(BaseHTTPRequestHandler):
                 assert body == dict(direction=direction), body
             elif name.startswith("error-"):
                 status, code = ERRORS[int(name[6:])]
-                envelope = dict(error=dict(code=code, message="internal host 10.0.0.5"), request_id="r")
+                envelope = dict(error=dict(code=code, message="internal host 192.0.2.5"), request_id="r")
             else:
                 raise AssertionError(name)
             if isinstance(envelope, dict) and "request_id" not in envelope:
