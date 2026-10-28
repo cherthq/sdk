@@ -12,6 +12,9 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = []
 
+[project.optional-dependencies]
+workers = []
+
 [tool.setuptools]
 packages = ["chert", "trychert"]
 

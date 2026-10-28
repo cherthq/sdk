@@ -121,7 +121,7 @@ the FaceTime control-plane API with Python snake_case methods:
 | Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)` |
 | User (bearer only) | `inspect_login(user_code)`, `approve_login(user_code, project_id)`, `logout()` |
 | Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)` |
-| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)` |
+| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)`; draft, not served yet: `purchase(plan=..., idempotency_key=...)`, `change_plan(plan=..., idempotency_key=...)`, `payment_method_setup(idempotency_key=...)` |
 
 Pagination parameters and checkout arguments are keyword-only. Enrollment uses
 a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
@@ -518,6 +518,47 @@ uses LiveKit, not these HTTP event streams.
   Transport failures have status 0 and code `timeout` or `transport_error`.
   Invalid JSON uses `invalid_response`; redirects use `redirect_blocked`.
   Neither errors nor a timeout authorize resending an uncertain mutation.
+
+## Cloudflare Python Workers (source preview)
+
+The same public API runs in [Cloudflare Python Workers](https://developers.cloudflare.com/workers/languages/python/)
+(Pyodide). When `sys.platform == "emscripten"`, `ChertClient`, `ChertControlPlane`,
+`Chert(...)` and `Chert.connect(...)` send each request through the runtime's
+JavaScript `fetch` instead of `urllib`; CPython behavior is unchanged. There is no
+transport argument to configure, and the `workers` extra adds no dependencies.
+
+```toml
+# Worker pyproject.toml, managed with pywrangler
+dependencies = ["chert-sdk[workers]"]
+```
+
+```python
+import json
+from workers import Response, WorkerEntrypoint
+from trychert import ChertClient
+
+class Default(WorkerEntrypoint):
+    async def fetch(self, request):
+        client = ChertClient(api_key=self.env.CHERT_IMESSAGE_KEY)
+        return Response(json.dumps(client.request("/whoami")))
+```
+
+Methods stay synchronous: each call suspends the handler with Pyodide's
+`run_sync` (JSPI), so call the SDK inside a handler, not at module import time.
+The fetch transport keeps the existing contract: pinned headers,
+`redirect: "manual"` (any 3xx is `redirect_blocked` / `network_error`), exactly
+one attempt, response size limits, and sanitized `timeout` / `transport_error`
+codes. `timeout` bounds each wait for headers or a body chunk and aborts the
+fetch when exceeded. `stream_events` reads the body incrementally and cancels it
+on close. `verify_webhook` uses only `hmac`/`hashlib` and needs no network.
+Proxy and TLS behavior belong to the Workers runtime, not the SDK.
+
+`python/examples/workers` is a minimal Worker: from that directory, put
+`CHERT_IMESSAGE_KEY` and `CHERT_WEBHOOK_SECRET` in `.dev.vars` and run
+`uv run pywrangler dev`. It was exercised locally under `wrangler dev` against a
+loopback stub only; that is not evidence of a deployed Worker reaching a live
+Chert service. `python/tests/test_workers.py` covers the transport offline with
+fake `js` and `pyodide.ffi` modules.
 
 ## Local checks and packaging
 

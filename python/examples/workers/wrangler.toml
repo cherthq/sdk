@@ -1,0 +1,7 @@
+name = "chert-sdk-python-worker-example"
+main = "src/entry.py"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["python_workers"]
+
+[vars]
+CHERT_IMESSAGE_URL = "https://console.trychert.com"

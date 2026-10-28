@@ -145,12 +145,27 @@ before production use. Default-origin reaction support is not yet verified.
 No endpoint fallback or automatic retries are performed; a queued receipt is
 not proof of delivery. Package publication and backend availability are separate.
 
-Billing uses a signed-in user session and project UUID, not a CLI/project key.
+Billing uses a signed-in user session and project UUID. Only the terminal-billing
+draft below also accepts a CLI credential with the `billing` scope (owner/admin).
 Use `billingStatus()` to inspect entitlement and availability. Refusals keep their code,
 for example `billing_sales_disabled`, `billing_subscription_exists`,
 `billing_dedicated_no_inventory` or `shared_no_capacity`. The 0.2.0 preview
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
+
+**Terminal billing (draft, unreleased; the backend does not serve it yet).**
+`purchase({ plan }, key)` and `changePlan({ plan }, key)` charge the saved card;
+`paymentMethodSetup(key)` returns `{ status: 'requires_payment_method', url }` for
+adding or replacing it. Purchases and plan changes return `{ status: 'active',
+entitlement }`, `{ status: 'pending' }` (the payment was accepted but the
+entitlement is not committed yet: retry with the same idempotency key), or
+`{ status: 'requires_payment_method' | 'requires_action', url }`, where `url` is a
+Stripe-hosted page for card entry or authentication: card details are never
+entered in the terminal. The CLI equivalents are
+`chert-sdk billing status | card | buy --plan P | switch --plan P | cancel`;
+mutations need `--idempotency-key` and `--confirm`. The CLI credential needs the
+`billing` scope and an owner/admin role. Dedicated purchases stay unavailable
+(`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
 
 ```sh
 bunx --package @trychert/sdk@0.2.2 chert-sdk context
@@ -200,9 +215,8 @@ does not deprecate any registry package; registry actions require separate appro
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
 `adopt` and `context`. Since 0.2.1, unknown commands and subcommands exit with
 `unknown_command` before any credential lookup. Published 0.1.0, 0.2.0, 0.2.1 and 0.2.2
-do not include `login`, `onboard`, `new`, `doctor` or `dev`. The preview CLI/onboarding work remains in
-[draft #5](https://github.com/cherthq/sdk/pull/5) and its integration branch in
-[draft #6](https://github.com/cherthq/sdk/pull/6).
+do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
+agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
 
 ### Custom video sources (source preview, unreleased)
 

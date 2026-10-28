@@ -7,11 +7,13 @@ import http.client
 import json
 import math
 import re
+import sys
 from typing import Any, Generator, Literal, TypedDict, cast
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, unquote, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
+from ._fetch import FetchOpener
 from .events import (MessagingEvent, RecordedMessagingEvent, MessagingEventPage,
                      MessagingStreamFrame, WebhookSubscription, CreateWebhookSubscription,
                      UpdateWebhookSubscription, WebhookSubscriptions, WebhookSubscriptionResponse,
@@ -137,7 +139,8 @@ class ChertClient:
         self._timeout = timeout
         self._limit = max_response_bytes
         # No ambient proxy, netrc/password handler or redirect forwarding.
-        self._opener = build_opener(ProxyHandler({}), _NoRedirect())
+        self._opener = (FetchOpener() if sys.platform == "emscripten"
+                        else build_opener(ProxyHandler({}), _NoRedirect()))
 
     def send_text(self, phone: str, text: str, *, idempotency_key: str | None = None) -> QueuedTextReceipt:
         """One strict plaintext attempt; a queued receipt is not delivery proof."""
