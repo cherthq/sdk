@@ -117,6 +117,28 @@ export interface LivingServiceMessageWebhook {
   data: { call_id: string; session_id: string; deployment_id: string; message: string; data: LivingJson; occurred_at: string };
 }
 
+const bytesOf = (v: string | Uint8Array) => typeof v === 'string' ? new TextEncoder().encode(v) : new Uint8Array(v);
+/**
+ * Verifies `X-Chert-Signature: sha256=<lowercase hex>`, an HMAC-SHA256 of the exact raw body bytes with the
+ * call-pinned living-service signing secret. Not the messaging `v1,<timestamp>,<hex>` format; there is no timestamp
+ * window, so de-duplicate on `event_id`. Verify before parsing JSON.
+ */
+export async function verifyLivingServiceWebhook(rawBody: string | Uint8Array, signatureHeader: string | null, secret: string | Uint8Array): Promise<boolean> {
+  const match = typeof signatureHeader === 'string' ? /^sha256=([0-9a-f]{64})(?![\s\S])/.exec(signatureHeader) : null;
+  const keyBytes = bytesOf(secret);
+  if (!match || !keyBytes.byteLength) return false;
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+  const digest = Uint8Array.from(match[1]!.match(/../g)!, byte => parseInt(byte, 16));
+  // WebCrypto verify compares in constant time.
+  return crypto.subtle.verify('HMAC', key, digest, bytesOf(rawBody));
+}
+/** Parses `X-Chert-Signature-Version` (the signing-secret version, for rotation). Returns null unless a positive decimal integer. */
+export function livingSignatureVersion(header: string | null): number | null {
+  if (typeof header !== 'string' || !/^[1-9][0-9]{0,15}(?![\s\S])/.test(header)) return null;
+  const version = Number(header);
+  return Number.isSafeInteger(version) ? version : null;
+}
+
 /** @internal Checks the effective viewport/fps returned by attach and status. */
 export function validateLivingSession(session: LivingSession): LivingSession {
   const s = session as unknown as Record<string, unknown>, v = s?.viewport as Record<string, unknown> | undefined;

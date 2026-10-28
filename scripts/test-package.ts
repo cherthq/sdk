@@ -165,7 +165,7 @@ declare const rtcModule: LiveKitRtcModule; declare const lkSource: LiveKitVideoS
 const lk: MediaTransport = liveKitVideoTransport(rtcModule, lkSource);
 void customVideo; void lk;
 import {connectLivingPage, startLivingPreview, type LivingPage} from '@trychert/sdk/living';
-import {parseLivingServices, type LivingSession} from '@trychert/sdk/facetime';
+import {livingSignatureVersion, parseLivingServices, verifyLivingServiceWebhook, type LivingServiceMessageWebhook, type LivingSession} from '@trychert/sdk/facetime';
 async function living(client: ChertControlPlane, frame: Window) {
   if (!parseLivingServices((await client.getCall('call')).living_services)) return;
   const deployment = await client.createLivingService({name:'Board',entry_url:'https://app.example/v1/',viewport:{width:1280,height:720},fps:30,input:['pointer']},'create-key-1');
@@ -176,6 +176,8 @@ async function living(client: ChertControlPlane, frame: Window) {
   // @ts-expect-error Messages must be JSON.
   page.send('choice', new Date());
   startLivingPreview(frame,{origin:'https://app.example',viewport:{width:640,height:360},fps:15});
+  const raw = new Uint8Array(0), version: number | null = livingSignatureVersion('1');
+  if (await verifyLivingServiceWebhook(raw, 'sha256=00', version === 1 ? 'secret' : new Uint8Array(32))) { const event: LivingServiceMessageWebhook = JSON.parse(''); void event.event_id; }
 }
 void living;
 declare const billing: ChertControlPlane;

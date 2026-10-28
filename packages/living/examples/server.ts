@@ -1,5 +1,5 @@
 /** Developer backend: deploy the page, attach it to a call and drive it from your own events. Voice keeps working throughout. */
-import { ChertControlPlane, parseLivingServices } from '@cherthq/control-plane';
+import { ChertControlPlane, livingSignatureVersion, parseLivingServices, verifyLivingServiceWebhook, type LivingServiceMessageWebhook } from '@cherthq/control-plane';
 
 /** Deploy once per release (e.g. in CI), not per call. Reuse the key when retrying the same release. */
 export async function deployOrderBoard(client: ChertControlPlane, release: string) {
@@ -28,9 +28,14 @@ export async function showOrderBoard(client: ChertControlPlane, callId: string, 
   };
 }
 
-/** Receives page messages. Verify the webhook signature with your configured secret before calling this. */
-export function onLivingMessage(event: import('@cherthq/control-plane').LivingServiceMessageWebhook, seen: Set<string>) {
-  if (seen.has(event.event_id)) return;   // at-least-once delivery
+/** Receives page messages: verify the raw bytes, then de-duplicate on event_id (delivery is at-least-once). */
+export async function onLivingMessage(request: Request, secrets: Map<number, string>, seen: Set<string>): Promise<Response> {
+  const raw = new Uint8Array(await request.arrayBuffer());
+  const secret = secrets.get(livingSignatureVersion(request.headers.get('X-Chert-Signature-Version')) ?? 0);
+  if (!secret || !await verifyLivingServiceWebhook(raw, request.headers.get('X-Chert-Signature'), secret)) return new Response(null, { status: 401 });
+  const event = JSON.parse(new TextDecoder().decode(raw)) as LivingServiceMessageWebhook;
+  if (seen.has(event.event_id)) return new Response(null, { status: 200 });
   seen.add(event.event_id);
   if (event.data.message === 'order.confirmed') console.log('Caller confirmed order on call', event.data.call_id);
+  return new Response(null, { status: 200 });
 }

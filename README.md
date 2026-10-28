@@ -282,9 +282,14 @@ through the API. Everything the page renders is visible to the caller.
   up to 16 KiB of JSON. `sendLivingInput` relays only declared input kinds, with
   pointer x/y normalized to 0..1. `detachLivingService` removes the page.
 - Messages the page sends arrive as a signed, durable `living_service.message`
-  webhook (`LivingServiceMessageWebhook`). Verify the signature over the raw bytes
-  and de-duplicate on `event_id`. The call timeline only records payload-free
+  webhook (`LivingServiceMessageWebhook`). The call timeline only records payload-free
   lifecycle events (`living_service.ready|failed|stopped`).
+  `X-Chert-Signature: sha256=<hex>` is an HMAC-SHA256 of the exact raw body with the
+  call's living-service signing secret; `X-Chert-Signature-Version` names which
+  secret version signed it. Pick the secret with `livingSignatureVersion(header)`,
+  check `await verifyLivingServiceWebhook(rawBody, signatureHeader, secret)` before
+  parsing, then de-duplicate on `event_id`. There is no timestamp, and this is not
+  the iMessage `v1,<timestamp>,<hex>` format.
 
 **Page side** (`@trychert/sdk/living`, no dependencies, no framework required):
 `connectLivingPage({ onStart, onState, onEvent, onCallEvent, onInput, onStop })`

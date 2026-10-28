@@ -1,7 +1,7 @@
 /** Thin client for the inspected Chert FaceTime control-plane routes. No retries or provisioning fiction. */
 import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
 export * from './video';
-export { parseLivingServices, type LivingServicesCapability, type LivingInputKind, type LivingViewport, type LivingJson, type LivingServiceManifest, type LivingDeploymentStatus, type LivingDeployment, type AttachLivingService, type LivingSessionStatus, type LivingSession, type LivingInputEvent, type LivingServiceMessageWebhook } from './living';
+export { parseLivingServices, verifyLivingServiceWebhook, livingSignatureVersion, type LivingServicesCapability, type LivingInputKind, type LivingViewport, type LivingJson, type LivingServiceManifest, type LivingDeploymentStatus, type LivingDeployment, type AttachLivingService, type LivingSessionStatus, type LivingSession, type LivingInputEvent, type LivingServiceMessageWebhook } from './living';
 import { validateAttach, validateEvent, validateInput, validateLivingSession, validateManifest, validateState, type AttachLivingService, type LivingDeployment, type LivingInputEvent, type LivingJson, type LivingServiceManifest, type LivingSession } from './living';
 export type MediaSessionCodec = 'h264' | 'vp8';
 export type MediaDirection = 'publish' | 'subscribe';

@@ -192,3 +192,20 @@ test('living error codes survive sanitization without server text; unknown livin
       .toEqual([status, code === 'living_secret_route' ? 'request_failed' : code, false]);
   }
 });
+
+test('living_service.message webhooks verify sha256=<hex> over the exact raw body; version names the secret', async () => {
+  const { createHmac } = await import('node:crypto');
+  const { verifyLivingServiceWebhook, livingSignatureVersion } = await import('./index');
+  const secret = 'lss_test_secret', body = '{"event_id":"evt_1","type":"living_service.message","data":{"message":"order.confirmed"}}';
+  const hex = createHmac('sha256', secret).update(body).digest('hex');
+  const header = `sha256=${hex}`;
+  expect(await verifyLivingServiceWebhook(body, header, secret)).toBe(true);
+  expect(await verifyLivingServiceWebhook(new TextEncoder().encode(body), header, new TextEncoder().encode(secret))).toBe(true);
+  for (const [raw, sig, key] of [[body.replace('evt_1', 'evt_2'), header, secret], [`${body} `, header, secret], [body, header, 'other_secret'], [body, header, ''],
+    [body, `sha256=${hex.toUpperCase()}`, secret], [body, hex, secret], [body, `sha1=${hex}`, secret], [body, `SHA256=${hex}`, secret],
+    [body, `sha256=${hex.slice(2)}`, secret], [body, `${header}00`, secret], [body, ` ${header}`, secret], [body, `${header}\n`, secret],
+    [body, `v1,${Math.floor(Date.now() / 1000)},${hex}`, secret], [body, null, secret]] as const)
+    expect(await verifyLivingServiceWebhook(raw, sig, key)).toBe(false);
+  expect(['1', '2', '42'].map(livingSignatureVersion)).toEqual([1, 2, 42]);
+  for (const bad of [null, '', '0', '-1', '01', '1.0', ' 1', '1\n', 'v1', '1e3', '99999999999999999']) expect(livingSignatureVersion(bad)).toBeNull();
+});
