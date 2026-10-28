@@ -3,10 +3,13 @@ import http.client
 import json
 import math
 import re
+import sys
 from typing import Any, Literal
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
+
+from chert._fetch import FetchOpener
 
 from .models import (BillingResult, BillingStatus, CheckoutSession, BillingCancellation, CouponValidation, ConnectorEnrollment, ConnectorReceipt,
                      CallAction, CallDetail, CallEvents, CallPage, CreateCall,
@@ -67,7 +70,8 @@ class ChertControlPlane:
         self._token = _header(token) if token is not None else None
         self._project = _header(project_id) if project_id is not None else None
         self._timeout = timeout
-        self._opener = build_opener(ProxyHandler({}), _NoRedirect())
+        self._opener = (FetchOpener() if sys.platform == 'emscripten'
+                        else build_opener(ProxyHandler({}), _NoRedirect()))
 
     def _request(self, path: str, method: str = 'GET', body: Any = _UNSET,
                  auth: Literal['public', 'user', 'project'] = 'project',
