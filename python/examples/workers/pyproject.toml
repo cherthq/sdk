@@ -1,0 +1,14 @@
+[project]
+name = "chert-sdk-python-worker-example"
+version = "0.0.0"
+requires-python = ">=3.12"
+dependencies = ["chert-sdk[workers]"]
+
+[dependency-groups]
+dev = ["workers-py", "workers-runtime-sdk"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+chert-sdk = { path = "../..", editable = false }
