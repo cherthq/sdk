@@ -39,7 +39,7 @@ sdk = Chert(
     ),
 )
 # Either channel may be omitted; its attribute will be None.
-identity = sdk.facetime.whoami()
+lines = sdk.facetime.list_lines()  # whoami() needs a CLI login, not a project API key
 ```
 
 This wrapper does not bind servers, provision devices, discover origins, share

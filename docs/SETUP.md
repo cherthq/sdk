@@ -88,7 +88,7 @@ links to these docs. Add `--offline` to skip every request.
 Each service has its own client; use only the ones you have credentials for.
 Save the TypeScript as `first.ts` and run it with `bun first.ts`, `node first.ts`
 (Node 22.18+ runs TypeScript directly; run `npm pkg set type=module` once to
-silence its module-type warning) or `deno run --allow-env --allow-net first.ts`.
+silence its module-type warning) or `deno run --allow-env --allow-net --allow-read first.ts`.
 
 FaceTime only:
 
@@ -126,7 +126,8 @@ from trychert import Chert, FaceTimeConfig
 sdk = Chert(facetime=FaceTimeConfig(token=os.environ["CHERT_FACETIME_TOKEN"],
                                     project_id=os.environ["CHERT_PROJECT_ID"]))
 print(sdk.facetime.list_lines())
-# Add imessage=IMessageConfig(api_key=os.environ["CHERT_API_KEY"]) for iMessage.
+# For iMessage, also import IMessageConfig and pass
+# imessage=IMessageConfig(api_key=os.environ["CHERT_API_KEY"]).
 ```
 
 From the terminal:

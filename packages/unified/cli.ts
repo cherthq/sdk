@@ -14,8 +14,9 @@ const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk context [--offline]
 
 context prints SDK, credential, account and documentation context for coding
-agents. It reads FaceTime identity and lines (read-only) when CHERT_FACETIME_TOKEN
-and CHERT_PROJECT_ID are set; --offline skips every request.
+agents. It reads FaceTime lines, and identity with a CLI login (not a project API
+key), when CHERT_FACETIME_TOKEN and CHERT_PROJECT_ID are set; --offline skips
+every request.
 Setup guide: ${DOCS}/docs/SETUP.md
 For browser login and putting a LiveKit voice or video agent on a FaceTime line,
 use the separate @trychert/facetime CLI (chert).
@@ -25,8 +26,8 @@ Set CHERT_API_KEY for iMessage; CHERT_FACETIME_TOKEN for FaceTime.
 iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.
 FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionally
 overrides the origin. Credentials are service-specific, not interchangeable.
-facetime status needs a signed-in CLI login; a project API key (ftk_) works for
-facetime lines and workers.
+facetime status needs a signed-in CLI login; a project API key (ftk_) can run
+facetime lines and workers when its scopes allow.
 FaceTime commands inspect existing access/lines; no calls, media relay, billing,
 concierge onboarding or automatic shared-line allocation is implemented.
 Use --help on any channel without credentials. iMessage send requires an
