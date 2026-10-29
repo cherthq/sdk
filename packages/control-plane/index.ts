@@ -183,7 +183,7 @@ export class ChertControlPlane {
   sendLivingInput(callId:string,sessionId:string,input:LivingInputEvent){return this.request<{accepted:true}>(`${this.livingPath(callId,sessionId)}/input`,'POST',validateInput(input));}
   detachLivingService(callId:string,sessionId:string){return this.request<LivingSession>(this.livingPath(callId,sessionId),'DELETE');}
   /**
-   * Sets the call's video (draft): `{ page }` makes a page the whole video; `{ layers }` composes a camera or managed
+   * Sets the call's video (not available yet): `{ page }` makes a page the whole video; `{ layers }` composes a camera or managed
    * base with a page layer above it. Replaces the current composition, which holds the call's single publish slot.
    */
   async setCallVideo(callId:string,input:SetCallVideo,idempotencyKey:string,options:{signal?:AbortSignal;readyTimeoutMs?:number}={}):Promise<CallVideoComposition>{

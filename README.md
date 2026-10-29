@@ -155,8 +155,8 @@ because Chert trims them. Any other success response raises
 posted to a route production does not serve, so text sends failed there; 0.2.3
 fixes this.
 
-Billing uses a signed-in user session and project UUID. Only the terminal-billing
-draft below also accepts a CLI login with the `billing` scope held by a current
+Billing uses a signed-in user session and project UUID. Only terminal billing
+below (not available yet) also accepts a CLI login with the `billing` scope held by a current
 project owner; a project API key (`ftk_`) is never accepted.
 Use `billingStatus()` to inspect entitlement and availability. Refusals keep their code,
 for example `billing_sales_disabled`, `billing_subscription_exists`,
@@ -345,7 +345,7 @@ through the same bridge, without a call. Examples: a
 [React app](packages/living/examples/react/App.tsx), and a
 [developer backend](packages/living/examples/server.ts).
 
-Limitations: these routes are a draft contract and require a backend that reports
+Limitations: these routes require a backend that reports
 `living_services`. There is no audio from the page, and no uploaded bundles yet.
 Input is relayed to the page, not injected as OS events. The code ships in
 0.2.2 and later, but the hosted backend does not serve these routes yet.
