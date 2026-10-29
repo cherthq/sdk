@@ -6,8 +6,7 @@ fallback or automatic retries. An optional `baseURL` accepts HTTPS or loopback
 HTTP: root origins get `/api/v1`; explicit deployment path prefixes and trailing
 slashes retain their existing semantics. `/api/v1` is not duplicated. Only
 omitted/undefined values select the default; empty/null values are rejected.
-The public import is `@trychert/sdk/imessage`. This guide targets 0.2.3 (npm release pending; 0.2.2 and earlier cannot
-send text); the
+The public import is `@trychert/sdk/imessage`. This guide targets 0.2.0; the
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Requests require a backend supporting the documented contracts and
 authorized access. Verify feature availability for your project; package

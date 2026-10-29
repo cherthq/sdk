@@ -11,7 +11,7 @@ python -m pip install chert-sdk==0.2.3
 ```
 
 This guide matches the published 0.2.3 package, which was built from this source
-tree. The version matches npm `@trychert/sdk` 0.2.3 (npm release pending). 0.2.3 sends text to
+tree. The version follows the npm `@trychert/sdk` 0.2.3 release. 0.2.3 sends text to
 `POST /api/v1/send` (0.2.2 and earlier used a route production does not serve), accepts
 `queued`, `sent` and `duplicate` receipts, rejects idempotency keys with surrounding
 whitespace, and adds draft call video composition and terminal billing that the hosted
