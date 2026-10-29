@@ -205,6 +205,31 @@ pub enum CallExecution {
         #[serde(flatten)]
         room: RoomCredentials,
     },
+    #[serde(rename = "customer_managed")]
+    Direct {
+        #[serde(flatten)]
+        media: DirectMedia,
+    },
+}
+/// Call-scoped direct media credentials. Formatting never reveals the media token.
+#[derive(Clone)]
+pub struct DirectMedia {
+    pub media_url: String,
+    pub media_token: String,
+    pub remote_participant_identity: Option<String>,
+}
+impl Serialize for DirectMedia {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("media_transport", "direct")?;
+        map.serialize_entry("media_url", &self.media_url)?;
+        map.serialize_entry("media_token", &self.media_token)?;
+        if let Some(identity) = &self.remote_participant_identity {
+            map.serialize_entry("remote_participant_identity", identity)?;
+        }
+        map.end()
+    }
 }
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -273,6 +298,7 @@ redacted_debug!(
     TranscriptTurn,
     Transcript,
     RoomCredentials,
+    DirectMedia,
     CallExecution,
     Recipient,
     CallTarget,
@@ -527,6 +553,22 @@ impl FaceTimeClient {
                     || room.livekit_url.trim().is_empty()
                     || room.participant_token.trim().is_empty()
                     || room.remote_participant_identity.trim().is_empty()
+                {
+                    return Err(ChertError::new(None, "invalid_call_request"));
+                }
+            }
+            CallExecution::Direct { media } => {
+                if !input.media.audio
+                    || !direct_media_url(&media.media_url)
+                    || !(16..=4096).contains(&media.media_token.len())
+                    || !media
+                        .media_token
+                        .bytes()
+                        .all(|b| (0x20..=0x7e).contains(&b))
+                    || media
+                        .remote_participant_identity
+                        .as_deref()
+                        .is_some_and(|identity| identity.trim().is_empty())
                 {
                     return Err(ChertError::new(None, "invalid_call_request"));
                 }
@@ -806,4 +848,19 @@ impl FaceTimeClient {
         self.perform("/settings", HttpMethod::PUT, Some(&body), None, Some(200))
             .await
     }
+}
+fn direct_media_url(value: &str) -> bool {
+    if value.len() > 2048 {
+        return false;
+    }
+    let Ok(url) = url::Url::parse(value) else {
+        return false;
+    };
+    let loopback = matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
+    (url.scheme() == "wss" || (url.scheme() == "ws" && loopback))
+        && url.host_str().is_some_and(|host| !host.is_empty())
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.fragment().is_none()
+        && !value.contains('#')
 }
