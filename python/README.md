@@ -11,13 +11,13 @@ python -m pip install chert-sdk==0.2.3
 ```
 
 This guide matches the published 0.2.3 package, which was built from this source
-tree. The version matches npm `@trychert/sdk` 0.2.3 (npm release pending). 0.2.3 sends text to
+tree. The version follows the npm `@trychert/sdk` 0.2.3 release. 0.2.3 sends text to
 `POST /api/v1/send` (0.2.2 and earlier used a route production does not serve), accepts
 `queued`, `sent` and `duplicate` receipts, rejects idempotency keys with surrounding
-whitespace, and adds draft call video composition and terminal billing that the hosted
-backend does not serve yet. Since 0.1.1 it adds
-the custom video session and screen-share content contract (source preview,
-unreleased: the hosted backend does not serve them yet and they fail with
+whitespace, and adds call video composition and terminal billing, which are not
+available yet (the hosted backend does not serve them). Since 0.1.1 it adds
+the custom video session and screen-share content contract (not available yet:
+the hosted backend does not serve them and they fail with
 `404 endpoint_unavailable`), the new allowlisted media error codes, billing
 refusals by code (such as `billing_sales_disabled` or `shared_no_capacity`)
 instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
@@ -125,7 +125,7 @@ the FaceTime control-plane API with Python snake_case methods:
 | Public (no auth or project header) | `begin_login(device_name)`, `poll_login(device_code)` |
 | User (bearer only) | `inspect_login(user_code)`, `approve_login(user_code, project_id)`, `logout()` |
 | Project (bearer and `x-chert-project-id`) | `whoami()`, `list_credentials()`, `revoke_credential(credential_id)`, `list_lines(limit=None, offset=None)`, `list_workers(limit=None, offset=None)`, `list_connectors()`, `enroll_connector(enrollment)`, `activate_connector(binding_id, expected_binding_id, assignment_generation)`, `drain_connector(binding_id)`, `revoke_connector(binding_id)` |
-| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)`; draft, not served yet: `purchase(plan=..., idempotency_key=...)`, `payment_method_setup(idempotency_key=...)`; unavailable: `change_plan(plan=..., idempotency_key=...)` always fails with `billing_plan_change_unavailable` |
+| Billing (user bearer and `x-chert-project-id`) | `billing_status()`, `create_checkout(plan=..., coupon_code=None, idempotency_key=...)`, `cancel_subscription(idempotency_key=...)`, `validate_coupon(coupon_code, idempotency_key=...)`; not available yet: `purchase(plan=..., idempotency_key=...)`, `payment_method_setup(idempotency_key=...)`; unavailable: `change_plan(plan=..., idempotency_key=...)` always fails with `billing_plan_change_unavailable` |
 
 Pagination parameters and checkout arguments are keyword-only. Enrollment uses
 a `ConnectorEnrollment` dictionary. Wire models live in `trychert.models`;
@@ -232,7 +232,7 @@ transport failures and redirects use status 0 / `network_error`.
 These are control-plane operations, not FaceTime media/calling APIs or evidence
 that a connector is provisioned or a call succeeded.
 
-## Custom video sessions (v1, video-only; source preview, unreleased)
+## Custom video sessions (v1, video-only; not available yet)
 
 Until the hosted backend serves these routes, `create_media_session` fails with
 `ChertControlPlaneError` status 404, code `endpoint_unavailable`. Check
@@ -290,7 +290,7 @@ be reused. Failures raise `MediaFrameError` (a `ValueError`) with `code`
 Limitations: no audio, no built-in media engine or WebRTC stack (bring your own,
 e.g. aiortc), and no guarantee that keyframe requests (PLI/FIR) are delivered.
 
-### Call video composition (draft, unreleased)
+### Call video composition (not available yet)
 
 A call's video can be a stack of layers that the backend composes server-side and
 publishes through the call's single publish slot (so it conflicts with other publish

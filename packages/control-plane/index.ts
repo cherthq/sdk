@@ -165,7 +165,7 @@ export class ChertControlPlane {
     const grant=await this.request<MediaSessionGrant>(`calls/${this.resourceId(callId)}/media-sessions`,'POST',{direction:input.direction,...(input.codecs?{codecs:input.codecs}:{}),...(content?{content}:{})});
     return validateGrant(grant,input.direction,input.codecs,content);
   }
-  /** Registers a living service and its first immutable deployment revision. Draft backend contract. */
+  /** Registers a living service and its first immutable deployment revision. Not available yet. */
   createLivingService(manifest:LivingServiceManifest,idempotencyKey:string){return this.request<LivingDeployment>('living-services','POST',validateManifest(manifest),'project',this.idempotency(idempotencyKey));}
   /** Deploys a new immutable revision of an existing living service. Reuse the key when retrying. */
   deployLivingService(serviceId:string,manifest:LivingServiceManifest,idempotencyKey:string){return this.request<LivingDeployment>(`living-services/${this.resourceId(serviceId)}/deployments`,'POST',validateManifest(manifest),'project',this.idempotency(idempotencyKey));}
@@ -183,7 +183,7 @@ export class ChertControlPlane {
   sendLivingInput(callId:string,sessionId:string,input:LivingInputEvent){return this.request<{accepted:true}>(`${this.livingPath(callId,sessionId)}/input`,'POST',validateInput(input));}
   detachLivingService(callId:string,sessionId:string){return this.request<LivingSession>(this.livingPath(callId,sessionId),'DELETE');}
   /**
-   * Sets the call's video (draft): `{ page }` makes a page the whole video; `{ layers }` composes a camera or managed
+   * Sets the call's video (not available yet): `{ page }` makes a page the whole video; `{ layers }` composes a camera or managed
    * base with a page layer above it. Replaces the current composition, which holds the call's single publish slot.
    */
   async setCallVideo(callId:string,input:SetCallVideo,idempotencyKey:string,options:{signal?:AbortSignal;readyTimeoutMs?:number}={}):Promise<CallVideoComposition>{
@@ -248,7 +248,7 @@ export class ChertControlPlane {
     return this.request<Checkout>('billing','POST',{action:'checkout',plan:input.plan,...(input.coupon_code===undefined?{}:{coupon_code:input.coupon_code})},'project',this.billingIdempotency(idempotencyKey));
   }
   /**
-   * Buys a plan with the saved default card (draft backend contract). Card entry or 3DS returns a Stripe-hosted URL.
+   * Buys a plan with the saved default card (not available yet). Card entry or 3DS returns a Stripe-hosted URL.
    * Refused while the project already has a live subscription; the entitlement is granted by the payment webhook.
    */
   purchase(input:{plan:BillingPlan},idempotencyKey:string){return this.billingResult('purchase',input,idempotencyKey);}
@@ -257,7 +257,7 @@ export class ChertControlPlane {
    * (timing, proration, refunds, payment failure, fulfilment) exists. Kept so callers can detect that code.
    */
   changePlan(input:{plan:BillingPlan},idempotencyKey:string){return this.billingResult('change_plan',input,idempotencyKey);}
-  /** Returns a Stripe-hosted page for adding or replacing the saved card (draft backend contract). */
+  /** Returns a Stripe-hosted page for adding or replacing the saved card (not available yet). */
   async paymentMethodSetup(idempotencyKey:string):Promise<{status:'requires_payment_method';url:string}>{
     const result=await this.request<BillingResult>('billing','POST',{action:'payment_method'},'project',this.billingIdempotency(idempotencyKey));
     if(result?.status!=='requires_payment_method')throw new ChertApiError(200,'invalid_response');

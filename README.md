@@ -48,14 +48,6 @@ The examples below target **`@trychert/sdk@0.2.3`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
 
-> **npm 0.2.3 is not on the registry yet.** Until it is, the `@trychert/sdk@0.2.3`
-> commands below fail with "No matching version", and an unpinned install gets
-> 0.2.2, **whose iMessage `sendText` cannot send** (it uses a route production
-> does not serve). On 0.2.2, `chert-sdk imessage send` also needs
-> `CHERT_PROJECT_ID`, `facetime status` with an `ftk_` key returns `unauthorized`,
-> and the `billing` commands and call video composition do not exist yet.
-> PyPI `chert-sdk` 0.2.3 is published and has the fix.
-
 ```sh
 npm install @trychert/sdk@0.2.3
 # Alternatives:
@@ -163,8 +155,8 @@ because Chert trims them. Any other success response raises
 posted to a route production does not serve, so text sends failed there; 0.2.3
 fixes this.
 
-Billing uses a signed-in user session and project UUID. Only the terminal-billing
-draft below also accepts a CLI login with the `billing` scope held by a current
+Billing uses a signed-in user session and project UUID. Only terminal billing
+below (not available yet) also accepts a CLI login with the `billing` scope held by a current
 project owner; a project API key (`ftk_`) is never accepted.
 Use `billingStatus()` to inspect entitlement and availability. Refusals keep their code,
 for example `billing_sales_disabled`, `billing_subscription_exists`,
@@ -172,7 +164,7 @@ for example `billing_sales_disabled`, `billing_subscription_exists`,
 removes the obsolete catalog and checkout-row APIs; see the
 [billing migration guide](https://github.com/cherthq/sdk/blob/main/packages/control-plane/BACKEND_COVERAGE.md#preview-migration).
 
-**Terminal billing (draft; ships in 0.2.3, not served yet).**
+**Terminal billing (not available yet).**
 `purchase({ plan }, key)` charges the saved card and is refused while the project
 already has a live subscription; the plan is granted by the payment webhook.
 `paymentMethodSetup(key)` returns `{ status: 'requires_payment_method', url }` for
@@ -216,7 +208,7 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
 migration. To upgrade, update the dependency to `@trychert/sdk@0.2.3`
-(not on npm yet; see the notice above), regenerate your consumer lockfile and rerun tests.
+(published, `latest`), regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
 stay `@trychert/sdk/<subpath>`.
 
@@ -234,13 +226,13 @@ usage; do not rely on it to rename existing SDK imports. This documentation
 does not deprecate any registry package; registry actions require separate approval.
 
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
-`adopt` and `context`, and since 0.2.3 `billing status|card|buy|cancel` (draft;
-the backend does not serve it yet). Since 0.2.1, unknown commands and subcommands exit with
-`unknown_command` before any credential lookup. Versions 0.1.0 through 0.2.3
+`adopt` and `context`, and since 0.2.3 `billing status|card|buy|cancel` (not
+available yet: the backend refuses them). Since 0.2.1, unknown commands and subcommands exit with
+`unknown_command` before any credential lookup. Published 0.1.0 through 0.2.3
 do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
 agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
 
-### Custom video sources (source preview, unreleased)
+### Custom video sources (not available yet)
 
 `@trychert/sdk/media` lets you send your own frames into a FaceTime call, and
 receive caller video, over standard WebRTC. LiveKit is not required. The core
@@ -298,7 +290,7 @@ capped at 1280×720 and 30 fps. These APIs require a backend that reports these
 capabilities. The code ships in 0.2.2 and later, but the hosted backend does not serve
 these routes yet: calls fail with `404 endpoint_unavailable`.
 
-### Living services (draft, unreleased)
+### Living services (not available yet)
 
 A living service is a web page you host, which Chert renders as the call's video.
 Voice keeps working on the existing call path, and your backend updates the page
@@ -353,12 +345,12 @@ through the same bridge, without a call. Examples: a
 [React app](packages/living/examples/react/App.tsx), and a
 [developer backend](packages/living/examples/server.ts).
 
-Limitations: these routes are a draft contract and require a backend that reports
+Limitations: these routes require a backend that reports
 `living_services`. There is no audio from the page, and no uploaded bundles yet.
 Input is relayed to the page, not injected as OS events. The code ships in
 0.2.2 and later, but the hosted backend does not serve these routes yet.
 
-### Screen sharing (draft, unreleased)
+### Screen sharing (not available yet)
 
 Screen sharing uses the same media sessions and WHIP/WHEP signaling as custom
 video. There is no second transport.
@@ -401,7 +393,7 @@ video. There is no second transport.
 
 See [`packages/media/examples/screen-share.ts`](packages/media/examples/screen-share.ts).
 
-### Call video composition (draft, unreleased)
+### Call video composition (not available yet)
 
 The code ships in 0.2.3, but the hosted backend does not serve it yet
 (`404 endpoint_unavailable`). The call's video can be a page, or a page layered over live video, composed
