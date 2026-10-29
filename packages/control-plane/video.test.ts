@@ -256,3 +256,23 @@ test('screen media sessions: content is validated, echoed and screen grants are 
     expect(String(error) + JSON.stringify(error)).not.toContain('internal detail');
   }
 });
+
+test('direct media calls send the exact customer_managed direct body', async () => {
+  const bodies: unknown[] = [];
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
+    bodies.push(await request.json());
+    return Response.json({ data: { id: 'call' } }, { status: 201 });
+  } });
+  try {
+    const client = new ChertControlPlane({ baseUrl: server.url.origin, token: 'facetime-only', projectId: 'project' });
+    const direct: CreateCall = { direction: 'outbound', mode: 'customer_managed', line_id: 'line',
+      destination: '+61400000000', media: { audio: true, video: false }, media_transport: 'direct',
+      media_url: 'wss://media.example/direct/room', media_token: 'synthetic-media-token' };
+    const labelled: CreateCall = { ...direct, remote_participant_identity: 'agent' };
+    await client.createCall(direct, 'direct-start-1');
+    await client.createCall(labelled, 'direct-start-2');
+    expect(bodies).toEqual([direct, labelled]);
+    expect(bodies[0]).not.toHaveProperty('remote_participant_identity');
+    expect(bodies[0]).not.toHaveProperty('livekit_url');
+  } finally { server.stop(true); }
+});

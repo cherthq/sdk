@@ -20,6 +20,11 @@ export interface MediaReadiness {
 }
 export interface ByorRoom {
   livekit_url: string; participant_token: string; remote_participant_identity: string;
+  media_transport?: 'livekit'; media_url?: never; media_token?: never;
+}
+export interface DirectMedia {
+  media_transport: 'direct'; media_url: string; media_token: string; remote_participant_identity?: string;
+  livekit_url?: never; participant_token?: never;
 }
 /** Customer webhook body. Verify the configured signature before trusting it. */
 export interface IncomingCallWebhook {
@@ -28,16 +33,17 @@ export interface IncomingCallWebhook {
     occurred_at: string; from?: { type: 'phone_number' | 'email'; value: string } | null };
 }
 /** Return to the authenticated incoming webhook, not to the /answer endpoint. */
-export type IncomingCallDecision = { action: 'decline' } | ({ action: 'accept' } & ByorRoom);
+export type IncomingCallDecision = { action: 'decline' } | ({ action: 'accept' } & (ByorRoom | DirectMedia));
 type CallDestination =
   | { destination: string; destination_type?: 'phone' | 'email' | 'apple_id' | 'facetime_link'; recipients?: never }
   | { destination?: never; destination_type?: never; line_id: string; recipients: { type: 'phone_number' | 'email'; value: string }[] };
 export type CreateCall = CallDestination & { direction: 'outbound' } & (
   | { mode: 'managed'; assistant_id: string; line_id?: string;
       media: { audio: true; video: boolean } | { audio: boolean; video: true };
-      livekit_url?: never; participant_token?: never; remote_participant_identity?: never }
+      livekit_url?: never; participant_token?: never; remote_participant_identity?: never;
+      media_transport?: never; media_url?: never; media_token?: never }
   | ({ mode: 'customer_managed'; line_id: string; assistant_id?: never;
-      media: { audio: true; video: boolean } } & ByorRoom)
+      media: { audio: true; video: boolean } } & (ByorRoom | DirectMedia))
 );
 export type CallStatus = 'queued' | 'incoming' | 'allocating' | 'agent_preparing' | 'answering' | 'dialing' | 'connecting' | 'active' | 'ending' | 'ended' | 'failed' | 'rejected';
 /** Public normalized event types. Raw LiveKit track callbacks are not HTTP call events. */

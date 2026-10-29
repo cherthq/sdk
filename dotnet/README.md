@@ -229,6 +229,11 @@ var ending = await chert.FaceTime.EndCallAsync(call.Id, endOperationKey,
 ```
 
 Managed calls use `Mode = "managed"` and `AssistantId` instead of room credentials.
+Direct audio (not available yet on the hosted backend) sets
+`MediaTransport = "direct"`, `MediaUrl` (`wss://`, `ws://` only on loopback) and
+`MediaToken` (16–4096 printable ASCII characters) instead of `LivekitUrl` and
+`ParticipantToken`; `RemoteParticipantIdentity` is optional. See
+[direct audio transport](../docs/FACETIME.md#direct-audio-transport).
 FaceTime links use `DestinationType = "facetime_link"`; groups use typed
 `CallRecipient[]` instead of `Destination`. Links and groups require an assigned
 line. Server permissions, worker capabilities and deployment feature flags still

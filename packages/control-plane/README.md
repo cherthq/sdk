@@ -97,6 +97,29 @@ Return an `IncomingCallDecision` to that webhook: either `{action:'decline'}` or
 These room credentials are not arguments to `answerCall`. Configure the line's
 `customer_decides` inbound policy and your authorized integration separately.
 
+Direct audio (not available yet on the hosted backend) replaces the room fields
+with `media_transport: 'direct'`, `media_url` (`wss://`) and `media_token`;
+`remote_participant_identity` becomes optional. The `DirectMedia` type covers
+`createCall` bodies and `accept` decisions, and the types reject mixing it with
+LiveKit fields. Bodies pass through unchanged.
+
+```ts
+async function placeDirectAudioCall(client: ChertControlPlane, key: string) {
+  return client.createCall({
+    direction: 'outbound', mode: 'customer_managed',
+    line_id: authorizedLineId, destination: authorizedDestination,
+    media: {audio: true, video: false},
+    media_transport: 'direct',
+    media_url: customerMediaUrl,
+    media_token: callScopedMediaToken,
+  }, key);
+}
+```
+
+See
+[direct audio transport](../../docs/FACETIME.md#direct-audio-transport) for
+field rules and the WebSocket protocol your server implements.
+
 `getCall` returns detail events in `facetime_call_events`; `getCallEvents` returns
 a normalized `{call_id,events}` timeline, not a stream or raw track callbacks.
 There is no FaceTime SSE/WebSocket event endpoint represented by these APIs.

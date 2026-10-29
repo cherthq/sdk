@@ -34,6 +34,11 @@ struct RoomCredentials {
     std::string participant_token;
     std::string remote_participant_identity;
 };
+struct DirectMedia {
+    std::string media_url;
+    std::string media_token;
+    std::optional<std::string> remote_participant_identity;
+};
 struct CreateCall {
     CallMode mode = CallMode::customer_managed;
     std::optional<std::string> line_id;
@@ -44,6 +49,7 @@ struct CreateCall {
     Media media;
     bool authorized_test_call = false;
     std::optional<RoomCredentials> room;
+    std::optional<DirectMedia> direct;
 };
 enum class CallAction { answer, reject, end };
 // Response status strings are open to future server values; never infer readiness.

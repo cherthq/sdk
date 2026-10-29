@@ -112,6 +112,23 @@ class UnifiedTests(unittest.TestCase):
             else:
                 self.assertNotIn('idempotency-key', headers)
 
+    def test_direct_media_call_body_passes_through_unchanged(self):
+        from trychert.models import CreateCall
+        for identity in (None, 'agent'):
+            body: CreateCall = {'direction': 'outbound', 'mode': 'customer_managed',
+                'media_transport': 'direct', 'line_id': '11111111-1111-4111-8111-111111111111',
+                'destination': '+15550000002', 'media': {'audio': True, 'video': False},
+                'media_url': 'wss://media.example.test/direct/room', 'media_token': 'synthetic-media-token'}
+            if identity is not None:
+                body['remote_participant_identity'] = identity
+            self.server.calls = []
+            self.server.payload, self.server.status = {'data': {'id': 'call'}}, 201
+            self.client.create_call(body, idempotency_key='direct-create-key')
+            self.assertEqual(self.server.calls[0][:2], ('POST', '/api/v1/calls'))
+            self.assertEqual(self.server.calls[0][3], body)
+            self.assertNotIn('livekit_url', self.server.calls[0][3])
+            self.assertNotIn('participant_token', self.server.calls[0][3])
+
     def test_calls_validate_before_network_and_never_retry(self):
         body = {'direction': 'outbound', 'mode': 'managed', 'assistant_id': 'synthetic-assistant',
                 'destination': '+15550000002', 'media': {'audio': True, 'video': False}}

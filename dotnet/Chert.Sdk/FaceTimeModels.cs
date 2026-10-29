@@ -56,6 +56,9 @@ public sealed class CreateCallRequest : FaceTimeModel
     public string? LivekitUrl { get; init; }
     public string? ParticipantToken { get; init; }
     public string? RemoteParticipantIdentity { get; init; }
+    public string? MediaTransport { get; init; }
+    public string? MediaUrl { get; init; }
+    public string? MediaToken { get; init; }
 }
 public sealed class CallRecipient : FaceTimeModel
 {

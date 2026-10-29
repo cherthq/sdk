@@ -193,6 +193,16 @@ class ByorRoom(TypedDict):
     remote_participant_identity: str
 
 
+class _DirectMediaRequired(TypedDict):
+    media_transport: Literal['direct']
+    media_url: str
+    media_token: str
+
+
+class DirectMedia(_DirectMediaRequired, total=False):
+    remote_participant_identity: str
+
+
 class CallRecipient(TypedDict):
     type: Literal['phone_number', 'email']
     value: str
@@ -244,7 +254,22 @@ class ByorCallRecipients(_ByorCall, _Recipients):
     pass
 
 
-CreateCall = ManagedCallDestination | ManagedCallRecipients | ByorCallDestination | ByorCallRecipients
+class _DirectCall(DirectMedia):
+    direction: Literal['outbound']
+    mode: Literal['customer_managed']
+    media: ByorMedia
+
+
+class DirectCallDestination(_DirectCall, _Destination):
+    line_id: str
+
+
+class DirectCallRecipients(_DirectCall, _Recipients):
+    pass
+
+
+CreateCall = (ManagedCallDestination | ManagedCallRecipients | ByorCallDestination | ByorCallRecipients
+              | DirectCallDestination | DirectCallRecipients)
 CallStatus = Literal['queued', 'incoming', 'allocating', 'agent_preparing', 'answering', 'dialing',
                      'connecting', 'active', 'ending', 'ended', 'failed', 'rejected']
 CallEventType = Literal['incoming_registered', 'allocated', 'answer_requested', 'reject_requested',

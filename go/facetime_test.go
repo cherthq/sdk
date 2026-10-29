@@ -36,6 +36,12 @@ func TestFaceTimeRouteContracts(t *testing.T) {
 		{"call", "GET", "/calls/call-1", "", "", "project", call, 200, func(c *FaceTimeClient) (any, error) { return data(c.GetCall(ctx, "call-1")) }},
 		{"events", "GET", "/calls/call-1/events", "", "", "project", `{"call_id":"call-1","events":[{"id":"event-1","type":"queued","at":"now","sequence":2,"source":"api"}]}`, 200, func(c *FaceTimeClient) (any, error) { return data(c.GetCallEvents(ctx, "call-1")) }},
 		{"transcript", "GET", "/calls/call-1/transcript", "", "", "project", `{"call_id":"call-1","schema_version":1,"turns":[{"occurred_at":"now","speaker":"caller","text":"private words"}]}`, 200, func(c *FaceTimeClient) (any, error) { return data(c.GetTranscript(ctx, "call-1")) }},
+		{"direct", "POST", "/calls", `{"direction":"outbound","mode":"customer_managed","line_id":"` + chatID + `","destination":"person@example.com","media":{"audio":true,"video":false},"media_transport":"direct","media_url":"wss://media.example.com/direct/room","media_token":"private-media-token"}`, "stable-key", "project", call, 201, func(c *FaceTimeClient) (any, error) {
+			return data(c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "person@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/direct/room", MediaToken: "private-media-token"}, "stable-key"))
+		}},
+		{"direct loopback labelled", "POST", "/calls", `{"direction":"outbound","mode":"customer_managed","line_id":"` + chatID + `","destination":"person@example.com","media":{"audio":true,"video":false},"media_transport":"direct","media_url":"ws://127.0.0.1:8787/media","media_token":"private-media-token","remote_participant_identity":"customer"}`, "stable-key", "project", call, 201, func(c *FaceTimeClient) (any, error) {
+			return data(c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "person@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "ws://127.0.0.1:8787/media", MediaToken: "private-media-token", RemoteParticipantIdentity: "customer"}, "stable-key"))
+		}},
 		{"create", "POST", "/calls", `{"direction":"outbound","mode":"managed","assistant_id":"` + chatID + `","destination":"person@example.com","destination_type":"email","media":{"audio":true,"video":false}}`, "stable-key", "project", call, 201, func(c *FaceTimeClient) (any, error) {
 			return data(c.CreateCall(ctx, CreateCallRequest{Mode: "managed", AssistantID: chatID, Destination: "person@example.com", DestinationType: "email", Media: Media{Audio: true}}, "stable-key"))
 		}},
@@ -299,6 +305,56 @@ func TestFaceTimeRejectedInputsHaveNoEffects(t *testing.T) {
 		func() error { _, e := c.CallAction(ctx, "id", CallAction("delete"), "", "stable-key"); return e },
 		func() error {
 			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "ws://media.example.com/room", MediaToken: "synthetic-media-token"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "https://media.example.com/room", MediaToken: "synthetic-media-token"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://user:pw@media.example.com/room", MediaToken: "synthetic-media-token"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room#frag", MediaToken: "synthetic-media-token"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/" + strings.Repeat("a", 2048), MediaToken: "synthetic-media-token"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room", MediaToken: "short"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room", MediaToken: "synthetic-media-token\n"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room", MediaToken: "synthetic-media-token", RemoteParticipantIdentity: " "}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room", MediaToken: "synthetic-media-token", LiveKitURL: "wss://room.example.com"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room", MediaToken: "synthetic-media-token", ParticipantToken: "private-room-token"}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "webrtc", MediaURL: "wss://media.example.com/room", MediaToken: "synthetic-media-token"}, "stable-key")
+			return e
+		},
+		func() error {
+			r := CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room", MediaToken: "synthetic-media-token"}
+			r.Media.Audio = false
+			_, e := c.CreateCall(ctx, r, "stable-key")
 			return e
 		},
 		func() error { _, e := c.UpdateAssistant(ctx, "id", UpdateAssistantRequest{}); return e },

@@ -224,7 +224,11 @@ nil (omit), `json.RawMessage("null")` (clear), and a JSON string (replace).
 Outbound creation always sends `direction: outbound`. Managed calls require an
 assistant; customer-managed/BYOR calls require an explicit line, audio and all
 three call-scoped room credentials. Choose a single destination or a recipient
-group, never both. The server owns scope, destination, room-token, quota and media
+group, never both. Direct audio (not available yet on the hosted backend)
+sets `MediaTransport: "direct"`, `MediaURL` (`wss://`, `ws://` only on loopback)
+and `MediaToken` (16–4096 printable ASCII bytes) instead of the LiveKit fields;
+`RemoteParticipantIdentity` is optional. See
+[direct audio transport](../docs/FACETIME.md#direct-audio-transport). The server owns scope, destination, room-token, quota and media
 validation. **HTTP 201/202 is control acceptance, not a connected call, completed
 hangup, active connector runtime, or verified two-way media.**
 
