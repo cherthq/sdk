@@ -134,6 +134,12 @@ to the explicitly configured FaceTime endpoint; `Debug` omits tokens and custome
 Server-side authorization, room-token validation and media readiness remain authoritative.
 
 For BYOR, use `CallExecution::CustomerManaged { room: RoomCredentials { ... } }`.
+For direct audio (not available yet on the hosted backend), use
+`CallExecution::Direct { media: DirectMedia { media_url, media_token, remote_participant_identity } }`.
+It sends `mode: customer_managed` with `media_transport: direct`, requires audio
+and a line, and checks the URL (`wss://`, `ws://` only on loopback) and token
+(16–4096 printable ASCII bytes) before sending. See
+[direct audio transport](../docs/FACETIME.md#direct-audio-transport).
 It cannot contain a managed assistant. Use `CallTarget::Group { recipients }` for
 groups and `DestinationType::FacetimeLink` for links. Group/destination exclusivity
 is enforced by the Rust type. Production BYOR requires audio and a line; video
