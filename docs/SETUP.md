@@ -69,7 +69,7 @@ Which credential each surface takes:
 | `chert-sdk facetime status`, `whoami()` | A CLI login (`ftu_…`, from `chert login`) in `CHERT_FACETIME_TOKEN` |
 | Lines, workers, calls, assistants | A project API key (`ftk_…`) within its scopes; a CLI login can also read lines and workers |
 | Billing today | Only a signed-in browser session at https://facetime.trychert.com |
-| Terminal billing (draft, not served yet) | A CLI login with the `billing` scope, held by a current project owner; not a project API key |
+| Terminal billing (not available yet) | A CLI login with the `billing` scope, held by a current project owner; not a project API key |
 
 Keep these out of source control and logs. Defaults are
 `https://console.trychert.com` (iMessage) and `https://facetime.trychert.com`
@@ -168,8 +168,8 @@ accept only that browser session's token, not a project API key or a CLI login,
 and the SDK does not allocate lines. Other `chert-sdk` commands only inspect
 access.
 
-Terminal billing (`chert-sdk billing status|card|buy|cancel`, `purchase`) is a
-draft: the code ships in 0.2.3, but the backend does not serve it yet, so
+Terminal billing (`chert-sdk billing status|card|buy|cancel`, `purchase`) is
+not available yet: the commands are in 0.2.3, but the backend refuses them, so
 today every command fails. It will charge a saved card, refuse a purchase while the
 project already has a live subscription, and return a Stripe-hosted URL whenever
 card entry or authentication is needed; the plan is granted only after the
@@ -202,7 +202,7 @@ validation, a bounded video source and signaling for your own WebRTC peer
 connection), web frontends rendered as call video, and screen sharing (an agent
 streaming its screen into a call, and receiving the caller's shared screen) and
 call video composition (a page as the call video, or layered over live video) are
-unreleased drafts, so do not build on them. Custom video, living services and
+not available yet, so do not build on them. Custom video, living services and
 screen sharing ship in `@trychert/sdk` 0.2.2 and later, and call video
 composition ships in 0.2.3, but the hosted backend does not serve any of them
 yet: calls fail with `404 endpoint_unavailable`

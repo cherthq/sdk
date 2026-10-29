@@ -14,10 +14,10 @@ This guide matches the published 0.2.3 package, which was built from this source
 tree. The version follows the npm `@trychert/sdk` 0.2.3 release. 0.2.3 sends text to
 `POST /api/v1/send` (0.2.2 and earlier used a route production does not serve), accepts
 `queued`, `sent` and `duplicate` receipts, rejects idempotency keys with surrounding
-whitespace, and adds draft call video composition and terminal billing that the hosted
-backend does not serve yet. Since 0.1.1 it adds
-the custom video session and screen-share content contract (source preview,
-unreleased: the hosted backend does not serve them yet and they fail with
+whitespace, and adds call video composition and terminal billing, which are not
+available yet (the hosted backend does not serve them). Since 0.1.1 it adds
+the custom video session and screen-share content contract (not available yet:
+the hosted backend does not serve them and they fail with
 `404 endpoint_unavailable`), the new allowlisted media error codes, billing
 refusals by code (such as `billing_sales_disabled` or `shared_no_capacity`)
 instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
@@ -232,7 +232,7 @@ transport failures and redirects use status 0 / `network_error`.
 These are control-plane operations, not FaceTime media/calling APIs or evidence
 that a connector is provisioned or a call succeeded.
 
-## Custom video sessions (v1, video-only; source preview, unreleased)
+## Custom video sessions (v1, video-only; not available yet)
 
 Until the hosted backend serves these routes, `create_media_session` fails with
 `ChertControlPlaneError` status 404, code `endpoint_unavailable`. Check
@@ -290,7 +290,7 @@ be reused. Failures raise `MediaFrameError` (a `ValueError`) with `code`
 Limitations: no audio, no built-in media engine or WebRTC stack (bring your own,
 e.g. aiortc), and no guarantee that keyframe requests (PLI/FIR) are delivered.
 
-### Call video composition (draft, unreleased)
+### Call video composition (not available yet)
 
 A call's video can be a stack of layers that the backend composes server-side and
 publishes through the call's single publish slot (so it conflicts with other publish

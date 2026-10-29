@@ -10,9 +10,9 @@ const DOCS = 'https://github.com/cherthq/sdk/blob/main';
 const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk imessage send --phone +COUNTRYNUMBER --body TEXT --idempotency-key KEY --confirm
   chert-sdk facetime status | lines | workers
-  chert-sdk billing status (draft)
-  chert-sdk billing card | cancel --idempotency-key KEY --confirm (draft)
-  chert-sdk billing buy --plan shared|dedicated --idempotency-key KEY --confirm (draft)
+  chert-sdk billing status (not available yet)
+  chert-sdk billing card | cancel --idempotency-key KEY --confirm (not available yet)
+  chert-sdk billing buy --plan shared|dedicated --idempotency-key KEY --confirm (not available yet)
   chert-sdk adopt [path] [--write] [--install] [--json]
   chert-sdk context [--offline]
 
@@ -29,15 +29,15 @@ Credentials by surface (service-specific, not interchangeable):
   imessage send            CHERT_API_KEY (iMessage API key)
   facetime status          CHERT_FACETIME_TOKEN = CLI login (ftu_, from chert login)
   facetime lines, workers  CHERT_FACETIME_TOKEN = project API key (ftk_) or CLI login
-  billing (draft)          CHERT_FACETIME_TOKEN = CLI login with the billing scope,
+  billing (not available)  CHERT_FACETIME_TOKEN = CLI login with the billing scope,
                            held by a current project owner; not a project API key
 iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.
 FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionally
 overrides the origin.
 FaceTime commands inspect existing access/lines; no calls, media relay,
 concierge onboarding or automatic shared-line allocation is implemented.
-Billing is a draft backend contract: today billing only works from a signed-in
-browser session, and the backend refuses CLI credentials until it ships.
+The billing commands are not available yet: the backend refuses CLI credentials,
+so today billing only works from a signed-in browser session. Once available,
 buy charges the saved card and is refused while a subscription is live; when a
 card or authentication is needed the output carries a Stripe-hosted url to open,
 then rerun billing status. A pending status means rerun the same command with
@@ -138,7 +138,7 @@ async function context(env: NodeJS.ProcessEnv, offline: boolean) {
     },
     missing: ['CHERT_PROJECT_ID', 'CHERT_API_KEY', 'CHERT_FACETIME_TOKEN'].filter(name => !set(name)),
     account: { facetime: offline ? 'skipped' : facetimeAccount ?? 'not_configured', imessage: 'not_inspected' },
-    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status (draft)', 'billing card (draft)', 'billing buy (draft)', 'billing cancel (draft)', 'adopt', 'context'],
+    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status (not available yet)', 'billing card (not available yet)', 'billing buy (not available yet)', 'billing cancel (not available yet)', 'adopt', 'context'],
     docs: { setup: `${DOCS}/docs/SETUP.md`, llms: `${DOCS}/llms.txt`, ...(existsSync(llmsFile) ? { llmsFile } : {}), readme: `${DOCS}/README.md`,
       compatibility: `${DOCS}/COMPATIBILITY.md` },
     agentCli: { package: '@trychert/facetime', bin: 'chert', use: 'Browser login and putting a LiveKit voice or video agent on a FaceTime line' },
