@@ -22,6 +22,13 @@ The SDK's `chert-sdk` CLI has no `login`, `onboard`, `new` or `dev` command.
 
 JavaScript / TypeScript (Node 22.12+, current Bun, or Deno 2):
 
+> **npm 0.2.3 is not on the registry yet.** Until it is, an install gets
+> 0.2.2, **whose iMessage `sendText` cannot send** (it uses a route production
+> does not serve). On 0.2.2, `chert-sdk imessage send` also needs
+> `CHERT_PROJECT_ID`, `facetime status` with an `ftk_` key returns `unauthorized`,
+> and the `billing` commands and call video composition do not exist yet.
+> PyPI `chert-sdk` 0.2.3 is published and has the fix.
+
 ```sh
 npm install @trychert/sdk
 # or: pnpm add @trychert/sdk

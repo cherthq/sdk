@@ -1,7 +1,7 @@
 # Chert FaceTime client
 
 The `@trychert/sdk/facetime` export provides typed HTTP methods for the Chert FaceTime
-API. This guide targets `@trychert/sdk@0.2.0`; the
+API. This guide targets `@trychert/sdk@0.2.3` (npm release pending); the
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Use a reviewed local tarball for local validation. See the root guide
 for supported Node, Bun and Deno versions.

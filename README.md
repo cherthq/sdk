@@ -48,6 +48,14 @@ The examples below target **`@trychert/sdk@0.2.3`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
 
+> **npm 0.2.3 is not on the registry yet.** Until it is, the `@trychert/sdk@0.2.3`
+> commands below fail with "No matching version", and an unpinned install gets
+> 0.2.2, **whose iMessage `sendText` cannot send** (it uses a route production
+> does not serve). On 0.2.2, `chert-sdk imessage send` also needs
+> `CHERT_PROJECT_ID`, `facetime status` with an `ftk_` key returns `unauthorized`,
+> and the `billing` commands and call video composition do not exist yet.
+> PyPI `chert-sdk` 0.2.3 is published and has the fix.
+
 ```sh
 npm install @trychert/sdk@0.2.3
 # Alternatives:
@@ -208,7 +216,7 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
 migration. To upgrade, update the dependency to `@trychert/sdk@0.2.3`
-(published, `latest`), regenerate your consumer lockfile and rerun tests.
+(not on npm yet; see the notice above), regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
 stay `@trychert/sdk/<subpath>`.
 
@@ -228,7 +236,7 @@ does not deprecate any registry package; registry actions require separate appro
 The published CLI commands are `imessage send`, `facetime status|lines|workers`,
 `adopt` and `context`, and since 0.2.3 `billing status|card|buy|cancel` (draft;
 the backend does not serve it yet). Since 0.2.1, unknown commands and subcommands exit with
-`unknown_command` before any credential lookup. Published 0.1.0 through 0.2.3
+`unknown_command` before any credential lookup. Versions 0.1.0 through 0.2.3
 do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
 agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
 
