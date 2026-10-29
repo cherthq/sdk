@@ -12,7 +12,7 @@ and import `@trychert/sdk/<adapter>`; the `@cherthq/*` names below are private
 workspace names. This guide targets `@trychert/sdk@0.2.3` (npm release pending); the
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Run it from the published package with
-`npx --package=@trychert/sdk@0.2.3 chert-sdk adopt ./my-app` (dry run). Existing `@trychert/sdk@0.1.0`
+`npx --package=@trychert/sdk chert-sdk adopt ./my-app` (dry run). Existing `@trychert/sdk@0.1.0`
 imports need no rename; see the [upgrade guide](../../README.md#upgrading-from-trychertsdk010).
 
 ```sh
