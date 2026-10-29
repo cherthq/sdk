@@ -1,0 +1,48 @@
+# Publishes an already-verified tarball to npm with trusted publishing (OIDC):
+# no npm token, OTP or browser approval. npm must trust this repository, this
+# workflow file and the `npm` environment, with direct `npm publish` allowed.
+# The tarball must be attached to the published GitHub release v<version>; the
+# job fails before publishing unless its sha256, package name and version match.
+name: Publish npm
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to publish, e.g. 0.2.3
+        required: true
+      sha256:
+        description: sha256 of trychert-sdk-<version>.tgz attached to release v<version>
+        required: true
+permissions:
+  contents: read
+  id-token: write # required for npm trusted publishing
+jobs:
+  publish:
+    runs-on: ubuntu-latest # trusted publishing needs a GitHub-hosted runner
+    environment: npm
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24' # trusted publishing needs Node >= 22.14
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Download and verify the release tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          SHA256: ${{ inputs.sha256 }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must be X.Y.Z"; exit 1; }
+          [[ "$SHA256" =~ ^[0-9a-f]{64}$ ]] || { echo "sha256 must be 64 lowercase hex characters"; exit 1; }
+          file="trychert-sdk-$VERSION.tgz"
+          gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern "$file"
+          echo "$SHA256  $file" | sha256sum --check --strict
+          manifest="$(tar -xzOf "$file" package/package.json | jq -r '.name+"@"+.version')"
+          [ "$manifest" = "@trychert/sdk@$VERSION" ] || { echo "manifest is $manifest, expected @trychert/sdk@$VERSION"; exit 1; }
+          if npm view "@trychert/sdk@$VERSION" version >/dev/null 2>&1; then echo "@trychert/sdk@$VERSION is already published"; exit 1; fi
+      - name: Publish
+        env:
+          VERSION: ${{ inputs.version }}
+        # npm >= 11.5.1 detects OIDC and exchanges it for a one-use publish token; provenance is automatic.
+        run: npx -y npm@12.2.1 publish "trychert-sdk-$VERSION.tgz" --access public --tag latest
