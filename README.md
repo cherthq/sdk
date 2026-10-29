@@ -48,6 +48,14 @@ The examples below target **`@trychert/sdk@0.2.3`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
 
+> **npm 0.2.3 is not on the registry yet.** Until it is, the `@trychert/sdk@0.2.3`
+> commands below fail with "No matching version", and an unpinned install gets
+> 0.2.2, **whose iMessage `sendText` cannot send** (it uses a route production
+> does not serve). On 0.2.2, `chert-sdk imessage send` also needs
+> `CHERT_PROJECT_ID`, `facetime status` with an `ftk_` key returns `unauthorized`,
+> and the `billing` commands and call video composition do not exist yet.
+> PyPI `chert-sdk` 0.2.3 is published and has the fix.
+
 ```sh
 npm install @trychert/sdk@0.2.3
 # Alternatives:
