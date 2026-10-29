@@ -4,7 +4,7 @@
 
 Rules for coding agents:
 
-- npm `@trychert/sdk` 0.2.3 is not published yet; npm `latest` is 0.2.2, whose iMessage `sendText` cannot send (old route). Do not tell users to install `@trychert/sdk@0.2.3` until `npm view @trychert/sdk version` shows it. PyPI `chert-sdk` 0.2.3 is published.
+- npm `@trychert/sdk` 0.2.3 is not published yet; npm `latest` is 0.2.2, whose iMessage `sendText` cannot send (old route). Do not tell users to install `@trychert/sdk@0.2.3` until `npm view @trychert/sdk version` shows it. PyPI `chert-sdk` 0.2.3 is published; for iMessage sends, use it until npm 0.2.3 ships.
 
 - Run `chert-sdk context` (or `npx --package=@trychert/sdk chert-sdk context`) first. It prints JSON with the SDK version, which credentials are set (never their values), FaceTime identity and lines, and docs links. `--offline` makes no requests.
 - Credentials are per service: `CHERT_API_KEY` (iMessage), `CHERT_FACETIME_TOKEN` plus `CHERT_PROJECT_ID` (FaceTime). They are not interchangeable. Never print or commit them. In `CHERT_FACETIME_TOKEN`, identity (`facetime status`) needs a CLI login (`ftu_`); lines, workers, calls and assistants take a project API key (`ftk_`).
