@@ -5,6 +5,38 @@ import Linq from '@cherthq/linq-adapter';
 import Sendblue, { unwrapChert, createSendblueReactionFetch } from '@cherthq/sendblue-adapter';
 import Blooio from '@cherthq/blooio-adapter';
 
+// Public adoption helpers must survive packaging without changing the wire shapes.
+{
+  const { ChertControlPlane } = await import('@cherthq/control-plane');
+  const transcript = { call_id: 'call', schema_version: 1, turns: [{ occurred_at: 'now', speaker: 'caller', text: 'Hello' }], created_at: 'now' };
+  const replies = [[], { items: [] }, transcript];
+  const requests = [];
+  const control = new ChertControlPlane({ token: 'user', projectId: 'project', fetch: async (url, init) => {
+    requests.push({ url: String(url), headers: new Headers(init.headers) });
+    return Response.json({ data: replies.shift() });
+  } });
+  assert.deepEqual(await control.listProjects(), []);
+  assert.deepEqual(await control.listIntegrations(), { items: [] });
+  assert.deepEqual(await control.getCallTranscript('call'), transcript);
+  assert.equal(requests[0].headers.has('x-chert-project-id'), false);
+  assert.equal(requests[1].headers.get('x-chert-project-id'), 'project');
+  assert.deepEqual(requests.map(r => new URL(r.url).pathname), ['/api/v1/projects', '/api/v1/integrations', '/api/v1/calls/call/transcript']);
+  const replay = { status: 'queued', message_id: 'msg', delivered: false, retryable: false };
+  const lookup = { id: 'msg', phone: '+15555550101', chat_id: 'chat', lead_id: 'lead', convo_id: null, phone_line_id: null, created_at: 'now', status: 'received', error: null, direction: 'outbound', text: 'legacy', message_guid: 'guid' };
+  const paths = ['/api/v1/chats', '/api/v1/chats/chat/messages', '/api/v1/messages/msg'];
+  const results = [replay, { messages: [], has_more: true }, lookup];
+  const input = { from: '+15555550100', to: ['person@example.com'], message: { parts: [{ type: 'text', value: 'Hello' }] }, idempotency_key: 'stable-create' };
+  const client = new ChertClient({ apiKey: 'key', fetch: async (url, init) => {
+    assert.equal(new URL(url).pathname, paths.shift());
+    if (init.method === 'POST') assert.deepEqual(JSON.parse(init.body), input);
+    return Response.json(results.shift());
+  } });
+  assert.deepEqual(await client.createChat(input), replay);
+  assert.deepEqual(await client.listChatMessages('chat'), { messages: [], has_more: true });
+  assert.deepEqual(await client.getMessage('msg'), lookup);
+  assert.equal(paths.length, 0);
+}
+
 // The OTP transport works in fresh consumers without installing Better Auth.
 {
   const { chertPhoneOTP, ChertOTPDeliveryError } = await import('@cherthq/better-auth');

@@ -140,6 +140,21 @@ console.log('All portable unified exports loaded without workspace packages.');
   // Resolve every shipped declaration using both supported TS resolution modes.
   writeFileSync(join(temporary, 'consumer.ts'), subpaths.map((path, i) => `import * as api${i} from '${specifier(path)}';\nvoid api${i};`).join('\n') + `
 import {ChertClient, verifyWebhook, type MessagingStreamFrame, type MessagingEventPage} from '@trychert/sdk';
+import {type ProjectMembership, type CallTranscript, type Integration, type CreateChatResult, type ChatHistory, type MessageLookup} from '@trychert/sdk';
+async function resources(client: ChertClient, control: import('@trychert/sdk').ChertControlPlane) {
+  const projects: ProjectMembership[] = await control.listProjects();
+  const transcript: CallTranscript = await control.getCallTranscript('call');
+  const integrations: {items: Integration[]} = await control.listIntegrations();
+  const created: CreateChatResult = await client.createChat({from:'+15555550100',to:['person@example.com'],message:{parts:[{type:'text',value:'Hello'}]},idempotency_key:'operation-1'});
+  const history: ChatHistory = await client.listChatMessages('chat');
+  const lookup: MessageLookup = await client.getMessage('message');
+  // @ts-expect-error An unenforced SMS policy must not become a public promise.
+  await client.createChat({from:'+15555550100',to:['+15555550101'],message:{parts:[{type:'text',value:'Hello'}]},idempotency_key:'operation-1',sms_fallback:false});
+  // @ts-expect-error History has no supported pagination contract.
+  await client.listChatMessages('chat',{limit:10});
+  return {projects, transcript, integrations, created, history, lookup};
+}
+void resources;
 async function events(client: ChertClient, signal: AbortSignal) {
   const page: MessagingEventPage = await client.listEvents({limit:2,cursor:'opaque'}, {signal});
   const secret: string = (await client.createWebhookSubscription({url:'https://receiver.example/events'})).subscription.secret;
