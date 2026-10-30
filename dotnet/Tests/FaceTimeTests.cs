@@ -117,6 +117,26 @@ static partial class Program
                 && p.GetProperty("remote_participant_identity").GetString() == "agent-7" && !p.TryGetProperty("assistant_id", out _));
             Check(!input.ToString().Contains("secret") && !string.Join(',', request.Headers.Values).Contains("room-secret"));
         });
+        await Run("FaceTime direct media sends the exact customer_managed direct body", async () =>
+        {
+            ReplyWith(CallJson, 201);
+            foreach (var (url, identity) in new[] { ("wss://media.example.test/direct/room", (string?)null), ("ws://127.0.0.1:8787/media", "agent-7"),
+                ("WSS://media.example.test/direct/room", null), ("ws://LOCALHOST:8787/media", null), ("ws://[::1]:8787/media", null) })
+            {
+                var input = new CreateCallRequest { Mode = "customer_managed", LineId = Chat, Destination = "person@example.test",
+                    Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = url, MediaToken = "direct-media-secret", RemoteParticipantIdentity = identity };
+                await client.CreateCallAsync(input, "direct-1234");
+                var request = server.Requests.Last(); using var doc = JsonDocument.Parse(request.Body); var p = doc.RootElement;
+                var names = p.EnumerateObject().Select(x => x.Name).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var expected = new[] { "authorized_test_call", "destination", "direction", "line_id", "media", "media_token", "media_transport", "media_url", "mode" }
+                    .Concat(identity is null ? [] : new[] { "remote_participant_identity" }).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                Check(names.SequenceEqual(expected) && p.GetProperty("mode").GetString() == "customer_managed"
+                    && p.GetProperty("media_transport").GetString() == "direct" && p.GetProperty("media_url").GetString() == url
+                    && p.GetProperty("media_token").GetString() == "direct-media-secret"
+                    && (identity is null || p.GetProperty("remote_participant_identity").GetString() == identity));
+                Check(!input.ToString().Contains("secret") && !string.Join(',', request.Headers.Values).Contains("direct-media-secret"));
+            }
+        });
         await Run("FaceTime links and typed groups preserve destinations", async () =>
         {
             ReplyWith(CallJson, 201);
@@ -269,6 +289,29 @@ static partial class Program
                 new() { Mode = "customer_managed", Destination = "+15550000002", Media = new() { Audio = true, Video = false } },
                 new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = false, Video = true }, LivekitUrl = "wss://room.test", ParticipantToken = "token", RemoteParticipantIdentity = "agent" },
                 new() { Mode = "managed", AssistantId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, ParticipantToken = "token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "ws://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "https://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://u:p@media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x#f", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/" + new string('a', 2048), MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "short" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token\n" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token", RemoteParticipantIdentity = " " },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token", LivekitUrl = "wss://room.test", ParticipantToken = "token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token", AuthorizedTestCall = true },
+                new() { Mode = "customer_managed", Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = false, Video = true }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "webrtc", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, LivekitUrl = "wss://room.test", ParticipantToken = "token", RemoteParticipantIdentity = "agent", MediaToken = "synthetic-media-token" },
+                new() { Mode = "managed", AssistantId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "managed", AssistantId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "livekit" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = " wss://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.te\tst/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://m\u00e9dia.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "WS://media.test/x", MediaToken = "synthetic-media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic media-token" },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, MediaTransport = "direct", MediaUrl = "wss://media.test/x", MediaToken = "synthetic-media-token", RemoteParticipantIdentity = new string('a', 241) },
+                new() { Mode = "customer_managed", LineId = Chat, Destination = "+15550000002", Media = new() { Audio = true, Video = false }, LivekitUrl = "wss://room.test", ParticipantToken = "token", RemoteParticipantIdentity = new string('a', 241) },
                 new() { Mode = "managed", AssistantId = Chat, LineId = Chat, Destination = "https://evil.test/#link", DestinationType = "facetime_link", Media = new() { Audio = true, Video = false } },
                 new() { Mode = "managed", AssistantId = Chat, LineId = Chat, Recipients = [new() { Type = "email", Value = "A@b.test" }, new() { Type = "email", Value = "a@b.test" }], Media = new() { Audio = true, Video = false } }
             }) await Throws<ArgumentException>(() => client.CreateCallAsync(input, "stable-key"));

@@ -2,6 +2,7 @@ package chert
 
 import (
 	"encoding/json"
+	"net/url"
 	"strings"
 	"unicode/utf8"
 )
@@ -121,6 +122,9 @@ type CreateCallRequest struct {
 	DestinationType           string      `json:"destination_type,omitempty"`
 	Recipients                []Recipient `json:"recipients,omitempty"`
 	Media                     Media       `json:"media"`
+	MediaTransport            string      `json:"media_transport,omitempty"`
+	MediaURL                  string      `json:"media_url,omitempty"`
+	MediaToken                string      `json:"media_token,omitempty"`
 	LiveKitURL                string      `json:"livekit_url,omitempty"`
 	ParticipantToken          string      `json:"participant_token,omitempty"`
 	RemoteParticipantIdentity string      `json:"remote_participant_identity,omitempty"`
@@ -134,11 +138,23 @@ func (r CreateCallRequest) valid() bool {
 	}
 	switch r.Mode {
 	case "managed":
-		if !uuidPattern.MatchString(r.AssistantID) || r.LiveKitURL != "" || r.ParticipantToken != "" || r.RemoteParticipantIdentity != "" {
+		if !uuidPattern.MatchString(r.AssistantID) || r.LiveKitURL != "" || r.ParticipantToken != "" || r.RemoteParticipantIdentity != "" || r.MediaTransport != "" || r.MediaURL != "" || r.MediaToken != "" {
 			return false
 		}
 	case "customer_managed":
-		if r.AssistantID != "" || r.LineID == "" || !r.Media.Audio || strings.TrimSpace(r.LiveKitURL) == "" || strings.TrimSpace(r.ParticipantToken) == "" || strings.TrimSpace(r.RemoteParticipantIdentity) == "" {
+		if r.AssistantID != "" || r.LineID == "" || !r.Media.Audio {
+			return false
+		}
+		switch r.MediaTransport {
+		case "", "livekit":
+			if r.MediaURL != "" || r.MediaToken != "" || strings.TrimSpace(r.LiveKitURL) == "" || strings.TrimSpace(r.ParticipantToken) == "" || !participantIdentity(r.RemoteParticipantIdentity) {
+				return false
+			}
+		case "direct":
+			if r.LiveKitURL != "" || r.ParticipantToken != "" || !directMediaURL(r.MediaURL) || !directMediaToken(r.MediaToken) || (r.RemoteParticipantIdentity != "" && !participantIdentity(r.RemoteParticipantIdentity)) {
+				return false
+			}
+		default:
 			return false
 		}
 	default:
@@ -216,4 +232,38 @@ type UpdateLineRequest struct {
 // ProjectSettings contains project-scoped LiveKit allowlist configuration.
 type ProjectSettings struct {
 	LiveKitAllowedHosts []string `json:"livekit_allowed_hosts"`
+}
+
+func participantIdentity(value string) bool {
+	trimmed := strings.TrimSpace(value)
+	return trimmed != "" && len(trimmed) <= 240
+}
+
+func printableASCII(value string) bool {
+	for i := 0; i < len(value); i++ {
+		if value[i] < 0x21 || value[i] > 0x7e {
+			return false
+		}
+	}
+	return true
+}
+
+func directMediaURL(value string) bool {
+	if len(value) > 2048 || strings.Contains(value, "#") || !printableASCII(value) {
+		return false
+	}
+	u, err := url.Parse(value)
+	if err != nil || u.User != nil || u.Hostname() == "" {
+		return false
+	}
+	scheme := strings.ToLower(u.Scheme)
+	switch strings.ToLower(u.Hostname()) {
+	case "localhost", "127.0.0.1", "::1":
+		return scheme == "wss" || scheme == "ws"
+	}
+	return scheme == "wss"
+}
+
+func directMediaToken(value string) bool {
+	return len(value) >= 16 && len(value) <= 4096 && printableASCII(value)
 }

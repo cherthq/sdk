@@ -173,6 +173,10 @@ or `recipients` with an explicit line, never both. Managed calls enable audio or
 video; FaceTime links require an explicit line. Bodies pass through unchanged;
 these typed models do not replace server validation or provisioning. Keep BYOR
 credentials and call payloads out of logs.
+`DirectCallDestination`/`DirectCallRecipients` model direct audio (not available
+yet on the hosted backend): `media_transport: 'direct'`, `media_url`,
+`media_token` and optional `remote_participant_identity`, without LiveKit fields.
+See [direct audio transport](../docs/FACETIME.md#direct-audio-transport).
 
 `CallDetail.facetime_call_events` contains detail events with `event_type`,
 `created_at`, and `payload`. The separate `CallEvents.events` timeline contains

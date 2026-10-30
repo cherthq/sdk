@@ -70,6 +70,43 @@ int main(int argc, char** argv) {
         check(client.facetime.create_call(input, "call-key").data.id == call_id);
         input.media.video = true;
         check(client.facetime.create_call(input, std::string(200, 'k')).data.media.video);
+        auto direct = input;
+        direct.room.reset();
+        direct.media.video = false;
+        direct.direct = trychert::DirectMedia{"wss://media.example.test/direct/room", "private-media-token", std::nullopt};
+        check(client.facetime.create_call(direct, "direct-key").data.id == call_id);
+        direct.direct->media_url = "ws://127.0.0.1:8787/media";
+        direct.direct->remote_participant_identity = "agent-identity";
+        check(client.facetime.create_call(direct, "direct-loopback-key").data.id == call_id);
+        direct.direct->media_url = "WSS://media.example.test/direct/room";
+        direct.direct->remote_participant_identity.reset();
+        check(client.facetime.create_call(direct, "direct-upper-key").data.id == call_id);
+        direct.direct->media_url = "ws://LOCALHOST:8787/media";
+        check(client.facetime.create_call(direct, "direct-localhost-key").data.id == call_id);
+        for (int variant = 0; variant < 18; ++variant) {
+            auto bad = direct;
+            switch (variant) {
+                case 0: bad.direct->media_url = "ws://media.example.test/x"; break;
+                case 1: bad.direct->media_url = "https://media.example.test/x"; break;
+                case 2: bad.direct->media_url = "wss://u:p@media.example.test/x"; break;
+                case 3: bad.direct->media_url = "wss://media.example.test/x#f"; break;
+                case 4: bad.direct->media_url = "wss://media.example.test/" + std::string(2048, 'a'); break;
+                case 5: bad.direct->media_token = "short"; break;
+                case 6: bad.direct->media_token = "private-media-token\n"; break;
+                case 7: bad.direct->remote_participant_identity = " "; break;
+                case 8: bad.room = trychert::RoomCredentials{"wss://room.example.test", "private-room-token", "agent"}; break;
+                case 9: bad.media.audio = false; break;
+                case 10: bad.line_id.reset(); break;
+                case 11: bad.direct->media_url = "ws://localhost.example.test/x"; break;
+                case 12: bad.direct->media_url = " wss://media.example.test/x"; break;
+                case 13: bad.direct->media_url = "wss://media.exa\tmple.test/x"; break;
+                case 14: bad.direct->media_url = "wss://m\xc3\xa9" "dia.example.test/x"; break;
+                case 15: bad.direct->media_url = "WS://media.example.test/x"; break;
+                case 16: bad.direct->remote_participant_identity = std::string(241, 'a'); break;
+                case 17: bad.direct->media_token = "private media-token"; break;
+            }
+            invalid([&] { static_cast<void>(client.facetime.create_call(bad, "invalid-key")); });
+        }
         input.room.reset(); input.mode = trychert::CallMode::managed; input.assistant_id = project;
         check(client.facetime.create_call(input, "managed-key").data.mode == "managed");
         input.destination.reset(); input.destination_type.reset();

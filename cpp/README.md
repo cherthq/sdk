@@ -125,6 +125,7 @@ The SDK itself never reads these environment variables.
 | Call list/detail | `list_calls`, `get_call` | `Result<Page<Call>>`, `Result<Call>` |
 | Outbound audio/video | `create_call(CreateCall, key)` | HTTP 201 call snapshot; not call completion |
 | Managed / BYOR | `CallMode`, optional `RoomCredentials` | Managed requires assistant; production BYOR requires line and all room fields |
+| Direct audio (not available yet) | optional `DirectMedia` | `customer_managed` with line and audio; `wss://` URL (`ws://` only on loopback), 16–4096-byte printable token; never combined with `room`. See [direct audio transport](../docs/FACETIME.md#direct-audio-transport) |
 | Phone/email/Apple ID/link/group | `destination`, `destination_type`, `recipients` | Destination or recipient list, never both; server canonicalizes/admit-checks |
 | Answer/reject/end | `act_on_call(id, CallAction, key, reason)` | HTTP 202 current call; command queued, not completed |
 | Call events/transcripts | `get_call_events`, `get_transcript` | Typed ordered records; optional event sequence is preserved |

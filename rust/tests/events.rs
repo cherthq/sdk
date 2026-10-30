@@ -55,7 +55,10 @@ fn server(
         if linger {
             // Client cancels while waiting for the advertised body; socket must close.
             let mut buf = [0; 1];
-            assert_eq!(stream.read(&mut buf).unwrap(), 0);
+            match stream.read(&mut buf) {
+                Ok(n) => assert_eq!(n, 0),
+                Err(e) => assert_eq!(e.kind(), std::io::ErrorKind::ConnectionReset),
+            }
         } else if fragment && body.len() > 64 * 1024 {
             // Exercise a final LF arriving separately from its CR.
             let last = body.len() - 1;

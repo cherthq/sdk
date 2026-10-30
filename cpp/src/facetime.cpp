@@ -33,6 +33,32 @@ void key(const std::string& value) {
     require(value.size() >= 8 && value.size() <= 200 && value.front() != ' ' && value.back() != ' ');
     require(std::all_of(value.begin(), value.end(), [](unsigned char c) { return c >= 32 && c <= 126; }));
 }
+bool printable_ascii(const std::string& value) {
+    return std::all_of(value.begin(), value.end(), [](unsigned char c) { return c > 32 && c < 127; });
+}
+std::string lower_ascii(std::string_view value) {
+    std::string out(value);
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return out;
+}
+void participant_identity(const std::string& value) {
+    text(value, 1024);
+    const auto first = value.find_first_not_of(" \t\n\v\f\r");
+    require(first != value.npos && value.find_last_not_of(" \t\n\v\f\r") - first + 1 <= 240);
+}
+void direct_media_url(const std::string& value) {
+    text(value, 2048);
+    require(printable_ascii(value));
+    const auto lowered = lower_ascii(value);
+    const bool secure = lowered.starts_with("wss://");
+    require(secure || lowered.starts_with("ws://"));
+    const auto rest = std::string_view(lowered).substr(secure ? 6 : 5);
+    const auto authority = rest.substr(0, rest.find_first_of("/?"));
+    require(!authority.empty() && value.find('#') == value.npos && authority.find('@') == authority.npos);
+    const auto host = authority.starts_with("[") ? authority.substr(0, authority.find(']') + 1)
+                                                 : authority.substr(0, authority.find(':'));
+    require(!host.empty() && host != "[" && (secure || host == "localhost" || host == "127.0.0.1" || host == "[::1]"));
+}
 template<class E, std::size_t N> std::string name(E value, const std::array<std::string_view, N>& names) {
     const auto index = static_cast<std::size_t>(value);
     require(index < N);
@@ -99,7 +125,7 @@ Json create_body(const CreateCall& input) {
         {"authorized_test_call", input.authorized_test_call}};
     if (input.line_id) body["line_id"] = uuid(*input.line_id);
     if (input.assistant_id) body["assistant_id"] = uuid(*input.assistant_id);
-    require(input.mode == CallMode::managed ? input.assistant_id.has_value() && !input.room : !input.assistant_id);
+    require(input.mode == CallMode::managed ? input.assistant_id.has_value() && !input.room && !input.direct : !input.assistant_id);
     if (!input.recipients.empty()) {
         require(!input.destination && !input.destination_type && input.line_id && input.recipients.size() <= 31);
         body["recipients"] = Json::array();
@@ -119,15 +145,30 @@ Json create_body(const CreateCall& input) {
         if (input.destination_type) body["destination_type"] = name(*input.destination_type,
             std::to_array<std::string_view>({"phone", "email", "apple_id", "facetime_link"}));
     }
-    if (input.mode == CallMode::customer_managed && !input.authorized_test_call) require(input.line_id && input.room);
+    require(!(input.room && input.direct));
+    if (input.mode == CallMode::customer_managed && !input.authorized_test_call) require(input.line_id && (input.room || input.direct));
     if (input.room) {
         require(input.mode == CallMode::customer_managed && input.line_id && input.media.audio && !input.authorized_test_call);
         text(input.room->livekit_url, 4096);
         text(input.room->participant_token, 32768);
-        text(input.room->remote_participant_identity, 1024);
+        participant_identity(input.room->remote_participant_identity);
         body["livekit_url"] = input.room->livekit_url;
         body["participant_token"] = input.room->participant_token;
         body["remote_participant_identity"] = input.room->remote_participant_identity;
+    }
+    if (input.direct) {
+        require(input.mode == CallMode::customer_managed && input.line_id && input.media.audio && !input.authorized_test_call);
+        direct_media_url(input.direct->media_url);
+        const auto& token = input.direct->media_token;
+        require(token.size() >= 16 && token.size() <= 4096
+            && printable_ascii(token));
+        body["media_transport"] = "direct";
+        body["media_url"] = input.direct->media_url;
+        body["media_token"] = token;
+        if (const auto& identity = input.direct->remote_participant_identity) {
+            participant_identity(*identity);
+            body["remote_participant_identity"] = *identity;
+        }
     }
     // Credential validity, destination canonicalization, ownership and capability
     // admission remain server decisions. Never retry a rejected/uncertain call.

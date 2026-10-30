@@ -301,6 +301,180 @@ async fn creates_managed_byor_and_group_calls_with_exact_keys_and_bodies() {
 }
 
 #[tokio::test]
+async fn creates_direct_media_calls_with_exact_bodies() {
+    for identity in [None, Some("remote-7")] {
+        let (url, wire) = ok(201, call());
+        let mut input = create();
+        input.execution = CallExecution::Direct {
+            media: DirectMedia {
+                media_url: "wss://media.example.test/direct/room-1".into(),
+                media_token: "synthetic-private-media-token".into(),
+                remote_participant_identity: identity.map(Into::into),
+            },
+        };
+        client(&url)
+            .create_call(&input, "stable-key")
+            .await
+            .unwrap();
+        let wire = wire.join().unwrap();
+        assert_wire(&wire, "POST", "/api/v1/calls");
+        let mut expected = json!({"direction":"outbound","mode":"customer_managed",
+            "media_transport":"direct","line_id":"line-2",
+            "media_url":"wss://media.example.test/direct/room-1",
+            "media_token":"synthetic-private-media-token",
+            "destination":"+15550000001","destination_type":"phone",
+            "media":{"audio":true,"video":false}});
+        if let Some(identity) = identity {
+            expected["remote_participant_identity"] = json!(identity);
+        }
+        assert_eq!(body(&wire), expected);
+        assert!(!format!("{input:?}").contains("private-media-token"));
+        assert!(!format!("{:?}", input.execution).contains("private-media-token"));
+    }
+}
+
+#[tokio::test]
+async fn invalid_direct_media_fails_before_network() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let c = client(&format!("http://{}", listener.local_addr().unwrap()));
+    let long_url = format!("wss://media.example.test/{}", "a".repeat(2048));
+    let long_identity = "a".repeat(241);
+    let cases: [(&str, &str, Option<&str>, bool); 15] = [
+        (
+            "ws://media.example.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "https://media.example.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://user:pw@media.example.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://media.example.test/x#frag",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (long_url.as_str(), "synthetic-media-token", None, true),
+        ("wss://media.example.test/x", "short", None, true),
+        (
+            "wss://media.example.test/x",
+            "synthetic-media-token\n",
+            None,
+            true,
+        ),
+        (
+            "wss://media.example.test/x",
+            "synthetic-media-token",
+            Some(" "),
+            true,
+        ),
+        (
+            "wss://media.example.test/x",
+            "synthetic-media-token",
+            None,
+            false,
+        ),
+        ("not a url", "synthetic-media-token", None, true),
+        (
+            " wss://media.example.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://media.exa\tmple.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://m\u{e9}dia.example.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://media.example.test/x",
+            "synthetic media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://media.example.test/x",
+            "synthetic-media-token",
+            Some(long_identity.as_str()),
+            true,
+        ),
+    ];
+    for (media_url, media_token, identity, audio) in cases {
+        let mut input = create();
+        input.media.audio = audio;
+        input.execution = CallExecution::Direct {
+            media: DirectMedia {
+                media_url: media_url.into(),
+                media_token: media_token.into(),
+                remote_participant_identity: identity.map(Into::into),
+            },
+        };
+        assert_eq!(
+            c.create_call(&input, "stable-key").await.unwrap_err().code,
+            "invalid_call_request"
+        );
+    }
+    let mut input = create();
+    input.line_id.clear();
+    input.execution = CallExecution::Direct {
+        media: DirectMedia {
+            media_url: "wss://media.example.test/x".into(),
+            media_token: "synthetic-media-token".into(),
+            remote_participant_identity: None,
+        },
+    };
+    assert_eq!(
+        c.create_call(&input, "stable-key").await.unwrap_err().code,
+        "invalid_identifier"
+    );
+    assert!(listener.accept().is_err());
+}
+
+#[tokio::test]
+async fn direct_media_allows_plain_websocket_only_for_loopback() {
+    for media_url in [
+        "ws://localhost:8787/media",
+        "ws://127.0.0.1:8787/media",
+        "ws://[::1]:8787/media",
+        "ws://LOCALHOST:8787/media",
+        "WSS://media.example.test/x",
+    ] {
+        let (url, wire) = ok(201, call());
+        let mut input = create();
+        input.execution = CallExecution::Direct {
+            media: DirectMedia {
+                media_url: media_url.into(),
+                media_token: "synthetic-media-token".into(),
+                remote_participant_identity: None,
+            },
+        };
+        client(&url)
+            .create_call(&input, "stable-key")
+            .await
+            .unwrap();
+        assert_eq!(body(&wire.join().unwrap())["media_url"], json!(media_url));
+    }
+}
+
+#[tokio::test]
 async fn managed_destination_can_omit_line_without_changing_explicit_line_requests() {
     for line_id in ["", "line-2"] {
         let (url, wire) = ok(201, call());
