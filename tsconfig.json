@@ -16,6 +16,7 @@
     "skipLibCheck": true
   },
   "include": [
+    "examples/better-auth/**/*.ts",
     "packages/**/*.ts",
     "scripts/test*.ts",
     "tests/client.test.ts",

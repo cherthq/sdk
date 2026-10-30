@@ -4,6 +4,7 @@
 
 Rules for coding agents:
 
+- Better Auth phone transport (`@trychert/sdk/better-auth`) is source preview only, not in npm 0.2.3. See docs/BETTER_AUTH.md. Email remains supported alongside phone. Never auto-fallback to SMS after an uncertain send.
 - Run `chert-sdk context` (or `npx --package=@trychert/sdk chert-sdk context`) first. It prints JSON with the SDK version, which credentials are set (never their values), FaceTime identity and lines, and docs links. `--offline` makes no requests.
 - Credentials are per service: `CHERT_API_KEY` (iMessage), `CHERT_FACETIME_TOKEN` plus `CHERT_PROJECT_ID` (FaceTime). They are not interchangeable. Never print or commit them. In `CHERT_FACETIME_TOKEN`, identity (`facetime status`) needs a CLI login (`ftu_`); lines, workers, calls and assistants take a project API key (`ftk_`).
 - `chert-sdk imessage send` needs `--confirm` and a stable `--idempotency-key`. Send only to recipients who agreed, and only when the user asked.
