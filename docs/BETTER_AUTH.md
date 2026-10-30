@@ -66,7 +66,7 @@ include the exact code; keep the stated expiry consistent with `expiresIn`.
 Better Auth's separate `sendPasswordResetOTP` hook is **not** enabled implicitly;
 configure a purpose-specific transport there if phone password reset is wanted.
 
-## Acceptance, failure and abuse protection
+## Acceptance, limitations and abuse protection
 
 - `queued`, `sent` and `duplicate` receipts mean server acceptance/dispatch,
   **not delivery or successful verification**. Only Better Auth's verify endpoint
@@ -101,3 +101,7 @@ configure a purpose-specific transport there if phone password reset is wanted.
   mean no code exists; don't turn a transport exception into an alternate login
   proof. Run Better Auth migrations, configure persistent storage and review its
   OTP storage/atomic-consumption guarantees for your deployment.
+- A delivered code persists in the recipient's Messages app and Apple's storage;
+  server-side redaction cannot remove those copies. SMS has the same inherent
+  recipient-side persistence limitation. Keep codes short-lived and single-use,
+  with expiry and consumption enforced by Better Auth, not by this transport.
