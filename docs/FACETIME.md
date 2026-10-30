@@ -27,12 +27,14 @@ it. A customer-managed call can skip LiveKit and move raw call audio over one
 WebSocket to your server. Send `media_transport: "direct"`, `media_url` and
 `media_token` instead of `livekit_url` and `participant_token`;
 `remote_participant_identity` is an optional diagnostics label. Omitting
-`media_transport` keeps LiveKit.
+`media_transport` or sending `media_transport: "livekit"` keeps LiveKit;
+managed calls must omit it.
 
 | Field | Rule |
 | --- | --- |
-| `media_url` | `wss://` (`ws://` only for `localhost`, `127.0.0.1`, `[::1]`), at most 2048 bytes, no userinfo or fragment |
-| `media_token` | Opaque bearer, 16–4096 bytes of printable ASCII |
+| `media_url` | `wss://` (`ws://` only for `localhost`, `127.0.0.1`, `[::1]`), at most 2048 bytes of printable ASCII (`0x21`–`0x7E`, no spaces), no userinfo or fragment. Scheme and host compare case-insensitively |
+| `media_token` | Opaque bearer, 16–4096 bytes of printable ASCII (`0x21`–`0x7E`) |
+| `remote_participant_identity` | Optional for direct, required for LiveKit; at most 240 UTF-8 bytes after trimming, not blank |
 | `media.audio` | Must be `true`. Video still uses the existing video paths; direct carries audio only |
 
 Mixing LiveKit and direct fields is rejected. The worker connects to `media_url`
