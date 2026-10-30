@@ -5,6 +5,23 @@ import Linq from '@cherthq/linq-adapter';
 import Sendblue, { unwrapChert, createSendblueReactionFetch } from '@cherthq/sendblue-adapter';
 import Blooio from '@cherthq/blooio-adapter';
 
+// The OTP transport works in fresh consumers without installing Better Auth.
+{
+  const { chertPhoneOTP, ChertOTPDeliveryError } = await import('@cherthq/better-auth');
+  let requests = 0;
+  const client = new ChertClient({ apiKey: 'otp-fixture', fetch: async (url, init) => {
+    requests++;
+    assert.equal(String(url), 'https://console.trychert.com/api/v1/send');
+    assert.deepEqual(JSON.parse(init.body), { phone: '+15555550123', body: 'Code: 190284' });
+    return Response.json({ status: 'queued', message_id: 'm1', chat_id: 'c1' }, { status: 202 });
+  } });
+  await chertPhoneOTP({ client, formatMessage: ({ code }) => `Code: ${code}` })({ phoneNumber: '+15555550123', code: '190284' });
+  assert.equal(requests, 1);
+  const cause = new Error('transport unavailable');
+  await assert.rejects(chertPhoneOTP({ client: { async sendText() { throw cause; } }, formatMessage: ({ code }) => code })({ phoneNumber: '+15555550123', code: '190284' }),
+    error => error instanceof ChertOTPDeliveryError && error.outcome === 'unconfirmed' && error.cause === cause);
+}
+
 // Run the shipped stream parser and signature verifier on all supported runtimes.
 {
   const record = { id: 'row', event_id: 'producer', type: 'message.received', payload: { text: 'hello 🌍' } };

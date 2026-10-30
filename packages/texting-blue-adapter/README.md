@@ -26,7 +26,8 @@ await textingBlueFetch('https://api.texting.blue/v1/messages/send', {
 
 Field gaps: `id` is the actual 32-hex Chert public message ID, not `msg_…`.
 `status:"queued"` is Chert queue acceptance, never sent/delivered evidence; there
-is no `polling` state. Chert never falls back to SMS.
+is no `polling` state. The adapter does not initiate SMS fallback; device-level
+fallback prevention is not established.
 
 Errors use the documented `{error:{code,message}}` shape with sanitized text:
 `invalid_request` 400, `unauthorized` 401, `forbidden` 403, `not_found` 404,

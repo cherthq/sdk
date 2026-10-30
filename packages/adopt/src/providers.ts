@@ -178,7 +178,7 @@ export const PROVIDERS: Provider[] = [
     adapter: { package: '@cherthq/contiguity-adapter', version: '0.1.0', kind: 'fetch', factory: 'createContiguityFetch' },
     packages: [], hosts: ['api.contiguity.com'],
     routes: [
-      { methods: 'POST', path: '/send/imessage', class: 'drop_in', note: 'Keys `{to, from?, message}` only; fallback/attachments/effect/fast_track and markdown-style text reject. Chert never falls back to SMS/RCS.' },
+      { methods: 'POST', path: '/send/imessage', class: 'drop_in', note: 'Keys `{to, from?, message}` only; fallback/attachments/effect/fast_track and markdown-style text reject. The adapter does not initiate SMS/RCS fallback; device-level prevention is not established.' },
       { methods: 'POST', path: '/send/imessage/typing', class: 'drop_in', note: 'Exactly `{to, from, action}` with explicit E.164 `from`.' },
       { methods: 'POST', path: '/send/imessage/reactions', class: 'unsupported', note: 'Rejected: targets the latest message matching content, which Chert cannot resolve to an owned message ID.' },
     ],

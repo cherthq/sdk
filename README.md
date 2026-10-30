@@ -8,6 +8,10 @@ the other clients are source previews, with unified channel support under review
 **New here? Start with the [setup guide](docs/SETUP.md).** Coding agents can read
 [`llms.txt`](llms.txt) or run `chert-sdk context`.
 
+Better Auth users: the [iMessage phone transport](docs/BETTER_AUTH.md) is a
+source preview for the next SDK release, not in npm 0.2.3. It adds phone
+verification alongside existing email auth, not instead of it.
+
 ## Languages and release status
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
