@@ -1,6 +1,38 @@
 import {describe,it,expect} from 'bun:test';
-import {ChertControlPlane,ChertApiError} from './index';
+import {ChertControlPlane,ChertApiError,type ProjectMembership,type CallTranscript} from './index';
 const project = '11111111-1111-4111-8111-111111111111';
+describe('public adoption resources',()=>{
+ it('discovers projects with user auth and reads metadata/transcripts with project scope',async()=>{
+  const membership={role:'viewer',facetime_projects:{id:project,slug:'sample',name:'Sample',website_domain:'example.com',logo_data:null,created_at:'created',updated_at:'updated'}} satisfies ProjectMembership;
+  const integration={id:'integration',project_id:project,name:'Agent',endpoint_url:'https://agent.example',enabled:true,signing_enabled:false,payload_version:1,active_revision_id:null,livekit_allowed_hosts:null,created_at:'created',updated_at:'updated'};
+  const override={...integration,id:'override',livekit_allowed_hosts:[]};
+  const transcript={call_id:'opaque/id',schema_version:1,turns:[{occurred_at:'now',speaker:'caller',text:'Hello'},{occurred_at:'later',speaker:'agent',text:'Hi'}],created_at:'created'} satisfies CallTranscript;
+  const replies:unknown[]=[[membership],{items:[integration,override]},transcript];
+  const seen:{url:string;headers:Headers}[]=[];
+  const client=new ChertControlPlane({token:'user',projectId:project,fetch:Object.assign(async(url:Parameters<typeof fetch>[0],init?:RequestInit)=>{seen.push({url:String(url),headers:new Headers(init?.headers)});return Response.json({data:replies.shift()});},{preconnect:fetch.preconnect})});
+  expect(await client.listProjects()).toEqual([membership]);
+  expect(await client.listIntegrations()).toEqual({items:[integration,override]});
+  expect(await client.getCallTranscript('opaque/id')).toEqual(transcript);
+  expect(seen.map(r=>r.url)).toEqual(['projects','integrations','calls/opaque%2Fid/transcript'].map(p=>`https://facetime.trychert.com/api/v1/${p}`));
+  expect(seen[0]!.headers.has('x-chert-project-id')).toBe(false);
+  for(const request of seen.slice(1))expect(request.headers.get('x-chert-project-id')).toBe(project);
+  for(const request of seen)expect(request.headers.get('authorization')).toBe('Bearer user');
+  const userOnly=new ChertControlPlane({token:'user',fetch:Object.assign(async()=>Response.json({data:[]}),{preconnect:fetch.preconnect})});
+  expect(await userOnly.listProjects()).toEqual([]);
+  await expect(userOnly.listIntegrations()).rejects.toMatchObject({code:'project_required'});
+ });
+ it('rejects incompatible response contracts and distinguishes absent from empty transcripts',async()=>{
+  for(const data of [null,{call_id:'other',schema_version:1,turns:[],created_at:'now'},{call_id:'call',schema_version:2,turns:[],created_at:'now'}]){
+   const {client}=fixture(data);await expect(client.getCallTranscript('call')).rejects.toMatchObject({code:'invalid_response'});
+  }
+  const empty={call_id:'call',schema_version:1,turns:[],created_at:'now'} satisfies CallTranscript;
+  expect(await fixture(empty).client.getCallTranscript('call')).toEqual(empty);
+  await expect(fixture({items:[{id:'bad'}]}).client.listIntegrations()).rejects.toMatchObject({code:'invalid_response'});
+  await expect(fixture([{role:'owner',facetime_projects:null}]).client.listProjects()).rejects.toMatchObject({code:'invalid_response'});
+  const missing=new ChertControlPlane({token:'user',projectId:project,fetch:Object.assign(async()=>Response.json({error:{code:'transcript_not_found'}},{status:404}),{preconnect:fetch.preconnect})});
+  await expect(missing.getCallTranscript('call')).rejects.toMatchObject({status:404,code:'transcript_not_found'});
+ });
+});
 function fixture(data:unknown,status=200){const requests:{url:string;init:RequestInit}[]=[];const client=new ChertControlPlane({baseUrl:'https://control.example',token:'user-fixture',projectId:project,fetch:(async(url: Parameters<typeof fetch>[0],init?: RequestInit)=>{requests.push({url:String(url),init:init!});return Response.json({data}, {status});}) as typeof fetch});return {client,requests};}
 describe('control-plane wire contracts',()=>{
  it('defaults to the canonical origin and keeps public login separate from authenticated billing',async()=>{

@@ -12,6 +12,61 @@ Better Auth users: the [iMessage phone transport](docs/BETTER_AUTH.md) is a
 source preview for the next SDK release, not in npm 0.2.3. It adds phone
 verification alongside existing email auth, not instead of it.
 
+### Unreleased public resource helpers
+
+The following helpers are **source previews on `main`, not in npm 0.2.3**:
+
+```ts
+import { ChertClient, ChertControlPlane } from '@trychert/sdk';
+
+const discovery = new ChertControlPlane({ token: userAccessToken });
+const memberships = await discovery.listProjects(); // Signed-in user bearer only.
+const control = new ChertControlPlane({ token: projectToken, projectId });
+const integrations = await control.listIntegrations(); // { items }, no secrets.
+const transcript = await control.getCallTranscript(callId); // Recorded turns.
+
+const messages = new ChertClient({ apiKey });
+const result = await messages.createChat({
+  from: '+15555550100', to: ['person@example.com'],
+  message: { parts: [{ type: 'text', value: 'Hello' }] },
+  idempotency_key: operationId, // Persist and reuse only for this identical request.
+});
+const history = await messages.listChatMessages(chatId);
+const status = await messages.getMessage(messageId);
+```
+
+Project discovery sends no project header. Transcripts and integrations require
+project authorization (`facetime:read` for project API keys); CLI credentials
+remain subject to the backend's operation allowlist. Missing transcripts return
+404, not an empty transcript. These helpers expose no fleet/admin/device protocol.
+
+`createChat` supports a bounded subset: canonical E.164 sending phone, 1–31
+canonical E.164 or lowercase email recipients, text/media/rich-link parts and an
+explicit nonempty body idempotency key (at most 200 UTF-8 bytes). The sender must
+be an active assigned line. Groups support text only. First-message validation
+rejects URLs in text and consecutive text parts; use a rich-link part for a URL.
+Text is normalized by the backend. Optional `message.subject` names a group;
+`parallel_attachments` is opt-in. Unsupported fields, including SMS policy flags,
+are rejected locally. No SMS prevention or iMessage-only delivery is promised.
+
+Creation returns either `{ chat, message }` or a queued/retrying/failed/settled replay
+record; inspect the returned variant rather than assuming acceptance or delivery.
+A settled replay's top-level status/service/delivery fields can be newer than its
+nested message snapshot; the SDK preserves both without inferring delivery.
+Incompatible successful replies throw `unconfirmed_chat_outcome`. A timeout or
+network failure also leaves acceptance uncertain: reconcile before resending.
+The SDK does not retry or initiate an SMS fallback; these helpers do not control
+backend/device SMS behavior. Stable body keys do not guarantee delivery, and
+keys must not be reused for different payloads.
+
+History is the newest recorded window (up to 200 messages), ordered oldest first;
+`has_more` is a truncation hint, **not pagination**. No limit/cursor options exist.
+`getMessage` returns a separate recorded-status union, not a history message.
+Its `received` variant can describe an outbound legacy record; optional `service`
+on outbound records can be `mixed`. Recorded service/status is not independent
+channel or delivery proof. Recorded request/response/error fields can contain
+sensitive data; do not log them or assume that server text is sanitized.
+
 ## Languages and release status
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |

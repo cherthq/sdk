@@ -1,4 +1,6 @@
 import { readEventStream, type MessagingStreamFrame, type StreamEventsOptions, type EventListOptions, type MessagingEventPage, type RecordedMessagingEvent, type WebhookSubscription, type CreateWebhookSubscription, type UpdateWebhookSubscription } from './events.js';
+import { isChatHistory, isMessageLookup, isCreateChatResult, validateCreateChat, validateResourceOptions, type CreateChatRequest } from './resources.js';
+export type { MessageService, MessagePart, Chat, ChatMessage, ChatHistory, CreateChatRequest, CreateChatResult, MessageLookup } from './resources.js';
 export { verifyWebhook, type MessagingEvent, type StreamedMessagingEvent, type MessagingWebhookEvent, type MessagingStreamFrame, type StreamEventsOptions, type EventListOptions, type MessagingEventPage, type RecordedMessagingEvent, type WebhookSubscription, type CreateWebhookSubscription, type UpdateWebhookSubscription } from './events.js';
 
 export type ChertFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -131,6 +133,29 @@ export class ChertClient {
     const {status,data}=await this.#performRequest<T>(path,options);
     return {status,data};
   }
+  /** One explicit sender/recipient operation; requires a stable body key. A replay may report failed/retrying. */
+  async createChat(body: CreateChatRequest, options: SendTextOptions = {}) {
+    validateCreateChat(body);
+    validateResourceOptions(options);
+    const result = await this.#performRequest<unknown>('/chats', { ...options, method: 'POST', body }, 'chat');
+    if (![200, 202].includes(result.status) || !isCreateChatResult(result.data))
+      throw new ChertAPIError(502, 'unconfirmed_chat_outcome', 'Chat outcome unconfirmed; reconcile before retrying', result.requestId);
+    return result.data;
+  }
+  /** Newest recorded window only. has_more does not provide a cursor or pagination contract. */
+  async listChatMessages(chatId: string, options: SendTextOptions = {}) {
+    validateResourceOptions(options);
+    const data = await this.request<unknown>(`/chats/${this.#resourceId(chatId)}/messages`, options);
+    if (!isChatHistory(data)) throw new ChertAPIError(502, 'invalid_response', 'Invalid chat history response');
+    return data;
+  }
+  /** Recorded status lookup, distinct from a history message; never probes or retries delivery. */
+  async getMessage(messageId: string, options: SendTextOptions = {}) {
+    validateResourceOptions(options);
+    const data = await this.request<unknown>(`/messages/${this.#resourceId(messageId)}`, options);
+    if (!isMessageLookup(data)) throw new ChertAPIError(502, 'invalid_response', 'Invalid message lookup response');
+    return data;
+  }
   listEvents(query: EventListOptions = {}, options: SendTextOptions = {}): Promise<MessagingEventPage> {
     const params = new URLSearchParams();
     for (const key of ['type', 'status', 'lead_id', 'since', 'cursor'] as const) {
@@ -212,7 +237,7 @@ export class ChertClient {
     if (typeof id !== 'string' || !id || id === '.' || id === '..') throw new TypeError('A resource ID is required');
     return encodeURIComponent(id);
   }
-  async #performRequest<T>(path: string, options: RequestOptions, strictText=false, idempotencyKey?:string): Promise<{status:number;data:T;requestId:string|null}> {
+  async #performRequest<T>(path: string, options: RequestOptions, strictSend:boolean|'chat'=false, idempotencyKey?:string): Promise<{status:number;data:T;requestId:string|null}> {
     if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || path.includes('#')) throw new TypeError('Expected a Chert-relative API path');
     const url = new URL(path.slice(1), this.#base);
     if (url.origin !== this.#base.origin || !url.pathname.startsWith(this.#base.pathname)) throw new TypeError('API path escapes the Chert baseURL');
@@ -226,10 +251,10 @@ export class ChertClient {
     if (response.status === 204) return {status:204,data:undefined as T,requestId};
     let data: unknown;
     try { data = await response.json(); }
-    catch { if(strictText&&response.ok)throw new ChertAPIError(502,'unconfirmed_text_outcome','Text outcome unconfirmed; reconcile before retrying',requestId);
+    catch { if(strictSend&&response.ok)throw new ChertAPIError(502,strictSend==='chat'?'unconfirmed_chat_outcome':'unconfirmed_text_outcome','Send outcome unconfirmed; reconcile before retrying',requestId);
       throw new ChertAPIError(response.status >= 400 ? response.status : 502, 'invalid_response', 'Chert returned a non-JSON response; reconcile any send before retrying', requestId); }
-    if(strictText&&response.ok&&isRecord(data)&&data.success===false)
-      throw new ChertAPIError(502,'unconfirmed_text_outcome','Text outcome unconfirmed; reconcile before retrying',requestId,data);
+    if(strictSend&&response.ok&&isRecord(data)&&data.success===false)
+      throw new ChertAPIError(502,strictSend==='chat'?'unconfirmed_chat_outcome':'unconfirmed_text_outcome','Send outcome unconfirmed; reconcile before retrying',requestId,data);
     if (!response.ok || (isRecord(data) && data.success === false)) {
       const error = isRecord(data) ? (isRecord(data.error) ? data.error : data) : null;
       const code = error && (typeof error.code === 'string' || typeof error.code === 'number') ? String(error.code) : 'request_failed';

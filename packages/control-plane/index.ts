@@ -1,6 +1,8 @@
 /** Thin client for the inspected Chert FaceTime control-plane routes. No retries or provisioning fiction. */
 import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistant, CreateCall, LineUpdate, MediaReadiness, UpdateAssistant, VideoCapabilities } from './video';
 export * from './video';
+import { isProjectMemberships, isIntegrations, isCallTranscript } from './resources';
+export type { ProjectMembership, Integration, CallTranscript } from './resources';
 export { parseLivingServices, verifyLivingServiceWebhook, livingSignatureVersion, type LivingServicesCapability, type LivingInputKind, type LivingViewport, type LivingJson, type LivingServiceManifest, type LivingDeploymentStatus, type LivingDeployment, type AttachLivingService, type LivingSessionStatus, type LivingSession, type LivingInputEvent, type LivingServiceMessageWebhook } from './living';
 export { COMPOSITION_MAX_LAYERS, parseVideoComposition, compositionInputTarget, type VideoCompositionCapability, type CompositionBaseKind, type CompositionBase, type CompositionRegion, type CompositionPage, type CompositionBackground, type BaseLayerInput, type PageLayerInput, type VideoLayerInput, type SetCallVideo, type PageRef, type CompositionStatus, type BaseLayer, type PageLayer, type VideoLayer, type CallVideoComposition } from './composition';
 import { compositionBody, validateComposition, type CallVideoComposition, type PageRef, type SetCallVideo } from './composition';
@@ -100,7 +102,7 @@ export interface BillingCancellation {status:'cancellation_requested';message:st
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 /** Server text, bodies, URLs and credentials are deliberately not included in errors. */
 export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
-const safeCodes = new Set(['billing_plan_change_unavailable','living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded','video_composition_unsupported','composition_invalid','composition_revision_conflict','composition_base_unavailable']);
+const safeCodes = new Set(['transcript_not_found','billing_plan_change_unavailable','living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded','video_composition_unsupported','composition_invalid','composition_revision_conflict','composition_base_unavailable']);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -147,6 +149,24 @@ export class ChertControlPlane {
   logout(){return this.request<{revoked:boolean}>('cli/logout','POST',undefined,'user');}
   listCredentials(){return this.request<{credentials:Credential[]}>('cli/credentials');}
   revokeCredential(id:string){return this.request<{revoked:boolean}>(`cli/credentials/${encodeURIComponent(id)}`,'DELETE');}
+  /** Signed-in user bearer, not a CLI/project key. Does not require or send project context. */
+  async listProjects(){
+    const data=await this.request<unknown>('projects','GET',undefined,'user');
+    if(!isProjectMemberships(data))throw new ChertApiError(200,'invalid_response');
+    return data;
+  }
+  /** Project-scoped metadata only; no signing secrets or fleet assignments. */
+  async listIntegrations(){
+    const data=await this.request<unknown>('integrations');
+    if(!isIntegrations(data))throw new ChertApiError(200,'invalid_response');
+    return data;
+  }
+  /** Recorded transcript, not live media or transcript ingestion. Missing is not an empty transcript. */
+  async getCallTranscript(callId:string){
+    const data=await this.request<unknown>(`calls/${this.resourceId(callId)}/transcript`);
+    if(!isCallTranscript(data)||data.call_id!==callId)throw new ChertApiError(200,'invalid_response');
+    return data;
+  }
   private page(path:string,options:PageOptions){const params=new URLSearchParams();for(const key of ['limit','offset'] as const){const value=options[key];if(value!==undefined){if(!Number.isInteger(value)||value<0||(key==='limit'&&(value<1||value>100)))throw new TypeError('Invalid pagination.');params.set(key,String(value));}}return `${path}${params.size?'?'+params:''}`;}
   listLines(options:PageOptions={}){return this.request<Page<Line>>(this.page('lines',options));}
   listWorkers(options:PageOptions={}){return this.request<Page<Worker>>(this.page('workers',options));}
