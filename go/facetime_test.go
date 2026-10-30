@@ -357,11 +357,25 @@ func TestFaceTimeRejectedInputsHaveNoEffects(t *testing.T) {
 			_, e := c.CreateCall(ctx, r, "stable-key")
 			return e
 		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: "wss://media.example.com/room", MediaToken: "synthetic-media-token", RemoteParticipantIdentity: strings.Repeat("a", 241)}, "stable-key")
+			return e
+		},
+		func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, LiveKitURL: "wss://room.example.com", ParticipantToken: "private-room-token", RemoteParticipantIdentity: strings.Repeat("a", 241)}, "stable-key")
+			return e
+		},
 		func() error { _, e := c.UpdateAssistant(ctx, "id", UpdateAssistantRequest{}); return e },
 		func() error {
 			_, e := c.Request(ctx, "GET", "https://foreign.test/", nil, FaceTimeRequestOptions{})
 			return e
 		},
+	}
+	for _, mediaURL := range []string{" wss://media.example.com/room", "wss://media.exa\tmple.com/room", "wss://m\u00e9dia.example.com/room", "WS://media.example.com/room"} {
+		checks = append(checks, func() error {
+			_, e := c.CreateCall(ctx, CreateCallRequest{Mode: "customer_managed", LineID: chatID, Destination: "test@example.com", Media: Media{Audio: true}, MediaTransport: "direct", MediaURL: mediaURL, MediaToken: "synthetic-media-token"}, "stable-key")
+			return e
+		})
 	}
 	for _, check := range checks {
 		if check() == nil {
@@ -484,5 +498,13 @@ func TestCouponLengthCountsTrimmedCharacters(t *testing.T) {
 	}
 	if couponCode(strings.Repeat("é", 65)) || couponCode("   ") {
 		t.Fatal("over-long or blank coupons must be rejected")
+	}
+}
+
+func TestDirectMediaURLCaseInsensitive(t *testing.T) {
+	for _, value := range []string{"WSS://media.example.com/room", "ws://LOCALHOST:8787/media", "Ws://127.0.0.1:8787/media", "ws://[::1]:8787/media"} {
+		if !directMediaURL(value) {
+			t.Errorf("%q rejected", value)
+		}
 	}
 }

@@ -150,7 +150,7 @@ try:
                             env=dict(os.environ, http_proxy="http://127.0.0.1:1", NO_PROXY=""), timeout=30)
     assert not errors, errors
     assert result.returncode == 0, result.returncode
-    assert len(creates) == 7
+    assert len(creates) == 9
     audio = {"direction": "outbound", "mode": "customer_managed", "line_id": LINE, "destination": "+15550000002",
              "destination_type": "phone", "media": {"audio": True, "video": False}, "authorized_test_call": False,
              "livekit_url": "wss://room.example.test", "participant_token": "private-room-token", "remote_participant_identity": "agent-identity"}
@@ -160,12 +160,14 @@ try:
     direct = {**managed, "media_transport": "direct", "media_url": "wss://media.example.test/direct/room", "media_token": "private-media-token"}
     assert creates[2] == ("direct-key", direct)
     assert creates[3] == ("direct-loopback-key", {**direct, "media_url": "ws://127.0.0.1:8787/media", "remote_participant_identity": "agent-identity"})
+    assert creates[4] == ("direct-upper-key", {**direct, "media_url": "WSS://media.example.test/direct/room"})
+    assert creates[5] == ("direct-localhost-key", {**direct, "media_url": "ws://LOCALHOST:8787/media"})
     managed.update(mode="managed", assistant_id=PROJECT, media={"audio": True, "video": True})
-    assert creates[4] == ("managed-key", managed)
+    assert creates[6] == ("managed-key", managed)
     group = {k: v for k, v in managed.items() if k not in ("destination", "destination_type")}
     group["recipients"] = [{"type": "email", "value": "a@example.test"}, {"type": "phone_number", "value": "+15550000002"}]
-    assert creates[5] == ("group-key", group)
-    assert creates[6] == ("link-key", {**managed, "destination": "https://facetime.apple.com/join#a", "destination_type": "facetime_link"})
+    assert creates[7] == ("group-key", group)
+    assert creates[8] == ("link-key", {**managed, "destination": "https://facetime.apple.com/join#a", "destination_type": "facetime_link"})
     expected = {("imessage", "POST", "/api/v1/send"): 5,
                 ("imessage", "POST", "/custom/api/v1/send"): 1,
                 ("facetime", "GET", "/api/v1/lines?limit=1&offset=9"): 4,
@@ -175,7 +177,7 @@ try:
               ("PATCH", f"/lines/{LINE}"), *[("POST", f"/calls/{CALL}/{a}") for a in ("answer", "reject", "end")],
               *[(m, "/raw") for m in ("GET", "POST", "PUT", "PATCH", "DELETE")]]
     expected.update({("facetime", m, "/deployment/api/v1" + p): 1 for m, p in normal})
-    expected[("facetime", "POST", "/deployment/api/v1/calls")] = 7
+    expected[("facetime", "POST", "/deployment/api/v1/calls")] = 9
     cases = [(n, "GET", f"/calls/{CALL}") for n in ("wrong-id", "wrong-project", "missing-field", "bad-bool", "null-data", "wrong-status")]
     cases += [(n, "GET", "/calls?limit=50&offset=0") for n in ("bad-page", "float-page", "huge-page", "negative-page", "object-items")]
     cases += [("bad-event", "GET", f"/calls/{CALL}/events"), ("bad-transcript", "GET", f"/calls/{CALL}/transcript"),

@@ -33,14 +33,28 @@ void key(const std::string& value) {
     require(value.size() >= 8 && value.size() <= 200 && value.front() != ' ' && value.back() != ' ');
     require(std::all_of(value.begin(), value.end(), [](unsigned char c) { return c >= 32 && c <= 126; }));
 }
+bool printable_ascii(const std::string& value) {
+    return std::all_of(value.begin(), value.end(), [](unsigned char c) { return c > 32 && c < 127; });
+}
+std::string lower_ascii(std::string_view value) {
+    std::string out(value);
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return out;
+}
+void participant_identity(const std::string& value) {
+    text(value, 1024);
+    const auto first = value.find_first_not_of(" \t\n\v\f\r");
+    require(first != value.npos && value.find_last_not_of(" \t\n\v\f\r") - first + 1 <= 240);
+}
 void direct_media_url(const std::string& value) {
     text(value, 2048);
-    const bool secure = value.starts_with("wss://");
-    require(secure || value.starts_with("ws://"));
-    const auto rest = std::string_view(value).substr(secure ? 6 : 5);
+    require(printable_ascii(value));
+    const auto lowered = lower_ascii(value);
+    const bool secure = lowered.starts_with("wss://");
+    require(secure || lowered.starts_with("ws://"));
+    const auto rest = std::string_view(lowered).substr(secure ? 6 : 5);
     const auto authority = rest.substr(0, rest.find_first_of("/?"));
     require(!authority.empty() && value.find('#') == value.npos && authority.find('@') == authority.npos);
-    require(std::all_of(value.begin(), value.end(), [](unsigned char c) { return c > 32 && c < 127; }));
     const auto host = authority.starts_with("[") ? authority.substr(0, authority.find(']') + 1)
                                                  : authority.substr(0, authority.find(':'));
     require(!host.empty() && host != "[" && (secure || host == "localhost" || host == "127.0.0.1" || host == "[::1]"));
@@ -137,7 +151,7 @@ Json create_body(const CreateCall& input) {
         require(input.mode == CallMode::customer_managed && input.line_id && input.media.audio && !input.authorized_test_call);
         text(input.room->livekit_url, 4096);
         text(input.room->participant_token, 32768);
-        text(input.room->remote_participant_identity, 1024);
+        participant_identity(input.room->remote_participant_identity);
         body["livekit_url"] = input.room->livekit_url;
         body["participant_token"] = input.room->participant_token;
         body["remote_participant_identity"] = input.room->remote_participant_identity;
@@ -147,13 +161,12 @@ Json create_body(const CreateCall& input) {
         direct_media_url(input.direct->media_url);
         const auto& token = input.direct->media_token;
         require(token.size() >= 16 && token.size() <= 4096
-            && std::all_of(token.begin(), token.end(), [](unsigned char c) { return c >= 32 && c <= 126; }));
+            && printable_ascii(token));
         body["media_transport"] = "direct";
         body["media_url"] = input.direct->media_url;
         body["media_token"] = token;
         if (const auto& identity = input.direct->remote_participant_identity) {
-            text(*identity, 1024);
-            require(std::any_of(identity->begin(), identity->end(), [](unsigned char c) { return !std::isspace(c); }));
+            participant_identity(*identity);
             body["remote_participant_identity"] = *identity;
         }
     }

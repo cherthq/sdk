@@ -339,7 +339,8 @@ async fn invalid_direct_media_fails_before_network() {
     listener.set_nonblocking(true).unwrap();
     let c = client(&format!("http://{}", listener.local_addr().unwrap()));
     let long_url = format!("wss://media.example.test/{}", "a".repeat(2048));
-    let cases: [(&str, &str, Option<&str>, bool); 10] = [
+    let long_identity = "a".repeat(241);
+    let cases: [(&str, &str, Option<&str>, bool); 15] = [
         (
             "ws://media.example.test/x",
             "synthetic-media-token",
@@ -385,6 +386,36 @@ async fn invalid_direct_media_fails_before_network() {
             false,
         ),
         ("not a url", "synthetic-media-token", None, true),
+        (
+            " wss://media.example.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://media.exa\tmple.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://m\u{e9}dia.example.test/x",
+            "synthetic-media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://media.example.test/x",
+            "synthetic media-token",
+            None,
+            true,
+        ),
+        (
+            "wss://media.example.test/x",
+            "synthetic-media-token",
+            Some(long_identity.as_str()),
+            true,
+        ),
     ];
     for (media_url, media_token, identity, audio) in cases {
         let mut input = create();
@@ -423,6 +454,8 @@ async fn direct_media_allows_plain_websocket_only_for_loopback() {
         "ws://localhost:8787/media",
         "ws://127.0.0.1:8787/media",
         "ws://[::1]:8787/media",
+        "ws://LOCALHOST:8787/media",
+        "WSS://media.example.test/x",
     ] {
         let (url, wire) = ok(201, call());
         let mut input = create();

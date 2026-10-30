@@ -197,6 +197,7 @@ pub struct RoomCredentials {
 /// The execution mode prevents combining managed assistants with BYOR secrets.
 #[derive(Clone, Serialize)]
 #[serde(tag = "mode")]
+#[non_exhaustive]
 pub enum CallExecution {
     #[serde(rename = "managed")]
     Managed { assistant_id: String },
@@ -552,7 +553,7 @@ impl FaceTimeClient {
                 if !input.media.audio
                     || room.livekit_url.trim().is_empty()
                     || room.participant_token.trim().is_empty()
-                    || room.remote_participant_identity.trim().is_empty()
+                    || !participant_identity(&room.remote_participant_identity)
                 {
                     return Err(ChertError::new(None, "invalid_call_request"));
                 }
@@ -564,11 +565,11 @@ impl FaceTimeClient {
                     || !media
                         .media_token
                         .bytes()
-                        .all(|b| (0x20..=0x7e).contains(&b))
+                        .all(|b| (0x21..=0x7e).contains(&b))
                     || media
                         .remote_participant_identity
                         .as_deref()
-                        .is_some_and(|identity| identity.trim().is_empty())
+                        .is_some_and(|identity| !participant_identity(identity))
                 {
                     return Err(ChertError::new(None, "invalid_call_request"));
                 }
@@ -849,8 +850,12 @@ impl FaceTimeClient {
             .await
     }
 }
+fn participant_identity(value: &str) -> bool {
+    let trimmed = value.trim();
+    !trimmed.is_empty() && trimmed.len() <= 240
+}
 fn direct_media_url(value: &str) -> bool {
-    if value.len() > 2048 {
+    if value.len() > 2048 || !value.bytes().all(|b| (0x21..=0x7e).contains(&b)) {
         return false;
     }
     let Ok(url) = url::Url::parse(value) else {

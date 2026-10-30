@@ -147,11 +147,11 @@ func (r CreateCallRequest) valid() bool {
 		}
 		switch r.MediaTransport {
 		case "", "livekit":
-			if r.MediaURL != "" || r.MediaToken != "" || strings.TrimSpace(r.LiveKitURL) == "" || strings.TrimSpace(r.ParticipantToken) == "" || strings.TrimSpace(r.RemoteParticipantIdentity) == "" {
+			if r.MediaURL != "" || r.MediaToken != "" || strings.TrimSpace(r.LiveKitURL) == "" || strings.TrimSpace(r.ParticipantToken) == "" || !participantIdentity(r.RemoteParticipantIdentity) {
 				return false
 			}
 		case "direct":
-			if r.LiveKitURL != "" || r.ParticipantToken != "" || !directMediaURL(r.MediaURL) || !directMediaToken(r.MediaToken) || (r.RemoteParticipantIdentity != "" && strings.TrimSpace(r.RemoteParticipantIdentity) == "") {
+			if r.LiveKitURL != "" || r.ParticipantToken != "" || !directMediaURL(r.MediaURL) || !directMediaToken(r.MediaToken) || (r.RemoteParticipantIdentity != "" && !participantIdentity(r.RemoteParticipantIdentity)) {
 				return false
 			}
 		default:
@@ -234,29 +234,36 @@ type ProjectSettings struct {
 	LiveKitAllowedHosts []string `json:"livekit_allowed_hosts"`
 }
 
+func participantIdentity(value string) bool {
+	trimmed := strings.TrimSpace(value)
+	return trimmed != "" && len(trimmed) <= 240
+}
+
+func printableASCII(value string) bool {
+	for i := 0; i < len(value); i++ {
+		if value[i] < 0x21 || value[i] > 0x7e {
+			return false
+		}
+	}
+	return true
+}
+
 func directMediaURL(value string) bool {
-	if len(value) > 2048 || strings.Contains(value, "#") {
+	if len(value) > 2048 || strings.Contains(value, "#") || !printableASCII(value) {
 		return false
 	}
 	u, err := url.Parse(value)
 	if err != nil || u.User != nil || u.Hostname() == "" {
 		return false
 	}
-	switch u.Hostname() {
+	scheme := strings.ToLower(u.Scheme)
+	switch strings.ToLower(u.Hostname()) {
 	case "localhost", "127.0.0.1", "::1":
-		return u.Scheme == "wss" || u.Scheme == "ws"
+		return scheme == "wss" || scheme == "ws"
 	}
-	return u.Scheme == "wss"
+	return scheme == "wss"
 }
 
 func directMediaToken(value string) bool {
-	if len(value) < 16 || len(value) > 4096 {
-		return false
-	}
-	for i := 0; i < len(value); i++ {
-		if value[i] < 0x20 || value[i] > 0x7e {
-			return false
-		}
-	}
-	return true
+	return len(value) >= 16 && len(value) <= 4096 && printableASCII(value)
 }

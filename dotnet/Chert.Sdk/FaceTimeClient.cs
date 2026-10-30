@@ -316,24 +316,31 @@ public sealed class FaceTimeClient : IDisposable
         {
             if (input.Mode != "customer_managed" || input.LineId is null || !input.Media.Audio || input.AuthorizedTestCall
                 || input.LivekitUrl is not null || input.ParticipantToken is not null || !DirectMediaUrl(input.MediaUrl)
-                || input.MediaToken is not { Length: >= 16 and <= 4096 } || input.MediaToken.Any(c => c is < ' ' or > '~')
-                || (input.RemoteParticipantIdentity is not null && string.IsNullOrWhiteSpace(input.RemoteParticipantIdentity)))
+                || input.MediaToken is not { Length: >= 16 and <= 4096 } || !PrintableAscii(input.MediaToken)
+                || (input.RemoteParticipantIdentity is not null && !ParticipantIdentity(input.RemoteParticipantIdentity)))
                 throw new ArgumentException("Direct media requires a line, audio, a wss media URL and a media token without room credentials");
             return;
         }
         if (input.MediaTransport is not (null or "livekit") || input.MediaUrl is not null || input.MediaToken is not null)
             throw new ArgumentException("Direct media fields require media_transport direct");
+        if (input.Mode == "managed" && input.MediaTransport is not null) throw new ArgumentException("Managed calls cannot supply a media transport");
         var credentials = new[] { input.LivekitUrl, input.ParticipantToken, input.RemoteParticipantIdentity };
         var any = credentials.Any(x => x is not null);
         if (input.Mode == "managed" && any) throw new ArgumentException("Managed calls cannot supply room credentials");
         if (input.Mode == "customer_managed" && (!input.AuthorizedTestCall || any)
-            && (input.LineId is null || credentials.Any(string.IsNullOrWhiteSpace) || !input.Media.Audio || input.AuthorizedTestCall))
+            && (input.LineId is null || credentials.Any(string.IsNullOrWhiteSpace) || !ParticipantIdentity(input.RemoteParticipantIdentity)
+                || !input.Media.Audio || input.AuthorizedTestCall))
             throw new ArgumentException("BYOR requires a line, audio and all room credentials without test-call mode");
     }
+    private static bool PrintableAscii(string value) => value.All(c => c is > ' ' and <= '~');
+    private static bool ParticipantIdentity(string? value) =>
+        value?.Trim() is { Length: > 0 } trimmed && System.Text.Encoding.UTF8.GetByteCount(trimmed) <= 240;
     private static bool DirectMediaUrl(string? value)
     {
-        if (value is null || value.Length > 2048 || value.Contains('#') || !Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        if (value is null || value.Length > 2048 || value.Contains('#') || !PrintableAscii(value) || !Uri.TryCreate(value, UriKind.Absolute, out var uri)
             || !string.IsNullOrEmpty(uri.UserInfo) || string.IsNullOrEmpty(uri.Host)) return false;
-        return uri.Scheme == "wss" || (uri.Scheme == "ws" && uri.Host is "localhost" or "127.0.0.1" or "[::1]");
+        var scheme = uri.Scheme.ToLowerInvariant();
+        var loopback = uri.Host.ToLowerInvariant() is "localhost" or "127.0.0.1" or "[::1]";
+        return scheme == "wss" || (scheme == "ws" && loopback);
     }
 }
