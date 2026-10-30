@@ -9,7 +9,8 @@ export interface ProjectMembership {
 export interface Integration {
   id: string; project_id: string; name: string; endpoint_url: string; enabled: boolean;
   signing_enabled: boolean; payload_version: number; active_revision_id: string | null;
-  livekit_allowed_hosts: string[]; created_at: string; updated_at: string;
+  /** null inherits project hosts; [] is an explicit empty override. */
+  livekit_allowed_hosts: string[] | null; created_at: string; updated_at: string;
 }
 export interface CallTranscript {
   call_id: string; schema_version: 1;
@@ -31,7 +32,7 @@ export function isIntegrations(v: unknown): v is { items: Integration[] } {
     && ['id', 'project_id', 'name', 'endpoint_url', 'created_at', 'updated_at'].every(k => typeof i[k] === 'string')
     && typeof i.enabled === 'boolean' && typeof i.signing_enabled === 'boolean'
     && Number.isInteger(i.payload_version) && nullableString(i.active_revision_id)
-    && Array.isArray(i.livekit_allowed_hosts) && i.livekit_allowed_hosts.every(h => typeof h === 'string'));
+    && (i.livekit_allowed_hosts === null || Array.isArray(i.livekit_allowed_hosts) && i.livekit_allowed_hosts.every(h => typeof h === 'string')));
 }
 export function isCallTranscript(v: unknown): v is CallTranscript {
   return record(v) && typeof v.call_id === 'string' && v.schema_version === 1 && typeof v.created_at === 'string'

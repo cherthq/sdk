@@ -4,13 +4,14 @@ const project = '11111111-1111-4111-8111-111111111111';
 describe('public adoption resources',()=>{
  it('discovers projects with user auth and reads metadata/transcripts with project scope',async()=>{
   const membership={role:'viewer',facetime_projects:{id:project,slug:'sample',name:'Sample',website_domain:'example.com',logo_data:null,created_at:'created',updated_at:'updated'}} satisfies ProjectMembership;
-  const integration={id:'integration',project_id:project,name:'Agent',endpoint_url:'https://agent.example',enabled:true,signing_enabled:false,payload_version:1,active_revision_id:null,livekit_allowed_hosts:[],created_at:'created',updated_at:'updated'};
+  const integration={id:'integration',project_id:project,name:'Agent',endpoint_url:'https://agent.example',enabled:true,signing_enabled:false,payload_version:1,active_revision_id:null,livekit_allowed_hosts:null,created_at:'created',updated_at:'updated'};
+  const override={...integration,id:'override',livekit_allowed_hosts:[]};
   const transcript={call_id:'opaque/id',schema_version:1,turns:[{occurred_at:'now',speaker:'caller',text:'Hello'},{occurred_at:'later',speaker:'agent',text:'Hi'}],created_at:'created'} satisfies CallTranscript;
-  const replies:unknown[]=[[membership],{items:[integration]},transcript];
+  const replies:unknown[]=[[membership],{items:[integration,override]},transcript];
   const seen:{url:string;headers:Headers}[]=[];
   const client=new ChertControlPlane({token:'user',projectId:project,fetch:Object.assign(async(url:Parameters<typeof fetch>[0],init?:RequestInit)=>{seen.push({url:String(url),headers:new Headers(init?.headers)});return Response.json({data:replies.shift()});},{preconnect:fetch.preconnect})});
   expect(await client.listProjects()).toEqual([membership]);
-  expect(await client.listIntegrations()).toEqual({items:[integration]});
+  expect(await client.listIntegrations()).toEqual({items:[integration,override]});
   expect(await client.getCallTranscript('opaque/id')).toEqual(transcript);
   expect(seen.map(r=>r.url)).toEqual(['projects','integrations','calls/opaque%2Fid/transcript'].map(p=>`https://facetime.trychert.com/api/v1/${p}`));
   expect(seen[0]!.headers.has('x-chert-project-id')).toBe(false);

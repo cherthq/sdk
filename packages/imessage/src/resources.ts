@@ -23,8 +23,14 @@ export interface CreateChatRequest {
   /** Stable caller-owned body key. Reuse only with the identical request. */
   idempotency_key: string; parallel_attachments?: boolean;
 }
+type ChatSnapshot = { chat: Chat; message: ChatMessage; warnings?: string[] };
+/** A later recorded observation; the nested message snapshot may still be queued. */
+type SettledChatOutcome =
+  | { status: 'sent'; error: null; service: string; delivered: boolean; retryable: false }
+  | { status: 'failed'; error: string; service?: string; delivered: false; retryable: false; code: number; transport_error?: unknown };
 export type CreateChatResult =
-  | { chat: Chat; message: ChatMessage; status?: 'queued'; warnings?: string[] }
+  | (ChatSnapshot & { status?: 'queued' })
+  | ((ChatSnapshot | { message_id: string }) & SettledChatOutcome)
   | { status: 'queued'; message_id: string; delivered: false; retryable: false }
   | { status: 'retrying'; error: 'send_retrying'; reason: string; attempt: number; max_attempts: number; lead_id: string; convo_id: string | null; phone_line_id: string | null }
   | { status: 'failed'; error: 'send_failed'; code: number; reason: string; lead_id: string; convo_id: string | null; phone_line_id: string | null; retryable: boolean; attempts: number };
@@ -71,8 +77,14 @@ export function isChatHistory(v: unknown): v is ChatHistory {
 }
 export function isCreateChatResult(v: unknown): v is CreateChatResult {
   if (!record(v)) return false;
-  if (isChat(v.chat) && isChatMessage(v.message)) return (v.status === undefined || v.status === 'queued')
+  const snapshot = isChat(v.chat) && isChatMessage(v.message)
     && (v.warnings === undefined || Array.isArray(v.warnings) && v.warnings.every(w => typeof w === 'string'));
+  if ((snapshot || typeof v.message_id === 'string') && v.retryable === false) {
+    if (v.status === 'sent') return v.error === null && typeof v.service === 'string' && typeof v.delivered === 'boolean';
+    if (v.status === 'failed') return typeof v.error === 'string' && optionalStrings(v, ['service']) && v.delivered === false
+      && typeof v.code === 'number' && Number.isFinite(v.code);
+  }
+  if (snapshot) return v.status === undefined || v.status === 'queued';
   if (v.status === 'queued') return typeof v.message_id === 'string' && v.delivered === false && v.retryable === false;
   if (typeof v.reason !== 'string' || typeof v.lead_id !== 'string' || !nullableString(v.convo_id) || !nullableString(v.phone_line_id)) return false;
   if (v.status === 'retrying') return v.error === 'send_retrying' && Number.isInteger(v.attempt) && Number.isInteger(v.max_attempts);

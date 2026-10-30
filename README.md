@@ -49,8 +49,10 @@ Text is normalized by the backend. Optional `message.subject` names a group;
 `parallel_attachments` is opt-in. Unsupported fields, including SMS policy flags,
 are rejected locally. No SMS prevention or iMessage-only delivery is promised.
 
-Creation returns either `{ chat, message }` or a queued/retrying/failed replay
+Creation returns either `{ chat, message }` or a queued/retrying/failed/settled replay
 record; inspect the returned variant rather than assuming acceptance or delivery.
+A settled replay's top-level status/service/delivery fields can be newer than its
+nested message snapshot; the SDK preserves both without inferring delivery.
 Incompatible successful replies throw `unconfirmed_chat_outcome`. A timeout or
 network failure also leaves acceptance uncertain: reconcile before resending.
 The SDK does not retry or initiate an SMS fallback; these helpers do not control

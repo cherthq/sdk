@@ -10,6 +10,10 @@ test('chat creation preserves fresh and evolving replay bodies with a single key
   const replies = [
     { chat, message, status: 'queued' },
     { chat: { ...chat, is_group: true }, message: { ...message, status: 'sent', service: 'imessage' } },
+    { chat, message, status: 'sent', error: null, service: 'mixed', delivered: false, retryable: false },
+    { chat, message, status: 'failed', error: 'send failed', service: 'unknown', delivered: false, retryable: false, code: 4104, transport_error: null },
+    { message_id: 'msg-1', status: 'sent', error: null, service: 'sms', delivered: true, retryable: false },
+    { message_id: 'msg-1', status: 'failed', error: 'send failed', delivered: false, retryable: false, code: 4104 },
     { status: 'queued', message_id: 'msg-1', delivered: false, retryable: false },
     { status: 'retrying', error: 'send_retrying', reason: 'pending', attempt: 1, max_attempts: 3, lead_id: 'lead', convo_id: null, phone_line_id: 'line' },
     { status: 'failed', error: 'send_failed', code: 5004, reason: 'failed', retryable: false, attempts: 3, lead_id: 'lead', convo_id: 'convo', phone_line_id: null },
