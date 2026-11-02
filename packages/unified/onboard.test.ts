@@ -272,6 +272,14 @@ test('the demo never calls a number that belongs to another account', async () =
   expect(records().find(r => r.code === 'demo_requested')).toMatchObject({ number: '•••0199' });
 });
 
+test('a demo that cannot start still wires the project and reports the failure', async () => {
+  writeFileSync(join(world.cwd, 'package.json'), '{}');
+  world.responses[`/api/v1/onboarding/${SESSION}/demo`] = { status: 409, body: { error: { code: 'outbound_unavailable', message: 'server wording' } } };
+  expect(await run('--yes')).toBe(1);
+  expect(records().some(r => r.code === 'wire_in')).toBe(true);
+  expect(world.err.join('\n')).toContain('outbound_unavailable');
+});
+
 test('two linked numbers say which one is called', async () => {
   world.aliases = [A, B];
   world.verified = [A, B];

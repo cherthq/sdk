@@ -496,15 +496,20 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     const signedIn = saved ? { credential: saved, verified: selected } : await login(deps, api, origin, emit, selected);
     if (saved) emit({ code: 'signed_in', project_id: saved.project_id, message: 'Using this computer\'s existing Chert sign-in.' });
     const recipient = signedIn.verified[0]!;
+    let stopped: unknown;
     try { await onboarding(deps, api, origin, emit, signedIn.credential, recipient, signedIn.verified.length - 1, Boolean(values['skip-demo'])); }
     catch (error) {
-      if (error instanceof OnboardError && error.code === 'login_required') rmSync(join(chertHome(deps), 'credentials.json'), { force: true });
-      throw error;
+      if (error instanceof OnboardError && error.code === 'login_required') { rmSync(join(chertHome(deps), 'credentials.json'), { force: true }); throw error; }
+      stopped = error;
     }
-    if (values['no-wire']) return 0;
-    const project = detectProject(deps.cwd);
-    if (project) { await wireIn(deps, emit, signedIn.credential, project); return 0; }
-    return await setupAgentCli(deps, emit, Boolean(values.yes), json) ? 0 : 1;
+    let wired = true;
+    if (!values['no-wire']) {
+      const project = detectProject(deps.cwd);
+      if (project) await wireIn(deps, emit, signedIn.credential, project);
+      else wired = await setupAgentCli(deps, emit, Boolean(values.yes), json);
+    }
+    if (stopped) throw stopped;
+    return wired ? 0 : 1;
   } catch (error) {
     const known = error instanceof OnboardError ? error : new OnboardError('onboarding_failed', 'Onboarding stopped. Nothing further was sent. Run chert-sdk onboard again to continue.');
     deps.err(json ? JSON.stringify({ code: known.code, error: known.message, ...known.detail }) : known.message);
