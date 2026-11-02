@@ -13,8 +13,8 @@ Rules for coding agents:
 - FaceTime calls can carry audio and video (calls can also be audio-only). Video needs a line with `supports_video`, a FaceTime Video call, and an agent that publishes a camera track.
 - Direct audio transport (`media_transport: "direct"` with `media_url`/`media_token` on customer-managed calls, no LiveKit) is not available yet; the SDKs send it but the hosted backend does not accept it. See FaceTime notes.
 - Custom video (WHIP/WHEP), living services, screen sharing and call video composition are not available yet (PRs #17, #18, #25, #29); do not build on them. All four ship in the package (composition since 0.2.3), but the hosted backend does not serve them (`404 endpoint_unavailable`).
-- Credentials need a browser once: a FaceTime project API key comes from the dashboard's Developer tab, the project UUID from `chert whoami --json`, and billing only works in the browser today.
-- `chert-sdk` has no `login`, `onboard`, `new` or `dev` command; those belong to the `chert` CLI from `@trychert/facetime`.
+- Without `chert-sdk onboard`, credentials need a browser once: a FaceTime project API key comes from the dashboard's Developer tab, the project UUID from `chert whoami --json`, and billing only works in the browser today.
+- `chert-sdk onboard` (macOS, unreleased) signs in with the Mac's own number by sending a one-time code from Messages, sets up the trial and requests the FaceTime demo. In a project it prints a `wire_in` handoff with a prompt; elsewhere it sets up the `chert` CLI. With `--json` and no choice it stops with `numbers_required`: ask the user which numbers, then pass `--numbers`. `chert-sdk` has no `login`, `new` or `dev` command; those belong to the `chert` CLI from `@trychert/facetime`.
 
 ## Docs
 
