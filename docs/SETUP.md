@@ -56,7 +56,7 @@ two numbers, the demo calls the first one verified.
 | Flag | Effect |
 | --- | --- |
 | `--numbers +A,+B` | Use these numbers, by value or list position, or `all`. They must be on this Mac. Counts as confirmation |
-| `--yes` | Use every number and accept the prompts, including the CLI install |
+| `--yes` | Use every number without asking |
 | `--json` | One JSON line per step with a stable `code`. Never prompts; without a choice it stops with `numbers_required` and masked numbers |
 | `--skip-demo` | Stop before the demo call |
 | `--no-wire` | Skip the project or CLI step |

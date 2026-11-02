@@ -13,7 +13,7 @@ const message = (number: string) => `CHERT-LOGIN-${number.slice(-4)}SECRET`;
 
 interface World {
   aliases: unknown[]; home: string; cwd: string; out: string[]; err: string[]; sent: string[][]; calls: { path: string; body: unknown; headers: Headers; method: string }[];
-  execFail: Record<string, { stderr?: string }>; prompts: string[]; answers: string[]; ignored: boolean; chertInstalled: boolean; npmPublished: boolean; installs: string[][];
+  execFail: Record<string, { stderr?: string }>; proven?: boolean; prompts: string[]; answers: string[]; ignored: boolean; chertInstalled: boolean; npmPublished: boolean; installs: string[][];
   verified: string[]; unlinked: string[]; finishOnly: boolean; tokenPolls: number; session: Record<string, unknown>; responses: Record<string, { status: number; body: unknown }>;
   platform: string; interactive: boolean; now: number;
 }
@@ -77,7 +77,7 @@ function route(path: string, method: string, body: { numbers?: string[]; finish?
   }
   if (path === '/api/v1/allowance') return { plan: 'trial', minutes_left: 10, nested: { secret: 'no' } };
   if (path === '/api/v1/onboarding') return view();
-  if (path.endsWith('/verify')) { world.session = { status: 'ready' }; return { code: CODE, recipient: body.recipient }; }
+  if (path.endsWith('/verify')) { world.session = { status: 'ready' }; return world.proven ? { code: null, verified: true } : { code: CODE, recipient: body.recipient }; }
   if (path.endsWith('/demo')) { world.session = { status: 'demo_running', demo_call_id: CALL }; return view(); }
   if (method === 'GET') return view();
   throw new Error(`unexpected ${path}`);
@@ -127,7 +127,8 @@ test('a machine caller without a choice gets masked numbers and nothing is sent'
   expect(everything()).not.toContain(A);
 });
 
-test('a terminal without json still stops without a real terminal', async () => {
+test('a terminal without json still stops at a choice of numbers without a real terminal', async () => {
+  world.aliases = [A, B];
   expect(await runOnboard([], deps())).toBe(1);
   expect(world.err.at(-1)).toContain('--numbers');
   expect(world.calls).toEqual([]);
@@ -144,26 +145,21 @@ test('a number not on this Mac is refused before any request', async () => {
   expect(everything()).not.toContain(FOREIGN);
 });
 
-test('the concierge asks which number, then confirms before sending', async () => {
+test('the concierge asks which number and sends straight away', async () => {
   world.aliases = [A, B];
   world.interactive = true;
-  world.answers = ['2', 'y'];
+  world.answers = ['2'];
   expect(await runOnboard(['--skip-demo', '--no-wire'], deps())).toBe(1);
   expect(world.out.join('\n')).toContain(B);
-  expect(world.prompts[1]).toContain('from your Messages app');
+  expect(world.prompts.length).toBe(1);
   const login = world.calls.find(call => call.path === '/api/v1/phone-logins')!;
   expect(login.body).toEqual({ device_name: 'Test Mac', numbers: [B] });
 });
 
-test('choosing all sends one code per number, and declining sends nothing', async () => {
+test('choosing all sends one code per number', async () => {
   world.aliases = [A, B];
   world.interactive = true;
-  world.answers = ['n', 'n'];
-  world.answers = ['both', 'n'];
-  expect(await runOnboard([], deps())).toBe(1);
-  expect(world.err.at(-1)).toBe('Nothing was sent.');
-  expect(world.calls).toEqual([]);
-  world.answers = ['all', 'yes'];
+  world.answers = ['all'];
   world.verified = [A, B];
   expect(await runOnboard(['--no-wire'], deps())).toBe(0);
   const loginMessages = world.sent.map(args => args.at(-2));
@@ -457,13 +453,10 @@ test('no project with the CLI present reports it ready', async () => {
   expect(world.installs).toEqual([]);
 });
 
-test('no project installs the published CLI only with consent', async () => {
+test('no project installs the published CLI without asking', async () => {
   world.chertInstalled = false;
   expect(await run('--numbers', '1')).toBe(0);
-  expect(records().at(-1)).toMatchObject({ code: 'personal_agent_cli_install_required', install_command: 'npm install -g @trychert/facetime@beta' });
-  expect(world.installs).toEqual([]);
-  world.out = [];
-  expect(await run('--yes')).toBe(0);
+  expect(world.prompts).toEqual([]);
   expect(world.installs).toEqual([['install', '-g', '@trychert/facetime@beta']]);
   expect(records().at(-1)!.code).toBe('personal_agent_ready');
 });
@@ -494,3 +487,25 @@ test('the origin can be overridden only by a plain https address', async () => {
 function readdirNames(dir: string): string[] {
   return existsSync(dir) ? Array.from(new Bun.Glob('*').scanSync({ cwd: dir, dot: true })) : [];
 }
+
+test('one number on the Mac runs from start to call with no prompt and one message', async () => {
+  world.interactive = true;
+  world.proven = true;
+  expect(await runOnboard(['--no-wire'], deps())).toBe(0);
+  expect(world.prompts).toEqual([]);
+  expect(world.sent.length).toBe(1);
+  expect(world.out.join('\n')).toContain('Answer the FaceTime call');
+});
+
+test('with no number in Messages it asks for one and tells the person what to text', async () => {
+  world.aliases = [];
+  world.interactive = true;
+  world.answers = [FOREIGN];
+  world.proven = true;
+  world.verified = [FOREIGN];
+  expect(await runOnboard(['--no-wire'], deps())).toBe(0);
+  expect(world.prompts[0]).toContain('What is your phone number?');
+  expect(world.sent).toEqual([]);
+  expect(world.calls.find(call => call.path === '/api/v1/phone-logins')!.body).toMatchObject({ numbers: [FOREIGN], manual: true });
+  expect(world.out.join('\n')).toContain(`from ${FOREIGN}`);
+});

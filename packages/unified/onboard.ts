@@ -87,8 +87,10 @@ async function detectNumbers(deps: OnboardDeps): Promise<string[]> {
   const plist = join(deps.home, 'Library', 'Preferences', 'com.apple.madrid.plist');
   let numbers: string[] = [];
   try { numbers = parseMessagesAliases((await deps.exec('plutil', ['-extract', 'IMD-IDS-Aliases', 'json', '-o', '-', plist], 15_000)).stdout); } catch {}
-  if (!numbers.length) throw new OnboardError('no_phone_numbers', 'No phone number is signed in to Messages on this Mac. Turn on your number in Messages > Settings > iMessage, or on your iPhone under Settings > Apps > Messages > Text Message Forwarding, then run this again.');
   return numbers;
+}
+function noNumbers(): OnboardError {
+  return new OnboardError('no_phone_numbers', 'No phone number is signed in to Messages on this Mac. Turn on your number in Messages > Settings > iMessage, or on your iPhone under Settings > Apps > Messages > Text Message Forwarding, then run this again.');
 }
 
 function parseSelection(raw: string, detected: string[]): string[] {
@@ -166,7 +168,7 @@ const actions: Record<string, string> = {
   phone_login_expired: 'This sign-in expired. Run chert-sdk onboard again.',
   phone_login_not_found: 'This sign-in is no longer valid. Run chert-sdk onboard again.',
   phone_login_rate_limited: 'Too many sign-ins from here. Wait a few minutes and run chert-sdk onboard again.',
-  phone_login_unavailable: 'This number cannot sign in this way. Sign in through your browser with chert login, or try again later.',
+  phone_login_unavailable: 'This number cannot sign in this way. Sign in with chert login --browser, or try again later.',
   shared_worker_upgrade_required: 'This line has not passed shared-call qualification. Your onboarding state is saved; retry later.',
   line_busy: 'The line is serving a call or awaiting cleanup. Run chert-sdk onboard again shortly.',
   outbound_unavailable: 'The assigned line cannot place the hosted demo yet. Your verification is saved; contact Chert support.',
@@ -259,12 +261,12 @@ async function sendFromMessages(deps: OnboardDeps, text: string, to: string) {
   }
 }
 
-async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, selected: string[]): Promise<{ credential: SavedCredential; verified: string[] }> {
+async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, selected: string[], manual: boolean): Promise<{ credential: SavedCredential; verified: string[] }> {
   let pending = loadPending(deps, origin);
   const file = pendingFile(deps, origin);
   if (pending && (pending.numbers.length !== selected.length || pending.numbers.some(number => !selected.includes(number)))) { rmSync(file, { force: true }); pending = undefined; }
   if (!pending) {
-    const started = await api.require('/api/v1/phone-logins', { body: { device_name: deviceName(deps), numbers: selected } }) as
+    const started = await api.require('/api/v1/phone-logins', { body: { device_name: deviceName(deps), numbers: selected, ...(manual ? { manual: true } : {}) } }) as
       { device_code?: unknown; receiving_number?: unknown; challenges?: unknown; expires_in?: unknown; interval?: unknown };
     const challenges = started.challenges as { number?: unknown; message?: unknown }[];
     if (typeof started.device_code !== 'string' || !DEVICE_CODE.test(started.device_code) || typeof started.receiving_number !== 'string' || !E164.test(started.receiving_number)
@@ -272,6 +274,7 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
       || challenges.length !== selected.length || selected.some(number => !challenges.some(c => c.number === number))
       || challenges.some(c => typeof c.message !== 'string' || !OUTGOING_MESSAGE.test(c.message))) throw invalid();
     for (const challenge of challenges) {
+      if (manual) { emit({ code: 'login_code_to_send', number: maskNumber(challenge.number as string), login_code: challenge.message, send_to: started.receiving_number, message: `Text ${challenge.message as string} to ${started.receiving_number} from ${challenge.number as string}. Chert continues as soon as it arrives.` }); continue; }
       await sendFromMessages(deps, challenge.message as string, started.receiving_number);
       emit({ code: 'login_code_sent', number: maskNumber(challenge.number as string), message: `Sent a sign-in code to Chert from Messages for ${maskNumber(challenge.number as string)}.` });
     }
@@ -279,7 +282,7 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
     writeOwnerOnly(join(chertHome(deps), 'onboarding'), `phone-login-${digest([origin])}.json`, JSON.stringify(pending) + '\n');
   } else emit({ code: 'login_resumed', message: 'Continuing the sign-in already in progress.' });
 
-  const begun = deps.now(), deadline = Math.min(pending.expires_at, begun + LOGIN_WAIT_MS);
+  const begun = deps.now(), deadline = manual ? pending.expires_at : Math.min(pending.expires_at, begun + LOGIN_WAIT_MS);
   let interval = Math.max(pending.interval, 1) * 1000, lastCount = 0, changedAt = begun;
   for (;;) {
     const stalled = lastCount > 0 && deps.now() - changedAt >= STALLED_AFTER_MS;
@@ -348,14 +351,19 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
   emit({ code: 'trial_status', session_id: session.id, status: session.status, allowance: trial, message: 'Shared access and your trial allowance are set up.' });
 
   if (session.status === 'awaiting_verification') {
-    const challenge = await api.require(`/api/v1/onboarding/${session.id}/verify`, { ...auth, body: { recipient }, key: `${resume.request_key}:verify` }) as { code?: unknown };
-    if (typeof challenge.code !== 'string' || !/^\d{6}$/.test(challenge.code)) throw invalid();
-    await sendFromMessages(deps, challenge.code, session.line.receiving_number);
-    emit({ code: 'verification_sent', number: maskNumber(recipient), message: `Sent the call verification code from Messages for ${maskNumber(recipient)}.` });
+    const challenge = await api.require(`/api/v1/onboarding/${session.id}/verify`, { ...auth, body: { recipient }, key: `${resume.request_key}:verify` }) as { code?: unknown; verified?: unknown };
+    // A number that just proved itself at sign-in needs no second message.
+    let wait = challenge.verified === true ? 0 : 2000;
+    if (challenge.verified !== true) {
+      if (typeof challenge.code !== 'string' || !/^\d{6}$/.test(challenge.code)) throw invalid();
+      await sendFromMessages(deps, challenge.code, session.line.receiving_number);
+      emit({ code: 'verification_sent', number: maskNumber(recipient), message: `Sent the call verification code from Messages for ${maskNumber(recipient)}.` });
+    }
     const deadline = deps.now() + SESSION_WAIT_MS;
     while (session.status === 'awaiting_verification') {
       if (deps.now() >= deadline) throw new OnboardError('verification_timeout', 'Chert did not confirm the code. Check that Messages sends from the number you picked, then run this again.');
-      await deps.sleep(2000);
+      await deps.sleep(wait);
+      wait = 2000;
       session = parseSession(await api.require(`/api/v1/onboarding/${session.id}`, { ...auth, method: 'GET' }));
     }
   }
@@ -431,7 +439,7 @@ async function wireIn(deps: OnboardDeps, emit: Emit, credential: SavedCredential
     message: `Project found (${project.stack}). ${env.written ? 'The credential is in .env.local.' : env.reason}\nPaste this to your coding agent:\n\n${prompt}` });
 }
 
-async function setupAgentCli(deps: OnboardDeps, emit: Emit, yes: boolean, json: boolean): Promise<boolean> {
+async function setupAgentCli(deps: OnboardDeps, emit: Emit): Promise<boolean> {
   const next = ['chert doctor', 'chert dev'];
   const ready = () => emit({ code: 'personal_agent_ready', next_commands: next, message: `No project here, so the personal agent CLI is what you need. Next: ${next.join(', then ')}.` });
   try { await deps.exec('chert', ['--version'], 15_000); ready(); return true; } catch {}
@@ -440,10 +448,6 @@ async function setupAgentCli(deps: OnboardDeps, emit: Emit, yes: boolean, json: 
   catch {
     emit({ code: 'personal_agent_cli_unavailable', message: `Could not find ${AGENT_CLI} with npm. Your Chert sign-in is saved. Install Node, then run: ${command}` });
     return false;
-  }
-  if (!yes) {
-    const agreed = !json && deps.interactive && /^y(es)?$/i.test((await deps.prompt(`No project here. Install the personal agent CLI with "${command}"? [y/N] `)).trim());
-    if (!agreed) { emit({ code: 'personal_agent_cli_install_required', install_command: command, message: `Not installed. When you want it, run: ${command}` }); return true; }
   }
   try { await deps.exec('npm', ['install', '-g', `${AGENT_CLI}@beta`], 300_000); ready(); return true; }
   catch {
@@ -463,19 +467,23 @@ function hostedOrigin(value: string | undefined): string {
   return url.origin;
 }
 
+/** A number Messages cannot send for: the person says which and texts the code themselves. */
+async function askForNumber(deps: OnboardDeps, flags: { numbers?: string; json: boolean }): Promise<string[]> {
+  const answer = flags.numbers ?? (!flags.json && deps.interactive ? await deps.prompt('No number found in Messages. What is your phone number? ') : undefined);
+  if (answer === undefined) throw noNumbers();
+  const number = e164(answer.trim());
+  if (!number) throw new OnboardError('invalid_numbers', 'Use your number with its + country code. Nothing was sent.');
+  return [number];
+}
+
+// Running the command is the agreement. Only a real choice between numbers stops to ask.
 async function choose(deps: OnboardDeps, detected: string[], flags: { numbers?: string; yes: boolean; json: boolean }): Promise<string[]> {
   if (flags.numbers !== undefined) return parseSelection(flags.numbers, detected);
-  if (flags.yes) return detected;
+  if (flags.yes || detected.length === 1) return detected;
   if (flags.json || !deps.interactive) throw new OnboardError('numbers_required', 'Ask the user which to use, then rerun with --numbers 1,2 (positions or +numbers), --numbers all, or --yes for all. A message is sent from their Messages app for each.', { numbers: detected.map((number, index) => ({ index: index + 1, number: maskNumber(number) })) });
-  let selected = detected;
-  if (detected.length > 1) {
-    deps.out('This Mac has these numbers:');
-    detected.forEach((number, index) => deps.out(`  ${index + 1}) ${number}`));
-    selected = parseSelection(await deps.prompt(`Which should Chert use? Enter ${detected.map((_, index) => index + 1).join(', ')} or all: `), detected);
-  }
-  const answer = await deps.prompt(`Chert will send a one-time code from your Messages app for ${selected.join(' and ')}, then call you on FaceTime. Continue? [y/N] `);
-  if (!/^y(es)?$/i.test(answer.trim())) throw new OnboardError('consent_declined', 'Nothing was sent.');
-  return selected;
+  deps.out('This Mac has these numbers:');
+  detected.forEach((number, index) => deps.out(`  ${index + 1}) ${number}`));
+  return parseSelection(await deps.prompt(`Which should Chert use? Enter ${detected.map((_, index) => index + 1).join(', ')} or all: `), detected);
 }
 
 export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps()): Promise<number> {
@@ -490,10 +498,12 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     const origin = hostedOrigin(deps.env.CHERT_FACETIME_URL);
     const detected = await detectNumbers(deps);
     emit({ code: 'numbers_detected', numbers: detected.map(maskNumber), message: `Found ${detected.length} number${detected.length === 1 ? '' : 's'} in Messages.` });
-    const selected = await choose(deps, detected, { ...(values.numbers !== undefined ? { numbers: values.numbers } : {}), yes: Boolean(values.yes), json });
+    const chosen = values.numbers !== undefined ? { numbers: values.numbers } : {};
+    const manual = !detected.length;
+    const selected = manual ? await askForNumber(deps, { ...chosen, json }) : await choose(deps, detected, { ...chosen, yes: Boolean(values.yes), json });
     const api = new Api(deps, origin);
     const saved = loadCredential(deps, origin);
-    const signedIn = saved ? { credential: saved, verified: selected } : await login(deps, api, origin, emit, selected);
+    const signedIn = saved ? { credential: saved, verified: selected } : await login(deps, api, origin, emit, selected, manual);
     if (saved) emit({ code: 'signed_in', project_id: saved.project_id, message: 'Using this computer\'s existing Chert sign-in.' });
     const recipient = signedIn.verified[0]!;
     let stopped: unknown;
@@ -506,7 +516,7 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     if (!values['no-wire']) {
       const project = detectProject(deps.cwd);
       if (project) await wireIn(deps, emit, signedIn.credential, project);
-      else wired = await setupAgentCli(deps, emit, Boolean(values.yes), json);
+      else wired = await setupAgentCli(deps, emit);
     }
     if (stopped) throw stopped;
     return wired ? 0 : 1;
