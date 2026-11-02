@@ -261,6 +261,21 @@ test('two verified numbers say which one is called, and a taken number is report
   world.unlinked = [B];
   expect(await run('--yes', '--no-wire')).toBe(0);
   expect(records().find(r => r.code === 'signed_in')).toMatchObject({ unlinked: ['•••0199'] });
+  expect(records().find(r => r.code === 'demo_requested')!.message).not.toContain('first one verified');
+});
+
+test('the demo never calls a number that belongs to another account', async () => {
+  world.aliases = [A, B];
+  world.verified = [A, B];
+  world.unlinked = [A];
+  expect(await run('--yes', '--no-wire')).toBe(0);
+  expect(records().find(r => r.code === 'demo_requested')).toMatchObject({ number: '•••0199' });
+});
+
+test('two linked numbers say which one is called', async () => {
+  world.aliases = [A, B];
+  world.verified = [A, B];
+  expect(await run('--yes', '--no-wire')).toBe(0);
   expect(records().find(r => r.code === 'demo_requested')!.message).toContain('first one verified');
 });
 

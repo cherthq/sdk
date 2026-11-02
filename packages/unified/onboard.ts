@@ -166,7 +166,7 @@ const actions: Record<string, string> = {
   phone_login_expired: 'This sign-in expired. Run chert-sdk onboard again.',
   phone_login_not_found: 'This sign-in is no longer valid. Run chert-sdk onboard again.',
   phone_login_rate_limited: 'Too many sign-ins from here. Wait a few minutes and run chert-sdk onboard again.',
-  phone_login_unavailable: 'Sign-in by phone is not available right now. Nothing was sent. Try again later.',
+  phone_login_unavailable: 'This number cannot sign in this way. Sign in through your browser with chert login, or try again later.',
   shared_worker_upgrade_required: 'This line has not passed shared-call qualification. Your onboarding state is saved; retry later.',
   line_busy: 'The line is serving a call or awaiting cleanup. Run chert-sdk onboard again shortly.',
   outbound_unavailable: 'The assigned line cannot place the hosted demo yet. Your verification is saved; contact Chert support.',
@@ -318,7 +318,9 @@ function finishLogin(deps: OnboardDeps, origin: string, file: string, emit: Emit
     message: `Signed in with ${verified.map(maskNumber).join(' and ')}.`
       + (unverified.length ? ` ${unverified.map(maskNumber).join(' and ')} did not verify: Messages sends from one number at a time, set under Messages > Settings > iMessage > Start New Conversations From. Change it and run this again to add the other number.` : '')
       + (unlinked.length ? ` ${unlinked.map(maskNumber).join(' and ')} already belongs to another Chert account, so it was not added.` : '') });
-  return { credential, verified };
+  const linked = verified.filter(number => !unlinked.includes(number));
+  if (!linked.length) throw invalid();
+  return { credential, verified: linked };
 }
 
 function deviceName(deps: OnboardDeps): string {
