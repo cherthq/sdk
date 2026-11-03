@@ -143,7 +143,7 @@ export class ChertControlPlane {
       throw new ChertApiError(response.status,response.status===404?'endpoint_unavailable':'invalid_response');
     }
     if(!envelope||typeof envelope!=='object')throw new ChertApiError(response.status,'invalid_response');
-    if(!response.ok){const error=(envelope as {error?:unknown}).error;const fields=error&&typeof error==='object'?error as {code?:unknown}:undefined;const code=typeof fields?.code==='string'?fields.code:undefined;const serverCode=code===undefined?undefined:serverCodes.has(code)?code:'unknown';throw new ChertApiError(response.status,code&&safeCodes.has(code)?code:'request_failed',serverCode);}
+    if(!response.ok){const error=(envelope as {error?:unknown}).error;const fields=error&&typeof error==='object'?error as {code?:unknown}:undefined;const code=typeof fields?.code==='string'?fields.code:undefined;const serverCode=!fields||!Object.hasOwn(fields,'code')?undefined:code!==undefined&&serverCodes.has(code)?code:'unknown';throw new ChertApiError(response.status,code&&safeCodes.has(code)?code:'request_failed',serverCode);}
     if(!Object.hasOwn(envelope,'data'))throw new ChertApiError(response.status,'invalid_response');
     return (envelope as {data:T}).data;
   }

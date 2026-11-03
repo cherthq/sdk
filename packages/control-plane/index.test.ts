@@ -95,6 +95,9 @@ describe('safe failures',()=>{
    Response.json({error:{code:'new_server_code'}},{status:400}),
    Response.json({error:{code:'billing_private token: secret',message:'secret'}},{status:500}),
    Response.json({error:{message:'private message'}},{status:400}),
+   Response.json({error:{code:null}},{status:400}),
+   Response.json({error:{code:123}},{status:400}),
+   Response.json({error:{code:''}},{status:400}),
    new Response('{invalid',{status:502}),
   ];
   const client=new ChertControlPlane({fetch:(async()=>responses.shift()!) as unknown as typeof fetch});
@@ -110,8 +113,12 @@ describe('safe failures',()=>{
   expect(JSON.stringify(third,Object.getOwnPropertyNames(third))).not.toContain('secret');
   const fourth=await client.beginLogin({device_name:'Test'}).catch(e=>e);
   expect(fourth).toMatchObject({status:400,serverCode:undefined});
-  const fifth=await client.beginLogin({device_name:'Test'}).catch(e=>e);
-  expect(fifth).toMatchObject({status:502,code:'invalid_response',serverCode:undefined});
+  for(let i=0;i<3;i++){
+   const malformed=await client.beginLogin({device_name:'Test'}).catch(e=>e);
+   expect(malformed).toMatchObject({status:400,serverCode:'unknown'});
+  }
+  const invalid=await client.beginLogin({device_name:'Test'}).catch(e=>e);
+  expect(invalid).toMatchObject({status:502,code:'invalid_response',serverCode:undefined});
  });
  it('bounds response bytes and attaches a request deadline',async()=>{let signal:AbortSignal|undefined;const client=new ChertControlPlane({fetch:(async(_url: Parameters<typeof fetch>[0],init?: RequestInit)=>{signal=init?.signal??undefined;return new Response('x'.repeat(1_048_577));}) as typeof fetch});await expect(client.beginLogin({device_name:'Test'})).rejects.toMatchObject({code:'invalid_response'});expect(signal).toBeInstanceOf(AbortSignal);});
  it('preserves permission failures without retry or leaking server data',async()=>{let calls=0;const client=new ChertControlPlane({token:'private',projectId:project,fetch:(async()=>{calls++;return Response.json({error:{code:'forbidden',message:'private token',details:{secret:'bad'}}},{status:403});}) as unknown as typeof fetch});try{await client.createCheckout({plan:'shared'},'stable-key');throw Error('expected');}catch(error){expect(error).toBeInstanceOf(ChertApiError);expect((error as ChertApiError).code).toBe('forbidden');expect(String(error)).not.toContain('private');expect(JSON.stringify(error)).not.toContain('secret');}expect(calls).toBe(1);});
