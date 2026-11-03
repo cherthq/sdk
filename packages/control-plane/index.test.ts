@@ -89,6 +89,23 @@ describe('control-plane wire contracts',()=>{
  });
 });
 describe('safe failures',()=>{
+ it('exposes server error information separately from safe error text',async()=>{
+  const responses=[
+   Response.json({error:{code:'livekit_not_provisioned',message:'Use Shared or your own LiveKit.'}},{status:409}),
+   Response.json({error:{code:'new_server_code'}},{status:400}),
+   new Response('{invalid',{status:502}),
+  ];
+  const client=new ChertControlPlane({fetch:(async()=>responses.shift()!) as unknown as typeof fetch});
+  const first=await client.beginLogin({device_name:'Test'}).catch(e=>e);
+  expect(first).toMatchObject({status:409,code:'request_failed',serverCode:'livekit_not_provisioned',serverMessage:'Use Shared or your own LiveKit.'});
+  expect(String(first)).not.toContain('Use Shared');
+  expect(JSON.stringify(first)).not.toContain('Use Shared');
+  expect(JSON.stringify(first)).not.toContain('livekit_not_provisioned');
+  const second=await client.beginLogin({device_name:'Test'}).catch(e=>e);
+  expect(second).toMatchObject({status:400,serverCode:'new_server_code',serverMessage:undefined});
+  const third=await client.beginLogin({device_name:'Test'}).catch(e=>e);
+  expect(third).toMatchObject({status:502,code:'invalid_response',serverCode:undefined,serverMessage:undefined});
+ });
  it('bounds response bytes and attaches a request deadline',async()=>{let signal:AbortSignal|undefined;const client=new ChertControlPlane({fetch:(async(_url: Parameters<typeof fetch>[0],init?: RequestInit)=>{signal=init?.signal??undefined;return new Response('x'.repeat(1_048_577));}) as typeof fetch});await expect(client.beginLogin({device_name:'Test'})).rejects.toMatchObject({code:'invalid_response'});expect(signal).toBeInstanceOf(AbortSignal);});
  it('preserves permission failures without retry or leaking server data',async()=>{let calls=0;const client=new ChertControlPlane({token:'private',projectId:project,fetch:(async()=>{calls++;return Response.json({error:{code:'forbidden',message:'private token',details:{secret:'bad'}}},{status:403});}) as unknown as typeof fetch});try{await client.createCheckout({plan:'shared'},'stable-key');throw Error('expected');}catch(error){expect(error).toBeInstanceOf(ChertApiError);expect((error as ChertApiError).code).toBe('forbidden');expect(String(error)).not.toContain('private');expect(JSON.stringify(error)).not.toContain('secret');}expect(calls).toBe(1);});
  it('terminal billing: purchase, change_plan and payment_method send keyed actions and accept only Stripe-hosted URLs',async()=>{
