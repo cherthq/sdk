@@ -509,3 +509,15 @@ test('with no number in Messages it asks for one and tells the person what to te
   expect(world.calls.find(call => call.path === '/api/v1/phone-logins')!.body).toMatchObject({ numbers: [FOREIGN], manual: true });
   expect(world.out.join('\n')).toContain(`from ${FOREIGN}`);
 });
+
+test('a demo that did not connect is taken again in a new session', async () => {
+  world.proven = true;
+  expect(await run('--no-wire')).toBe(0);
+  world.session = { status: 'complete', demo_result: 'not_completed', demo_call_id: PROJECT };
+  world.calls = []; world.out = [];
+  const started = world.calls.length;
+  expect(await run('--no-wire')).toBe(0);
+  expect(records().some(record => record.code === 'demo_retry')).toBe(true);
+  const creates = world.calls.slice(started).filter(call => call.path === '/api/v1/onboarding');
+  expect(creates.length).toBe(1);
+});

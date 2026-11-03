@@ -208,6 +208,7 @@ interface Session {
   id: string; status: string; expires_at?: string;
   line: { id: string; receiving_number: string };
   demo_call_id?: string | null;
+  demo_result?: string;
   demo_queue?: { state?: string; position?: number | null; message?: string };
 }
 
@@ -333,7 +334,7 @@ function deviceName(deps: OnboardDeps): string {
 
 async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emit, credential: SavedCredential, recipient: string, others: number, skipDemo: boolean) {
   const auth = { token: credential.access_token, project: credential.project_id };
-  const resume = loadResume(deps, origin, credential.project_id);
+  let resume = loadResume(deps, origin, credential.project_id);
   const started = async () => {
     const session = parseSession(await api.require('/api/v1/onboarding', { ...auth, body: {}, key: resume.request_key }));
     resume.session_id = session.id;
@@ -345,6 +346,13 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
   if (session.status === 'expired' || session.status === 'cancelled') {
     rmSync(join(chertHome(deps), 'onboarding', resumeName(origin, credential.project_id)), { force: true });
     throw new OnboardError(`onboarding_${session.status}`, 'This onboarding has ended. Run chert-sdk onboard again to start a new one.');
+  }
+  // A demo that did not complete can be taken again, in a new session. Its verification still stands if it is recent.
+  if (session.status === 'complete' && session.demo_result === 'not_completed') {
+    rmSync(join(chertHome(deps), 'onboarding', resumeName(origin, credential.project_id)), { force: true });
+    resume = loadResume(deps, origin, credential.project_id);
+    session = await started();
+    emit({ code: 'demo_retry', session_id: session.id, message: 'The last demo call did not connect, so Chert is trying again.' });
   }
   const allowance = await api.call('/api/v1/allowance', { ...auth, method: 'GET' }).catch(() => null);
   const trial = Object.fromEntries(Object.entries((allowance?.status === 200 && allowance.data) || {}).filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value)));
