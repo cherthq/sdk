@@ -2,19 +2,20 @@
 
 Open-source clients for Chert messaging and FaceTime control-plane services.
 This repository contains JavaScript/TypeScript, Python, Rust, C#/.NET, C++ and Go
-clients. **Language coverage and release status differ:** JavaScript is published;
-the other clients are source previews, with unified channel support under review.
+clients. **Language coverage and release status differ:** npm targets 0.3.0;
+Python source is 0.3.0 but PyPI remains 0.2.3. Other clients are source previews.
+See the [changelog](CHANGELOG.md) for release changes and availability.
 
 **New here? Start with the [setup guide](docs/SETUP.md).** Coding agents can read
 [`llms.txt`](llms.txt) or run `chert-sdk context`.
 
-Better Auth users: the [iMessage phone transport](docs/BETTER_AUTH.md) is a
-source preview for the next SDK release, not in npm 0.2.3. It adds phone
+Better Auth users: the [iMessage phone transport](docs/BETTER_AUTH.md) ships in
+npm 0.3.0. It adds phone
 verification alongside existing email auth, not instead of it.
 
-### Unreleased public resource helpers
+### Public resource helpers in 0.3.0
 
-The following helpers are **source previews on `main`, not in npm 0.2.3**:
+The following helpers ship in **npm 0.3.0**:
 
 ```ts
 import { ChertClient, ChertControlPlane } from '@trychert/sdk';
@@ -69,14 +70,18 @@ sensitive data; do not log them or assume that server text is sanitized.
 
 FaceTime control-plane failures expose recognized server error codes as the
 enumerable `ChertApiError.serverCode`. Unrecognized codes map to `unknown`;
-when no code is provided, `serverCode` is undefined. The existing `code` remains
-unchanged, and the default error text does not include server messages.
+when no code is provided, `serverCode` is undefined. This property is additive,
+but 0.3.0 also changes `code` for `transcript_not_found` responses from
+`request_failed` to `transcript_not_found`. Update missing-transcript handlers
+accordingly. The formatted text includes `code`, so it changes in that case;
+do not branch on that text. Raw server messages are not retained or included
+in default error text. See [Changed in 0.3.0](CHANGELOG.md#changed).
 
 ## Languages and release status
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
-| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.2.3`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.3.0`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.2.3 on PyPI](https://pypi.org/project/chert-sdk/0.2.3/): `pip install chert-sdk==0.2.3` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
@@ -108,22 +113,22 @@ build/test source; do not substitute a similarly named registry package.
 
 ## JavaScript / TypeScript
 
-The examples below target **`@trychert/sdk@0.2.3`**. The
+The examples below target **`@trychert/sdk@0.3.0`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
 
 ```sh
-npm install @trychert/sdk@0.2.3
+npm install @trychert/sdk@0.3.0
 # Alternatives:
-pnpm add @trychert/sdk@0.2.3
-bun add @trychert/sdk@0.2.3
+pnpm add @trychert/sdk@0.3.0
+bun add @trychert/sdk@0.3.0
 
-npx --package=@trychert/sdk@0.2.3 chert-sdk --help
-bunx --package @trychert/sdk@0.2.3 chert-sdk --help
+npx --package=@trychert/sdk@0.3.0 chert-sdk --help
+bunx --package @trychert/sdk@0.3.0 chert-sdk --help
 ```
 
 ESM and declarations are shipped for Node 22.12+, current Bun and Deno 2 with
-npm compatibility. Deno imports use `npm:@trychert/sdk@0.2.3` (append subpaths
+npm compatibility. Deno imports use `npm:@trychert/sdk@0.3.0` (append subpaths
 after the version). CommonJS `require()` is not a supported migration target.
 The npm package is `@trychert/sdk`; the CLI binary remains `chert-sdk`.
 
@@ -245,12 +250,12 @@ plan-change policy exists, and the CLI has no `switch` command. Dedicated purcha
 unavailable (`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
 
 ```sh
-bunx --package @trychert/sdk@0.2.3 chert-sdk context
-bunx --package @trychert/sdk@0.2.3 chert-sdk facetime status
-bunx --package @trychert/sdk@0.2.3 chert-sdk facetime lines
-bunx --package @trychert/sdk@0.2.3 chert-sdk facetime workers
-bunx --package @trychert/sdk@0.2.3 chert-sdk adopt ./my-app          # Dry-run migration report
-bunx --package @trychert/sdk@0.2.3 chert-sdk adopt ./my-app --write  # Applies supported rewrites
+bunx --package @trychert/sdk@0.3.0 chert-sdk context
+bunx --package @trychert/sdk@0.3.0 chert-sdk facetime status
+bunx --package @trychert/sdk@0.3.0 chert-sdk facetime lines
+bunx --package @trychert/sdk@0.3.0 chert-sdk facetime workers
+bunx --package @trychert/sdk@0.3.0 chert-sdk adopt ./my-app          # Dry-run migration report
+bunx --package @trychert/sdk@0.3.0 chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
 `context` prints JSON with the SDK version, which credentials are set (never
@@ -271,7 +276,7 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
-migration. To upgrade, update the dependency to `@trychert/sdk@0.2.3`
+migration. To upgrade, update the dependency to `@trychert/sdk@0.3.0`
 (published, `latest`), regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
 stay `@trychert/sdk/<subpath>`.
@@ -280,7 +285,7 @@ stay `@trychert/sdk/<subpath>`.
 
 The canonical npm package is `@trychert/sdk`, not `chert-sdk`. If you installed
 the accidental unscoped 0.1.0 package (since unpublished from npm), remove that
-dependency and install `@trychert/sdk@0.2.3`. Change root imports
+dependency and install `@trychert/sdk@0.3.0`. Change root imports
 from `chert-sdk` to `@trychert/sdk` and preserve subpath suffixes (for example,
 `chert-sdk/facetime` becomes `@trychert/sdk/facetime`). Regenerate your consumer
 lockfile and rerun tests. The identity correction does not change the default

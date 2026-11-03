@@ -1,7 +1,7 @@
 # Better Auth: iMessage phone transport alongside email
 
-**Source preview; not included in npm 0.2.3.** This integration adds the server-only
-`@trychert/sdk/better-auth` subpath in the next SDK release. It is not a separate
+**Included in npm 0.3.0.** This integration adds the server-only
+`@trychert/sdk/better-auth` subpath. It is not a separate
 auth system or package. Better Auth is optional: the SDK transport has no Better
 Auth runtime dependency. Tested against Better Auth 1.7.14's
 [phone-number sendOTP hook](https://www.better-auth.com/docs/plugins/phone-number).

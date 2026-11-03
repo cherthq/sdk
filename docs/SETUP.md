@@ -18,8 +18,8 @@ Coding agents can read the same material from [`llms.txt`](https://github.com/ch
 The SDKs and the FaceTime agent CLI are separate packages with separate commands.
 The SDK's `chert-sdk` CLI has no `login`, `onboard`, `new` or `dev` command.
 
-For Better Auth, see the [phone transport guide](BETTER_AUTH.md): source preview,
-not included in npm 0.2.3. Existing email auth stays enabled alongside phone.
+For Better Auth, see the [phone transport guide](BETTER_AUTH.md), included in
+npm 0.3.0. Existing email auth stays enabled alongside phone.
 
 ## 1. Install
 
