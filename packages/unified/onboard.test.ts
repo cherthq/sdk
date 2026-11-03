@@ -497,6 +497,35 @@ test('one number on the Mac runs from start to call with no prompt and one messa
   expect(world.out.join('\n')).toContain('Answer the FaceTime call');
 });
 
+function limitedVerify(times: number): OnboardDeps {
+  const base = deps(), real = base.fetch;
+  let left = times;
+  return { ...base, fetch: (async (input: URL, init: RequestInit) => {
+    if (new URL(input).pathname.endsWith('/verify') && left-- > 0) {
+      world.calls.push({ path: new URL(input).pathname, body: undefined, headers: new Headers(init.headers), method: init.method ?? 'GET' });
+      return Response.json({ error: { code: 'verification_rate_limited' } }, { status: 429 });
+    }
+    return real(input as never, init);
+  }) as unknown as typeof fetch };
+}
+
+test('a verification rate limit is waited out with no second run', async () => {
+  world.proven = true;
+  expect(await runOnboard(['--json', '--no-wire'], limitedVerify(3))).toBe(0);
+  expect(records().filter(record => record.code === 'verification_waiting').length).toBe(1);
+  expect(records().some(record => record.code === 'demo_requested')).toBe(true);
+  expect(world.calls.filter(call => call.path.endsWith('/verify')).length).toBe(4);
+});
+
+test('a rate limit that outlasts the wait still stops with the same error', async () => {
+  world.proven = true;
+  const started = world.now;
+  expect(await runOnboard(['--json', '--no-wire'], limitedVerify(Number.MAX_SAFE_INTEGER))).toBe(1);
+  expect(failure().code).toBe('verification_rate_limited');
+  expect(world.now - started).toBeLessThanOrEqual(40_000);
+  expect(records().some(record => record.code === 'demo_requested')).toBe(false);
+});
+
 test('with no number in Messages it asks for one and tells the person what to text', async () => {
   world.aliases = [];
   world.interactive = true;

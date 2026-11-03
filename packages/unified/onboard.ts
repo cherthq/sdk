@@ -17,6 +17,8 @@ const OUTGOING_MESSAGE = /^[!-,.-~][ -~]{0,159}$/;
 const SEND_SCRIPT = ['on run argv', 'tell application "Messages"', 'set targetService to 1st account whose service type = iMessage',
   'send (item 1 of argv) to participant (item 2 of argv) of targetService', 'end tell', 'end run'];
 const FINISH_AFTER_MS = 60_000;
+const VERIFY_LIMIT_WAIT_MS = 35_000;
+const VERIFY_LIMIT_POLL_MS = 3_000;
 const STALLED_AFTER_MS = 15_000;
 const LOGIN_WAIT_MS = 120_000;
 const SESSION_WAIT_MS = 600_000;
@@ -332,6 +334,19 @@ function deviceName(deps: OnboardDeps): string {
   return printable || 'Mac';
 }
 
+async function requestVerification(deps: OnboardDeps, api: Api, emit: Emit, path: string, options: Parameters<Api['require']>[1]): Promise<unknown> {
+  const deadline = deps.now() + VERIFY_LIMIT_WAIT_MS;
+  for (let told = false; ;) {
+    try { return await api.require(path, options); }
+    catch (error) {
+      if (!(error instanceof OnboardError) || error.code !== 'verification_rate_limited' || deps.now() + VERIFY_LIMIT_POLL_MS > deadline) throw error;
+      if (!told) emit({ code: 'verification_waiting', message: 'Chert allows one verification every 30 seconds. Waiting, then continuing.' });
+      told = true;
+      await deps.sleep(VERIFY_LIMIT_POLL_MS);
+    }
+  }
+}
+
 async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emit, credential: SavedCredential, recipient: string, others: number, skipDemo: boolean) {
   const auth = { token: credential.access_token, project: credential.project_id };
   let resume = loadResume(deps, origin, credential.project_id);
@@ -359,7 +374,7 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
   emit({ code: 'trial_status', session_id: session.id, status: session.status, allowance: trial, message: 'Shared access and your trial allowance are set up.' });
 
   if (session.status === 'awaiting_verification') {
-    const challenge = await api.require(`/api/v1/onboarding/${session.id}/verify`, { ...auth, body: { recipient }, key: `${resume.request_key}:verify` }) as { code?: unknown; verified?: unknown };
+    const challenge = await requestVerification(deps, api, emit, `/api/v1/onboarding/${session.id}/verify`, { ...auth, body: { recipient }, key: `${resume.request_key}:verify` }) as { code?: unknown; verified?: unknown };
     // A number that just proved itself at sign-in needs no second message.
     let wait = challenge.verified === true ? 0 : 2000;
     if (challenge.verified !== true) {
