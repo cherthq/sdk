@@ -63,7 +63,7 @@ test('CLI preserves a safe SDK error code without exposing server text or respon
 });
 
 test('CLI reports unknown commands as such, even without credentials', async () => {
-  for (const command of [['login'], ['onboard'], ['facetim'], ['facetime', 'statsu'], ['facetime', 'lines', 'extra'], ['imessage', 'sned'], ['context', 'extra'], ['context', '--offline', 'extra'], ['context', '--bogus'], ['billing'], ['billing', 'refund'], ['billing', 'status', 'extra']]) {
+  for (const command of [['login'], ['facetim'], ['facetime', 'statsu'], ['facetime', 'lines', 'extra'], ['imessage', 'sned'], ['context', 'extra'], ['context', '--offline', 'extra'], ['context', '--bogus'], ['billing'], ['billing', 'refund'], ['billing', 'status', 'extra']]) {
     const env = { ...process.env }; delete env.CHERT_PROJECT_ID;
     const child = Bun.spawn(['node', resolve(import.meta.dir, '../../dist/unified/cli.js'), ...command], { env, stdout: 'pipe', stderr: 'pipe' });
     expect(await child.exited).toBe(1);

@@ -300,6 +300,7 @@ available yet: the backend refuses them). Since 0.2.1, unknown commands and subc
 `unknown_command` before any credential lookup. Published 0.1.0 through 0.2.3
 do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
 agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
+Unreleased: `chert-sdk onboard` for a Mac, see [setup](docs/SETUP.md#automated-onboarding-on-a-mac).
 
 ### Custom video sources (not available yet)
 

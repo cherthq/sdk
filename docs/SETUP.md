@@ -16,10 +16,50 @@ Coding agents can read the same material from [`llms.txt`](https://github.com/ch
 | Migrate from another iMessage provider SDK | `chert-sdk adopt` (ships in `@trychert/sdk`) |
 
 The SDKs and the FaceTime agent CLI are separate packages with separate commands.
-The SDK's `chert-sdk` CLI has no `login`, `onboard`, `new` or `dev` command.
+The SDK's `chert-sdk` CLI has no `login`, `new` or `dev` command. On a Mac,
+[`chert-sdk onboard`](#automated-onboarding-on-a-mac) gets you started without a browser.
 
 For Better Auth, see the [phone transport guide](BETTER_AUTH.md), included in
 npm 0.3.0. Existing email auth stays enabled alongside phone.
+
+## Automated onboarding on a Mac
+
+Not released yet: this needs the next `@trychert/sdk` and server support that has
+not shipped.
+
+```sh
+chert-sdk onboard
+```
+
+1. Reads the phone numbers signed in to Messages. With several, it asks which to
+   use, or all. It reads Messages' aliases only, so a number listed only in the
+   Apple ID's vetted aliases is not offered.
+2. After you confirm, it sends a one-time code to Chert from your Messages app for
+   each number. The first run asks macOS for permission to control Messages. Chert
+   accepts a code only from the number it was issued for, so reading a number from
+   your Mac is never itself proof.
+3. Saves the sign-in where the `chert` CLI reads it (`~/.chert`, or `CHERT_HOME`).
+4. Sets up shared access and your trial, verifies the number for calls with one more
+   code, then requests the FaceTime demo. It waits in line if the line is busy. An
+   accepted request does not confirm audio or video worked.
+5. In a project (a language manifest or `.git`), it prints the install command and a
+   prompt for your coding agent, and writes `CHERT_FACETIME_TOKEN` and
+   `CHERT_PROJECT_ID` to `.env.local` only if git ignores that file and it does not
+   already set them differently. It never edits source files. Elsewhere, it offers to
+   install the `chert` CLI from `@trychert/facetime`.
+
+Messages sends from the number under **Settings > iMessage > Start New Conversations
+From**, and a script cannot choose it. A chosen number sent from another number does
+not verify, and the command says so. Change that setting and rerun to add it. With
+two numbers, the demo calls the first one verified.
+
+| Flag | Effect |
+| --- | --- |
+| `--numbers +A,+B` | Use these numbers, by value or list position, or `all`. They must be on this Mac. Counts as confirmation |
+| `--yes` | Use every number without asking |
+| `--json` | One JSON line per step with a stable `code`. Never prompts; without a choice it stops with `numbers_required` and masked numbers |
+| `--skip-demo` | Stop before the demo call |
+| `--no-wire` | Skip the project or CLI step |
 
 ## 1. Install
 
@@ -55,8 +95,8 @@ Credentials are per service and are not interchangeable.
 | `CHERT_PROJECT_ID` | FaceTime (required), iMessage (context only) | Your project UUID. The dashboard does not display it yet: install the agent CLI (`npm install -g @trychert/facetime@beta`), run `chert login`, then `chert whoami --json` and copy `project_id`. |
 
 Both credentials need an account with Chert. A browser is required once, to
-sign in and create the key; nothing in this guide can create an account or a key
-from the terminal.
+sign in and create the key, unless you use `chert-sdk onboard` on a Mac, which
+creates a CLI login (not a project API key) for FaceTime.
 
 A project API key works for lines, workers, calls and assistants within the
 scopes you give it. It is not a person, so it cannot read a signed-in identity:
