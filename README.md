@@ -70,8 +70,12 @@ sensitive data; do not log them or assume that server text is sanitized.
 
 FaceTime control-plane failures expose recognized server error codes as the
 enumerable `ChertApiError.serverCode`. Unrecognized codes map to `unknown`;
-when no code is provided, `serverCode` is undefined. The existing `code` remains
-unchanged, and the default error text does not include server messages.
+when no code is provided, `serverCode` is undefined. This property is additive,
+but 0.3.0 also changes `code` for `transcript_not_found` responses from
+`request_failed` to `transcript_not_found`. Update missing-transcript handlers
+accordingly. The formatted text includes `code`, so it changes in that case;
+do not branch on that text. Raw server messages are not retained or included
+in default error text. See [Changed in 0.3.0](CHANGELOG.md#changed).
 
 ## Languages and release status
 

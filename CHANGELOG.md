@@ -5,11 +5,26 @@
 `@trychert/sdk` 0.3.0 (npm). Python source is versioned 0.3.0, but this release
 does **not** publish it: `chert-sdk` remains 0.2.3 on PyPI.
 
+### Changed
+
+- **Missing-transcript errors have a new `code`.** When a FaceTime response
+  contains `error.code: "transcript_not_found"`, JavaScript
+  `ChertApiError.code` is now `transcript_not_found`, not `request_failed` as in
+  0.2.3. The formatted error text includes that code and changes too. Update
+  handlers that matched `request_failed` for missing transcripts to match
+  `transcript_not_found`; do not branch on formatted error text. The new
+  transcript helper also reports a missing transcript as an error, not an empty
+  transcript. This release is not purely additive.
+
+### Added
+
 - **Inspect FaceTime error codes without retaining server messages.** JavaScript
   `ChertApiError.serverCode` exposes recognized codes, maps unrecognized or
   malformed codes to `unknown`, and is `undefined` when no code is provided.
-  The existing `code` and default error text remain unchanged. Raw server
-  messages and response bodies are not retained in the error.
+  This property is additive; it does not make the release's `code` behavior
+  unchanged (see **Changed** above). Error text keeps its existing format and
+  does not include raw server messages. Raw server messages and response bodies
+  are not retained in the error.
 - **Add public resource helpers.** JavaScript adds project discovery,
   integration metadata and recorded call transcripts, plus chat creation,
   recorded chat history and message status. Chat creation requires a stable
