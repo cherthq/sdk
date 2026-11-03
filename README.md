@@ -67,9 +67,9 @@ on outbound records can be `mixed`. Recorded service/status is not independent
 channel or delivery proof. Recorded request/response/error fields can contain
 sensitive data; do not log them or assume that server text is sanitized.
 
-FaceTime control-plane failures expose the server's error code as the enumerable
-`ChertApiError.serverCode` when present. The existing `code` remains an
-allowlisted code, and the default error text does not include server messages.
+FaceTime control-plane failures expose recognized server error codes as the
+enumerable `ChertApiError.serverCode`; unknown codes are omitted. The existing
+`code` remains unchanged, and the default error text does not include server messages.
 
 ## Languages and release status
 
