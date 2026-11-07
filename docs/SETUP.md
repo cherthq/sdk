@@ -20,8 +20,8 @@ The SDK's `chert-sdk` CLI has no `login`, `new` or `dev` command. The unreleased
 Mac [`chert-sdk onboard`](#automated-onboarding-on-a-mac) flow is intended to
 sign you in without a browser.
 
-For Better Auth, see the [phone transport guide](BETTER_AUTH.md): source preview,
-not included in npm 0.2.3. Existing email auth stays enabled alongside phone.
+For Better Auth, see the [phone transport guide](BETTER_AUTH.md), included in
+npm 0.3.0. Existing email auth stays enabled alongside phone.
 
 ## Automated onboarding on a Mac
 

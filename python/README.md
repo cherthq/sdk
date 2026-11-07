@@ -4,14 +4,16 @@ Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
 The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
 [`chert-sdk` 0.2.3](https://pypi.org/project/chert-sdk/0.2.3/) is published on PyPI.
 The legacy `chert` import and explicit-URL constructor calls remain compatible.
+The source version is 0.3.0, but Python 0.3.0 is **not published** by the npm
+0.3.0 release. Install 0.2.3 from PyPI until a separate Python release is ready.
 
 ```sh
 python -m pip install chert-sdk==0.2.3
 # or: uv add chert-sdk==0.2.3
 ```
 
-This guide matches the published 0.2.3 package, which was built from this source
-tree. The version follows the npm `@trychert/sdk` 0.2.3 release. 0.2.3 sends text to
+The published 0.2.3 package matched the npm `@trychert/sdk` 0.2.3 release;
+newer source can differ. 0.2.3 sends text to
 `POST /api/v1/send` (0.2.2 and earlier used a route production does not serve), accepts
 `queued`, `sent` and `duplicate` receipts, rejects idempotency keys with surrounding
 whitespace, and adds call video composition and terminal billing, which are not
