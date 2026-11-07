@@ -100,9 +100,15 @@ export interface Checkout {url:string}
 export interface CheckoutInput {plan:BillingPlan;coupon_code?:string}
 export interface BillingCancellation {status:'cancellation_requested';message:string}
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
-/** Server text, bodies, URLs and credentials are deliberately not included in errors. */
-export class ChertApiError extends Error {constructor(public readonly status:number,public readonly code:string){super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';}}
+export class ChertApiError extends Error {
+  constructor(public readonly status:number,public readonly code:string,public readonly serverCode?:string){
+    super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';
+  }
+}
 const safeCodes = new Set(['transcript_not_found','billing_plan_change_unavailable','living_capability_unsupported','living_surface_conflict','living_state_conflict','living_deployment_not_ready','living_input_not_allowed','living_session_not_found','media_capability_unsupported','media_session_conflict','call_not_active','call_ended','call_not_found','media_session_expired','media_transport_unavailable','unauthorized','forbidden','cli_scope_denied','billing_owner_required','billing_unavailable','billing_binding_mismatch','billing_checkout_exists','billing_coupon_unavailable','billing_dedicated_no_inventory','billing_dedicated_unqualified','billing_idempotency_conflict','billing_invalid','billing_no_subscription','billing_paid_period_required','billing_price_mismatch','billing_provider_mismatch','billing_provider_unavailable','billing_reservation_expired','billing_reservation_not_found','billing_reservation_pending','billing_sales_disabled','billing_subscription_conflict','billing_subscription_exists','billing_payment_failed','billing_plan_unchanged','billing_unconfigured','shared_no_capacity','project_required','invalid_request','cli_login_expired','cli_login_not_found','cli_login_forbidden','slow_down','cli_login_rate_limited','cli_login_busy','not_found','conflict','caller_screen_not_shared','media_content_unsupported','caller_screen_unsupported','media_limit_exceeded','video_composition_unsupported','composition_invalid','composition_revision_conflict','composition_base_unavailable']);
+const serverCodes = new Set([...safeCodes,
+  'livekit_not_provisioned',
+]);
 export class ChertControlPlane {
   private readonly origin:string; private readonly token?:string;private readonly projectId?:string;private readonly fetcher:typeof globalThis.fetch;
   constructor(options:ClientOptions={}){
@@ -137,7 +143,7 @@ export class ChertControlPlane {
       throw new ChertApiError(response.status,response.status===404?'endpoint_unavailable':'invalid_response');
     }
     if(!envelope||typeof envelope!=='object')throw new ChertApiError(response.status,'invalid_response');
-    if(!response.ok){const error=(envelope as {error?:unknown}).error;const code=error&&typeof error==='object'?(error as {code?:unknown}).code:undefined;throw new ChertApiError(response.status,typeof code==='string'&&safeCodes.has(code)?code:'request_failed');}
+    if(!response.ok){const error=(envelope as {error?:unknown}).error;const fields=error&&typeof error==='object'?error as {code?:unknown}:undefined;const code=typeof fields?.code==='string'?fields.code:undefined;const serverCode=!fields||!Object.hasOwn(fields,'code')?undefined:code!==undefined&&serverCodes.has(code)?code:'unknown';throw new ChertApiError(response.status,code&&safeCodes.has(code)?code:'request_failed',serverCode);}
     if(!Object.hasOwn(envelope,'data'))throw new ChertApiError(response.status,'invalid_response');
     return (envelope as {data:T}).data;
   }
