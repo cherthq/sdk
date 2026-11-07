@@ -1,8 +1,8 @@
 import { execFile } from 'node:child_process';
 import { randomUUID, createHash } from 'node:crypto';
-import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir, hostname } from 'node:os';
-import { join } from 'node:path';
+import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { homedir, hostname, tmpdir } from 'node:os';
+import { isAbsolute, join, relative, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { createInterface } from 'node:readline/promises';
 
@@ -125,8 +125,10 @@ function writeOwnerOnly(dir: string, name: string, contents: string) {
   mkdirSync(dir, { recursive: true, mode: 0o700 }); chmodSync(dir, 0o700);
   const file = join(dir, name), temporary = `${file}.${process.pid}.${randomUUID()}.tmp`;
   const fd = openSync(temporary, 'wx', 0o600);
-  try { writeFileSync(fd, contents); fsyncSync(fd); } finally { closeSync(fd); }
-  renameSync(temporary, file);
+  try {
+    try { writeFileSync(fd, contents); fsyncSync(fd); } finally { closeSync(fd); }
+    renameSync(temporary, file);
+  } finally { rmSync(temporary, { force: true }); }
 }
 function readOwnerOnly(path: string): unknown {
   if (!existsSync(path)) return undefined;
@@ -153,17 +155,74 @@ function loadPending(deps: OnboardDeps, origin: string): PendingLogin | undefine
 }
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-interface OnboardingResume { request_key: string; session_id?: string }
+interface OnboardingResume { request_key: string; binding: string; session_id?: string; previous_session_id?: string; verification_generation?: number; fresh_proof?: 'required' | 'requested' }
 const resumeName = (origin: string, project: string) => `${digest([origin, project])}.json`;
-function loadResume(deps: OnboardDeps, origin: string, project: string): OnboardingResume {
+function loadResume(deps: OnboardDeps, origin: string, project: string, token: string, recipient: string): OnboardingResume {
   const dir = join(chertHome(deps), 'onboarding'), value = readOwnerOnly(join(dir, resumeName(origin, project))) as Partial<OnboardingResume> | undefined;
-  if (value && typeof value.request_key === 'string' && UUID.test(value.request_key)) return value as OnboardingResume;
-  const created = { request_key: randomUUID() };
+  const binding = digest([origin, project, token, recipient]);
+  if (value !== undefined) {
+    if (!value || value.binding !== binding || typeof value.request_key !== 'string' || !UUID.test(value.request_key)
+      || (value.session_id !== undefined && (typeof value.session_id !== 'string' || !UUID.test(value.session_id)))
+      || (value.previous_session_id !== undefined && (typeof value.previous_session_id !== 'string' || !UUID.test(value.previous_session_id)))
+      || (value.verification_generation !== undefined && (!Number.isSafeInteger(value.verification_generation) || value.verification_generation < 0))
+      || (value.fresh_proof !== undefined && value.fresh_proof !== 'required' && value.fresh_proof !== 'requested'))
+      throw new OnboardError('recipient_proof_required', 'This saved onboarding cannot be safely continued with this sign-in and number. Contact Chert support before continuing.');
+    return value as OnboardingResume;
+  }
+  const created = { request_key: randomUUID(), binding };
   saveResume(deps, origin, project, created);
   return created;
 }
 function saveResume(deps: OnboardDeps, origin: string, project: string, value: OnboardingResume) {
   writeOwnerOnly(join(chertHome(deps), 'onboarding'), resumeName(origin, project), JSON.stringify(value) + '\n');
+}
+
+function restartResume(deps: OnboardDeps, origin: string, credential: SavedCredential, recipient: string, previousSessionId?: string) {
+  saveResume(deps, origin, credential.project_id, { request_key: randomUUID(), binding: digest([origin, credential.project_id, credential.access_token, recipient]), fresh_proof: 'required', ...(previousSessionId ? { previous_session_id: previousSessionId } : {}) });
+}
+
+async function selectedRecipient(deps: OnboardDeps, api: Api, origin: string, credential: SavedCredential, selected: string[], emit: Emit): Promise<string> {
+  const file = join(chertHome(deps), 'onboarding', resumeName(origin, credential.project_id));
+  const value = readOwnerOnly(file) as Partial<OnboardingResume> | undefined;
+  if (value === undefined) return selected[0]!;
+  const bound = selected.find(recipient => value?.binding === digest([origin, credential.project_id, credential.access_token, recipient]));
+  if (bound) return bound;
+  if (!value || typeof value.request_key !== 'string' || !UUID.test(value.request_key)
+    || (value.session_id !== undefined && (typeof value.session_id !== 'string' || !UUID.test(value.session_id)))
+    || (value.previous_session_id !== undefined && (typeof value.previous_session_id !== 'string' || !UUID.test(value.previous_session_id)))
+    || (value.verification_generation !== undefined && (!Number.isSafeInteger(value.verification_generation) || value.verification_generation < 0))
+    || (value.fresh_proof !== undefined && value.fresh_proof !== 'required' && value.fresh_proof !== 'requested'))
+    throw new OnboardError('recipient_proof_required', 'This saved onboarding cannot be safely continued with this sign-in and number. Contact Chert support before continuing.');
+  const setAside = (previousSessionId?: string) => {
+    renameSync(file, `${file}.archived-${randomUUID()}`);
+    restartResume(deps, origin, credential, selected[0]!, previousSessionId);
+    emit({ code: 'onboarding_restarted', message: 'An earlier onboarding was set aside. Starting a new verification.' });
+    return selected[0]!;
+  };
+  if (value.session_id === undefined) return setAside(value.previous_session_id);
+  let session: Session;
+  try {
+    session = parseSession(await api.require(`/api/v1/onboarding/${value.session_id}`, { token: credential.access_token, project: credential.project_id, method: 'GET' }));
+  } catch (error) {
+    if (error instanceof OnboardError && error.code === 'verification_stale') return setAside(value.session_id);
+    throw error;
+  }
+  if (session.id !== value.session_id)
+    throw new OnboardError('recipient_proof_required', 'This saved onboarding cannot be safely continued with this sign-in and number. Contact Chert support before continuing.');
+  if (session.status === 'expired' || session.status === 'cancelled') {
+    restartResume(deps, origin, credential, selected[0]!, session.id);
+    return selected[0]!;
+  }
+  if (session.recipient !== undefined && !selected.includes(session.recipient))
+    throw new OnboardError('recipient_proof_required', 'This saved onboarding cannot be safely continued with this sign-in and number. Contact Chert support before continuing.');
+  if (!session.recipient && value.binding === undefined) {
+    restartResume(deps, origin, credential, selected[0]!, session.id);
+    return selected[0]!;
+  }
+  if (!session.recipient)
+    throw new OnboardError('recipient_proof_required', 'This saved onboarding cannot be safely continued with this sign-in and number. Contact Chert support before continuing.');
+  saveResume(deps, origin, credential.project_id, { ...value, request_key: value.request_key, binding: digest([origin, credential.project_id, credential.access_token, session.recipient]) });
+  return session.recipient;
 }
 
 const actions: Record<string, string> = {
@@ -204,11 +263,16 @@ const actions: Record<string, string> = {
   onboarding_expired: 'This onboarding expired. Run chert-sdk onboard again.',
   demo_unavailable: 'The hosted demo is not available on this line yet. Your verification is saved; retry later.',
   verification_rate_limited: 'Wait a moment, then run chert-sdk onboard again.',
+  verification_expired: 'This verification expired. Run chert-sdk onboard again to request a new code.',
+  verification_already_verified: 'Verification is finishing. Run chert-sdk onboard again shortly.',
+  verification_stale: 'Verification is no longer current. Run chert-sdk onboard again to start a new verification.',
 };
 
 interface Session {
   id: string; status: string; expires_at?: string;
   line: { id: string; receiving_number: string };
+  recipient?: string;
+  verification_received?: boolean;
   demo_call_id?: string | null;
   demo_result?: string;
   demo_queue?: { state?: string; position?: number | null; message?: string };
@@ -249,8 +313,14 @@ const invalid = () => new OnboardError('backend_response_invalid', 'Chert return
 
 function parseSession(value: unknown): Session {
   const session = value as Partial<Session> | null;
-  if (!session || typeof session.id !== 'string' || !UUID.test(session.id) || typeof session.status !== 'string' || typeof session.line?.receiving_number !== 'string' || !E164.test(session.line.receiving_number)) throw invalid();
+  if (!session || typeof session.id !== 'string' || !UUID.test(session.id) || typeof session.status !== 'string' || typeof session.line?.receiving_number !== 'string' || !E164.test(session.line.receiving_number)
+    || (session.recipient !== undefined && (typeof session.recipient !== 'string' || !E164.test(session.recipient)))
+    || (session.verification_received !== undefined && typeof session.verification_received !== 'boolean')) throw invalid();
   return session as Session;
+}
+
+function requireRecipient(session: Session, recipient: string) {
+  if (session.recipient !== recipient) throw new OnboardError('recipient_proof_required', 'This onboarding does not confirm the selected number. Contact Chert support before continuing.');
 }
 
 async function sendFromMessages(deps: OnboardDeps, text: string, to: string) {
@@ -322,7 +392,7 @@ function finishLogin(deps: OnboardDeps, origin: string, file: string, emit: Emit
   const unlinked = Array.isArray(answer.unlinked_numbers) ? answer.unlinked_numbers.filter((n): n is string => typeof n === 'string') : [];
   emit({ code: 'signed_in', project_id: answer.project_id, verified: verified.map(maskNumber), unverified: unverified.map(maskNumber), unlinked: unlinked.map(maskNumber),
     message: `Signed in with ${verified.map(maskNumber).join(' and ')}.`
-      + (unverified.length ? ` ${unverified.map(maskNumber).join(' and ')} did not verify: Messages sends from one number at a time, set under Messages > Settings > iMessage > Start New Conversations From. Change it and run this again to add the other number.` : '')
+      + (unverified.length ? ` ${unverified.map(maskNumber).join(' and ')} did not verify: Messages sends from one number at a time, set under Messages > Settings > iMessage > Start New Conversations From. Contact Chert support to add another number.` : '')
       + (unlinked.length ? ` ${unlinked.map(maskNumber).join(' and ')} already belongs to another Chert account, so it was not added.` : '') });
   const linked = verified.filter(number => !unlinked.includes(number));
   if (!linked.length) throw invalid();
@@ -349,9 +419,10 @@ async function requestVerification(deps: OnboardDeps, api: Api, emit: Emit, path
 
 async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emit, credential: SavedCredential, recipient: string, others: number, skipDemo: boolean) {
   const auth = { token: credential.access_token, project: credential.project_id };
-  let resume = loadResume(deps, origin, credential.project_id);
+  let resume = loadResume(deps, origin, credential.project_id, credential.access_token, recipient);
   const started = async () => {
     const session = parseSession(await api.require('/api/v1/onboarding', { ...auth, body: {}, key: resume.request_key }));
+    if (resume.previous_session_id === session.id) throw invalid();
     resume.session_id = session.id;
     saveResume(deps, origin, credential.project_id, resume);
     return session;
@@ -359,28 +430,63 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
   let session = resume.session_id ? parseSession(await api.require(`/api/v1/onboarding/${resume.session_id}`, { ...auth, method: 'GET' })) : await started();
   if (session.id !== (resume.session_id ?? session.id)) throw invalid();
   if (session.status === 'expired' || session.status === 'cancelled') {
-    rmSync(join(chertHome(deps), 'onboarding', resumeName(origin, credential.project_id)), { force: true });
+    if (session.recipient !== undefined) requireRecipient(session, recipient);
+    restartResume(deps, origin, credential, recipient, session.id);
     throw new OnboardError(`onboarding_${session.status}`, 'This onboarding has ended. Run chert-sdk onboard again to start a new one.');
   }
+  if (resume.fresh_proof === 'required' && (session.status !== 'awaiting_verification' || session.verification_received === true))
+    throw new OnboardError('recipient_proof_required', 'A new verification is required before continuing. Contact Chert support.');
+  if (session.status !== 'awaiting_verification' || session.recipient !== undefined) requireRecipient(session, recipient);
   // A demo that did not complete can be taken again, in a new session. Its verification still stands if it is recent.
   if (session.status === 'complete' && session.demo_result === 'not_completed') {
     rmSync(join(chertHome(deps), 'onboarding', resumeName(origin, credential.project_id)), { force: true });
-    resume = loadResume(deps, origin, credential.project_id);
+    resume = loadResume(deps, origin, credential.project_id, credential.access_token, recipient);
     session = await started();
     emit({ code: 'demo_retry', session_id: session.id, message: 'The last demo call did not connect, so Chert is trying again.' });
   }
+  if (session.status !== 'awaiting_verification' || session.recipient !== undefined) requireRecipient(session, recipient);
   const allowance = await api.call('/api/v1/allowance', { ...auth, method: 'GET' }).catch(() => null);
   const trial = Object.fromEntries(Object.entries((allowance?.status === 200 && allowance.data) || {}).filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value)));
   emit({ code: 'trial_status', session_id: session.id, status: session.status, allowance: trial, message: 'Shared access and your trial allowance are set up.' });
 
   if (session.status === 'awaiting_verification') {
-    const challenge = await requestVerification(deps, api, emit, `/api/v1/onboarding/${session.id}/verify`, { ...auth, body: { recipient }, key: `${resume.request_key}:verify` }) as { code?: unknown; verified?: unknown };
-    // A number that just proved itself at sign-in needs no second message.
-    let wait = challenge.verified === true ? 0 : 2000;
-    if (challenge.verified !== true) {
-      if (typeof challenge.code !== 'string' || !/^\d{6}$/.test(challenge.code)) throw invalid();
-      await sendFromMessages(deps, challenge.code, session.line.receiving_number);
-      emit({ code: 'verification_sent', number: maskNumber(recipient), message: `Sent the call verification code from Messages for ${maskNumber(recipient)}.` });
+    let wait = 0;
+    if (session.verification_received === true) requireRecipient(session, recipient);
+    else {
+      const verify = () => requestVerification(deps, api, emit, `/api/v1/onboarding/${session.id}/verify`, {
+        ...auth, body: { recipient }, key: `${resume.request_key}:verify${resume.verification_generation ? `:${resume.verification_generation}` : ''}`,
+      });
+      let result: unknown;
+      try {
+        try { result = await verify(); }
+        catch (error) {
+          if (!(error instanceof OnboardError) || error.code !== 'verification_expired' || (resume.verification_generation ?? 0) >= Number.MAX_SAFE_INTEGER) throw error;
+          resume.verification_generation = (resume.verification_generation ?? 0) + 1;
+          saveResume(deps, origin, credential.project_id, resume);
+          result = await verify();
+        }
+      }
+      catch (error) {
+        if (!(error instanceof OnboardError) || error.code !== 'verification_already_verified') throw error;
+        if (resume.fresh_proof === 'required')
+          throw new OnboardError('recipient_proof_required', 'A new verification is required before continuing. Contact Chert support.');
+        session = parseSession(await api.require(`/api/v1/onboarding/${session.id}`, { ...auth, method: 'GET' }));
+        if (session.id !== resume.session_id) throw invalid();
+        requireRecipient(session, recipient);
+        if (session.status === 'awaiting_verification' && session.verification_received !== true) throw error;
+        if (!['awaiting_verification', 'ready', 'demo_running', 'complete'].includes(session.status)) throw error;
+      }
+      if (result !== undefined) {
+        const challenge = result as { code?: unknown; verified?: unknown };
+        if (resume.fresh_proof === 'required' && challenge.verified === true)
+          throw new OnboardError('recipient_proof_required', 'A new verification is required before continuing. Contact Chert support.');
+        wait = challenge.verified === true ? 0 : 2000;
+        if (challenge.verified !== true) {
+          if (typeof challenge.code !== 'string' || !/^\d{6}$/.test(challenge.code)) throw invalid();
+          if (resume.fresh_proof === 'required') { resume.fresh_proof = 'requested'; saveResume(deps, origin, credential.project_id, resume); }
+          emit({ code: 'verification_to_send', number: maskNumber(recipient), verification_code: challenge.code, send_to: session.line.receiving_number, message: `Send ${challenge.code} to ${session.line.receiving_number} from ${recipient} to verify this number. Chert will continue when it arrives.` });
+        }
+      }
     }
     const deadline = deps.now() + SESSION_WAIT_MS;
     while (session.status === 'awaiting_verification') {
@@ -388,10 +494,17 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
       await deps.sleep(wait);
       wait = 2000;
       session = parseSession(await api.require(`/api/v1/onboarding/${session.id}`, { ...auth, method: 'GET' }));
+      if (session.id !== resume.session_id) throw invalid();
+      if (session.recipient !== undefined) requireRecipient(session, recipient);
     }
   }
+  requireRecipient(session, recipient);
+  if (!['ready', 'demo_running', 'complete'].includes(session.status))
+    throw new OnboardError('recipient_confirmation_pending', 'Verification has not completed. Run chert-sdk onboard again.');
   if (skipDemo) { emit({ code: 'demo_skipped', status: session.status, message: 'Skipped the demo call.' }); return; }
   if (session.status === 'ready') session = parseSession(await api.require(`/api/v1/onboarding/${session.id}/demo`, { ...auth, body: { when_busy: 'queue' }, key: resume.request_key }));
+  if (session.id !== resume.session_id) throw invalid();
+  requireRecipient(session, recipient);
   const deadline = deps.now() + SESSION_WAIT_MS;
   let reported: number | null | undefined;
   while (session.status === 'ready' && session.demo_queue && deps.now() < deadline) {
@@ -402,6 +515,8 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
     if (!['waiting', 'ready', 'placing'].includes(session.demo_queue.state ?? '')) break;
     await deps.sleep(3000);
     session = parseSession(await api.require(`/api/v1/onboarding/${session.id}`, { ...auth, method: 'GET' }));
+    if (session.id !== resume.session_id) throw invalid();
+    requireRecipient(session, recipient);
   }
   const also = others > 0 ? ' Chert calls one number, so this goes to the first one verified.' : '';
   if (session.status === 'demo_running') emit({ code: 'demo_requested', call_id: session.demo_call_id ?? null, number: maskNumber(recipient), message: `Chert is calling ${maskNumber(recipient)}. Answer the FaceTime call to try the demo; the request being accepted does not confirm that audio or video worked.${also}` });
@@ -445,18 +560,28 @@ async function writeLocalEnv(deps: OnboardDeps, credential: SavedCredential): Pr
   }
   const added = Object.entries(wanted).map(([name, value]) => `${name}=${value}`);
   if (!added.length) return { written: true };
-  const temporary = `${file}.${process.pid}.${randomUUID()}.tmp`;
-  const fd = openSync(temporary, 'wx', 0o600);
-  try { writeFileSync(fd, [...lines, ...added].join('\n') + '\n'); fsyncSync(fd); } finally { closeSync(fd); }
-  renameSync(temporary, file);
-  chmodSync(file, 0o600);
+  const root = (await deps.exec('git', ['-C', deps.cwd, 'rev-parse', '--show-toplevel'], 10_000)).stdout.trim() || deps.cwd;
+  const tempRoot = realpathSync(tmpdir());
+  const fromRoot = relative(realpathSync(root), tempRoot);
+  if (fromRoot !== '..' && !fromRoot.startsWith(`..${sep}`) && !isAbsolute(fromRoot)) return { written: false, reason: 'The temporary directory is inside the repository, so the credential was not written.' };
+  const dir = mkdtempSync(join(tempRoot, 'chert-env-'));
+  try {
+    const temporary = join(dir, 'env');
+    const fd = openSync(temporary, 'wx', 0o600);
+    try { writeFileSync(fd, [...lines, ...added].join('\n') + '\n'); fsyncSync(fd); } finally { closeSync(fd); }
+    try { renameSync(temporary, file); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EXDEV') return { written: false, reason: 'The secure temporary directory is on another filesystem, so the credential was not written. Set the variables another way.' };
+      throw error;
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
   return { written: true };
 }
 
 async function wireIn(deps: OnboardDeps, emit: Emit, credential: SavedCredential, project: NonNullable<ReturnType<typeof detectProject>>) {
   const env = await writeLocalEnv(deps, credential);
   const docs = { setup: `${DOCS}/docs/SETUP.md`, llms: `${DOCS}/llms.txt`, readme: `${DOCS}/README.md` };
-  const prompt = `Wire Chert FaceTime into this ${project.stack === 'unknown' ? '' : `${project.stack} `}project. ${project.install_command ? `Install the SDK with \`${project.install_command}\`.` : project.install_note ?? ''} Read ${docs.llms} and ${docs.setup} first, and run \`chert-sdk context\` to see the account. Read CHERT_FACETIME_TOKEN and CHERT_PROJECT_ID from the environment${env.written ? ' (they are in .env.local)' : ''}; never commit them or print them. Follow this project's existing conventions, and test against a real call before saying it works.`;
+  const prompt = `Wire Chert FaceTime into this ${project.stack === 'unknown' ? '' : `${project.stack} `}project. ${project.install_command ? `Install the SDK with \`${project.install_command}\`.` : project.install_note ?? ''} Read ${docs.llms} and ${docs.setup} first. The CLI login${env.written ? ' in .env.local' : ''} is limited to its scoped operations and cannot create application calls. Application calls require a project API key created in the browser; have the user configure CHERT_FACETIME_TOKEN with that key locally and CHERT_PROJECT_ID with the project ID. Never ask the user to paste credentials; never commit or print them. Follow this project's existing conventions. Place a real test call only with explicit user authorization and an approved recipient; otherwise use non-calling checks and do not claim the call works.`;
   emit({ code: 'wire_in', stack: project.stack, install_command: project.install_command, ...(project.install_note ? { install_note: project.install_note } : {}),
     env_vars: ['CHERT_FACETIME_TOKEN', 'CHERT_PROJECT_ID'], env_local_written: env.written, ...(env.reason ? { env_local_reason: env.reason } : {}), docs, prompt,
     message: `Project found (${project.stack}). ${env.written ? 'The credential is in .env.local.' : env.reason}\nPaste this to your coding agent:\n\n${prompt}` });
@@ -526,13 +651,21 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     const selected = manual ? await askForNumber(deps, { ...chosen, json }) : await choose(deps, detected, { ...chosen, yes: Boolean(values.yes), json });
     const api = new Api(deps, origin);
     const saved = loadCredential(deps, origin);
-    const signedIn = saved ? { credential: saved, verified: selected } : await login(deps, api, origin, emit, selected, manual);
+    const signedIn = saved ? { credential: saved, verified: [] as string[] } : await login(deps, api, origin, emit, selected, manual);
     if (saved) emit({ code: 'signed_in', project_id: saved.project_id, message: 'Using this computer\'s existing Chert sign-in.' });
-    const recipient = signedIn.verified[0]!;
+    let recipient: string | undefined;
     let stopped: unknown;
-    try { await onboarding(deps, api, origin, emit, signedIn.credential, recipient, signedIn.verified.length - 1, Boolean(values['skip-demo'])); }
+    try {
+      recipient = await selectedRecipient(deps, api, origin, signedIn.credential, saved ? selected : signedIn.verified, emit);
+      await onboarding(deps, api, origin, emit, signedIn.credential, recipient, signedIn.verified.length - 1, Boolean(values['skip-demo']));
+    }
     catch (error) {
       if (error instanceof OnboardError && error.code === 'login_required') { rmSync(join(chertHome(deps), 'credentials.json'), { force: true }); throw error; }
+      if (recipient === undefined) throw error;
+      if (error instanceof OnboardError && error.code === 'verification_stale') {
+        const prior = loadResume(deps, origin, signedIn.credential.project_id, signedIn.credential.access_token, recipient);
+        restartResume(deps, origin, signedIn.credential, recipient, prior.session_id);
+      }
       stopped = error;
     }
     let wired = true;

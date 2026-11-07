@@ -19,11 +19,16 @@ const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk context [--offline]
 
 onboard (macOS) reads your number from Messages, signs you in by sending a one-time
-code from your Messages app, sets up the trial, starts the FaceTime demo call, then
-finishes for this directory: wiring instructions for your coding agent in a project,
-the personal agent CLI elsewhere. Without --numbers or --yes it asks, and with --json
-or no terminal it stops with numbers_required. Output with --json is one JSON line
-per step.
+code from your Messages app (or asks you to send it manually), sets up the trial and
+starts the FaceTime demo call. A second verification may require you to manually send
+a code to the displayed number. One detected number is selected automatically and
+may send a message without prompting, even with --json or no terminal. With multiple
+detected numbers and no --numbers or --yes, it asks interactively; with --json or no
+terminal it stops with numbers_required. Output with --json is one JSON line per step.
+After sign-in, it may write a local credential and provide wiring instructions in a
+project, even if onboarding verification fails. Outside a project, it may automatically
+install the personal agent CLI globally with npm. --no-wire skips both project wiring
+and personal agent CLI setup.
 
 context prints SDK, credential, account and documentation context for coding
 agents. It reads FaceTime lines, and identity with a CLI login (not a project API

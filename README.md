@@ -103,7 +103,8 @@ build/test source; do not substitute a similarly named registry package.
 
 ## JavaScript / TypeScript
 
-The examples below target **`@trychert/sdk@0.2.3`**. The
+The examples below target **`@trychert/sdk@0.2.3`**; npm 0.3.0 is also
+published. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
 
@@ -266,8 +267,8 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
-migration. To upgrade, update the dependency to `@trychert/sdk@0.2.3`
-(published, `latest`), regenerate your consumer lockfile and rerun tests.
+migration. To use the version targeted by these examples, update the dependency
+to `@trychert/sdk@0.2.3`, regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
 stay `@trychert/sdk/<subpath>`.
 
@@ -290,7 +291,11 @@ available yet: the backend refuses them). Since 0.2.1, unknown commands and subc
 `unknown_command` before any credential lookup. Published 0.1.0 through 0.2.3
 do not include `login`, `onboard`, `new`, `doctor` or `dev`. Browser login and the
 agent onboarding CLI live in the separate `chert` CLI from `@trychert/facetime`.
-Unreleased: `chert-sdk onboard` for a Mac, see [setup](docs/SETUP.md#automated-onboarding-on-a-mac).
+Unreleased: `chert-sdk onboard` for a Mac is not in npm 0.3.0, and its required
+backend support is not deployed. Invoking it can send a Messages verification code
+without a separate prompt when one number is detected. A second verification
+requires explicit user action and a manual send. See the
+[setup guide](docs/SETUP.md#automated-onboarding-on-a-mac).
 
 ### Custom video sources (not available yet)
 
