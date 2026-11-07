@@ -446,8 +446,9 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
   }
   if (session.status !== 'awaiting_verification' || session.recipient !== undefined) requireRecipient(session, recipient);
   const allowance = await api.call('/api/v1/allowance', { ...auth, method: 'GET' }).catch(() => null);
-  const trial = Object.fromEntries(Object.entries((allowance?.status === 200 && allowance.data) || {}).filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value)));
-  emit({ code: 'trial_status', session_id: session.id, status: session.status, allowance: trial, message: 'Shared access and your trial allowance are set up.' });
+  const data = allowance?.status === 200 && typeof allowance.data === 'object' && allowance.data !== null && !Array.isArray(allowance.data) ? allowance.data : null;
+  const trial = Object.fromEntries(Object.entries(data ?? {}).filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value)));
+  emit({ code: 'trial_status', session_id: session.id, status: session.status, allowance: trial, message: data ? 'Shared access is set up. Trial allowance details were retrieved.' : 'Shared access is set up, but your trial allowance could not be checked.' });
 
   if (session.status === 'awaiting_verification') {
     let wait = 0;
@@ -518,7 +519,7 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
     if (session.id !== resume.session_id) throw invalid();
     requireRecipient(session, recipient);
   }
-  const also = others > 0 ? ' Chert calls one number, so this goes to the first one verified.' : '';
+  const also = others > 0 ? ' Chert calls one number.' : '';
   if (session.status === 'demo_running') emit({ code: 'demo_requested', call_id: session.demo_call_id ?? null, number: maskNumber(recipient), message: `Chert is calling ${maskNumber(recipient)}. Answer the FaceTime call to try the demo; the request being accepted does not confirm that audio or video worked.${also}` });
   else if (session.status === 'complete') emit({ code: 'demo_finished', call_id: session.demo_call_id ?? null, message: 'The demo call for this onboarding has already ended.' });
   else throw new OnboardError('demo_not_started', 'The demo call did not start yet. Run chert-sdk onboard again to continue.', session.demo_queue?.state ? { queue_state: session.demo_queue.state } : {});

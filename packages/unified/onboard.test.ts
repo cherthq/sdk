@@ -219,6 +219,28 @@ test('runs the whole flow: code, sign-in, trial, verification, demo', async () =
   const requested = records().find(r => r.code === 'demo_requested')!;
   expect(requested.message).toContain('does not confirm that audio or video worked');
   expect(records().find(r => r.code === 'trial_status')!.allowance).toEqual({ plan: 'trial', minutes_left: 10 });
+  expect(records().find(r => r.code === 'trial_status')!.message).toContain('Trial allowance details were retrieved');
+});
+
+test('reports an unavailable allowance check without stopping verification or the demo', async () => {
+  world.responses['/api/v1/allowance'] = { status: 503, body: { error: { code: 'unavailable' } } };
+  expect(await run('--yes', '--no-wire')).toBe(0);
+  expect(records().find(r => r.code === 'trial_status')).toMatchObject({
+    allowance: {}, message: 'Shared access is set up, but your trial allowance could not be checked.',
+  });
+  expect(records().some(r => r.code === 'demo_requested')).toBe(true);
+});
+
+test('reports a network failure checking allowance and continues', async () => {
+  const options = deps();
+  const fetch = options.fetch;
+  options.fetch = Object.assign(async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    if (new URL(String(input)).pathname === '/api/v1/allowance') throw new Error('offline');
+    return fetch(input, init);
+  }, { preconnect: fetch.preconnect });
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], options)).toBe(0);
+  expect(records().find(r => r.code === 'trial_status')?.message).toContain('allowance could not be checked');
+  expect(records().some(r => r.code === 'demo_requested')).toBe(true);
 });
 
 test('a second verification challenge requires the person to send it', async () => {
@@ -337,7 +359,7 @@ test('two linked numbers say which one is called', async () => {
   world.aliases = [A, B];
   world.verified = [A, B];
   expect(await run('--yes', '--no-wire')).toBe(0);
-  expect(records().find(r => r.code === 'demo_requested')!.message).toContain('first one verified');
+  expect(records().find(r => r.code === 'demo_requested')!.message).toContain('Chert is calling •••0100');
 });
 
 test('no verified number times out, asks for the sender setting and starts fresh next time', async () => {

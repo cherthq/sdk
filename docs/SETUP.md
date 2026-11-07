@@ -58,7 +58,8 @@ chert-sdk onboard
 Messages sends from the number under **Settings > iMessage > Start New Conversations
 From**, and a script cannot choose it. A chosen number sent from another number does
 not verify, and the command says so. Linking a second number on a later run is not
-supported. With two numbers, the demo calls the first one verified.
+supported. With two numbers, the demo calls the first eligible verified number in
+the original selection order, not necessarily the one verified first.
 To resume a saved onboarding, select the same number. A new sign-in can resume
 only if the service confirms the saved session and number belong to that account.
 If it cannot confirm them, the command stops and asks you to contact support.
