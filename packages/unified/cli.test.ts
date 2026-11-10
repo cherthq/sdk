@@ -1,18 +1,58 @@
 import { expect, test } from 'bun:test';
-import { resolve } from 'node:path';
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 
-test('CLI help warns when onboarding may send without prompting', async () => {
+test('CLI help explains onboarding is unavailable', async () => {
   for (const args of [['--help'], ['onboard', '--help']]) {
     const child = Bun.spawn(['node', resolve(import.meta.dir, '../../dist/unified/cli.js'), ...args], { stdout: 'pipe', stderr: 'pipe' });
     expect(await child.exited).toBe(0);
     const help = (await new Response(child.stdout).text()).replace(/\s+/g, ' ');
-    expect(help).toContain('One detected number is selected automatically and may send a message without prompting, even with --json or no terminal.');
-    expect(help).toContain('With multiple detected numbers and no --numbers or --yes, it asks interactively; with --json or no terminal it stops with numbers_required.');
-    expect(help).toContain('A second verification may require you to manually send a code to the displayed number.');
-    expect(help).toContain('After sign-in, it may write a local credential and provide wiring instructions in a project, even if onboarding verification fails.');
-    expect(help).toContain('Outside a project, it may automatically install the personal agent CLI globally with npm.');
-    expect(help).toContain('--no-wire skips both project wiring and personal agent CLI setup.');
+    expect(help).toContain('onboard is unavailable pending a sender-specific native IMCore integration.');
   }
+});
+
+test('public onboard fails before requests, external commands or project and credential writes', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'chert-onboard-gate-'));
+  const project = join(root, 'project');
+  const home = join(root, 'home');
+  const bin = join(root, 'bin');
+  mkdirSync(project); mkdirSync(home); mkdirSync(bin);
+  writeFileSync(join(project, 'package.json'), '{"name":"fixture"}\n');
+  writeFileSync(join(project, '.env.local'), 'EXISTING=value\n');
+  for (const name of ['plutil', 'osascript', 'npm', 'git']) {
+    writeFileSync(join(bin, name), `#!/bin/sh\necho invoked >> "${root}/commands"\n`, { mode: 0o755 });
+  }
+  let requests = 0;
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch() { requests++; return new Response('unexpected'); } });
+  try {
+    for (const flags of [['--yes', '--numbers', 'all'], ['--yes', '--numbers', 'all', '--json']]) {
+      const child = Bun.spawn(['node', resolve(import.meta.dir, '../../dist/unified/cli.js'), 'onboard', ...flags], {
+        cwd: project,
+        env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, HOME: home, CHERT_HOME: join(home, '.chert'), CHERT_FACETIME_URL: server.url.origin, CHERT_BASE_URL: server.url.origin },
+        stdout: 'pipe', stderr: 'pipe',
+      });
+      expect(await child.exited).toBe(1);
+      expect(await new Response(child.stdout).text()).toBe('');
+      const error = await new Response(child.stderr).text();
+      if (flags.includes('--json')) {
+        const result = JSON.parse(error);
+        expect(result.code).toBe('native_sender_unavailable');
+        expect(result.error).toContain('sender-specific native IMCore integration');
+        expect(result.error).toContain('browser sign-in');
+      } else {
+        expect(error).toContain('native_sender_unavailable');
+        expect(error).toContain('sender-specific native IMCore integration');
+        expect(error).toContain('browser sign-in');
+      }
+    }
+    expect(requests).toBe(0);
+    expect(readdirSync(root).sort()).toEqual(['bin', 'home', 'project']);
+    expect(readdirSync(home)).toEqual([]);
+    expect(readdirSync(project).sort()).toEqual(['.env.local', 'package.json']);
+    expect(readFileSync(join(project, '.env.local'), 'utf8')).toBe('EXISTING=value\n');
+    expect(readFileSync(join(project, 'package.json'), 'utf8')).toBe('{"name":"fixture"}\n');
+  } finally { server.stop(true); rmSync(root, { recursive: true, force: true }); }
 });
 
 test('CLI preserves keyed sends and rejects an explicit empty key before HTTP', async () => {

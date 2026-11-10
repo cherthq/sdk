@@ -15,7 +15,7 @@ interface World {
   aliases: unknown[]; home: string; cwd: string; out: string[]; err: string[]; sent: string[][]; calls: { path: string; body: unknown; headers: Headers; method: string }[];
   execFail: Record<string, { stderr?: string }>; proven?: boolean; prompts: string[]; answers: string[]; ignored: boolean; chertInstalled: boolean; npmPublished: boolean; installs: string[][];
   verified: string[]; unlinked: string[]; finishOnly: boolean; tokenPolls: number; session: Record<string, unknown>; responses: Record<string, { status: number; body: unknown }>;
-  platform: string; interactive: boolean; now: number;
+  platform: string; interactive: boolean; now: number; verificationSent: boolean;
 }
 let world: World;
 let root: string;
@@ -25,7 +25,7 @@ beforeEach(() => {
   mkdirSync(join(root, 'home'));
   mkdirSync(join(root, 'cwd'));
   world = { aliases: [A], home: join(root, 'home'), cwd: join(root, 'cwd'), out: [], err: [], sent: [], calls: [], execFail: {}, prompts: [], answers: [], ignored: true, chertInstalled: true, npmPublished: true, installs: [],
-    verified: [A], unlinked: [], finishOnly: false, tokenPolls: 0, session: { status: 'awaiting_verification' }, responses: {}, platform: 'darwin', interactive: false, now: 1_000_000 };
+    verified: [A], unlinked: [], finishOnly: false, tokenPolls: 0, session: { status: 'awaiting_verification' }, responses: {}, platform: 'darwin', interactive: false, now: 1_000_000, verificationSent: false };
 });
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
@@ -35,7 +35,11 @@ function deps(): OnboardDeps {
       const fail = world.execFail[file];
       if (fail) throw Object.assign(new Error('failed'), fail);
       if (file === 'plutil') return { stdout: JSON.stringify({ allAliases: world.aliases, selectedAliases: [] }) };
-      if (file === 'osascript') { world.sent.push(args); return { stdout: '' }; }
+      if (file === 'osascript') {
+        world.sent.push(args);
+        if (args.at(-2) === CODE) world.verificationSent = true;
+        return { stdout: '' };
+      }
       if (file === 'git') { if (!world.ignored) throw new Error('not ignored'); return { stdout: '' }; }
       if (file === 'chert') { if (!world.chertInstalled) throw new Error('missing'); return { stdout: '1' }; }
       if (file === 'npm') {
@@ -77,9 +81,12 @@ function route(path: string, method: string, body: { numbers?: string[]; finish?
   }
   if (path === '/api/v1/allowance') return { plan: 'trial', minutes_left: 10, nested: { secret: 'no' } };
   if (path === '/api/v1/onboarding') return view();
-  if (path.endsWith('/verify')) { world.session = { status: 'ready', recipient: body.recipient }; return world.proven ? { code: null, verified: true } : { code: CODE, recipient: body.recipient }; }
+  if (path.endsWith('/verify')) { world.verificationSent = false; world.session = { status: world.proven ? 'ready' : 'awaiting_verification', recipient: body.recipient }; return world.proven ? { code: null, verified: true } : { code: CODE, recipient: body.recipient }; }
   if (path.endsWith('/demo')) { world.session = { ...world.session, status: 'demo_running', demo_call_id: CALL }; return view(); }
-  if (method === 'GET') return view();
+  if (method === 'GET') {
+    if (world.verificationSent && world.session.status === 'awaiting_verification') world.session = { ...world.session, status: 'ready' };
+    return view();
+  }
   throw new Error(`unexpected ${path}`);
 }
 
@@ -108,14 +115,27 @@ test('refuses to run off a Mac', async () => {
   expect(world.calls).toEqual([]);
 });
 
-test('reports no numbers when Messages has none or cannot be read', async () => {
+test('reports no numbers or an unavailable Messages identity', async () => {
   world.aliases = ['person@example.com'];
   expect(await run('--yes')).toBe(1);
   expect(failure().code).toBe('no_phone_numbers');
   world.execFail.plutil = {};
   expect(await run('--yes')).toBe(1);
-  expect(failure().code).toBe('no_phone_numbers');
+  expect(failure().code).toBe('messages_identity_unavailable');
   expect(world.calls).toEqual([]);
+});
+
+test('no detected aliases never accepts a supplied number or prompts for one', async () => {
+  world.aliases = [];
+  world.interactive = true;
+  world.answers = [FOREIGN];
+  for (const args of [[], ['--numbers', FOREIGN], ['--numbers', '1']]) {
+    expect(await run(...args)).toBe(1);
+    expect(failure().code).toBe('no_phone_numbers');
+  }
+  expect(world.prompts).toEqual([]);
+  expect(world.calls).toEqual([]);
+  expect(world.sent).toEqual([]);
 });
 
 test('a machine caller without a choice gets masked numbers and nothing is sent', async () => {
@@ -206,8 +226,8 @@ test('other send failures do not repeat what Messages said', async () => {
 
 test('runs the whole flow: code, sign-in, trial, verification, demo', async () => {
   expect(await run('--yes', '--no-wire')).toBe(0);
-  expect(records().map(r => r.code)).toEqual(['numbers_detected', 'login_code_sent', 'signed_in', 'trial_status', 'verification_to_send', 'demo_requested']);
-  expect(world.sent.map(args => args.slice(-2))).toEqual([[message(A), LINE]]);
+  expect(records().map(r => r.code)).toEqual(['numbers_detected', 'login_code_sent', 'signed_in', 'trial_status', 'verification_code_sent', 'demo_requested']);
+  expect(world.sent.map(args => args.slice(-2))).toEqual([[message(A), LINE], [CODE, LINE]]);
   const onboarding = world.calls.find(call => call.path === '/api/v1/onboarding')!;
   expect(onboarding.headers.get('authorization')).toBe(`Bearer ${TOKEN}`);
   expect(onboarding.headers.get('x-chert-project-id')).toBe(PROJECT);
@@ -243,12 +263,35 @@ test('reports a network failure checking allowance and continues', async () => {
   expect(records().some(r => r.code === 'demo_requested')).toBe(true);
 });
 
-test('a second verification challenge requires the person to send it', async () => {
+test('a second verification challenge is sent automatically without displaying it', async () => {
   expect(await run('--yes', '--no-wire')).toBe(0);
-  expect(world.sent.map(args => args.slice(-2))).toEqual([[message(A), LINE]]);
-  const instruction = records().find(r => r.code === 'verification_to_send');
-  expect(instruction).toMatchObject({ verification_code: CODE, send_to: LINE });
-  expect(instruction?.message).toContain('Send');
+  expect(world.sent.map(args => args.slice(-2))).toEqual([[message(A), LINE], [CODE, LINE]]);
+  expect(records().some(r => r.code === 'verification_code_sent')).toBe(true);
+  expect(everything()).not.toContain(CODE);
+  expect(world.calls.findIndex(call => call.path === `/api/v1/onboarding/${SESSION}` && call.method === 'GET')).toBeLessThan(world.calls.findIndex(call => call.path.endsWith('/demo')));
+});
+
+test('sending a verification code does not start a demo without server confirmation', async () => {
+  world.responses[`/api/v1/onboarding/${SESSION}`] = { status: 200, body: { data: { id: SESSION, status: 'awaiting_verification', recipient: A, line: { receiving_number: LINE } } } };
+  expect(await run('--yes', '--no-wire')).toBe(1);
+  expect(world.sent.map(args => args.slice(-2))).toEqual([[message(A), LINE], [CODE, LINE]]);
+  expect(failure().code).toBe('verification_timeout');
+  expect(world.calls.some(call => call.path === `/api/v1/onboarding/${SESSION}` && call.method === 'GET')).toBe(true);
+  expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
+});
+
+test('a failed second send reports the Messages error and never starts the demo', async () => {
+  for (const [stderr, code] of [['Not authorized (-1743)', 'messages_permission_denied'], ['send failed', 'messages_send_failed']]) {
+    const options = deps(), exec = options.exec;
+    options.exec = async (file, args, timeout) => {
+      if (file === 'osascript' && args.at(-2) === CODE) throw Object.assign(new Error('failed'), { stderr });
+      return exec(file, args, timeout);
+    };
+    expect(await runOnboard(['--json', '--yes', '--no-wire'], options)).toBe(1);
+    expect(failure().code).toBe(code);
+    expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
+    expect(records().some(r => r.code === 'verification_code_sent')).toBe(false);
+  }
 });
 
 test('a saved sign-in does not verify a newly selected number', async () => {
@@ -273,12 +316,12 @@ test('a pending project-scoped verification cannot be reused for another number'
   expect(world.calls.some(call => call.path.endsWith('/verify') || call.path.endsWith('/demo'))).toBe(false);
 });
 
-test('never prints credentials or login secrets, even when manual verification is displayed', async () => {
+test('never prints credentials, login secrets, or verification codes', async () => {
   mkdirSync(join(world.cwd, '.git'));
   expect(await run('--yes')).toBe(0);
   const text = everything();
-  for (const secret of [TOKEN, DEVICE, message(A)]) expect(text).not.toContain(secret);
-  expect(records().find(r => r.code === 'verification_to_send')).toMatchObject({ verification_code: CODE, send_to: LINE });
+  for (const secret of [TOKEN, DEVICE, message(A), CODE]) expect(text).not.toContain(secret);
+  expect(records().some(r => r.code === 'verification_code_sent')).toBe(true);
 });
 
 test('saves the sign-in in the format and place the chert CLI reads', async () => {
@@ -500,7 +543,7 @@ test('already verified after a pending read polls for confirmation without repla
   expect(await runOnboard(['--json', '--yes', '--no-wire'], wrapped)).toBe(0);
   expect(polls).toBe(3);
   expect(world.calls.filter(call => call.path.endsWith('/verify'))).toHaveLength(1);
-  expect(records().some(record => record.code === 'verification_to_send')).toBe(false);
+  expect(records().some(record => record.code === 'verification_code_sent')).toBe(false);
   expect(records().some(record => record.code === 'demo_requested')).toBe(true);
 });
 
@@ -541,7 +584,7 @@ test('a consumed verification waits for confirmation without reissuing the chall
   expect(await runOnboard(['--json', '--yes', '--no-wire'], wrapped)).toBe(0);
   expect(polls).toBe(2);
   expect(world.calls.some(call => call.path.endsWith('/verify'))).toBe(false);
-  expect(records().some(record => record.code === 'verification_to_send')).toBe(false);
+  expect(records().some(record => record.code === 'verification_code_sent')).toBe(false);
   expect(records().some(record => record.code === 'demo_requested')).toBe(true);
 });
 
@@ -653,7 +696,7 @@ test('fresh sign-in reconciles prior state using only linked verified candidates
   expect(await runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], wrapped)).toBe(0);
   expect(world.calls.some(call => call.path === '/api/v1/onboarding')).toBe(true);
   expect(world.calls.find(call => call.path.endsWith('/verify'))?.body).toEqual({ recipient: B });
-  expect(records().some(record => record.code === 'verification_to_send')).toBe(true);
+  expect(records().some(record => record.code === 'verification_code_sent')).toBe(true);
   expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
 });
 
@@ -674,7 +717,7 @@ test('a rotated credential replaces an authorized ended session with a fresh cha
       return response;
     }) as unknown as typeof fetch;
     expect(await runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], wrapped)).toBe(0);
-    expect(records().some(record => record.code === 'verification_to_send')).toBe(true);
+    expect(records().some(record => record.code === 'verification_code_sent')).toBe(true);
     expect(world.calls.filter(call => call.path.endsWith('/verify'))).toHaveLength(1);
     expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
     const file = join(world.home, '.chert', 'onboarding', `${createHash('sha256').update(JSON.stringify(['https://facetime.trychert.com', PROJECT])).digest('hex')}.json`);
@@ -705,7 +748,7 @@ test('an ended session for another number starts a new verification for the sele
     expect(await runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], wrapped)).toBe(0);
     expect(world.calls.find(call => call.path === '/api/v1/onboarding')!.headers.get('idempotency-key')).not.toBe(oldKey);
     expect(world.calls.find(call => call.path.endsWith('/verify'))?.body).toEqual({ recipient: B });
-    expect(records().some(record => record.code === 'verification_to_send')).toBe(true);
+    expect(records().some(record => record.code === 'verification_code_sent')).toBe(true);
     expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
     const file = join(world.home, '.chert', 'onboarding', `${createHash('sha256').update(JSON.stringify(['https://facetime.trychert.com', PROJECT])).digest('hex')}.json`);
     const state = JSON.parse(readFileSync(file, 'utf8'));
@@ -771,7 +814,7 @@ test('an authorized legacy session without a recipient starts a new verification
     return response;
   }) as unknown as typeof fetch;
   expect(await runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], wrapped)).toBe(0);
-  expect(records().some(record => record.code === 'verification_to_send')).toBe(true);
+  expect(records().some(record => record.code === 'verification_code_sent')).toBe(true);
   expect(world.calls.find(call => call.path.endsWith('/verify'))?.path).toBe(`/api/v1/onboarding/${CALL}/verify`);
 });
 
@@ -812,7 +855,7 @@ test('a legacy record without a session id is preserved and starts a fresh verif
   world.calls = []; world.out = []; world.session = { status: 'awaiting_verification' };
   expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
   expect(records().some(record => record.code === 'onboarding_restarted')).toBe(true);
-  expect(records().some(record => record.code === 'verification_to_send')).toBe(true);
+  expect(records().some(record => record.code === 'verification_code_sent')).toBe(true);
   const archive = readdirNames(join(world.home, '.chert', 'onboarding')).find(name => name.includes('.json.archived-'))!;
   expect(readFileSync(join(world.home, '.chert', 'onboarding', archive), 'utf8')).toBe(old);
   expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
@@ -1038,19 +1081,6 @@ test('a rate limit that outlasts the wait still stops with the same error', asyn
   expect(failure().code).toBe('verification_rate_limited');
   expect(world.now - started).toBeLessThanOrEqual(40_000);
   expect(records().some(record => record.code === 'demo_requested')).toBe(false);
-});
-
-test('with no number in Messages it asks for one and tells the person what to text', async () => {
-  world.aliases = [];
-  world.interactive = true;
-  world.answers = [FOREIGN];
-  world.proven = true;
-  world.verified = [FOREIGN];
-  expect(await runOnboard(['--no-wire'], deps())).toBe(0);
-  expect(world.prompts[0]).toContain('What is your phone number?');
-  expect(world.sent).toEqual([]);
-  expect(world.calls.find(call => call.path === '/api/v1/phone-logins')!.body).toMatchObject({ numbers: [FOREIGN], manual: true });
-  expect(world.out.join('\n')).toContain(`from ${FOREIGN}`);
 });
 
 test('a demo retry fails closed if the new session does not prove the recipient', async () => {

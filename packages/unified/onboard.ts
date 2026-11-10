@@ -87,12 +87,11 @@ export function parseMessagesAliases(json: string): string[] {
 
 async function detectNumbers(deps: OnboardDeps): Promise<string[]> {
   const plist = join(deps.home, 'Library', 'Preferences', 'com.apple.madrid.plist');
-  let numbers: string[] = [];
-  try { numbers = parseMessagesAliases((await deps.exec('plutil', ['-extract', 'IMD-IDS-Aliases', 'json', '-o', '-', plist], 15_000)).stdout); } catch {}
-  return numbers;
+  try { return parseMessagesAliases((await deps.exec('plutil', ['-extract', 'IMD-IDS-Aliases', 'json', '-o', '-', plist], 15_000)).stdout); }
+  catch { throw new OnboardError('messages_identity_unavailable', 'Could not read Messages identities on this Mac. Open Messages, sign in to iMessage and enable your phone number, then run this again.'); }
 }
 function noNumbers(): OnboardError {
-  return new OnboardError('no_phone_numbers', 'No phone number is signed in to Messages on this Mac. Turn on your number in Messages > Settings > iMessage, or on your iPhone under Settings > Apps > Messages > Text Message Forwarding, then run this again.');
+  return new OnboardError('no_phone_numbers', 'No phone number was found in Messages settings on this Mac. Sign in to iMessage and enable your number in Messages > Settings > iMessage, then run this again.');
 }
 
 function parseSelection(raw: string, detected: string[]): string[] {
@@ -334,12 +333,12 @@ async function sendFromMessages(deps: OnboardDeps, text: string, to: string) {
   }
 }
 
-async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, selected: string[], manual: boolean): Promise<{ credential: SavedCredential; verified: string[] }> {
+async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, selected: string[]): Promise<{ credential: SavedCredential; verified: string[] }> {
   let pending = loadPending(deps, origin);
   const file = pendingFile(deps, origin);
   if (pending && (pending.numbers.length !== selected.length || pending.numbers.some(number => !selected.includes(number)))) { rmSync(file, { force: true }); pending = undefined; }
   if (!pending) {
-    const started = await api.require('/api/v1/phone-logins', { body: { device_name: deviceName(deps), numbers: selected, ...(manual ? { manual: true } : {}) } }) as
+    const started = await api.require('/api/v1/phone-logins', { body: { device_name: deviceName(deps), numbers: selected } }) as
       { device_code?: unknown; receiving_number?: unknown; challenges?: unknown; expires_in?: unknown; interval?: unknown };
     const challenges = started.challenges as { number?: unknown; message?: unknown }[];
     if (typeof started.device_code !== 'string' || !DEVICE_CODE.test(started.device_code) || typeof started.receiving_number !== 'string' || !E164.test(started.receiving_number)
@@ -347,7 +346,6 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
       || challenges.length !== selected.length || selected.some(number => !challenges.some(c => c.number === number))
       || challenges.some(c => typeof c.message !== 'string' || !OUTGOING_MESSAGE.test(c.message))) throw invalid();
     for (const challenge of challenges) {
-      if (manual) { emit({ code: 'login_code_to_send', number: maskNumber(challenge.number as string), login_code: challenge.message, send_to: started.receiving_number, message: `Text ${challenge.message as string} to ${started.receiving_number} from ${challenge.number as string}. Chert continues as soon as it arrives.` }); continue; }
       await sendFromMessages(deps, challenge.message as string, started.receiving_number);
       emit({ code: 'login_code_sent', number: maskNumber(challenge.number as string), message: `Sent a sign-in code to Chert from Messages for ${maskNumber(challenge.number as string)}.` });
     }
@@ -355,7 +353,7 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
     writeOwnerOnly(join(chertHome(deps), 'onboarding'), `phone-login-${digest([origin])}.json`, JSON.stringify(pending) + '\n');
   } else emit({ code: 'login_resumed', message: 'Continuing the sign-in already in progress.' });
 
-  const begun = deps.now(), deadline = manual ? pending.expires_at : Math.min(pending.expires_at, begun + LOGIN_WAIT_MS);
+  const begun = deps.now(), deadline = Math.min(pending.expires_at, begun + LOGIN_WAIT_MS);
   let interval = Math.max(pending.interval, 1) * 1000, lastCount = 0, changedAt = begun;
   for (;;) {
     const stalled = lastCount > 0 && deps.now() - changedAt >= STALLED_AFTER_MS;
@@ -485,7 +483,8 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
         if (challenge.verified !== true) {
           if (typeof challenge.code !== 'string' || !/^\d{6}$/.test(challenge.code)) throw invalid();
           if (resume.fresh_proof === 'required') { resume.fresh_proof = 'requested'; saveResume(deps, origin, credential.project_id, resume); }
-          emit({ code: 'verification_to_send', number: maskNumber(recipient), verification_code: challenge.code, send_to: session.line.receiving_number, message: `Send ${challenge.code} to ${session.line.receiving_number} from ${recipient} to verify this number. Chert will continue when it arrives.` });
+          await sendFromMessages(deps, challenge.code, session.line.receiving_number);
+          emit({ code: 'verification_code_sent', number: maskNumber(recipient), message: `Sent a verification code from Messages for ${maskNumber(recipient)}. Chert will continue when it arrives.` });
         }
       }
     }
@@ -616,15 +615,6 @@ function hostedOrigin(value: string | undefined): string {
   return url.origin;
 }
 
-/** A number Messages cannot send for: the person says which and texts the code themselves. */
-async function askForNumber(deps: OnboardDeps, flags: { numbers?: string; json: boolean }): Promise<string[]> {
-  const answer = flags.numbers ?? (!flags.json && deps.interactive ? await deps.prompt('No number found in Messages. What is your phone number? ') : undefined);
-  if (answer === undefined) throw noNumbers();
-  const number = e164(answer.trim());
-  if (!number) throw new OnboardError('invalid_numbers', 'Use your number with its + country code. Nothing was sent.');
-  return [number];
-}
-
 // Running the command is the agreement. Only a real choice between numbers stops to ask.
 async function choose(deps: OnboardDeps, detected: string[], flags: { numbers?: string; yes: boolean; json: boolean }): Promise<string[]> {
   if (flags.numbers !== undefined) return parseSelection(flags.numbers, detected);
@@ -646,13 +636,13 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     if (deps.platform !== 'darwin') throw new OnboardError('macos_required', 'Automated onboarding reads your number from Messages, so it needs a Mac. On another computer use chert login from @trychert/facetime.');
     const origin = hostedOrigin(deps.env.CHERT_FACETIME_URL);
     const detected = await detectNumbers(deps);
-    emit({ code: 'numbers_detected', numbers: detected.map(maskNumber), message: `Found ${detected.length} number${detected.length === 1 ? '' : 's'} in Messages.` });
+    emit({ code: 'numbers_detected', numbers: detected.map(maskNumber), message: `Found ${detected.length} phone number${detected.length === 1 ? '' : 's'} in Messages settings.` });
     const chosen = values.numbers !== undefined ? { numbers: values.numbers } : {};
-    const manual = !detected.length;
-    const selected = manual ? await askForNumber(deps, { ...chosen, json }) : await choose(deps, detected, { ...chosen, yes: Boolean(values.yes), json });
+    if (!detected.length) throw noNumbers();
+    const selected = await choose(deps, detected, { ...chosen, yes: Boolean(values.yes), json });
     const api = new Api(deps, origin);
     const saved = loadCredential(deps, origin);
-    const signedIn = saved ? { credential: saved, verified: [] as string[] } : await login(deps, api, origin, emit, selected, manual);
+    const signedIn = saved ? { credential: saved, verified: [] as string[] } : await login(deps, api, origin, emit, selected);
     if (saved) emit({ code: 'signed_in', project_id: saved.project_id, message: 'Using this computer\'s existing Chert sign-in.' });
     let recipient: string | undefined;
     let stopped: unknown;
