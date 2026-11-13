@@ -14,8 +14,6 @@ const UUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a
 const CREDENTIAL = /^ftu_[A-Za-z0-9_-]{43}$/;
 const DEVICE_CODE = /^[\x21-\x7e]{16,200}$/;
 const OUTGOING_MESSAGE = /^[!-,.-~][ -~]{0,159}$/;
-const SEND_SCRIPT = ['on run argv', 'tell application "Messages"', 'set targetService to 1st account whose service type = iMessage',
-  'send (item 1 of argv) to participant (item 2 of argv) of targetService', 'end tell', 'end run'];
 const FINISH_AFTER_MS = 60_000;
 const VERIFY_LIMIT_WAIT_MS = 35_000;
 const VERIFY_LIMIT_POLL_MS = 3_000;
@@ -26,6 +24,7 @@ const SESSION_WAIT_MS = 600_000;
 export interface ExecResult { stdout: string }
 export interface OnboardDeps {
   exec(file: string, args: string[], timeoutMs: number): Promise<ExecResult>;
+  nativeSend?: (message: { from: string; to: string; text: string }) => Promise<{ from: string; to: string; acknowledged: boolean }>;
   fetch: typeof fetch;
   prompt(question: string): Promise<string>;
   now(): number;
@@ -322,15 +321,14 @@ function requireRecipient(session: Session, recipient: string) {
   if (session.recipient !== recipient) throw new OnboardError('recipient_proof_required', 'This onboarding does not confirm the selected number. Contact Chert support before continuing.');
 }
 
-async function sendFromMessages(deps: OnboardDeps, text: string, to: string) {
-  if (!OUTGOING_MESSAGE.test(text) || !E164.test(to)) throw invalid();
-  const args = [...SEND_SCRIPT.flatMap(line => ['-e', line]), text, to];
-  try { await deps.exec('osascript', args, 30_000); }
-  catch (error) {
-    const detail = `${(error as { stderr?: unknown }).stderr ?? ''}`;
-    if (/-1743|not authori[sz]ed/i.test(detail)) throw new OnboardError('messages_permission_denied', 'macOS blocked access to Messages. Allow it in System Settings > Privacy & Security > Automation, under your terminal app, then run this again.');
-    throw new OnboardError('messages_send_failed', 'Messages could not send the code. Open Messages, check you are signed in to iMessage, then run this again.');
-  }
+async function sendFromMessages(deps: OnboardDeps, text: string, to: string, from: string) {
+  if (!OUTGOING_MESSAGE.test(text) || !E164.test(to) || !E164.test(from)) throw invalid();
+  if (!deps.nativeSend) throw new OnboardError('native_sender_unavailable', 'Sender-specific native Messages transport is unavailable. Nothing was sent.');
+  let result;
+  try { result = await deps.nativeSend({ from, to, text }); }
+  catch { throw new OnboardError('messages_send_failed', 'Messages could not confirm the send. Do not retry until the send status is known.'); }
+  if (result?.acknowledged !== true || result.from !== from || result.to !== to)
+    throw new OnboardError('messages_send_failed', 'Messages could not confirm the selected sender. Do not retry until the send status is known.');
 }
 
 async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, selected: string[]): Promise<{ credential: SavedCredential; verified: string[] }> {
@@ -346,7 +344,7 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
       || challenges.length !== selected.length || selected.some(number => !challenges.some(c => c.number === number))
       || challenges.some(c => typeof c.message !== 'string' || !OUTGOING_MESSAGE.test(c.message))) throw invalid();
     for (const challenge of challenges) {
-      await sendFromMessages(deps, challenge.message as string, started.receiving_number);
+      await sendFromMessages(deps, challenge.message as string, started.receiving_number, challenge.number as string);
       emit({ code: 'login_code_sent', number: maskNumber(challenge.number as string), message: `Sent a sign-in code to Chert from Messages for ${maskNumber(challenge.number as string)}.` });
     }
     pending = { device_code: started.device_code, expires_at: deps.now() + started.expires_in * 1000, interval: started.interval, numbers: selected };
@@ -483,7 +481,7 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
         if (challenge.verified !== true) {
           if (typeof challenge.code !== 'string' || !/^\d{6}$/.test(challenge.code)) throw invalid();
           if (resume.fresh_proof === 'required') { resume.fresh_proof = 'requested'; saveResume(deps, origin, credential.project_id, resume); }
-          await sendFromMessages(deps, challenge.code, session.line.receiving_number);
+          await sendFromMessages(deps, challenge.code, session.line.receiving_number, recipient);
           emit({ code: 'verification_code_sent', number: maskNumber(recipient), message: `Sent a verification code from Messages for ${maskNumber(recipient)}. Chert will continue when it arrives.` });
         }
       }
