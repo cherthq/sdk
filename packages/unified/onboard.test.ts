@@ -48,6 +48,12 @@ function deps(): OnboardDeps {
       }
       throw new Error(`unexpected ${file}`);
     },
+    async nativeSend({ from, to, text }) {
+      if (world.execFail.osascript) throw new Error('send failed');
+      world.sent.push([from, text, to]);
+      if (text === CODE) world.verificationSent = true;
+      return { from, to, acknowledged: true };
+    },
     fetch: (async (input: URL, init: RequestInit) => {
       const path = new URL(input).pathname, body = init.body ? JSON.parse(String(init.body)) : undefined;
       world.calls.push({ path, body, headers: new Headers(init.headers), method: init.method ?? 'GET' });
@@ -182,20 +188,17 @@ test('choosing all sends one code per number', async () => {
   world.answers = ['all'];
   world.verified = [A, B];
   expect(await runOnboard(['--no-wire'], deps())).toBe(0);
-  const loginMessages = world.sent.map(args => args.at(-2));
-  expect(loginMessages.slice(0, 2)).toEqual([message(A), message(B)]);
+  expect(world.sent.slice(0, 2)).toEqual([[A, message(A), LINE], [B, message(B), LINE]]);
 });
 
-test('sends values as argv so metacharacters stay data', async () => {
+test('passes the selected sender and metacharacters as native data', async () => {
   const hostile = 'x" & (do shell script "id") & "`$(id)`;\'';
   world.responses['/api/v1/phone-logins'] = { status: 200, body: { data: { device_code: DEVICE, receiving_number: LINE, expires_in: 600, interval: 2, challenges: [{ number: A, message: hostile }] } } };
   expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
   const args = world.sent[0]!;
   expect(args.at(-2)).toBe(hostile);
   expect(args.at(-1)).toBe(LINE);
-  const script = args.slice(0, -2).join('\n');
-  expect(script).not.toContain('do shell script');
-  expect(script).toContain('send (item 1 of argv) to participant (item 2 of argv)');
+  expect(args[0]).toBe(A);
 });
 
 test('refuses server values that could be read as options or point at other numbers', async () => {
@@ -208,11 +211,29 @@ test('refuses server values that could be read as options or point at other numb
   expect(world.sent).toEqual([]);
 });
 
-test('automation denial names the setting and no sign-in is left behind', async () => {
-  world.execFail.osascript = { stderr: 'execution error: Not authorized to send Apple events to Messages. (-1743)' };
+test('native sender is required and a mismatched acknowledgement is refused', async () => {
+  const unavailable = deps();
+  delete unavailable.nativeSend;
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], unavailable)).toBe(1);
+  expect(failure().code).toBe('native_sender_unavailable');
+  expect(world.sent).toEqual([]);
+  for (const receipt of [
+    { from: B, to: LINE, acknowledged: true },
+    { from: A, to: B, acknowledged: true },
+    { from: A, to: LINE, acknowledged: false },
+  ]) {
+    const mismatch = deps();
+    mismatch.nativeSend = async () => receipt;
+    expect(await runOnboard(['--json', '--yes', '--no-wire'], mismatch)).toBe(1);
+    expect(failure().code).toBe('messages_send_failed');
+    expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
+  }
+});
+
+test('native send failure leaves no sign-in behind', async () => {
+  world.execFail.osascript = { stderr: 'not authorized' };
   expect(await run('--yes')).toBe(1);
-  expect(failure().code).toBe('messages_permission_denied');
-  expect(failure().error).toContain('Privacy & Security > Automation');
+  expect(failure().code).toBe('messages_send_failed');
   expect(existsSync(credentials())).toBe(false);
   expect(existsSync(join(world.home, '.chert', 'onboarding'))).toBe(false);
 });
@@ -281,17 +302,15 @@ test('sending a verification code does not start a demo without server confirmat
 });
 
 test('a failed second send reports the Messages error and never starts the demo', async () => {
-  for (const [stderr, code] of [['Not authorized (-1743)', 'messages_permission_denied'], ['send failed', 'messages_send_failed']]) {
-    const options = deps(), exec = options.exec;
-    options.exec = async (file, args, timeout) => {
-      if (file === 'osascript' && args.at(-2) === CODE) throw Object.assign(new Error('failed'), { stderr });
-      return exec(file, args, timeout);
-    };
-    expect(await runOnboard(['--json', '--yes', '--no-wire'], options)).toBe(1);
-    expect(failure().code).toBe(code);
-    expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
-    expect(records().some(r => r.code === 'verification_code_sent')).toBe(false);
-  }
+  const options = deps(), send = options.nativeSend!;
+  options.nativeSend = async message => {
+    if (message.text === CODE) throw new Error('send failed');
+    return send(message);
+  };
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], options)).toBe(1);
+  expect(failure().code).toBe('messages_send_failed');
+  expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
+  expect(records().some(r => r.code === 'verification_code_sent')).toBe(false);
 });
 
 test('a saved sign-in does not verify a newly selected number', async () => {
