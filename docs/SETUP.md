@@ -16,10 +16,20 @@ Coding agents can read the same material from [`llms.txt`](https://github.com/ch
 | Migrate from another iMessage provider SDK | `chert-sdk adopt` (ships in `@trychert/sdk`) |
 
 The SDKs and the FaceTime agent CLI are separate packages with separate commands.
-The SDK's `chert-sdk` CLI has no `login`, `onboard`, `new` or `dev` command.
+The SDK's `chert-sdk` CLI has no `login`, `new` or `dev` command. Mac
+[`chert-sdk onboard`](#automated-onboarding-on-a-mac) is unavailable.
 
 For Better Auth, see the [phone transport guide](BETTER_AUTH.md), included in
 npm 0.3.0. Existing email auth stays enabled alongside phone.
+
+## Automated onboarding on a Mac
+
+`chert-sdk onboard` is unavailable pending a sender-specific native IMCore
+integration. Messages aliases and AppleScript do not provide sender-specific
+sending. The command exits with `native_sender_unavailable`, including in
+`--json` mode, without starting setup. The published npm version 0.3.0 does not
+include this onboarding flow. For now, use the browser sign-in and credential
+setup below, or the separate [FaceTime agent CLI](#put-a-livekit-agent-on-a-facetime-line).
 
 ## 1. Install
 
@@ -54,9 +64,8 @@ Credentials are per service and are not interchangeable.
 | `CHERT_FACETIME_TOKEN` | FaceTime | A project API key (`ftk_…`): sign in at https://facetime.trychert.com, open **Developer**, then **Project API keys** → **Create API key** (project owners and admins). The key is shown once. |
 | `CHERT_PROJECT_ID` | FaceTime (required), iMessage (context only) | Your project UUID. The dashboard does not display it yet: install the agent CLI (`npm install -g @trychert/facetime@beta`), run `chert login`, then `chert whoami --json` and copy `project_id`. |
 
-Both credentials need an account with Chert. A browser is required once, to
-sign in and create the key; nothing in this guide can create an account or a key
-from the terminal.
+Both credentials need an account with Chert. Creating a project API key requires
+a browser. `chert-sdk onboard` is unavailable and cannot create a login.
 
 A project API key works for lines, workers, calls and assistants within the
 scopes you give it. It is not a person, so it cannot read a signed-in identity:

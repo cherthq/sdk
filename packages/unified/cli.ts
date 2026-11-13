@@ -8,6 +8,7 @@ import { SDK_VERSION } from '../adopt/src/providers.js';
 const DOCS = 'https://github.com/cherthq/sdk/blob/main';
 
 const help = `chert-sdk — unified Chert SDK CLI
+  chert-sdk onboard [--numbers +A,+B|1,2|all] [--yes] [--json] [--skip-demo] [--no-wire]
   chert-sdk imessage send --phone +COUNTRYNUMBER --body TEXT --idempotency-key KEY --confirm
   chert-sdk facetime status | lines | workers
   chert-sdk billing status (not available yet)
@@ -15,6 +16,9 @@ const help = `chert-sdk — unified Chert SDK CLI
   chert-sdk billing buy --plan shared|dedicated --idempotency-key KEY --confirm (not available yet)
   chert-sdk adopt [path] [--write] [--install] [--json]
   chert-sdk context [--offline]
+
+onboard is unavailable pending a sender-specific native IMCore integration. Use the
+browser sign-in and credential setup in the setup guide instead.
 
 context prints SDK, credential, account and documentation context for coding
 agents. It reads FaceTime lines, and identity with a CLI login (not a project API
@@ -34,8 +38,8 @@ Credentials by surface (service-specific, not interchangeable):
 iMessage defaults to https://console.trychert.com; CHERT_BASE_URL optionally overrides it.
 FaceTime defaults to https://facetime.trychert.com; CHERT_FACETIME_URL optionally
 overrides the origin.
-FaceTime commands inspect existing access/lines; no calls, media relay,
-concierge onboarding or automatic shared-line allocation is implemented.
+FaceTime commands inspect existing access/lines; they place no calls and relay no
+media. Onboarding is currently unavailable.
 The billing commands are not available yet: the backend refuses CLI credentials,
 so today billing only works from a signed-in browser session. Once available,
 buy charges the saved card and is refused while a subscription is live; when a
@@ -56,6 +60,12 @@ async function main() {
   const [channel, command, ...args] = process.argv.slice(2);
   if (channel === 'adopt') { process.exitCode = adopt(process.argv.slice(3)); return; }
   if (!channel || process.argv.includes('--help') || process.argv.includes('-h')) { console.log(help); return; }
+  if (channel === 'onboard') {
+    const message = 'Onboarding is unavailable pending a sender-specific native IMCore integration. Use browser sign-in and credential setup in the setup guide: ' + `${DOCS}/docs/SETUP.md`;
+    console.error(process.argv.slice(3).includes('--json') ? JSON.stringify({ error: message, code: 'native_sender_unavailable' }) : `native_sender_unavailable: ${message}`);
+    process.exitCode = 1;
+    return;
+  }
   // Reject unknown commands before asking for credentials, so typos are not reported as missing configuration.
   const unknown = channel === 'context' ? (command !== undefined && command !== '--offline') || args.length > 0
     : channel === 'imessage' ? command !== 'send'
@@ -138,7 +148,7 @@ async function context(env: NodeJS.ProcessEnv, offline: boolean) {
     },
     missing: ['CHERT_PROJECT_ID', 'CHERT_API_KEY', 'CHERT_FACETIME_TOKEN'].filter(name => !set(name)),
     account: { facetime: offline ? 'skipped' : facetimeAccount ?? 'not_configured', imessage: 'not_inspected' },
-    commands: ['imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status (not available yet)', 'billing card (not available yet)', 'billing buy (not available yet)', 'billing cancel (not available yet)', 'adopt', 'context'],
+    commands: ['onboard (unavailable)', 'imessage send', 'facetime status', 'facetime lines', 'facetime workers', 'billing status (not available yet)', 'billing card (not available yet)', 'billing buy (not available yet)', 'billing cancel (not available yet)', 'adopt', 'context'],
     docs: { setup: `${DOCS}/docs/SETUP.md`, llms: `${DOCS}/llms.txt`, ...(existsSync(llmsFile) ? { llmsFile } : {}), readme: `${DOCS}/README.md`,
       compatibility: `${DOCS}/COMPATIBILITY.md` },
     agentCli: { package: '@trychert/facetime', bin: 'chert', use: 'Browser login and putting a LiveKit voice or video agent on a FaceTime line' },
