@@ -456,6 +456,15 @@ test('the demo never calls a number that belongs to another account', async () =
   expect(records().find(r => r.code === 'demo_requested')).toMatchObject({ number: '•••0199' });
 });
 
+test('an approval with no linked numbers preserves the pending login and does not save a sign-in', async () => {
+  world.unlinked = [A];
+  expect(await run('--yes', '--no-wire')).toBe(1);
+  expect(existsSync(credentials())).toBe(false);
+  expect(readdirNames(join(world.home, '.chert', 'onboarding')).some(name => name.startsWith('phone-login-'))).toBe(true);
+  expect(records().some(record => record.code === 'signed_in')).toBe(false);
+  expect(world.calls.some(call => call.path === '/api/v1/onboarding')).toBe(false);
+});
+
 test('a saved sign-in resumes the linked second number when both remain selected', async () => {
   world.aliases = [A, B];
   world.verified = [B];

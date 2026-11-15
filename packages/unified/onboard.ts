@@ -389,18 +389,18 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
 function finishLogin(deps: OnboardDeps, origin: string, file: string, emit: Emit, pending: PendingLogin, answer: { access_token?: unknown; project_id?: unknown; verified_numbers?: unknown; unlinked_numbers?: unknown; device_name?: unknown; expires_in?: unknown }) {
   if (typeof answer.access_token !== 'string' || !CREDENTIAL.test(answer.access_token) || typeof answer.project_id !== 'string' || !UUID.test(answer.project_id)
     || typeof answer.expires_in !== 'number' || !Array.isArray(answer.verified_numbers) || !answer.verified_numbers.length || answer.verified_numbers.some(number => !pending.numbers.includes(number as string))) throw invalid();
-  const credential: SavedCredential = { access_token: answer.access_token, expires_at: deps.now() + answer.expires_in * 1000, kind: 'cli', project_id: answer.project_id, device_name: typeof answer.device_name === 'string' ? answer.device_name.slice(0, 200) : deviceName(deps), origin };
-  writeOwnerOnly(chertHome(deps), 'credentials.json', JSON.stringify(credential) + '\n');
-  rmSync(file, { force: true });
   const verified = answer.verified_numbers as string[];
   const unverified = pending.numbers.filter(number => !verified.includes(number));
   const unlinked = Array.isArray(answer.unlinked_numbers) ? answer.unlinked_numbers.filter((n): n is string => typeof n === 'string') : [];
+  const linked = verified.filter(number => !unlinked.includes(number));
+  if (!linked.length) throw invalid();
+  const credential: SavedCredential = { access_token: answer.access_token, expires_at: deps.now() + answer.expires_in * 1000, kind: 'cli', project_id: answer.project_id, device_name: typeof answer.device_name === 'string' ? answer.device_name.slice(0, 200) : deviceName(deps), origin };
+  writeOwnerOnly(chertHome(deps), 'credentials.json', JSON.stringify(credential) + '\n');
+  rmSync(file, { force: true });
   emit({ code: 'signed_in', project_id: answer.project_id, verified: verified.map(maskNumber), unverified: unverified.map(maskNumber), unlinked: unlinked.map(maskNumber),
     message: `Signed in with ${verified.map(maskNumber).join(' and ')}.`
       + (unverified.length ? ` ${unverified.map(maskNumber).join(' and ')} did not verify: Messages sends from one number at a time, set under Messages > Settings > iMessage > Start New Conversations From. Contact Chert support to add another number.` : '')
       + (unlinked.length ? ` ${unlinked.map(maskNumber).join(' and ')} already belongs to another Chert account, so it was not added.` : '') });
-  const linked = verified.filter(number => !unlinked.includes(number));
-  if (!linked.length) throw invalid();
   return { credential, verified: linked };
 }
 
