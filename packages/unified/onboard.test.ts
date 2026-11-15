@@ -507,6 +507,24 @@ test('a timed out login resumes without starting or sending another challenge', 
   expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(1);
 });
 
+test('an invalid saved sign-in attempt fails closed without starting another login', async () => {
+  world.verified = [];
+  expect(await run('--yes', '--no-wire')).toBe(1);
+  const dir = join(world.home, '.chert', 'onboarding');
+  const file = join(dir, readdirNames(dir).find(name => name.startsWith('phone-login-'))!);
+  const pending = JSON.parse(readFileSync(file, 'utf8'));
+  for (const invalid of [{}, { ...pending, device_code: 'bad' }, { ...pending, interval: 'bad' }, { ...pending, numbers: [] }]) {
+    const contents = JSON.stringify(invalid);
+    writeFileSync(file, contents);
+    world.calls = []; world.sent = []; world.err = [];
+    expect(await run('--yes', '--no-wire')).toBe(1);
+    expect(failure().code).toBe('unsafe_file');
+    expect(world.calls).toEqual([]);
+    expect(world.sent).toEqual([]);
+    expect(readFileSync(file, 'utf8')).toBe(contents);
+  }
+});
+
 test('a crash after sending resumes the same login without sending again, and keeps no code', async () => {
   const first = deps();
   const fetcher = first.fetch;

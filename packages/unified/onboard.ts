@@ -150,7 +150,12 @@ interface PendingLogin { device_code: string; expires_at: number; interval: numb
 const pendingFile = (deps: OnboardDeps, origin: string) => join(chertHome(deps), 'onboarding', `phone-login-${digest([origin])}.json`);
 function loadPending(deps: OnboardDeps, origin: string): PendingLogin | undefined {
   const value = readOwnerOnly(pendingFile(deps, origin)) as Partial<PendingLogin> | undefined;
-  if (!value || typeof value.device_code !== 'string' || typeof value.expires_at !== 'number' || typeof value.interval !== 'number' || !Array.isArray(value.numbers)) return undefined;
+  if (value === undefined) return undefined;
+  if (!value || typeof value.device_code !== 'string' || !DEVICE_CODE.test(value.device_code)
+    || typeof value.expires_at !== 'number' || !Number.isFinite(value.expires_at)
+    || typeof value.interval !== 'number' || !Number.isFinite(value.interval)
+    || !Array.isArray(value.numbers) || !value.numbers.length || value.numbers.some(number => typeof number !== 'string' || !E164.test(number)))
+    throw new OnboardError('unsafe_file', 'The saved sign-in attempt is invalid. Contact Chert support before continuing.');
   return value.expires_at > deps.now() ? value as PendingLogin : undefined;
 }
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
