@@ -227,15 +227,86 @@ test('native sender is required and a mismatched acknowledgement is refused', as
     expect(await runOnboard(['--json', '--yes', '--no-wire'], mismatch)).toBe(1);
     expect(failure().code).toBe('messages_send_failed');
     expect(world.calls.some(call => call.path.endsWith('/demo'))).toBe(false);
+    rmSync(join(world.home, '.chert'), { recursive: true, force: true });
   }
 });
 
-test('native send failure leaves no sign-in behind', async () => {
+test('ambiguous native send retains the login for reconciliation', async () => {
   world.execFail.osascript = { stderr: 'not authorized' };
   expect(await run('--yes')).toBe(1);
   expect(failure().code).toBe('messages_send_failed');
   expect(existsSync(credentials())).toBe(false);
-  expect(existsSync(join(world.home, '.chert', 'onboarding'))).toBe(false);
+  expect(readdirNames(join(world.home, '.chert', 'onboarding')).some(name => name.startsWith('phone-login-'))).toBe(true);
+  delete world.execFail.osascript;
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(1);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(0);
+});
+
+test('concurrent onboarding cannot create a second login or send', async () => {
+  const first = deps();
+  const fetcher = first.fetch;
+  let release!: () => void;
+  let entered!: () => void;
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  const started = new Promise<void>(resolve => { entered = resolve; });
+  first.fetch = (async (input: URL, init: RequestInit) => {
+    if (new URL(input).pathname === '/api/v1/phone-logins') { entered(); await waiting; }
+    return fetcher(input, init);
+  }) as unknown as typeof fetch;
+  const running = runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], first);
+  await started;
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(1);
+  expect(failure().code).toBe('onboarding_in_progress');
+  release();
+  expect(await running).toBe(0);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(1);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(1);
+});
+
+test('an interrupted onboarding lock is not automatically cleared', async () => {
+  const dir = join(world.home, '.chert', 'onboarding');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'onboarding.lock'), '', { mode: 0o600 });
+  expect(await run('--yes', '--no-wire')).toBe(1);
+  expect(failure().code).toBe('onboarding_in_progress');
+  expect(world.sent).toHaveLength(0);
+  expect(existsSync(join(dir, 'onboarding.lock'))).toBe(true);
+});
+
+test('an ambiguous verification send is not sent again on resume', async () => {
+  const first = deps();
+  const send = first.nativeSend!;
+  first.nativeSend = async request => {
+    const receipt = await send(request);
+    if (request.text === CODE) throw new Error('receipt lost');
+    return receipt;
+  };
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], first)).toBe(1);
+  expect(failure().code).toBe('messages_send_failed');
+  expect(world.sent.filter(([, text]) => text === CODE)).toHaveLength(1);
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
+  expect(world.sent.filter(([, text]) => text === CODE)).toHaveLength(1);
+  expect(world.calls.filter(call => call.path.endsWith('/verify'))).toHaveLength(1);
+});
+
+test('an older session without send state is reconciled without another verification send', async () => {
+  const first = deps();
+  const send = first.nativeSend!;
+  first.nativeSend = async request => {
+    if (request.text === CODE) throw new Error('unknown outcome');
+    return send(request);
+  };
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], first)).toBe(1);
+  const file = join(world.home, '.chert', 'onboarding', `${createHash('sha256').update(JSON.stringify(['https://facetime.trychert.com', PROJECT])).digest('hex')}.json`);
+  const legacy = JSON.parse(readFileSync(file, 'utf8'));
+  delete legacy.verification_send;
+  writeFileSync(file, JSON.stringify(legacy), { mode: 0o600 });
+  world.calls = [];
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(1);
+  expect(failure().code).toBe('verification_timeout');
+  expect(world.calls.some(call => call.path.endsWith('/verify'))).toBe(false);
+  expect(world.sent.filter(([, text]) => text === CODE)).toHaveLength(0);
 });
 
 test('other send failures do not repeat what Messages said', async () => {
@@ -350,7 +421,7 @@ test('saves the sign-in in the format and place the chert CLI reads', async () =
   expect(statSync(credentials()).mode & 0o777).toBe(0o600);
   expect(statSync(join(world.home, '.chert')).mode & 0o777).toBe(0o700);
   const resumeFile = join(world.home, '.chert', 'onboarding', `${createHash('sha256').update(JSON.stringify(['https://facetime.trychert.com', PROJECT])).digest('hex')}.json`);
-  expect(JSON.parse(readFileSync(resumeFile, 'utf8'))).toEqual({ request_key: expect.any(String), binding: expect.any(String), session_id: SESSION });
+  expect(JSON.parse(readFileSync(resumeFile, 'utf8'))).toEqual({ request_key: expect.any(String), binding: expect.any(String), session_id: SESSION, verification_send: 'acknowledged' });
 });
 
 test('a number Messages did not send from is reported, not claimed', async () => {
@@ -424,14 +495,16 @@ test('two linked numbers say which one is called', async () => {
   expect(records().find(r => r.code === 'demo_requested')!.message).toContain('Chert is calling •••0100');
 });
 
-test('no verified number times out, asks for the sender setting and starts fresh next time', async () => {
+test('a timed out login resumes without starting or sending another challenge', async () => {
   world.verified = [];
   expect(await run('--yes')).toBe(1);
   expect(failure().code).toBe('verification_timeout');
-  expect(failure().error).toContain('Start New Conversations From');
   expect(world.calls.filter(call => call.path.endsWith('/token')).some(call => (call.body as { finish?: boolean }).finish)).toBe(true);
   expect(existsSync(credentials())).toBe(false);
-  expect(readdirNames(join(world.home, '.chert', 'onboarding'))).toEqual([]);
+  expect(readdirNames(join(world.home, '.chert', 'onboarding')).some(name => name.startsWith('phone-login-'))).toBe(true);
+  expect(await run('--yes')).toBe(1);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(1);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(1);
 });
 
 test('a crash after sending resumes the same login without sending again, and keeps no code', async () => {

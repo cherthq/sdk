@@ -126,6 +126,8 @@ function writeOwnerOnly(dir: string, name: string, contents: string) {
   try {
     try { writeFileSync(fd, contents); fsyncSync(fd); } finally { closeSync(fd); }
     renameSync(temporary, file);
+    const directory = openSync(dir, 'r');
+    try { fsyncSync(directory); } finally { closeSync(directory); }
   } finally { rmSync(temporary, { force: true }); }
 }
 function readOwnerOnly(path: string): unknown {
@@ -153,7 +155,7 @@ function loadPending(deps: OnboardDeps, origin: string): PendingLogin | undefine
 }
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-interface OnboardingResume { request_key: string; binding: string; session_id?: string; previous_session_id?: string; verification_generation?: number; fresh_proof?: 'required' | 'requested' }
+interface OnboardingResume { request_key: string; binding: string; session_id?: string; previous_session_id?: string; verification_generation?: number; fresh_proof?: 'required' | 'requested'; verification_send?: 'not_started' | 'uncertain' | 'acknowledged' }
 const resumeName = (origin: string, project: string) => `${digest([origin, project])}.json`;
 function loadResume(deps: OnboardDeps, origin: string, project: string, token: string, recipient: string): OnboardingResume {
   const dir = join(chertHome(deps), 'onboarding'), value = readOwnerOnly(join(dir, resumeName(origin, project))) as Partial<OnboardingResume> | undefined;
@@ -163,11 +165,12 @@ function loadResume(deps: OnboardDeps, origin: string, project: string, token: s
       || (value.session_id !== undefined && (typeof value.session_id !== 'string' || !UUID.test(value.session_id)))
       || (value.previous_session_id !== undefined && (typeof value.previous_session_id !== 'string' || !UUID.test(value.previous_session_id)))
       || (value.verification_generation !== undefined && (!Number.isSafeInteger(value.verification_generation) || value.verification_generation < 0))
-      || (value.fresh_proof !== undefined && value.fresh_proof !== 'required' && value.fresh_proof !== 'requested'))
+      || (value.fresh_proof !== undefined && value.fresh_proof !== 'required' && value.fresh_proof !== 'requested')
+      || (value.verification_send !== undefined && value.verification_send !== 'not_started' && value.verification_send !== 'uncertain' && value.verification_send !== 'acknowledged'))
       throw new OnboardError('recipient_proof_required', 'This saved onboarding cannot be safely continued with this sign-in and number. Contact Chert support before continuing.');
-    return value as OnboardingResume;
+    return { ...value, ...(!value.session_id && !value.verification_send ? { verification_send: 'not_started' as const } : {}) } as OnboardingResume;
   }
-  const created = { request_key: randomUUID(), binding };
+  const created: OnboardingResume = { request_key: randomUUID(), binding, verification_send: 'not_started' };
   saveResume(deps, origin, project, created);
   return created;
 }
@@ -334,7 +337,8 @@ async function sendFromMessages(deps: OnboardDeps, text: string, to: string, fro
 async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, selected: string[]): Promise<{ credential: SavedCredential; verified: string[] }> {
   let pending = loadPending(deps, origin);
   const file = pendingFile(deps, origin);
-  if (pending && (pending.numbers.length !== selected.length || pending.numbers.some(number => !selected.includes(number)))) { rmSync(file, { force: true }); pending = undefined; }
+  if (pending && (pending.numbers.length !== selected.length || pending.numbers.some(number => !selected.includes(number))))
+    throw new OnboardError('login_in_progress', 'A sign-in for different numbers is still in progress. Wait for it to expire before starting another.');
   if (!pending) {
     const started = await api.require('/api/v1/phone-logins', { body: { device_name: deviceName(deps), numbers: selected } }) as
       { device_code?: unknown; receiving_number?: unknown; challenges?: unknown; expires_in?: unknown; interval?: unknown };
@@ -343,12 +347,13 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
       || !Array.isArray(challenges) || typeof started.expires_in !== 'number' || typeof started.interval !== 'number'
       || challenges.length !== selected.length || selected.some(number => !challenges.some(c => c.number === number))
       || challenges.some(c => typeof c.message !== 'string' || !OUTGOING_MESSAGE.test(c.message))) throw invalid();
+    if (!deps.nativeSend) throw new OnboardError('native_sender_unavailable', 'Sender-specific native Messages transport is unavailable. Nothing was sent.');
+    pending = { device_code: started.device_code, expires_at: deps.now() + started.expires_in * 1000, interval: started.interval, numbers: selected };
+    writeOwnerOnly(join(chertHome(deps), 'onboarding'), `phone-login-${digest([origin])}.json`, JSON.stringify(pending) + '\n');
     for (const challenge of challenges) {
       await sendFromMessages(deps, challenge.message as string, started.receiving_number, challenge.number as string);
       emit({ code: 'login_code_sent', number: maskNumber(challenge.number as string), message: `Sent a sign-in code to Chert from Messages for ${maskNumber(challenge.number as string)}.` });
     }
-    pending = { device_code: started.device_code, expires_at: deps.now() + started.expires_in * 1000, interval: started.interval, numbers: selected };
-    writeOwnerOnly(join(chertHome(deps), 'onboarding'), `phone-login-${digest([origin])}.json`, JSON.stringify(pending) + '\n');
   } else emit({ code: 'login_resumed', message: 'Continuing the sign-in already in progress.' });
 
   const begun = deps.now(), deadline = Math.min(pending.expires_at, begun + LOGIN_WAIT_MS);
@@ -370,8 +375,7 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
       }
     }
     if (deps.now() >= deadline) {
-      rmSync(file, { force: true });
-      throw new OnboardError('verification_timeout', 'Chert did not receive a code from your number. Messages sends from the number under Messages > Settings > iMessage > Start New Conversations From, and a script cannot choose it. Set it to the number you picked, then run this again.');
+      throw new OnboardError('verification_timeout', 'Chert did not confirm sign-in yet. The existing attempt will be resumed until it expires; do not send another code.');
     }
     await deps.sleep(interval);
   }
@@ -449,7 +453,7 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
   if (session.status === 'awaiting_verification') {
     let wait = 0;
     if (session.verification_received === true) requireRecipient(session, recipient);
-    else {
+    else if (resume.verification_send === 'not_started' || (!resume.verification_send && !resume.session_id)) {
       const verify = () => requestVerification(deps, api, emit, `/api/v1/onboarding/${session.id}/verify`, {
         ...auth, body: { recipient }, key: `${resume.request_key}:verify${resume.verification_generation ? `:${resume.verification_generation}` : ''}`,
       });
@@ -481,7 +485,12 @@ async function onboarding(deps: OnboardDeps, api: Api, origin: string, emit: Emi
         if (challenge.verified !== true) {
           if (typeof challenge.code !== 'string' || !/^\d{6}$/.test(challenge.code)) throw invalid();
           if (resume.fresh_proof === 'required') { resume.fresh_proof = 'requested'; saveResume(deps, origin, credential.project_id, resume); }
+          if (!deps.nativeSend) throw new OnboardError('native_sender_unavailable', 'Sender-specific native Messages transport is unavailable. Nothing was sent.');
+          resume.verification_send = 'uncertain';
+          saveResume(deps, origin, credential.project_id, resume);
           await sendFromMessages(deps, challenge.code, session.line.receiving_number, recipient);
+          resume.verification_send = 'acknowledged';
+          saveResume(deps, origin, credential.project_id, resume);
           emit({ code: 'verification_code_sent', number: maskNumber(recipient), message: `Sent a verification code from Messages for ${maskNumber(recipient)}. Chert will continue when it arrives.` });
         }
       }
@@ -624,6 +633,7 @@ async function choose(deps: OnboardDeps, detected: string[], flags: { numbers?: 
 }
 
 export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps()): Promise<number> {
+  let lock: string | undefined;
   let json = args.includes('--json');
   const emit: Emit = record => { deps.out(json ? JSON.stringify(record) : record.message); };
   try {
@@ -638,6 +648,18 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     const chosen = values.numbers !== undefined ? { numbers: values.numbers } : {};
     if (!detected.length) throw noNumbers();
     const selected = await choose(deps, detected, { ...chosen, yes: Boolean(values.yes), json });
+    const dir = join(chertHome(deps), 'onboarding');
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const lockPath = join(dir, 'onboarding.lock');
+    try { closeSync(openSync(lockPath, 'wx', 0o600)); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST')
+        throw new OnboardError('onboarding_in_progress', 'Another onboarding may be running or was interrupted. Contact Chert support before clearing its lock.');
+      throw error;
+    }
+    lock = lockPath;
+    const lockDirectory = openSync(dir, 'r');
+    try { fsyncSync(lockDirectory); } finally { closeSync(lockDirectory); }
     const api = new Api(deps, origin);
     const saved = loadCredential(deps, origin);
     const signedIn = saved ? { credential: saved, verified: [] as string[] } : await login(deps, api, origin, emit, selected);
@@ -669,5 +691,7 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     const known = error instanceof OnboardError ? error : new OnboardError('onboarding_failed', 'Onboarding stopped. Nothing further was sent. Run chert-sdk onboard again to continue.');
     deps.err(json ? JSON.stringify({ code: known.code, error: known.message, ...known.detail }) : known.message);
     return 1;
+  } finally {
+    if (lock) rmSync(lock, { force: true });
   }
 }
