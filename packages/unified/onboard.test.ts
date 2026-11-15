@@ -243,6 +243,82 @@ test('ambiguous native send retains the login for reconciliation', async () => {
   expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(0);
 });
 
+test('resumes only untouched login challenges after an uncertain send', async () => {
+  world.aliases = [A, B];
+  const first = deps();
+  first.nativeSend = async ({ from, to, text }) => {
+    world.sent.push([from, text, to]);
+    throw new Error('unknown send outcome');
+  };
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], first)).toBe(1);
+  const dir = join(world.home, '.chert', 'onboarding');
+  const file = join(dir, readdirNames(dir).find(name => name.startsWith('phone-login-'))!);
+  const saved = JSON.parse(readFileSync(file, 'utf8'));
+  expect(saved.challenges).toEqual([{ number: A, state: 'uncertain' }, { number: B, state: 'not_started', message: message(B) }]);
+  expect(statSync(file).mode & 0o777).toBe(0o600);
+  expect(statSync(dir).mode & 0o077).toBe(0);
+  expect(everything()).not.toContain(message(A));
+  expect(everything()).not.toContain(message(B));
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN')).map(([from]) => from)).toEqual([A, B]);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(1);
+});
+
+test('resumes untouched challenges when the native sender was unavailable', async () => {
+  world.aliases = [A, B];
+  const first = deps();
+  delete first.nativeSend;
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], first)).toBe(1);
+  expect(failure().code).toBe('native_sender_unavailable');
+  expect(world.sent).toEqual([]);
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN')).map(([from]) => from)).toEqual([A, B]);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(1);
+});
+
+test('a renamed Mac can resume an untouched challenge', async () => {
+  world.aliases = [A, B];
+  const first = deps();
+  delete first.nativeSend;
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], first)).toBe(1);
+  const resumed = deps();
+  resumed.deviceName = 'Renamed Mac';
+  expect(await runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], resumed)).toBe(0);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(1);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN')).map(([from]) => from)).toEqual([A, B]);
+});
+
+test('an expired attempt on a renamed Mac permits a fresh login', async () => {
+  const first = deps();
+  delete first.nativeSend;
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], first)).toBe(1);
+  world.now += 601_000;
+  const resumed = deps();
+  resumed.deviceName = 'Renamed Mac';
+  expect(await runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], resumed)).toBe(0);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(2);
+});
+
+test('concurrent recovery cannot duplicate an untouched challenge', async () => {
+  world.aliases = [A, B];
+  const first = deps();
+  first.nativeSend = async () => { throw new Error('uncertain'); };
+  expect(await runOnboard(['--json', '--yes', '--no-wire'], first)).toBe(1);
+  const recovering = deps();
+  const send = recovering.nativeSend!;
+  let entered!: () => void, release!: () => void;
+  const started = new Promise<void>(resolve => { entered = resolve; });
+  const wait = new Promise<void>(resolve => { release = resolve; });
+  recovering.nativeSend = async message => { entered(); await wait; return send(message); };
+  const running = runOnboard(['--json', '--yes', '--no-wire', '--skip-demo'], recovering);
+  await started;
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(1);
+  expect(failure().code).toBe('onboarding_in_progress');
+  release();
+  expect(await running).toBe(0);
+  expect(world.sent.filter(([, text]) => text === message(B))).toHaveLength(1);
+});
+
 test('concurrent onboarding cannot create a second login or send', async () => {
   const first = deps();
   const fetcher = first.fetch;
@@ -268,10 +344,39 @@ test('an interrupted onboarding lock is not automatically cleared', async () => 
   const dir = join(world.home, '.chert', 'onboarding');
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'onboarding.lock'), '', { mode: 0o600 });
+  const temp = join(dir, `phone-login-${'a'.repeat(64)}.json.123.22222222-2222-4222-8222-222222222222.tmp`);
+  writeFileSync(temp, message(A), { mode: 0o600 });
   expect(await run('--yes', '--no-wire')).toBe(1);
   expect(failure().code).toBe('onboarding_in_progress');
   expect(world.sent).toHaveLength(0);
   expect(existsSync(join(dir, 'onboarding.lock'))).toBe(true);
+  expect(existsSync(temp)).toBe(true);
+});
+
+test('cleans only owned login temporary files after acquiring the lock', async () => {
+  const dir = join(world.home, '.chert', 'onboarding');
+  mkdirSync(dir, { recursive: true });
+  const temp = join(dir, `phone-login-${'a'.repeat(64)}.json.123.22222222-2222-4222-8222-222222222222.tmp`);
+  const other = join(dir, 'other.tmp');
+  writeFileSync(temp, message(A), { mode: 0o600 });
+  writeFileSync(other, 'keep', { mode: 0o600 });
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
+  expect(existsSync(temp)).toBe(false);
+  expect(readFileSync(other, 'utf8')).toBe('keep');
+  expect(everything()).not.toContain(message(A));
+});
+
+test('refuses an unsafe matching login temporary file without following it', async () => {
+  const dir = join(world.home, '.chert', 'onboarding');
+  mkdirSync(dir, { recursive: true });
+  const target = join(root, 'target');
+  const temp = join(dir, `phone-login-${'a'.repeat(64)}.json.123.22222222-2222-4222-8222-222222222222.tmp`);
+  writeFileSync(target, 'keep');
+  symlinkSync(target, temp);
+  expect(await run('--yes', '--no-wire')).toBe(1);
+  expect(failure().code).toBe('unsafe_file');
+  expect(readFileSync(target, 'utf8')).toBe('keep');
+  expect(world.calls).toEqual([]);
 });
 
 test('an ambiguous verification send is not sent again on resume', async () => {
@@ -516,13 +621,39 @@ test('a timed out login resumes without starting or sending another challenge', 
   expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(1);
 });
 
+test('an active legacy sign-in is polled without starting or sending again', async () => {
+  const dir = join(world.home, '.chert', 'onboarding');
+  mkdirSync(dir, { recursive: true });
+  const name = `phone-login-${createHash('sha256').update(JSON.stringify(['https://facetime.trychert.com'])).digest('hex')}.json`;
+  writeFileSync(join(dir, name), JSON.stringify({ device_code: DEVICE, expires_at: world.now + 60_000, interval: 2, numbers: [A] }), { mode: 0o600 });
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(0);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins/token').map(call => call.body)).toEqual([{ device_code: DEVICE }]);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(0);
+});
+
+test('an expired legacy sign-in permits a fresh login', async () => {
+  const dir = join(world.home, '.chert', 'onboarding');
+  mkdirSync(dir, { recursive: true });
+  const name = `phone-login-${createHash('sha256').update(JSON.stringify(['https://facetime.trychert.com'])).digest('hex')}.json`;
+  writeFileSync(join(dir, name), JSON.stringify({ device_code: DEVICE, expires_at: world.now, interval: 2, numbers: [A] }), { mode: 0o600 });
+  expect(await run('--yes', '--no-wire', '--skip-demo')).toBe(0);
+  expect(world.calls.filter(call => call.path === '/api/v1/phone-logins')).toHaveLength(1);
+  expect(world.sent.filter(([, text]) => text.startsWith('CHERT-LOGIN'))).toHaveLength(1);
+});
+
 test('an invalid saved sign-in attempt fails closed without starting another login', async () => {
   world.verified = [];
   expect(await run('--yes', '--no-wire')).toBe(1);
   const dir = join(world.home, '.chert', 'onboarding');
   const file = join(dir, readdirNames(dir).find(name => name.startsWith('phone-login-'))!);
   const pending = JSON.parse(readFileSync(file, 'utf8'));
-  for (const invalid of [{}, { ...pending, device_code: 'bad' }, { ...pending, interval: 'bad' }, { ...pending, numbers: [] }]) {
+  for (const invalid of [{}, { ...pending, device_code: 'bad' }, { ...pending, interval: 'bad' }, { ...pending, numbers: [] },
+    { device_code: pending.device_code, expires_at: pending.expires_at, interval: pending.interval, numbers: pending.numbers, challenges: [] },
+    { ...pending, device_code: `fpl_${'e'.repeat(43)}` }, { ...pending, receiving_number: B },
+    { ...pending, challenges: [{ number: B, state: 'not_started', message: message(B) }] },
+    { ...pending, challenges: [{ number: A, state: 'unknown' }] },
+    { ...pending, challenges: [{ number: A, state: 'uncertain', message: message(A) }] }]) {
     const contents = JSON.stringify(invalid);
     writeFileSync(file, contents);
     world.calls = []; world.sent = []; world.err = [];

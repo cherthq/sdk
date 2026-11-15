@@ -146,15 +146,31 @@ function loadCredential(deps: OnboardDeps, origin: string): SavedCredential | un
   throw new OnboardError('existing_signin_conflict', 'This computer is already signed in to Chert another way. Run chert logout, or set CHERT_HOME to another folder, then run this again.');
 }
 
-interface PendingLogin { device_code: string; expires_at: number; interval: number; numbers: string[] }
+interface LoginBase { device_code: string; expires_at: number; interval: number; numbers: string[] }
+interface PendingLogin extends LoginBase {
+  version: 1; binding: string; receiving_number: string;
+  challenges: ({ number: string; state: 'not_started'; message: string } | { number: string; state: 'uncertain' | 'acknowledged' })[];
+}
+type SavedLogin = PendingLogin | (LoginBase & { version?: never });
 const pendingFile = (deps: OnboardDeps, origin: string) => join(chertHome(deps), 'onboarding', `phone-login-${digest([origin])}.json`);
-function loadPending(deps: OnboardDeps, origin: string): PendingLogin | undefined {
+const pendingBinding = (origin: string, pending: PendingLogin) => digest([origin, process.getuid?.(), pending.device_code, pending.receiving_number, pending.numbers]);
+function loadPending(deps: OnboardDeps, origin: string): SavedLogin | undefined {
   const value = readOwnerOnly(pendingFile(deps, origin)) as Partial<PendingLogin> | undefined;
   if (value === undefined) return undefined;
   if (!value || typeof value.device_code !== 'string' || !DEVICE_CODE.test(value.device_code)
     || typeof value.expires_at !== 'number' || !Number.isFinite(value.expires_at)
-    || typeof value.interval !== 'number' || !Number.isFinite(value.interval)
-    || !Array.isArray(value.numbers) || !value.numbers.length || value.numbers.some(number => typeof number !== 'string' || !E164.test(number)))
+    || typeof value.interval !== 'number' || !Number.isFinite(value.interval) || value.interval <= 0
+    || !Array.isArray(value.numbers) || !value.numbers.length || value.numbers.some(number => typeof number !== 'string' || !E164.test(number))
+    || new Set(value.numbers).size !== value.numbers.length)
+    throw new OnboardError('unsafe_file', 'The saved sign-in attempt is invalid. Contact Chert support before continuing.');
+  if (value.version === undefined && Object.keys(value).every(key => ['device_code', 'expires_at', 'interval', 'numbers'].includes(key)))
+    return value.expires_at > deps.now() ? { device_code: value.device_code, expires_at: value.expires_at, interval: value.interval, numbers: value.numbers } : undefined;
+  if (value.version !== 1 || typeof value.receiving_number !== 'string' || !E164.test(value.receiving_number)
+    || !Array.isArray(value.challenges) || value.challenges.length !== value.numbers.length
+    || value.challenges.some((challenge, i) => !challenge || challenge.number !== value.numbers![i]
+      || (challenge.state === 'not_started' ? typeof challenge.message !== 'string' || !OUTGOING_MESSAGE.test(challenge.message)
+        : (challenge.state !== 'uncertain' && challenge.state !== 'acknowledged') || 'message' in challenge))
+    || value.binding !== pendingBinding(origin, value as PendingLogin))
     throw new OnboardError('unsafe_file', 'The saved sign-in attempt is invalid. Contact Chert support before continuing.');
   return value.expires_at > deps.now() ? value as PendingLogin : undefined;
 }
@@ -347,19 +363,30 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
   if (!pending) {
     const started = await api.require('/api/v1/phone-logins', { body: { device_name: deviceName(deps), numbers: selected } }) as
       { device_code?: unknown; receiving_number?: unknown; challenges?: unknown; expires_in?: unknown; interval?: unknown };
-    const challenges = started.challenges as { number?: unknown; message?: unknown }[];
-    if (typeof started.device_code !== 'string' || !DEVICE_CODE.test(started.device_code) || typeof started.receiving_number !== 'string' || !E164.test(started.receiving_number)
-      || !Array.isArray(challenges) || typeof started.expires_in !== 'number' || typeof started.interval !== 'number'
-      || challenges.length !== selected.length || selected.some(number => !challenges.some(c => c.number === number))
-      || challenges.some(c => typeof c.message !== 'string' || !OUTGOING_MESSAGE.test(c.message))) throw invalid();
-    if (!deps.nativeSend) throw new OnboardError('native_sender_unavailable', 'Sender-specific native Messages transport is unavailable. Nothing was sent.');
-    pending = { device_code: started.device_code, expires_at: deps.now() + started.expires_in * 1000, interval: started.interval, numbers: selected };
+    const challenges = started?.challenges as { number?: unknown; message?: unknown }[];
+    if (!started || typeof started.device_code !== 'string' || !DEVICE_CODE.test(started.device_code) || typeof started.receiving_number !== 'string' || !E164.test(started.receiving_number)
+      || !Array.isArray(challenges) || typeof started.expires_in !== 'number' || !Number.isFinite(started.expires_in) || started.expires_in <= 0
+      || typeof started.interval !== 'number' || !Number.isFinite(started.interval) || started.interval <= 0
+      || challenges.length !== selected.length || selected.some(number => challenges.filter(c => c && c.number === number).length !== 1)
+      || challenges.some(c => !c || typeof c.message !== 'string' || !OUTGOING_MESSAGE.test(c.message))) throw invalid();
+    pending = { version: 1, binding: '', device_code: started.device_code, expires_at: deps.now() + started.expires_in * 1000, interval: started.interval, numbers: selected, receiving_number: started.receiving_number,
+      challenges: selected.map(number => ({ number, state: 'not_started', message: challenges.find(c => c.number === number)!.message as string })) };
+    pending.binding = pendingBinding(origin, pending);
     writeOwnerOnly(join(chertHome(deps), 'onboarding'), `phone-login-${digest([origin])}.json`, JSON.stringify(pending) + '\n');
-    for (const challenge of challenges) {
-      await sendFromMessages(deps, challenge.message as string, started.receiving_number, challenge.number as string);
-      emit({ code: 'login_code_sent', number: maskNumber(challenge.number as string), message: `Sent a sign-in code to Chert from Messages for ${maskNumber(challenge.number as string)}.` });
-    }
   } else emit({ code: 'login_resumed', message: 'Continuing the sign-in already in progress.' });
+
+  for (let i = 0; pending.version === 1 && i < pending.challenges.length; i++) {
+    const challenge = pending.challenges[i]!;
+    if (challenge.state !== 'not_started') continue;
+    if (deps.now() >= pending.expires_at) throw new OnboardError('phone_login_expired', actions.phone_login_expired!);
+    if (!deps.nativeSend) throw new OnboardError('native_sender_unavailable', 'Sender-specific native Messages transport is unavailable. Nothing was sent.');
+    pending.challenges[i] = { number: challenge.number, state: 'uncertain' };
+    writeOwnerOnly(join(chertHome(deps), 'onboarding'), `phone-login-${digest([origin])}.json`, JSON.stringify(pending) + '\n');
+    await sendFromMessages(deps, challenge.message, pending.receiving_number, challenge.number);
+    pending.challenges[i] = { number: challenge.number, state: 'acknowledged' };
+    writeOwnerOnly(join(chertHome(deps), 'onboarding'), `phone-login-${digest([origin])}.json`, JSON.stringify(pending) + '\n');
+    emit({ code: 'login_code_sent', number: maskNumber(challenge.number), message: `Sent a sign-in code to Chert from Messages for ${maskNumber(challenge.number)}.` });
+  }
 
   const begun = deps.now(), deadline = Math.min(pending.expires_at, begun + LOGIN_WAIT_MS);
   let interval = Math.max(pending.interval, 1) * 1000, lastCount = 0, changedAt = begun;
@@ -386,7 +413,7 @@ async function login(deps: OnboardDeps, api: Api, origin: string, emit: Emit, se
   }
 }
 
-function finishLogin(deps: OnboardDeps, origin: string, file: string, emit: Emit, pending: PendingLogin, answer: { access_token?: unknown; project_id?: unknown; verified_numbers?: unknown; unlinked_numbers?: unknown; device_name?: unknown; expires_in?: unknown }) {
+function finishLogin(deps: OnboardDeps, origin: string, file: string, emit: Emit, pending: SavedLogin, answer: { access_token?: unknown; project_id?: unknown; verified_numbers?: unknown; unlinked_numbers?: unknown; device_name?: unknown; expires_in?: unknown }) {
   if (typeof answer.access_token !== 'string' || !CREDENTIAL.test(answer.access_token) || typeof answer.project_id !== 'string' || !UUID.test(answer.project_id)
     || typeof answer.expires_in !== 'number' || !Array.isArray(answer.verified_numbers) || !answer.verified_numbers.length || answer.verified_numbers.some(number => !pending.numbers.includes(number as string))) throw invalid();
   const verified = answer.verified_numbers as string[];
@@ -665,6 +692,12 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     lock = lockPath;
     const lockDirectory = openSync(dir, 'r');
     try { fsyncSync(lockDirectory); } finally { closeSync(lockDirectory); }
+    for (const name of readdirSync(dir)) {
+      if (!/^phone-login-[0-9a-f]{64}\.json\.[0-9]+\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.tmp$/.test(name)) continue;
+      const path = join(dir, name);
+      ownerOnly(path);
+      rmSync(path);
+    }
     const api = new Api(deps, origin);
     const saved = loadCredential(deps, origin);
     const signedIn = saved ? { credential: saved, verified: [] as string[] } : await login(deps, api, origin, emit, selected);
