@@ -14,8 +14,8 @@ Rules for coding agents:
 - FaceTime calls can carry audio and video (calls can also be audio-only). Video needs a line with `supports_video`, a FaceTime Video call, and an agent that publishes a camera track.
 - Direct audio transport (`media_transport: "direct"` with `media_url`/`media_token` on customer-managed calls, no LiveKit) is not available yet; the SDKs send it but the hosted backend does not accept it. See FaceTime notes.
 - Custom video (WHIP/WHEP), living services, screen sharing and call video composition are not available yet (PRs #17, #18, #25, #29); do not build on them. All four ship in the package (composition since 0.2.3), but the hosted backend does not serve them (`404 endpoint_unavailable`).
-- Credentials need a browser once: a FaceTime project API key comes from the dashboard's Developer tab, the project UUID from `chert whoami --json`, and billing only works in the browser today.
-- `chert-sdk` has no `login`, `onboard`, `new` or `dev` command; those belong to the `chert` CLI from `@trychert/facetime`.
+- A FaceTime project API key requires a browser and comes from the dashboard's Developer tab. Get the project UUID with `chert whoami --json`. Billing only works in the browser today. A CLI login is not a project API key.
+- `chert-sdk onboard` is unavailable pending sender-specific native IMCore integration; npm 0.3.0 does not include the flow. It does not send messages or create credentials. `chert-sdk` has no `login`, `new` or `dev` command; those belong to the `chert` CLI from `@trychert/facetime`.
 
 ## Docs
 
