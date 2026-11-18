@@ -61,7 +61,7 @@ Credentials are per service and are not interchangeable.
 | --- | --- | --- |
 | `CHERT_API_KEY` | iMessage | Your messaging console at https://console.trychert.com |
 | `CHERT_TENANT` | iMessage, optional | The same console, when your account has tenants |
-| `CHERT_FACETIME_TOKEN` | FaceTime | A project API key (`ftk_…`): sign in at https://facetime.trychert.com, open **Developer**, then **Project API keys** → **Create API key** (project owners and admins). The key is shown once. |
+| `CHERT_FACETIME_TOKEN` | FaceTime | A project API key (`ftk_…`): sign in at https://facetime.trychert.com, open **Developer**, then **Project API keys** → **Create API key** (project owners and platform admins). The key is shown once. |
 | `CHERT_PROJECT_ID` | FaceTime (required), iMessage (context only) | Your project UUID. The dashboard does not display it yet: install the agent CLI (`npm install -g @trychert/facetime@beta`), run `chert login`, then `chert whoami --json` and copy `project_id`. |
 
 Both credentials need an account with Chert. Creating a project API key requires

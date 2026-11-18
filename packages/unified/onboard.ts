@@ -1,8 +1,8 @@
 import { execFile } from 'node:child_process';
 import { randomUUID, createHash } from 'node:crypto';
-import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir, hostname, tmpdir } from 'node:os';
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { homedir, hostname } from 'node:os';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { createInterface } from 'node:readline/promises';
 
@@ -580,50 +580,12 @@ export function detectProject(cwd: string): { stack: string; install_command: st
   return null;
 }
 
-async function writeLocalEnv(deps: OnboardDeps, credential: SavedCredential): Promise<{ written: boolean; reason?: string }> {
-  try { await deps.exec('git', ['-C', deps.cwd, 'check-ignore', '-q', '--', '.env.local'], 10_000); }
-  catch { return { written: false, reason: 'git does not ignore .env.local here, so the credential was not written. Add .env.local to .gitignore and run this again, or set the variables another way.' }; }
-  const file = join(deps.cwd, '.env.local');
-  const wanted: Record<string, string> = { CHERT_FACETIME_TOKEN: credential.access_token, CHERT_PROJECT_ID: credential.project_id };
-  let lines: string[] = [];
-  if (existsSync(file)) {
-    const stat = lstatSync(file);
-    if (!stat.isFile() || stat.isSymbolicLink()) return { written: false, reason: '.env.local is not a regular file, so it was left alone.' };
-    lines = readFileSync(file, 'utf8').split('\n');
-    if (lines.at(-1) === '') lines.pop();
-    for (const line of lines) {
-      const match = /^\s*(?:export\s+)?(CHERT_FACETIME_TOKEN|CHERT_PROJECT_ID)=(.*)$/.exec(line);
-      if (match && match[2]!.trim().replace(/^["']|["']$/g, '') !== wanted[match[1]!]) return { written: false, reason: `.env.local already sets ${match[1]} to something else, so it was left alone.` };
-      if (match) delete wanted[match[1]!];
-    }
-  }
-  const added = Object.entries(wanted).map(([name, value]) => `${name}=${value}`);
-  if (!added.length) return { written: true };
-  const root = (await deps.exec('git', ['-C', deps.cwd, 'rev-parse', '--show-toplevel'], 10_000)).stdout.trim() || deps.cwd;
-  const tempRoot = realpathSync(tmpdir());
-  const fromRoot = relative(realpathSync(root), tempRoot);
-  if (fromRoot !== '..' && !fromRoot.startsWith(`..${sep}`) && !isAbsolute(fromRoot)) return { written: false, reason: 'The temporary directory is inside the repository, so the credential was not written.' };
-  const dir = mkdtempSync(join(tempRoot, 'chert-env-'));
-  try {
-    const temporary = join(dir, 'env');
-    const fd = openSync(temporary, 'wx', 0o600);
-    try { writeFileSync(fd, [...lines, ...added].join('\n') + '\n'); fsyncSync(fd); } finally { closeSync(fd); }
-    try { renameSync(temporary, file); }
-    catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'EXDEV') return { written: false, reason: 'The secure temporary directory is on another filesystem, so the credential was not written. Set the variables another way.' };
-      throw error;
-    }
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-  return { written: true };
-}
-
-async function wireIn(deps: OnboardDeps, emit: Emit, credential: SavedCredential, project: NonNullable<ReturnType<typeof detectProject>>) {
-  const env = await writeLocalEnv(deps, credential);
+function wireIn(emit: Emit, project: NonNullable<ReturnType<typeof detectProject>>) {
   const docs = { setup: `${DOCS}/docs/SETUP.md`, llms: `${DOCS}/llms.txt`, readme: `${DOCS}/README.md` };
-  const prompt = `Wire Chert FaceTime into this ${project.stack === 'unknown' ? '' : `${project.stack} `}project. ${project.install_command ? `Install the SDK with \`${project.install_command}\`.` : project.install_note ?? ''} Read ${docs.llms} and ${docs.setup} first. The CLI login${env.written ? ' in .env.local' : ''} is limited to its scoped operations and cannot create application calls. Application calls require a project API key created in the browser; have the user configure CHERT_FACETIME_TOKEN with that key locally and CHERT_PROJECT_ID with the project ID. Never ask the user to paste credentials; never commit or print them. Follow this project's existing conventions. Place a real test call only with explicit user authorization and an approved recipient; otherwise use non-calling checks and do not claim the call works.`;
+  const prompt = `Wire Chert FaceTime into this ${project.stack === 'unknown' ? '' : `${project.stack} `}project. ${project.install_command ? `Install the SDK with \`${project.install_command}\`.` : project.install_note ?? ''} Read ${docs.llms} and ${docs.setup} first. The CLI login is limited to its scoped operations and cannot create application calls. Application calls require a project API key created in the browser; have the user configure CHERT_FACETIME_TOKEN and CHERT_PROJECT_ID together with the key and ID for the same project, using the application's configuration. Preserve existing configuration until the user has verified the matching values. If CHERT_FACETIME_TOKEN contains a CLI login from an earlier onboarding, the user must replace it with the project API key. Never ask the user to paste credentials; never commit or print them. Follow this project's existing conventions. Place a real test call only with explicit user authorization and an approved recipient; otherwise use non-calling checks and do not claim the call works.`;
   emit({ code: 'wire_in', stack: project.stack, install_command: project.install_command, ...(project.install_note ? { install_note: project.install_note } : {}),
-    env_vars: ['CHERT_FACETIME_TOKEN', 'CHERT_PROJECT_ID'], env_local_written: env.written, ...(env.reason ? { env_local_reason: env.reason } : {}), docs, prompt,
-    message: `Project found (${project.stack}). ${env.written ? 'The credential is in .env.local.' : env.reason}\nPaste this to your coding agent:\n\n${prompt}` });
+    env_vars: ['CHERT_FACETIME_TOKEN', 'CHERT_PROJECT_ID'], env_local_written: false, docs, prompt,
+    message: `Project found (${project.stack}). No application configuration was changed. Configure the project key and ID together for the same project.\nPaste this to your coding agent:\n\n${prompt}` });
 }
 
 async function setupAgentCli(deps: OnboardDeps, emit: Emit): Promise<boolean> {
@@ -720,7 +682,7 @@ export async function runOnboard(args: string[], deps: OnboardDeps = defaultDeps
     let wired = true;
     if (!values['no-wire']) {
       const project = detectProject(deps.cwd);
-      if (project) await wireIn(deps, emit, signedIn.credential, project);
+      if (project) wireIn(emit, project);
       else wired = await setupAgentCli(deps, emit);
     }
     if (stopped) throw stopped;

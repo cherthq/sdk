@@ -1190,24 +1190,77 @@ test('detects projects by manifest and picks the install command', () => {
   expect(inProject('.git')).toMatchObject({ stack: 'unknown', install_command: null });
 });
 
-test('a project gets a handoff and an ignored .env.local, with its other lines kept', async () => {
+test('a project gets a handoff without changing application configuration', async () => {
   writeFileSync(join(world.cwd, 'package.json'), '{}');
   writeFileSync(join(world.cwd, '.env.local'), 'OTHER=keep\n');
   expect(await run('--yes')).toBe(0);
   const wire = records().find(r => r.code === 'wire_in')!;
-  expect(wire).toMatchObject({ stack: 'javascript', install_command: 'npm install @trychert/sdk', env_vars: ['CHERT_FACETIME_TOKEN', 'CHERT_PROJECT_ID'], env_local_written: true });
+  expect(wire).toMatchObject({ stack: 'javascript', install_command: 'npm install @trychert/sdk', env_vars: ['CHERT_FACETIME_TOKEN', 'CHERT_PROJECT_ID'], env_local_written: false });
   expect(wire.prompt).toContain('npm install @trychert/sdk');
   expect(wire.prompt).toContain('cannot create application calls');
   expect(wire.prompt).toContain('project API key created in the browser');
+  expect(wire.prompt).toContain('CHERT_FACETIME_TOKEN and CHERT_PROJECT_ID together with the key and ID for the same project');
+  expect(wire.message).toContain('No application configuration was changed');
   expect(wire.prompt).toContain('Never ask the user to paste credentials');
   expect(wire.prompt).toContain('explicit user authorization and an approved recipient');
   expect(wire.prompt).toContain('otherwise use non-calling checks');
   expect(wire.prompt).not.toContain('chert-sdk context');
   expect(JSON.stringify(wire)).not.toContain(TOKEN);
-  expect(readFileSync(join(world.cwd, '.env.local'), 'utf8')).toBe(`OTHER=keep\nCHERT_FACETIME_TOKEN=${TOKEN}\nCHERT_PROJECT_ID=${PROJECT}\n`);
-  expect(statSync(join(world.cwd, '.env.local')).mode & 0o777).toBe(0o600);
+  expect(readFileSync(join(world.cwd, '.env.local'), 'utf8')).toBe('OTHER=keep\n');
   expect(readFileSync(join(world.cwd, 'package.json'), 'utf8')).toBe('{}');
   expect(world.installs).toEqual([]);
+});
+
+test('existing application or earlier CLI tokens are preserved without being printed', async () => {
+  writeFileSync(join(world.cwd, 'package.json'), '{}');
+  for (const token of ['ftk_synthetic_application_key', TOKEN]) {
+    writeFileSync(join(world.cwd, '.env.local'), `CHERT_FACETIME_TOKEN=${token}\n`);
+    world.out = [];
+    expect(await run('--yes')).toBe(0);
+    expect(readFileSync(join(world.cwd, '.env.local'), 'utf8')).toBe(`CHERT_FACETIME_TOKEN=${token}\n`);
+    expect(everything()).not.toContain(token);
+    const handoff = records().find(r => r.code === 'wire_in')!;
+    expect(handoff.env_local_written).toBe(false);
+    expect(handoff.prompt).toContain('key and ID for the same project');
+    expect(handoff.prompt).toContain('the user must replace it with the project API key');
+  }
+});
+
+test('a token from .env or the process is never paired with a written project ID', async () => {
+  writeFileSync(join(world.cwd, 'package.json'), '{}');
+  const token = 'ftk_other_project_secret';
+  const envFile = join(world.cwd, '.env');
+  const original = `CHERT_FACETIME_TOKEN=${token}\nOTHER=keep\n`;
+  writeFileSync(envFile, original);
+  expect(await run('--yes')).toBe(0);
+  expect(readFileSync(envFile, 'utf8')).toBe(original);
+  expect(existsSync(join(world.cwd, '.env.local'))).toBe(false);
+  expect(everything()).not.toContain(token);
+  rmSync(envFile);
+  world.out = []; world.err = [];
+  const wrapped = deps();
+  wrapped.env = { CHERT_FACETIME_TOKEN: token };
+  expect(await runOnboard(['--json', '--yes'], wrapped)).toBe(0);
+  expect(wrapped.env.CHERT_FACETIME_TOKEN).toBe(token);
+  expect(existsSync(join(world.cwd, '.env.local'))).toBe(false);
+  expect(everything()).not.toContain(token);
+  expect(records().find(r => r.code === 'wire_in')!.prompt).toContain('key and ID for the same project');
+});
+
+test('spaced dotenv assignments cannot pair a token with another project', async () => {
+  writeFileSync(join(world.cwd, 'package.json'), '{}');
+  for (const content of [
+    'export CHERT_FACETIME_TOKEN = ftk_existing\n',
+    'export CHERT_FACETIME_TOKEN = ftk_existing\nexport CHERT_PROJECT_ID = other\n',
+    'CHERT_FACETIME_TOKEN: ftk_existing\n',
+    'CHERT_FACETIME_TOKEN: ftk_existing\nCHERT_PROJECT_ID: other\n',
+  ]) {
+    writeFileSync(join(world.cwd, '.env.local'), content);
+    expect(await run('--yes')).toBe(0);
+    expect(readFileSync(join(world.cwd, '.env.local'), 'utf8')).toBe(content);
+    expect(records().find(r => r.code === 'wire_in')!.env_local_written).toBe(false);
+    world.out = [];
+  }
 });
 
 test('a project whose .env.local git does not ignore gets no credential on disk', async () => {
@@ -1216,26 +1269,6 @@ test('a project whose .env.local git does not ignore gets no credential on disk'
   expect(await run('--yes')).toBe(0);
   expect(records().find(r => r.code === 'wire_in')).toMatchObject({ env_local_written: false });
   expect(existsSync(join(world.cwd, '.env.local'))).toBe(false);
-});
-
-test('does not put temporary credentials in an in-repository directory beginning with two dots', async () => {
-  writeFileSync(join(world.cwd, 'package.json'), '{}');
-  const inside = join(world.cwd, '..cache');
-  mkdirSync(inside);
-  const previous = process.env.TMPDIR;
-  process.env.TMPDIR = inside;
-  const wrapped = deps(), exec = wrapped.exec;
-  wrapped.exec = async (file, args, timeout) => file === 'git' && args.includes('rev-parse')
-    ? { stdout: world.cwd }
-    : exec(file, args, timeout);
-  try {
-    expect(await runOnboard(['--json', '--yes'], wrapped)).toBe(0);
-    expect(records().find(r => r.code === 'wire_in')).toMatchObject({ env_local_written: false });
-    expect(existsSync(join(world.cwd, '.env.local'))).toBe(false);
-  } finally {
-    if (previous === undefined) delete process.env.TMPDIR;
-    else process.env.TMPDIR = previous;
-  }
 });
 
 test('an existing different value or symlinked .env.local is left alone', async () => {
