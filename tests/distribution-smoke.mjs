@@ -23,9 +23,10 @@ import Blooio from '@cherthq/blooio-adapter';
   assert.equal(requests[1].headers.get('x-chert-project-id'), 'project');
   assert.deepEqual(requests.map(r => new URL(r.url).pathname), ['/api/v1/projects', '/api/v1/integrations', '/api/v1/calls/call/transcript']);
   const replay = { status: 'sent', message_id: 'msg', error: null, service: 'mixed', delivered: false, retryable: false };
-  const lookup = { id: 'msg', phone: '+15555550101', chat_id: 'chat', lead_id: 'lead', convo_id: null, phone_line_id: null, created_at: 'now', status: 'received', error: null, direction: 'outbound', text: 'legacy', message_guid: 'guid' };
-  const paths = ['/api/v1/chats', '/api/v1/chats/chat/messages', '/api/v1/messages/msg'];
-  const results = [replay, { messages: [], has_more: true }, lookup];
+  const lookup = { id: 'msg', phone: '+15555550101', lead_id: 'lead', convo_id: null, phone_line_id: null, created_at: 'now', status: 'received', error: null, direction: 'outbound', text: 'legacy', spectrum_message_guid: 'msg' };
+  const outbound = { id: 'send', phone: '+15555550101', lead_id: null, convo_id: null, phone_line_id: null, created_at: 'now', status: 'sent', error: null, idempotency_key: null, external_id: null, request: { body: 'hello' }, response: {} };
+  const paths = ['/api/v1/chats', '/api/v1/chats/chat/messages', '/api/v1/messages/msg', '/api/v1/messages/send'];
+  const results = [replay, { messages: [], has_more: true }, lookup, outbound];
   const input = { from: '+15555550100', to: ['person@example.com'], message: { parts: [{ type: 'text', value: 'Hello' }] }, idempotency_key: 'stable-create' };
   const client = new ChertClient({ apiKey: 'key', fetch: async (url, init) => {
     assert.equal(new URL(url).pathname, paths.shift());
@@ -35,6 +36,7 @@ import Blooio from '@cherthq/blooio-adapter';
   assert.deepEqual(await client.createChat(input), replay);
   assert.deepEqual(await client.listChatMessages('chat'), { messages: [], has_more: true });
   assert.deepEqual(await client.getMessage('msg'), lookup);
+  assert.deepEqual(await client.getMessage('send'), outbound);
   assert.equal(paths.length, 0);
 }
 

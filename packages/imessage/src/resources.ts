@@ -35,10 +35,10 @@ export type CreateChatResult =
   | { status: 'retrying'; error: 'send_retrying'; reason: string; attempt: number; max_attempts: number; lead_id: string; convo_id: string | null; phone_line_id: string | null }
   | { status: 'failed'; error: 'send_failed'; code: number; reason: string; lead_id: string; convo_id: string | null; phone_line_id: string | null; retryable: boolean; attempts: number };
 export type MessageLookup = {
-  id: string; phone: string; chat_id: string | null; lead_id: string | null;
+  id: string; phone: string; chat_id?: string | null; lead_id: string | null;
   convo_id: string | null; phone_line_id: string | null; created_at: string;
 } & (
-  | { status: 'received'; error: null; chat_id: string; lead_id: string; direction: 'inbound' | 'outbound'; text: string; parts?: MessagePart[]; message_guid: string }
+  | { status: 'received'; error: null; lead_id: string; direction: 'inbound' | 'outbound'; text: string; parts?: MessagePart[]; spectrum_message_guid: string }
   | { status: 'queued' | 'sent' | 'duplicate' | 'failed'; error: string | null;
       idempotency_key: string | null; external_id: string | null;
       /** Opaque recorded public payloads, not the chat/history message shape. May contain sensitive message content. */
@@ -92,8 +92,9 @@ export function isCreateChatResult(v: unknown): v is CreateChatResult {
     && typeof v.retryable === 'boolean' && Number.isInteger(v.attempts);
 }
 export function isMessageLookup(v: unknown): v is MessageLookup {
-  if (!record(v) || !strings(v, ['id', 'phone', 'created_at']) || !['chat_id', 'lead_id', 'convo_id', 'phone_line_id'].every(k => nullableString(v[k]))) return false;
-  if (v.status === 'received') return v.error === null && strings(v, ['chat_id', 'lead_id', 'text', 'message_guid'])
+  if (!record(v) || !strings(v, ['id', 'phone', 'created_at']) || !['lead_id', 'convo_id', 'phone_line_id'].every(k => nullableString(v[k]))
+    || v.chat_id !== undefined && !nullableString(v.chat_id)) return false;
+  if (v.status === 'received') return v.error === null && strings(v, ['lead_id', 'text', 'spectrum_message_guid'])
     && (v.direction === 'inbound' || v.direction === 'outbound') && (v.parts === undefined || Array.isArray(v.parts) && v.parts.every(isPart));
   return typeof v.status === 'string' && ['queued', 'sent', 'duplicate', 'failed'].includes(v.status)
     && nullableString(v.error) && nullableString(v.idempotency_key) && nullableString(v.external_id)
