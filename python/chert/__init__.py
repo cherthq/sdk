@@ -14,6 +14,7 @@ from urllib.parse import quote, unquote, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 from ._fetch import FetchOpener
+from .resources import ChatHistory, ChatMessage, MessagePart, MessageService, _chat_history
 from .events import (MessagingEvent, RecordedMessagingEvent, MessagingEventPage,
                      MessagingStreamFrame, WebhookSubscription, CreateWebhookSubscription,
                      UpdateWebhookSubscription, WebhookSubscriptions, WebhookSubscriptionResponse,
@@ -21,6 +22,7 @@ from .events import (MessagingEvent, RecordedMessagingEvent, MessagingEventPage,
                      verify_webhook, _read_event_stream)
 
 __all__ = ["ChertClient", "ChertAPIError", "QueuedTextReceipt", "ReactionReceipt",
+           "ChatHistory", "ChatMessage", "MessagePart", "MessageService",
            "MessagingEvent", "RecordedMessagingEvent", "MessagingEventPage", "MessagingStreamFrame",
            "WebhookSubscription", "CreateWebhookSubscription", "UpdateWebhookSubscription",
            "WebhookSubscriptions", "WebhookSubscriptionResponse", "CreatedWebhookSubscriptionResponse",
@@ -240,6 +242,13 @@ class ChertClient:
 
     def get_event(self, row_id: str) -> RecordedMessagingEvent:
         return self.request("/events/" + self._resource_id(row_id))
+
+    def list_chat_messages(self, chat_id: str) -> ChatHistory:
+        """Newest recorded window only. has_more is truncation, not a usable pagination cursor."""
+        data = self.request('/chats/' + self._resource_id(chat_id) + '/messages')
+        if not _chat_history(data):
+            raise ChertAPIError(502, 'invalid_response')
+        return data
 
     def list_webhook_subscriptions(self) -> WebhookSubscriptions:
         return self.request("/webhook-subscriptions")
