@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Align JavaScript `getMessage` validation with the standalone hosted API.
+  `MessageLookup.chat_id` is optional because the host can omit it. The legacy
+  `received` variant exposes `spectrum_message_guid`, not `message_guid`.
+  Callers must handle an absent chat ID and read the recorded identifier under
+  its actual server field. The SDK preserves the response without synthesizing
+  aliases. This corrects the previously published TypeScript response contract.
+
 ## 0.3.0
 
 `@trychert/sdk` 0.3.0 (npm). Python source is versioned 0.3.0, but this release

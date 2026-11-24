@@ -66,7 +66,9 @@ keys must not be reused for different payloads.
 History is the newest recorded window (up to 200 messages), ordered oldest first;
 `has_more` is a truncation hint, **not pagination**. No limit/cursor options exist.
 `getMessage` returns a separate recorded-status union, not a history message.
-Its `received` variant can describe an outbound legacy record; optional `service`
+The hosted API can omit `chat_id`; `lead_id` is not renamed or synthesized into it.
+Its `received` variant uses `spectrum_message_guid`, not `message_guid`, and can
+describe an outbound legacy record. Optional `service`
 on outbound records can be `mixed`. Recorded service/status is not independent
 channel or delivery proof. Recorded request/response/error fields can contain
 sensitive data; do not log them or assume that server text is sanitized.

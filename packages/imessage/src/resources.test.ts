@@ -4,7 +4,7 @@ import { ChertClient, type CreateChatRequest, type CreateChatResult, type Chat, 
 const chat = { id: 'chat-1', display_name: null, handles: [{ service: 'imessage', address: '+15550000002' }], is_group: false, service: 'imessage', health_score: null, created_at: null } satisfies Chat;
 const message = { id: 'msg-1', chat_id: 'chat-1', parts: [], status: 'queued', direction: 'outbound', created_at: '2026-10-30T00:00:00Z', service: 'unknown', delivered_at: null, read_at: null } satisfies ChatMessage;
 const body: CreateChatRequest = { from: '+15550000001', to: ['person@example.com'], message: { parts: [{ type: 'text', value: 'Hello' }] }, idempotency_key: 'create-123' };
-const outbound = { id: 'msg-1', phone: '+15550000002', chat_id: null, lead_id: null, convo_id: null, phone_line_id: null, created_at: message.created_at, status: 'sent', error: null, idempotency_key: 'create-123', external_id: null, request: { message: 'sensitive' }, response: { status: 'retrying' }, service: 'mixed', delivered: false } satisfies MessageLookup;
+const outbound = { id: 'msg-1', phone: '+15550000002', lead_id: null, convo_id: null, phone_line_id: null, created_at: message.created_at, status: 'sent', error: null, idempotency_key: 'create-123', external_id: null, request: { message: 'sensitive' }, response: { status: 'retrying' }, service: 'mixed', delivered: false } satisfies MessageLookup;
 
 test('chat creation preserves fresh and evolving replay bodies with a single keyed request', async () => {
   const replies = [
@@ -58,7 +58,8 @@ test('incompatible accepted chat replies are explicitly unconfirmed, never retri
 });
 
 test('history and lookup preserve their distinct schemas and encode opaque IDs', async () => {
-  const received = { id: 'legacy', status: 'received', error: null, phone: '+15550000002', chat_id: 'chat', lead_id: 'lead', convo_id: null, phone_line_id: null, direction: 'outbound', text: 'legacy', created_at: message.created_at, message_guid: 'guid' } satisfies MessageLookup;
+  // Hosted GET /api/v1/messages/{id} at cherthq/imessage 9319bdd omits chat_id and returns spectrum_message_guid.
+  const received = { id: 'legacy', status: 'received', error: null, phone: '+15550000002', lead_id: 'lead', convo_id: null, phone_line_id: null, direction: 'outbound', text: 'legacy', created_at: message.created_at, spectrum_message_guid: 'legacy' } satisfies MessageLookup;
   const replies = [{ messages: [message], has_more: true }, outbound, received];
   const paths = ['chats/opaque%2Fid%3F/messages', 'messages/opaque%2Fid%3F', 'messages/legacy'];
   const client = new ChertClient({ apiKey: 'fixture', fetch: async (url, init) => {
@@ -68,6 +69,12 @@ test('history and lookup preserve their distinct schemas and encode opaque IDs',
   expect(await client.listChatMessages('opaque/id?')).toEqual({ messages: [message], has_more: true });
   expect(await client.getMessage('opaque/id?')).toEqual(outbound);
   expect(await client.getMessage('legacy')).toEqual(received);
-  const malformed = new ChertClient({ apiKey: 'fixture', fetch: async () => Response.json({ ...outbound, service: null }) });
-  await expect(malformed.getMessage('msg')).rejects.toMatchObject({ code: 'invalid_response' });
+  for (const reply of [{ ...outbound, chat_id: null }, { ...outbound, chat_id: 'chat' }, { ...received, direction: 'inbound' }] satisfies MessageLookup[]) {
+    const compatible = new ChertClient({ apiKey: 'fixture', fetch: async () => Response.json(reply) });
+    expect(await compatible.getMessage('msg')).toEqual(reply);
+  }
+  for (const reply of [{ ...outbound, service: null }, { ...outbound, chat_id: 42 }, { ...received, spectrum_message_guid: undefined, message_guid: 'invented' }, { ...received, direction: 'sideways' }]) {
+    const malformed = new ChertClient({ apiKey: 'fixture', fetch: async () => Response.json(reply) });
+    await expect(malformed.getMessage('msg')).rejects.toMatchObject({ code: 'invalid_response' });
+  }
 });
