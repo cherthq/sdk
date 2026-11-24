@@ -7,6 +7,28 @@ The legacy `chert` import and explicit-URL constructor calls remain compatible.
 The source version is 0.3.0, but Python 0.3.0 is **not published** by the npm
 0.3.0 release. Install 0.2.3 from PyPI until a separate Python release is ready.
 
+```sh
+python -m pip install chert-sdk==0.2.3
+# or: uv add chert-sdk==0.2.3
+```
+
+The published 0.2.3 package matched the npm `@trychert/sdk` 0.2.3 release;
+newer source can differ. 0.2.3 sends text to
+`POST /api/v1/send` (0.2.2 and earlier used a route production does not serve), accepts
+`queued`, `sent` and `duplicate` receipts, rejects idempotency keys with surrounding
+whitespace, and adds call video composition and terminal billing, which are not
+available yet (the hosted backend does not serve them). Since 0.1.1 it adds
+the custom video session and screen-share content contract (not available yet:
+the hosted backend does not serve them and they fail with
+`404 endpoint_unavailable`), the new allowlisted media error codes, billing
+refusals by code (such as `billing_sales_disabled` or `shared_no_capacity`)
+instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
+"Source preview" below means not production-verified, not absent from the package.
+
+```python
+from trychert import Chert, IMessageConfig, FaceTimeConfig
+```
+
 ## Unreleased public resource reads
 
 Source adds the read helpers already shipped in npm 0.3.0 for project discovery,
@@ -44,30 +66,6 @@ Run `python -m unittest discover -s tests` from `python/` with the existing buil
 prerequisites installed. `test_resources_package.py` builds a wheel, installs it
 without dependencies into a fresh environment and runs the same real-loopback HTTP
 tests with isolated imports. These checks do not prove live service availability.
-
-## Published package
-
-```sh
-python -m pip install chert-sdk==0.2.3
-# or: uv add chert-sdk==0.2.3
-```
-
-The published 0.2.3 package matched the npm `@trychert/sdk` 0.2.3 release;
-newer source can differ. 0.2.3 sends text to
-`POST /api/v1/send` (0.2.2 and earlier used a route production does not serve), accepts
-`queued`, `sent` and `duplicate` receipts, rejects idempotency keys with surrounding
-whitespace, and adds call video composition and terminal billing, which are not
-available yet (the hosted backend does not serve them). Since 0.1.1 it adds
-the custom video session and screen-share content contract (not available yet:
-the hosted backend does not serve them and they fail with
-`404 endpoint_unavailable`), the new allowlisted media error codes, billing
-refusals by code (such as `billing_sales_disabled` or `shared_no_capacity`)
-instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
-"Source preview" below means not production-verified, not absent from the package.
-
-```python
-from trychert import Chert, IMessageConfig, FaceTimeConfig
-```
 
 ## Explicit independent channels
 
