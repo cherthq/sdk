@@ -567,6 +567,6 @@ detail::Response detail::Transport::request_with_response(const std::string& pat
         }
         throw ApiError(status >= 300 ? status : 502, code, id, data);
     }
-    return {status, id, data};
+    return {status, id, std::make_optional(data)};
 }
 } // namespace trychert

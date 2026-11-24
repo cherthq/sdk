@@ -144,10 +144,7 @@ fn safe_path(path: &str) -> bool {
         }
     }
     // Dot segments must be rejected before URL joining normalizes them away.
-    if path.split('/').any(|part| part == "." || part == "..") {
-        return false;
-    }
-    true
+    !path.split('/').any(|part| part == "." || part == "..")
 }
 fn safe_request(path: &str) -> bool {
     if path.len() > 8192 || !clean(path) || path.contains(['\\', '#']) {
