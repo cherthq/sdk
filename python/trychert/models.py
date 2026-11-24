@@ -7,6 +7,21 @@ from typing import Literal, TypedDict, Union
 Json = Union[None, bool, int, float, str, list["Json"], dict[str, "Json"]]
 
 
+class ParticipantRecipient(TypedDict):
+    type: Literal['phone_number']
+    value: str
+
+
+class AddCallParticipant(TypedDict):
+    recipient: ParticipantRecipient
+
+
+class CallParticipantOperation(TypedDict):
+    id: str
+    call_id: str
+    status: Literal['queued', 'dispatching', 'submitted', 'already_present', 'failed', 'unknown']
+
+
 class Project(TypedDict):
     id: str
     name: str | None

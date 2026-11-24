@@ -273,6 +273,16 @@ class PackagingTest(unittest.TestCase):
             imported = subprocess.run([sys.executable, "-I", "-c", "import sys; sys.path.insert(0, %r); from chert import ChertClient, QueuedTextReceipt, ReactionReceipt; assert callable(ChertClient.send_text); assert callable(ChertClient.send_reaction); assert ReactionReceipt.__dataclass_params__.frozen; assert QueuedTextReceipt.__required_keys__ == frozenset(['success', 'message_id', 'chat_id', 'status']); print(ChertClient.__name__)" % str(wheel)], capture_output=True, text=True, timeout=10)
             self.assertEqual(imported.returncode, 0, imported.stderr)
             self.assertEqual(imported.stdout.strip(), "ChertClient")
+            consumer = Path(temp, 'consumer')
+            created = subprocess.run([sys.executable, '-m', 'venv', str(consumer)], capture_output=True, text=True, timeout=30)
+            self.assertEqual(created.returncode, 0, created.stderr)
+            interpreter = str(consumer / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python'))
+            installed = subprocess.run([interpreter, '-m', 'pip', 'install', '--no-index', '--no-deps', str(wheel)],
+                                       capture_output=True, text=True, timeout=30)
+            self.assertEqual(installed.returncode, 0, installed.stderr)
+            tested = subprocess.run([interpreter, '-I', str(root / 'tests/test_participants.py')], cwd=temp,
+                                    capture_output=True, text=True, timeout=30)
+            self.assertEqual(tested.returncode, 0, tested.stderr)
 
 
 if __name__ == "__main__":

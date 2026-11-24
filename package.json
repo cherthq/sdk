@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "engines": { "node": ">=22.12" },
   "publishConfig": { "access": "public" },
-  "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE", "COMPATIBILITY.md", "llms.txt", "docs/SETUP.md", "docs/BETTER_AUTH.md"],
+  "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE", "COMPATIBILITY.md", "llms.txt", "docs/SETUP.md", "docs/BETTER_AUTH.md", "docs/ADD_PEOPLE.md"],
   "bin": {
     "chert-sdk": "./dist/unified/cli.js"
   },

@@ -7,6 +7,9 @@ The legacy `chert` import and explicit-URL constructor calls remain compatible.
 The source version is 0.3.0, but Python 0.3.0 is **not published** by the npm
 0.3.0 release. Install 0.2.3 from PyPI until a separate Python release is ready.
 
+Unreleased source adds [gated FaceTime Add People methods](../docs/ADD_PEOPLE.md).
+These methods do not enable the service in production.
+
 ```sh
 python -m pip install chert-sdk==0.2.3
 # or: uv add chert-sdk==0.2.3

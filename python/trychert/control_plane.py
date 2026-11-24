@@ -12,7 +12,7 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 from chert._fetch import FetchOpener
 
 from .models import (BillingResult, BillingStatus, CheckoutSession, BillingCancellation, CouponValidation, ConnectorEnrollment, ConnectorReceipt,
-                     CallAction, CallDetail, CallEvents, CallPage, CreateCall,
+                     AddCallParticipant, CallParticipantOperation, CallAction, CallDetail, CallEvents, CallPage, CreateCall,
                      Credentials, DeviceLoginStart, Identity, Json, LinePage, LoginApproval,
                      LoginInspection, LoginResult, Revoked, WorkerPage)
 from .media import MediaDirection, MediaSessionContent, MediaSessionGrant, VideoCodec, _parse_media_session_grant
@@ -20,6 +20,10 @@ from .composition import CallVideoComposition, _composition_body, _validate_comp
 
 DEFAULT_FACETIME_URL = 'https://facetime.trychert.com'
 _UNSET = object()
+_PARTICIPANT_CODES = frozenset(('participant_failed', 'participant_outcome_unknown',
+                              'participant_receipt_missing', 'participant_unavailable', 'participant_call_unavailable',
+                              'participant_assignment_changed', 'participant_usage_expired', 'participant_idempotency_conflict',
+                              'participant_busy', 'participant_already_attempted'))
 _SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_required billing_unavailable billing_binding_mismatch billing_checkout_exists billing_coupon_unavailable billing_dedicated_no_inventory billing_dedicated_unqualified billing_idempotency_conflict billing_invalid billing_no_subscription billing_paid_period_required billing_price_mismatch billing_provider_mismatch billing_provider_unavailable billing_reservation_expired billing_reservation_not_found billing_reservation_pending billing_sales_disabled billing_subscription_conflict billing_subscription_exists billing_payment_failed billing_plan_unchanged billing_plan_change_unavailable billing_unconfigured shared_no_capacity project_required invalid_request cli_login_expired cli_login_not_found cli_login_forbidden slow_down cli_login_rate_limited cli_login_busy not_found conflict "
                          "media_capability_unsupported media_session_conflict caller_screen_not_shared media_content_unsupported caller_screen_unsupported media_limit_exceeded call_not_active call_ended call_not_found "
                          "media_session_expired media_transport_unavailable "
@@ -27,11 +31,12 @@ _SAFE_CODES = frozenset("unauthorized forbidden cli_scope_denied billing_owner_r
 
 
 class ChertControlPlaneError(Exception):
-    """Sanitized status/code only: no server bodies, URLs or credential context."""
+    """Sanitized status/code and optional participant operation ID; no raw server bodies."""
 
-    def __init__(self, status: int, code: str):
+    def __init__(self, status: int, code: str, *, operation_id: str | None = None):
         self.status = status
         self.code = code
+        self.operation_id = operation_id
         super().__init__(f"Chert control-plane request failed ({status}, {code}).")
 
 
@@ -137,7 +142,14 @@ class ChertControlPlane:
         if not 200 <= status < 300:
             error = envelope.get('error')
             code = error.get('code') if isinstance(error, dict) else None
-            raise ChertControlPlaneError(status, code if isinstance(code, str) and code in _SAFE_CODES else 'request_failed')
+            details = error.get('details') if isinstance(error, dict) else None
+            operation_id = details.get('operation_id') if isinstance(details, dict) else None
+            participant = isinstance(code, str) and code in _PARTICIPANT_CODES
+            if not participant or not isinstance(operation_id, str) or not re.fullmatch(
+                    r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', operation_id):
+                operation_id = None
+            raise ChertControlPlaneError(status, code if isinstance(code, str) and (code in _SAFE_CODES or participant)
+                                         else 'request_failed', operation_id=operation_id)
         if 'data' not in envelope:
             raise ChertControlPlaneError(status, 'invalid_response')
         return envelope['data']
@@ -198,6 +210,34 @@ class ChertControlPlane:
     def get_call_events(self, call_id: str) -> CallEvents:
         """Finite JSON timeline, not SSE or a media stream."""
         return self._request('calls/' + self._call_id(call_id) + '/events')
+
+    def add_call_participant(self, call_id: str, body: 'AddCallParticipant', *,
+                             idempotency_key: str) -> 'CallParticipantOperation':
+        """Gated release, not generally enabled. One attempt; never retry unknown with a fresh key."""
+        recipient = body.get('recipient') if isinstance(body, dict) else None
+        if (not isinstance(body, dict) or set(body) != {'recipient'} or not isinstance(recipient, dict)
+                or set(recipient) != {'type', 'value'} or recipient['type'] != 'phone_number'
+                or not isinstance(recipient['value'], str) or not re.fullmatch(r'\+[1-9][0-9]{7,14}', recipient['value'])):
+            raise ValueError('Use exactly one E.164 phone recipient')
+        data = self._request('calls/' + self._call_id(call_id) + '/participants', 'POST', body,
+                             idempotency_key=_idempotency_key(idempotency_key))
+        return self._participant_operation(data, call_id)
+
+    def get_call_participant(self, call_id: str, operation_id: str) -> 'CallParticipantOperation':
+        """Read invitation submission status, not whether the person joined. No invitation is sent."""
+        data = self._request('calls/' + self._call_id(call_id) + '/participants/' + self._call_id(operation_id))
+        result = self._participant_operation(data, call_id)
+        if result['id'] != operation_id:
+            raise ChertControlPlaneError(200, 'invalid_response')
+        return result
+
+    @staticmethod
+    def _participant_operation(data: Any, call_id: str) -> 'CallParticipantOperation':
+        if (not isinstance(data, dict) or not isinstance(data.get('id'), str) or not data['id']
+                or data.get('call_id') != call_id or data.get('status') not in
+                ('queued', 'dispatching', 'submitted', 'already_present', 'failed', 'unknown')):
+            raise ChertControlPlaneError(200, 'invalid_response')
+        return data
 
     def create_media_session(self, call_id: str, *, direction: MediaDirection,
                              codecs: list[VideoCodec] | tuple[VideoCodec, ...] | None = None,
