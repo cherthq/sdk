@@ -18,6 +18,9 @@ try {
   }));
   await run(['bun', 'install', '--ignore-scripts']);
   const installed = join(temporary, 'node_modules/@trychert/sdk');
+  writeFileSync(join(temporary, 'participants-consumer.mjs'), readFileSync(join(root, 'tests/participants-consumer.mjs')));
+  await run(['node', 'participants-consumer.mjs']);
+  await run(['bun', 'participants-consumer.mjs']);
   const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
   assert.equal(manifest.name, '@trychert/sdk');
   assert.equal(manifest.version, '0.3.0');

@@ -6,6 +6,9 @@ clients. **Language coverage and release status differ:** npm targets 0.3.0;
 Python source is 0.3.0 but PyPI remains 0.2.3. Other clients are source previews.
 See the [changelog](CHANGELOG.md) for release changes and availability.
 
+Unreleased source adds [gated FaceTime Add People methods](docs/ADD_PEOPLE.md)
+for TypeScript and Python. These methods do not enable the service in production.
+
 **New here? Start with the [setup guide](docs/SETUP.md).** Coding agents can read
 [`llms.txt`](llms.txt) or run `chert-sdk context`.
 

@@ -3,6 +3,8 @@ import type { Assistant, Call, CallAction, CallDetail, CallEvent, CreateAssistan
 export * from './video';
 import { isProjectMemberships, isIntegrations, isCallTranscript } from './resources';
 export type { ProjectMembership, Integration, CallTranscript } from './resources';
+import { isParticipantOperation, validateParticipant, participantErrorCodes, type AddCallParticipant, type CallParticipantOperation } from './participants';
+export type { AddCallParticipant, CallParticipantOperation } from './participants';
 export { parseLivingServices, verifyLivingServiceWebhook, livingSignatureVersion, type LivingServicesCapability, type LivingInputKind, type LivingViewport, type LivingJson, type LivingServiceManifest, type LivingDeploymentStatus, type LivingDeployment, type AttachLivingService, type LivingSessionStatus, type LivingSession, type LivingInputEvent, type LivingServiceMessageWebhook } from './living';
 export { COMPOSITION_MAX_LAYERS, parseVideoComposition, compositionInputTarget, type VideoCompositionCapability, type CompositionBaseKind, type CompositionBase, type CompositionRegion, type CompositionPage, type CompositionBackground, type BaseLayerInput, type PageLayerInput, type VideoLayerInput, type SetCallVideo, type PageRef, type CompositionStatus, type BaseLayer, type PageLayer, type VideoLayer, type CallVideoComposition } from './composition';
 import { compositionBody, validateComposition, type CallVideoComposition, type PageRef, type SetCallVideo } from './composition';
@@ -101,7 +103,7 @@ export interface CheckoutInput {plan:BillingPlan;coupon_code?:string}
 export interface BillingCancellation {status:'cancellation_requested';message:string}
 export interface CouponValidation {code:string;percent_off:number;mode:'live'|'test';currency:string;monthly_total?:number;due_now?:number;access_hours?:number;plans?:BillingPlan[]}
 export class ChertApiError extends Error {
-  constructor(public readonly status:number,public readonly code:string,public readonly serverCode?:string){
+  constructor(public readonly status:number,public readonly code:string,public readonly serverCode?:string,public readonly operationId?:string){
     super(`Chert request failed (${status}, ${code}).`);this.name='ChertApiError';
   }
 }
@@ -143,7 +145,17 @@ export class ChertControlPlane {
       throw new ChertApiError(response.status,response.status===404?'endpoint_unavailable':'invalid_response');
     }
     if(!envelope||typeof envelope!=='object')throw new ChertApiError(response.status,'invalid_response');
-    if(!response.ok){const error=(envelope as {error?:unknown}).error;const fields=error&&typeof error==='object'?error as {code?:unknown}:undefined;const code=typeof fields?.code==='string'?fields.code:undefined;const serverCode=!fields||!Object.hasOwn(fields,'code')?undefined:code!==undefined&&serverCodes.has(code)?code:'unknown';throw new ChertApiError(response.status,code&&safeCodes.has(code)?code:'request_failed',serverCode);}
+    if(!response.ok){
+      const error=(envelope as {error?:unknown}).error;
+      const fields=error&&typeof error==='object'?error as {code?:unknown;details?:unknown}:undefined;
+      const code=typeof fields?.code==='string'?fields.code:undefined;
+      const participant=code!==undefined&&participantErrorCodes.includes(code);
+      const serverCode=!fields||!Object.hasOwn(fields,'code')?undefined:code!==undefined&&(serverCodes.has(code)||participant)?code:'unknown';
+      const details=fields?.details;
+      const operationId=participant&&details&&typeof details==='object'&&'operation_id' in details
+        &&typeof details.operation_id==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(details.operation_id)?details.operation_id:undefined;
+      throw new ChertApiError(response.status,code&&(safeCodes.has(code)||participant)?code:'request_failed',serverCode,operationId);
+    }
     if(!Object.hasOwn(envelope,'data'))throw new ChertApiError(response.status,'invalid_response');
     return (envelope as {data:T}).data;
   }
@@ -250,6 +262,19 @@ export class ChertControlPlane {
   clearCallVideo(callId:string){return this.request<CallVideoComposition>(`calls/${this.resourceId(callId)}/video`,'DELETE').then(checkComposition);}
   private livingPath(callId:string,sessionId:string){return `calls/${this.resourceId(callId)}/living-sessions/${this.resourceId(sessionId)}`;}
   getCallEvents(id:string){return this.request<{call_id:string;events:CallEvent[]}>(`calls/${this.resourceId(id)}/events`);}
+  /** Gated release, not generally enabled. One attempt only; retain the key on failure. Never retry unknown with a fresh key. */
+  async addCallParticipant(callId:string,input:AddCallParticipant,idempotencyKey:string){
+    validateParticipant(input);
+    const data=await this.request<unknown>(`calls/${this.resourceId(callId)}/participants`,'POST',input,'project',this.idempotency(idempotencyKey));
+    if(!isParticipantOperation(data,callId))throw new ChertApiError(202,'invalid_response');
+    return data;
+  }
+  /** Read an invitation operation, not whether a person joined. Does not submit another invitation. */
+  async getCallParticipant(callId:string,operationId:string):Promise<CallParticipantOperation>{
+    const data=await this.request<unknown>(`calls/${this.resourceId(callId)}/participants/${this.resourceId(operationId)}`);
+    if(!isParticipantOperation(data,callId)||data.id!==operationId)throw new ChertApiError(200,'invalid_response');
+    return data;
+  }
   /** Acceptance is not connection/media success. Reconcile uncertain outcomes; never retry automatically. */
   createCall(input:CreateCall,idempotencyKey:string){return this.request<CallDetail>('calls','POST',input,'project',this.idempotency(idempotencyKey));}
   answerCall(id:string,idempotencyKey:string,input:CallAction={}){return this.request<CallDetail>(`calls/${this.resourceId(id)}/answer`,'POST',input,'project',this.idempotency(idempotencyKey));}
