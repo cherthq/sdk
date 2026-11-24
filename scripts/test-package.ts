@@ -23,7 +23,7 @@ try {
   await run(['bun', 'participants-consumer.mjs']);
   const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
   assert.equal(manifest.name, '@trychert/sdk');
-  assert.equal(manifest.version, '0.3.0');
+  assert.equal(manifest.version, '0.4.0');
   assert.deepEqual(manifest.bin, { 'chert-sdk': './dist/unified/cli.js' });
   assert.notEqual(manifest.private, true);
   assert.equal(manifest.publishConfig.access, 'public');
