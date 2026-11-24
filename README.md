@@ -2,9 +2,10 @@
 
 Open-source clients for Chert messaging and FaceTime control-plane services.
 This repository contains JavaScript/TypeScript, Python, Rust, C#/.NET, C++ and Go
-clients. **Language coverage and release status differ:** npm targets 0.3.0;
-Python source is 0.3.0 but PyPI remains 0.2.3. Other clients are source previews.
-See the [changelog](CHANGELOG.md) for release changes and availability.
+clients. **Language coverage and release status differ:** this source prepares
+npm 0.4.0 and Python 0.3.0; published packages remain npm 0.3.0 and PyPI 0.2.3.
+Other clients are source previews. See the [changelog](CHANGELOG.md) and
+[release preparation](docs/RELEASING.md) for candidate changes and publication gates.
 
 Unreleased source adds [gated FaceTime Add People methods](docs/ADD_PEOPLE.md)
 for TypeScript and Python. These methods do not enable the service in production.
@@ -86,7 +87,7 @@ in default error text. See [Changed in 0.3.0](CHANGELOG.md#changed).
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
-| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | This guide targets `@trychert/sdk@0.3.0`; see [npm](https://www.npmjs.com/package/@trychert/sdk) for available versions. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | Source candidate `@trychert/sdk@0.4.0`; registry quickstarts below use published 0.3.0. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.2.3 on PyPI](https://pypi.org/project/chert-sdk/0.2.3/): `pip install chert-sdk==0.2.3` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
@@ -121,6 +122,10 @@ build/test source; do not substitute a similarly named registry package.
 The examples below target **`@trychert/sdk@0.3.0`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
+For the corrected message-lookup contract and gated Add People methods, use the
+prepared 0.4.0 tarball until a separate npm publication is approved. The 0.4.0
+migration CLI generates a 0.4.0 dependency; registry installation of that generated
+dependency cannot succeed before publication.
 
 ```sh
 npm install @trychert/sdk@0.3.0

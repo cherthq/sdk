@@ -4,8 +4,9 @@ Python 3.10+ synchronous SDK with no runtime dependencies and no CLI.
 The distribution name is **`chert-sdk`**; the import namespace is **`trychert`**.
 [`chert-sdk` 0.2.3](https://pypi.org/project/chert-sdk/0.2.3/) is published on PyPI.
 The legacy `chert` import and explicit-URL constructor calls remain compatible.
-The source version is 0.3.0, but Python 0.3.0 is **not published** by the npm
-0.3.0 release. Install 0.2.3 from PyPI until a separate Python release is ready.
+The source prepares Python 0.3.0, independently of npm 0.4.0. It is **not published**
+by an npm release. Install 0.2.3 from PyPI until a separate Python release is ready;
+see the [candidate notes](../CHANGELOG.md) and [publication gates](../docs/RELEASING.md).
 
 Unreleased source adds [gated FaceTime Add People methods](../docs/ADD_PEOPLE.md).
 These methods do not enable the service in production.

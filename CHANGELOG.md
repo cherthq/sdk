@@ -1,8 +1,20 @@
 # Changelog
 
-## Unreleased
+## Prepared: npm 0.4.0 and Python 0.3.0
 
-### Fixed
+These are independent release candidates, not publication receipts. At preparation
+time, npm remains 0.3.0 and PyPI remains 0.2.3. See [release preparation](docs/RELEASING.md)
+for artifact verification and the separate publication paths.
+
+### Changed in Python 0.3.0 (since PyPI 0.2.3)
+
+- **Missing-transcript errors report `transcript_not_found`.** The newly exposed
+  transcript helper raises this code for a missing transcript rather than
+  returning an empty transcript or the generic `request_failed` code. Existing
+  generic requests also recognize this server code. Branch on the code, not
+  formatted error text. Recognized error codes do not retain raw server messages.
+
+### Fixed in npm 0.4.0 (since npm 0.3.0)
 
 - Align JavaScript `getMessage` validation with the standalone hosted API.
   `MessageLookup.chat_id` is optional because the host can omit it. The legacy
@@ -10,6 +22,33 @@
   Callers must handle an absent chat ID and read the recorded identifier under
   its actual server field. The SDK preserves the response without synthesizing
   aliases. This corrects the previously published TypeScript response contract.
+
+### Added in both candidates
+
+- **Gated FaceTime Add People.** TypeScript and Python add invitation submission
+  and operation lookup methods, with matching examples in
+  [Add People](docs/ADD_PEOPLE.md). The backend must explicitly enable the
+  capability for the call. An accepted operation is not proof that anyone joined;
+  reconcile its recorded outcome. This does not enable production support.
+  Participant errors expose allowlisted codes and a valid operation UUID for
+  reconciliation, not arbitrary server details or message text.
+
+### Added in Python 0.3.0 (since PyPI 0.2.3)
+
+- **Public resource reads.** Add project discovery, integration metadata, recorded
+  call transcripts and the newest recorded chat-message window. Discovery uses a
+  signed-in user bearer without a project header; other reads require authorized
+  project or messaging credentials. History is not a delivery probe or a complete
+  paginated export. Python does not add JavaScript's chat-creation or single-message
+  lookup helper. See the [Python examples](python/README.md#unreleased-public-resource-reads).
+- **Direct-media request fields.** Customer-managed call requests can describe
+  `media_transport`, `media_url`, `media_token` and an optional remote participant
+  identity. The hosted backend does not yet accept direct transport; these fields
+  are not a service-availability or interoperability claim.
+
+Other language versions remain unchanged source previews. Internal transfer
+routes are not public SDK operations. Native taps, Android invites and automated
+onboarding (#42) are not functional features of these candidates.
 
 ## 0.3.0
 
