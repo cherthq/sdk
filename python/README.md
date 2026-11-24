@@ -32,6 +32,44 @@ instead of `request_failed`, and `endpoint_unavailable` for any non-JSON 404.
 from trychert import Chert, IMessageConfig, FaceTimeConfig
 ```
 
+## Unreleased public resource reads
+
+Source adds the read helpers already shipped in npm 0.3.0 for project discovery,
+integration metadata, recorded call transcripts and the newest chat-message window.
+These Python methods are not in PyPI 0.2.3.
+
+```python
+import os
+from trychert import ChertClient, ChertControlPlane
+
+# Project discovery needs a signed-in user bearer, not a project API key.
+discovery = ChertControlPlane(token=os.environ['CHERT_USER_TOKEN'])
+memberships = discovery.list_projects()
+
+control = ChertControlPlane(token=os.environ['CHERT_PROJECT_TOKEN'],
+                           project_id=os.environ['CHERT_PROJECT_ID'])
+integrations = control.list_integrations()  # {'items': [...]}, no signing secrets
+transcript = control.get_call_transcript(os.environ['CHERT_CALL_ID'])
+
+messages = ChertClient(api_key=os.environ['CHERT_IMESSAGE_KEY'])
+history = messages.list_chat_messages(os.environ['CHERT_CHAT_ID'])
+```
+
+`get_call_transcript` returns recorded caller and agent turns, not a live stream.
+A missing transcript raises `transcript_not_found`; it is not an empty success.
+`list_chat_messages` returns `{messages, has_more}` for the newest recorded window.
+`has_more` means truncation, not a cursor. This route has no SDK pagination options.
+Recorded status is not an independent delivery probe. Credentials stay separate
+between FaceTime and iMessage, and requests never retry or follow redirects.
+
+The matching TypeScript methods are `listProjects`, `listIntegrations`,
+`getCallTranscript` and `listChatMessages`. See the root README's npm 0.3.0 example.
+
+Run `python -m unittest discover -s tests` from `python/` with the existing build
+prerequisites installed. `test_resources_package.py` builds a wheel, installs it
+without dependencies into a fresh environment and runs the same real-loopback HTTP
+tests with isolated imports. These checks do not prove live service availability.
+
 ## Explicit independent channels
 
 ```python

@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 
 from chert import ChertClient, ChertAPIError, QueuedTextReceipt, ReactionReceipt, DEFAULT_IMESSAGE_URL
+from chert.resources import ChatHistory, ChatMessage, MessagePart, MessageService
+from .resources import ProjectMembership, Integration, Integrations, CallTranscript, TranscriptTurn
 from chert.events import (MessagingEvent, RecordedMessagingEvent, MessagingEventPage,
                           MessagingStreamFrame, WebhookSubscription, CreateWebhookSubscription,
                           UpdateWebhookSubscription, WebhookSubscriptions, WebhookSubscriptionResponse,
@@ -54,6 +56,8 @@ class Chert:
 
 
 __all__ = ["Chert", "IMessageConfig", "FaceTimeConfig", "ChertClient", "ChertAPIError",
+           "ChatHistory", "ChatMessage", "MessagePart", "MessageService",
+           "ProjectMembership", "Integration", "Integrations", "CallTranscript", "TranscriptTurn",
            "UnsupportedUnifiedBackend", "UNIFIED_CONTRACT", "UNIFIED_SCOPES",
            "QueuedTextReceipt", "ReactionReceipt", "ChertControlPlane", "ChertControlPlaneError",
            "MessagingEvent", "RecordedMessagingEvent", "MessagingEventPage", "MessagingStreamFrame",
