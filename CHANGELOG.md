@@ -1,10 +1,11 @@
 # Changelog
 
-## Prepared: npm 0.4.0 and Python 0.3.0
+## npm 0.4.0 and Python 0.3.0 source
 
-These are independent release candidates, not publication receipts. At preparation
-time, npm remains 0.3.0 and PyPI remains 0.2.3. See [release preparation](docs/RELEASING.md)
-for artifact verification and the separate publication paths.
+npm 0.4.0 is published from the verified artifact in the
+[v0.4.0 release](https://github.com/cherthq/sdk/releases/tag/v0.4.0).
+Python 0.3.0 remains unpublished; PyPI remains 0.2.3 pending its separate
+publisher path. See the [release record](docs/RELEASING.md) for verification.
 
 ### Changed in Python 0.3.0 (since PyPI 0.2.3)
 
@@ -23,7 +24,7 @@ for artifact verification and the separate publication paths.
   its actual server field. The SDK preserves the response without synthesizing
   aliases. This corrects the previously published TypeScript response contract.
 
-### Added in both candidates
+### Added in npm 0.4.0 and Python 0.3.0 source
 
 - **Gated FaceTime Add People.** TypeScript and Python add invitation submission
   and operation lookup methods, with matching examples in

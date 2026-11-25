@@ -1,8 +1,20 @@
 # npm 0.4.0 / Python 0.3.0 release preparation
 
-This is preparation, not authorization to publish or tag. Source integration,
-registry publication and service deployment are separate. At preparation time,
-npm publishes `@trychert/sdk` 0.3.0 and PyPI publishes `chert-sdk` 0.2.3.
+Source integration, registry publication and service deployment are separate.
+The original preparation published nothing: npm was 0.3.0 and PyPI was 0.2.3.
+The separately authorized npm publication is recorded below; Python is still gated.
+
+## npm publication receipt
+
+On November 25, 2026, the existing [trusted-publishing workflow](https://github.com/cherthq/sdk/actions/runs/45552536256)
+accepted npm 0.4.0 from [release v0.4.0](https://github.com/cherthq/sdk/releases/tag/v0.4.0),
+source `f62e6e1bbaf2ff45ec6c415722073f5b69b0c4e1`. npm initially reported processing;
+public registry metadata and clean installs were verified after it became visible.
+The public archive is byte-identical to the tested candidate:
+`c620b97d3c6a360aa70c9fcf899aa442e29ef008254f308b81dc3ad6b1d0c9d4` (SHA256).
+Public-install Node/Bun participant consumers and Node/Bun/Deno distribution
+checks pass. These are local HTTP contract tests, not physical invitation proof.
+No trust settings changed. Python remains unpublished and blocked by #44.
 
 ## Version policy and scope
 
@@ -14,9 +26,8 @@ do not change. See the [changelog](../CHANGELOG.md) for consumer changes and lim
 
 The root npm version, migration CLI `SDK_VERSION` and packed-manifest assertion
 must agree. Python's `pyproject.toml` and installed-wheel version assertion must
-agree independently. Keep registry quickstarts pinned to published versions until
-publication is verified. Candidate migration output targets npm 0.4.0 and cannot
-resolve that version from the registry before publication.
+agree independently. Registry quickstarts now target verified npm 0.4.0; Python
+registry examples remain at 0.2.3. Migration output targets npm 0.4.0.
 
 ## Verified artifacts
 
@@ -40,13 +51,13 @@ live service enablement or that an invited participant joined a call.
 The existing [Publish npm workflow](../.github/workflows/publish-npm.yml) is
 manual-dispatch only. It downloads the already-verified tarball from the GitHub
 release `v0.4.0`, checks its supplied SHA256, package name and version, rejects an
-already-published version, and uses npm trusted publishing through the protected
+already-published version, and uses npm trusted publishing through the existing
 `npm` environment on a GitHub-hosted Node 24 runner. After approval, attach the
 exact verified tarball to that release and dispatch with version `0.4.0` and its
 recorded hash. Do not rebuild a replacement artifact during publication.
 
-This preparation creates no tag, release or workflow dispatch. Before publishing,
-confirm the configured npm trusted-publisher identity and required approvals.
+The original preparation created no tag, release or workflow dispatch. Each later
+publication requires its own authorization and configured publisher identity.
 
 ### Python
 

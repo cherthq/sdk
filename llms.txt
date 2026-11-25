@@ -4,7 +4,7 @@
 
 Rules for coding agents:
 
-- Source prepares npm 0.4.0 and Python 0.3.0; published versions remain npm 0.3.0 and PyPI 0.2.3. Use verified local artifacts for candidate-only methods; do not install unpublished registry versions. See docs/RELEASING.md for independent publication gates.
+- npm 0.4.0 is published. Python source is 0.3.0 but PyPI remains 0.2.3 pending the separate publisher path in #44; use verified local Python artifacts for candidate-only methods. See docs/RELEASING.md for verification and independent publication gates.
 - Better Auth phone transport (`@trychert/sdk/better-auth`) ships in npm 0.3.0. See docs/BETTER_AUTH.md. Email remains supported alongside phone. Never auto-fallback to SMS after an uncertain send.
 - Run `chert-sdk context` (or `npx --package=@trychert/sdk chert-sdk context`) first. It prints JSON with the SDK version, which credentials are set (never their values), FaceTime identity and lines, and docs links. `--offline` makes no requests.
 - Credentials are per service: `CHERT_API_KEY` (iMessage), `CHERT_FACETIME_TOKEN` plus `CHERT_PROJECT_ID` (FaceTime). They are not interchangeable. Never print or commit them. In `CHERT_FACETIME_TOKEN`, identity (`facetime status`) needs a CLI login (`ftu_`); lines, workers, calls and assistants take a project API key (`ftk_`).
