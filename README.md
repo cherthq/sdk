@@ -2,13 +2,13 @@
 
 Open-source clients for Chert messaging and FaceTime control-plane services.
 This repository contains JavaScript/TypeScript, Python, Rust, C#/.NET, C++ and Go
-clients. **Language coverage and release status differ:** this source prepares
-npm 0.4.0 and Python 0.3.0; published packages remain npm 0.3.0 and PyPI 0.2.3.
+clients. **Language coverage and release status differ:** npm 0.4.0 is published;
+Python source is 0.3.0 but PyPI remains 0.2.3, pending its separate publisher path.
 Other clients are source previews. See the [changelog](CHANGELOG.md) and
-[release preparation](docs/RELEASING.md) for candidate changes and publication gates.
+[release record](docs/RELEASING.md) for changes and publication gates.
 
-Unreleased source adds [gated FaceTime Add People methods](docs/ADD_PEOPLE.md)
-for TypeScript and Python. These methods do not enable the service in production.
+The [gated FaceTime Add People methods](docs/ADD_PEOPLE.md) ship in npm 0.4.0
+and Python 0.3.0 source. These methods do not enable the service in production.
 
 **New here? Start with the [setup guide](docs/SETUP.md).** Coding agents can read
 [`llms.txt`](llms.txt) or run `chert-sdk context`.
@@ -87,7 +87,7 @@ in default error text. See [Changed in 0.3.0](CHANGELOG.md#changed).
 
 | Language | Available on `main` | Release / unified-channel work | Documentation |
 | --- | --- | --- | --- |
-| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | Source candidate `@trychert/sdk@0.4.0`; registry quickstarts below use published 0.3.0. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
+| JavaScript / TypeScript | iMessage, FaceTime control plane, provider adapters, CLI | Published `@trychert/sdk@0.4.0`. Binary: `chert-sdk` | [Quickstart below](#javascript--typescript) |
 | Python 3.10+ | iMessage and FaceTime control plane (`trychert`); legacy `chert` imports retained | [`chert-sdk` 0.2.3 on PyPI](https://pypi.org/project/chert-sdk/0.2.3/): `pip install chert-sdk==0.2.3` | [Python guide](python/README.md) |
 | Rust 1.88+ | Async iMessage and FaceTime clients (`trychert_sdk`) | Unpublished `chert-sdk`; source preview only | [Rust guide](rust/README.md) |
 | C# / .NET 8 | iMessage and FaceTime HTTP clients (`TryChert`) | Unpublished `chert-sdk` NuGet package; source preview only | [.NET guide](dotnet/README.md) |
@@ -119,26 +119,24 @@ build/test source; do not substitute a similarly named registry package.
 
 ## JavaScript / TypeScript
 
-The examples below target **`@trychert/sdk@0.3.0`**. The
+The examples below target **`@trychert/sdk@0.4.0`**. The
 [npm package page](https://www.npmjs.com/package/@trychert/sdk) lists available
 versions. Package availability does not establish live backend support.
-For the corrected message-lookup contract and gated Add People methods, use the
-prepared 0.4.0 tarball until a separate npm publication is approved. The 0.4.0
-migration CLI generates a 0.4.0 dependency; registry installation of that generated
-dependency cannot succeed before publication.
+Version 0.4.0 corrects the message-lookup response contract and adds gated Add
+People methods. The migration CLI generates a 0.4.0 dependency.
 
 ```sh
-npm install @trychert/sdk@0.3.0
+npm install @trychert/sdk@0.4.0
 # Alternatives:
-pnpm add @trychert/sdk@0.3.0
-bun add @trychert/sdk@0.3.0
+pnpm add @trychert/sdk@0.4.0
+bun add @trychert/sdk@0.4.0
 
-npx --package=@trychert/sdk@0.3.0 chert-sdk --help
-bunx --package @trychert/sdk@0.3.0 chert-sdk --help
+npx --package=@trychert/sdk@0.4.0 chert-sdk --help
+bunx --package @trychert/sdk@0.4.0 chert-sdk --help
 ```
 
 ESM and declarations are shipped for Node 22.12+, current Bun and Deno 2 with
-npm compatibility. Deno imports use `npm:@trychert/sdk@0.3.0` (append subpaths
+npm compatibility. Deno imports use `npm:@trychert/sdk@0.4.0` (append subpaths
 after the version). CommonJS `require()` is not a supported migration target.
 The npm package is `@trychert/sdk`; the CLI binary remains `chert-sdk`.
 
@@ -260,12 +258,12 @@ plan-change policy exists, and the CLI has no `switch` command. Dedicated purcha
 unavailable (`billing_dedicated_unqualified`) until dedicated fulfilment is enabled.
 
 ```sh
-bunx --package @trychert/sdk@0.3.0 chert-sdk context
-bunx --package @trychert/sdk@0.3.0 chert-sdk facetime status
-bunx --package @trychert/sdk@0.3.0 chert-sdk facetime lines
-bunx --package @trychert/sdk@0.3.0 chert-sdk facetime workers
-bunx --package @trychert/sdk@0.3.0 chert-sdk adopt ./my-app          # Dry-run migration report
-bunx --package @trychert/sdk@0.3.0 chert-sdk adopt ./my-app --write  # Applies supported rewrites
+bunx --package @trychert/sdk@0.4.0 chert-sdk context
+bunx --package @trychert/sdk@0.4.0 chert-sdk facetime status
+bunx --package @trychert/sdk@0.4.0 chert-sdk facetime lines
+bunx --package @trychert/sdk@0.4.0 chert-sdk facetime workers
+bunx --package @trychert/sdk@0.4.0 chert-sdk adopt ./my-app          # Dry-run migration report
+bunx --package @trychert/sdk@0.4.0 chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
 `context` prints JSON with the SDK version, which credentials are set (never
@@ -286,7 +284,7 @@ preserved. `chert-adopt` becomes `chert-sdk adopt`.
 
 The published scoped package remains available and is not unpublished or
 deprecated by this change. Existing installs and imports keep working without
-migration. To upgrade, update the dependency to `@trychert/sdk@0.3.0`
+migration. To upgrade, update the dependency to `@trychert/sdk@0.4.0`
 (published, `latest`), regenerate your consumer lockfile and rerun tests.
 No import rename is needed: root imports stay `@trychert/sdk` and subpaths
 stay `@trychert/sdk/<subpath>`.
@@ -295,7 +293,7 @@ stay `@trychert/sdk/<subpath>`.
 
 The canonical npm package is `@trychert/sdk`, not `chert-sdk`. If you installed
 the accidental unscoped 0.1.0 package (since unpublished from npm), remove that
-dependency and install `@trychert/sdk@0.3.0`. Change root imports
+dependency and install `@trychert/sdk@0.4.0`. Change root imports
 from `chert-sdk` to `@trychert/sdk` and preserve subpath suffixes (for example,
 `chert-sdk/facetime` becomes `@trychert/sdk/facetime`). Regenerate your consumer
 lockfile and rerun tests. The identity correction does not change the default
