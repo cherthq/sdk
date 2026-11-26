@@ -3,7 +3,7 @@ import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { PROVIDER_IDS } from './providers';
-import { scan } from './scan';
+import { scan, TypeScriptMissing } from './scan';
 import { apply, human, REPORT, summary, writeReport } from './write';
 
 const USAGE = `Usage: chert-adopt [path] [--from auto|${PROVIDER_IDS.join('|')}] [--write] [--install] [--json] [--allow-dirty]
@@ -37,7 +37,11 @@ export function main(argv: string[], log = (s: string) => console.log(s), fail =
   const root = resolve(positionals[0] ?? '.');
   if (!existsSync(root) || !statSync(root).isDirectory()) { fail(`chert-adopt: not a directory: ${root}`); return 1; }
 
-  let result = scan(root, from);
+  let result;
+  try { result = scan(root, from); } catch (error) {
+    if (error instanceof TypeScriptMissing) { fail(error.message); return 1; }
+    throw error;
+  }
   let changed: string[] = [];
   if (values.write) {
     const reason = values['allow-dirty'] ? null : dirty(root);
