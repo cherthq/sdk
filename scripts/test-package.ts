@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -18,6 +18,30 @@ try {
   }));
   await run(['bun', 'install', '--ignore-scripts']);
   const installed = join(temporary, 'node_modules/@trychert/sdk');
+  // A plain install brings no provider SDK and no TypeScript compiler, and the core still works.
+  const optional = ['sendblue', '@linqapp/sdk', '@blooio/sdk', 'typescript'];
+  for (const name of optional) assert.ok(!existsSync(join(temporary, 'node_modules', name)), `${name} installed with the SDK`);
+  writeFileSync(join(temporary, 'lean.mjs'), `
+import assert from 'node:assert/strict';
+import Client from '@trychert/sdk';
+import { ChertClient } from '@trychert/sdk/imessage';
+import { ChertControlPlane } from '@trychert/sdk/facetime';
+assert.equal(Client, ChertClient);
+assert.equal(typeof ChertControlPlane, 'function');
+await assert.rejects(import('@trychert/sdk/sendblue-adapter'));
+console.log('The core SDK loads without provider packages.');
+`);
+  await run(['node', 'lean.mjs']);
+  await run(['node', join(installed, 'dist/unified/cli.js'), '--help']);
+  await run(['node', join(installed, 'dist/unified/cli.js'), 'adopt', '--help']);
+  mkdirSync(join(temporary, 'lean-app'));
+  writeFileSync(join(temporary, 'lean-app/send.ts'), "import Sendblue from 'sendblue';\nexport const client = new Sendblue({ apiKey: 'x', apiSecret: 'y' });\n");
+  const noCompiler = Bun.spawnSync(['node', join(installed, 'dist/unified/cli.js'), 'adopt', join(temporary, 'lean-app')]);
+  assert.equal(noCompiler.exitCode, 1);
+  assert.match(noCompiler.stderr.toString(), /npx -p @trychert\/sdk -p typescript@5 chert-sdk adopt/);
+  // Adapter and adopt users install the provider SDK they migrate from, and TypeScript 5.
+  const tested = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).devDependencies;
+  await run(['bun', 'add', '--ignore-scripts', ...optional.map(name => `${name}@${tested[name]}`)]);
   writeFileSync(join(temporary, 'participants-consumer.mjs'), readFileSync(join(root, 'tests/participants-consumer.mjs')));
   await run(['node', 'participants-consumer.mjs']);
   await run(['bun', 'participants-consumer.mjs']);

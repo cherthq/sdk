@@ -168,6 +168,12 @@ import { ChertControlPlane } from '@trychert/sdk/facetime';
 import Sendblue from '@trychert/sdk/sendblue-adapter';
 ```
 
+The `linq`, `sendblue` and `blooio` adapters extend the provider's own SDK, and
+`@trychert/sdk` does not install it. Keep it in your project: `@linqapp/sdk`,
+`sendblue` or `@blooio/sdk`. `chert-sdk adopt --write` keeps it. The tested
+versions are in [COMPATIBILITY.md](COMPATIBILITY.md). The other adapters and the
+rest of the SDK need no provider package.
+
 ### Unified session preview
 
 The new backend contract supports one approved session and project across both
@@ -262,8 +268,14 @@ bunx --package @trychert/sdk@0.4.0 chert-sdk context
 bunx --package @trychert/sdk@0.4.0 chert-sdk facetime status
 bunx --package @trychert/sdk@0.4.0 chert-sdk facetime lines
 bunx --package @trychert/sdk@0.4.0 chert-sdk facetime workers
-bunx --package @trychert/sdk@0.4.0 chert-sdk adopt ./my-app          # Dry-run migration report
-bunx --package @trychert/sdk@0.4.0 chert-sdk adopt ./my-app --write  # Applies supported rewrites
+```
+
+`adopt` reads your code with the TypeScript 5 compiler, which the SDK does not
+install. Run it with npx, which takes both packages:
+
+```sh
+npx -p @trychert/sdk@0.4.0 -p typescript@5 chert-sdk adopt ./my-app          # Dry-run migration report
+npx -p @trychert/sdk@0.4.0 -p typescript@5 chert-sdk adopt ./my-app --write  # Applies supported rewrites
 ```
 
 `context` prints JSON with the SDK version, which credentials are set (never

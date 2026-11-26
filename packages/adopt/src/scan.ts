@@ -1,8 +1,22 @@
-import ts from 'typescript';
+import type * as TS from 'typescript';
+import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { PROVIDERS, sdkImport, type Classification, type Outcome, type Provider } from './providers';
+
+// The TypeScript 5 compiler parses JavaScript and TypeScript sources. It is not an SDK
+// dependency: adopt loads it only when it scans code, so installing the SDK stays small.
+export class TypeScriptMissing extends Error {}
+let ts: typeof TS;
+function loadTypeScript(): typeof TS {
+  let loaded: typeof TS | undefined;
+  try { loaded = createRequire(import.meta.url)('typescript'); } catch { loaded = undefined; }
+  if (typeof loaded?.createSourceFile !== 'function') {
+    throw new TypeScriptMissing('chert-adopt: reading JavaScript and TypeScript needs the TypeScript 5 compiler, which this install does not have. Run: npx -p @trychert/sdk -p typescript@5 chert-sdk adopt <path>');
+  }
+  return loaded;
+}
 
 export type Kind = 'dependency' | 'import' | 'constructor' | 'call' | 'http' | 'base_url' | 'env' | 'credential' | 'webhook';
 export type Finding = {
@@ -88,17 +102,18 @@ type ImportRec = { provider: Provider; finding: Finding; edit?: ImportEdit; usag
 type Binding = { rec: ImportRec; kind: 'default' | 'ns' | 'cjs' | string; viaCjs?: boolean };
 
 function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[]) {
+  ts ??= loadTypeScript();
   const kind = file.endsWith('x') ? (file.endsWith('tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.JSX) : /\.[cm]?ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS;
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
-  const line = (node: ts.Node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+  const line = (node: TS.Node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
   const local: Finding[] = [];
   const recs: ImportRec[] = [];
   const bindings = new Map<string, Binding>();
   const clients = new Map<string, ImportRec>();
   const consts = new Map<string, string>();
-  const specifiers = new Set<ts.Node>();
+  const specifiers = new Set<TS.Node>();
 
-  const resolve = (node: ts.Node): string | null => {
+  const resolve = (node: TS.Node): string | null => {
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
     if (ts.isTemplateExpression(node)) {
       return node.head.text + node.templateSpans.map(span => (ts.isIdentifier(span.expression) && consts.get(span.expression.text)) || '{}').map((value, i) => value + node.templateSpans[i]!.literal.text).join('');
@@ -106,7 +121,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
     return null;
   };
 
-  const addImport = (spec: ts.StringLiteralLike, node: ts.Node) => {
+  const addImport = (spec: TS.StringLiteralLike, node: TS.Node) => {
     const match = packageProvider(spec.text);
     if (!match) return null;
     specifiers.add(spec);
@@ -127,7 +142,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
       rec.blocked = `Named export \`${imported}\` resolves to the original vendor client through ${adapter.package}'s re-exports; use the default import.`;
     }
   };
-  const clientKey = (node: ts.Node): string | null => {
+  const clientKey = (node: TS.Node): string | null => {
     const parent = node.parent;
     if (ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)) return parent.name.text;
     if (ts.isPropertyDeclaration(parent) && ts.isIdentifier(parent.name)) return `this.${parent.name.text}`;
@@ -137,7 +152,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
     }
     return null;
   };
-  const chain = (node: ts.Expression): string[] | null => {
+  const chain = (node: TS.Expression): string[] | null => {
     if (ts.isIdentifier(node)) return [node.text];
     if (node.kind === ts.SyntaxKind.ThisKeyword) return ['this'];
     if (ts.isParenthesizedExpression(node) || ts.isNonNullExpression(node)) return chain(node.expression);
@@ -145,7 +160,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
     return null;
   };
 
-  const first = (node: ts.Node): void => {
+  const first = (node: TS.Node): void => {
     if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       const rec = addImport(node.moduleSpecifier, node);
       if (rec && ts.isImportDeclaration(node) && node.importClause) {
@@ -158,9 +173,9 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
       }
     } else if (ts.isCallExpression(node) && node.arguments.length === 1 && ts.isStringLiteralLike(node.arguments[0]!)
       && ((ts.isIdentifier(node.expression) && node.expression.text === 'require') || node.expression.kind === ts.SyntaxKind.ImportKeyword)) {
-      const rec = addImport(node.arguments[0] as ts.StringLiteralLike, node);
+      const rec = addImport(node.arguments[0] as TS.StringLiteralLike, node);
       const required = node.expression.kind !== ts.SyntaxKind.ImportKeyword;
-      let target: ts.Node = ts.isAwaitExpression(node.parent) ? node.parent : node;
+      let target: TS.Node = ts.isAwaitExpression(node.parent) ? node.parent : node;
       let kind: string = required ? 'cjs' : 'ns';
       if (ts.isPropertyAccessExpression(target.parent) && target.parent.expression === target) { kind = target.parent.name.text; target = target.parent; }
       const declaration = target.parent;
@@ -217,7 +232,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
   };
   first(sf);
 
-  const second = (node: ts.Node): void => {
+  const second = (node: TS.Node): void => {
     if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
       const names = chain(node.expression);
       if (names) {
@@ -257,7 +272,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
             const init = call.arguments?.[1];
             if (!init) method = 'GET';
             else if (ts.isObjectLiteralExpression(init)) {
-              const property = init.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(sf) === 'method') as ts.PropertyAssignment | undefined;
+              const property = init.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(sf) === 'method') as TS.PropertyAssignment | undefined;
               if (!property) method = init.properties.some(ts.isSpreadAssignment) ? undefined : 'GET';
               else if (ts.isStringLiteralLike(property.initializer)) method = property.initializer.text.toUpperCase();
             }
@@ -288,7 +303,7 @@ function scanJs(file: string, text: string, out: Finding[], edits: ImportEdit[])
     }
     if (!fields || !(webhookFile || local.some(f => f.provider === provider.id))) continue;
     const seen = new Set<string>();
-    const visit = (node: ts.Node): void => {
+    const visit = (node: TS.Node): void => {
       const name = ts.isPropertyAccessExpression(node) ? node.name.text
         : ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression) ? node.argumentExpression.text : null;
       const cls = name && Object.hasOwn(fields, name) ? fields[name] : undefined;

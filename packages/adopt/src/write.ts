@@ -73,6 +73,9 @@ export function apply(scan: Scan): string[] {
       const rewritten = scan.edits.some(e => e.ok && e.provider === p.id && owned(e.file));
       const fetchUse = p.adapter.kind === 'fetch' && scan.findings.some(f => f.provider === p.id && f.kind === 'http' && f.class === 'drop_in' && owned(f.file));
       if (rewritten || fetchUse) add.set('@trychert/sdk', SDK_VERSION);
+      // An SDK adapter extends the vendor client, and the vendor package is an optional peer of
+      // @trychert/sdk, so the project keeps it. Only an adapter that needs no vendor package drops it.
+      if (p.adapter.kind === 'sdk') continue;
       const remaining = scan.findings.some(f => f.provider === p.id && f.kind === 'import' && !f.adopted && owned(f.file)
         && !scan.edits.some(e => e.ok && e.file === f.file && e.from === f.name));
       const declared = Object.values(manifest.deps).flat();

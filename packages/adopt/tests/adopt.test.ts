@@ -196,7 +196,8 @@ describe('dry run, write and safety', () => {
   "type": "module",
   "dependencies": {
     "@trychert/sdk": "0.4.0",
-    "express": "4.21.2"
+    "express": "4.21.2",
+    "sendblue": "3.20.1"
   }
 }
 `);

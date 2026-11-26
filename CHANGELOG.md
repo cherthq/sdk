@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased (npm)
+
+### Changed
+
+- **The SDK installs no provider SDK and no TypeScript.** `sendblue`,
+  `@linqapp/sdk` and `@blooio/sdk` are optional peer dependencies, and
+  `typescript` is no longer a dependency. A plain install is one package.
+- **Provider adapters need the provider SDK in your project.** The `linq`,
+  `sendblue` and `blooio` adapters extend it. `chert-sdk adopt --write` now keeps
+  that package in `package.json`; it used to remove it.
+- **`chert-sdk adopt` needs TypeScript 5 to read JavaScript and TypeScript.** It
+  loads the compiler only when it scans code, and says how to run it when the
+  compiler is missing: `npx -p @trychert/sdk -p typescript@5 chert-sdk adopt <path>`.
+
 ## npm 0.4.0 and Python 0.3.0 source
 
 npm 0.4.0 is published from the verified artifact in the
